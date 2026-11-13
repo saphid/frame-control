@@ -1,0 +1,40 @@
+{
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.14",
+  "state": "partial",
+  "sources": {
+    "pnp": "ok",
+    "present": "ok",
+    "adapters": "ok",
+    "routes": "ok",
+    "wlan": "unavailable"
+  },
+  "observedAt": "2026-10-24T19:15:45.946191+00:00",
+  "deviceCount": 2,
+  "devicesWithoutIdentifiers": [
+    {
+      "present": true,
+      "pnpStatus": "OK",
+      "problemCode": 0,
+      "operational": 6,
+      "media": 0,
+      "defaultRoute": false,
+      "wifi": false,
+      "hardware": false,
+      "channel": null,
+      "band": null
+    },
+    {
+      "present": true,
+      "pnpStatus": "OK",
+      "problemCode": 0,
+      "operational": 1,
+      "media": 1,
+      "defaultRoute": true,
+      "wifi": false,
+      "hardware": true,
+      "channel": null,
+      "band": null
+    }
+  ]
+}

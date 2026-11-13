@@ -141,6 +141,9 @@ def wait_for_idle_resolvers(timeout=10):
 class ArtworkTests(unittest.TestCase):
     def setUp(self):
         wait_for_idle_resolvers()
+        from apk_sources import _images
+        _images._dns.clear()  # each test answers lookups its own way
+        self.addCleanup(_images._dns.clear)
 
     def test_source_inputs_and_url(self):
         from apk_sources import _images
@@ -236,6 +239,34 @@ class ArtworkTests(unittest.TestCase):
         finally:
             server.close()
 
+    def test_tls_socket_timeout_before_deadline_is_a_source_error(self):
+        import socket
+        import ssl
+        from apk_sources import _images
+        public = [(2, 1, 6, '', ('93.184.216.34', 443))]
+        # A socket timeout may arrive before the overall clock reaches its
+        # deadline. Certificate errors must still retain their original type.
+        for error in (TimeoutError('handshake timed out'),
+                      ssl.SSLCertVerificationError('certificate rejected')):
+            with self.subTest(error=type(error).__name__):
+                client, server = socket.socketpair()
+                try:
+                    with patch.object(_images, '_resolve', return_value=public), \
+                            patch.object(_images.socket, 'create_connection', return_value=client), \
+                            patch.object(_images.time, 'monotonic', return_value=100), \
+                            patch.object(ssl.SSLSocket, 'do_handshake', side_effect=error):
+                        if isinstance(error, TimeoutError):
+                            with self.assertRaisesRegex(_images.SourceError, 'too long') as caught:
+                                _images.get('https://example.org/a.png', deadline=160)
+                            self.assertIs(caught.exception.__cause__, error)
+                        else:
+                            with self.assertRaises(ssl.SSLCertVerificationError) as caught:
+                                _images.get('https://example.org/a.png', deadline=160)
+                            self.assertIs(caught.exception, error)
+                finally:
+                    client.close()
+                    server.close()
+
     def test_timed_out_lookups_are_capped(self):
         import threading
         from apk_sources import _images
@@ -273,12 +304,29 @@ class ArtworkTests(unittest.TestCase):
         import threading
         from apk_sources import _images
         gate = threading.Event()
-        with patch.object(_images.socket, 'getaddrinfo', side_effect=lambda *a, **k: gate.wait(5) and []):
-            start = time.monotonic()
-            with self.assertRaisesRegex(_images.SourceError, 'too long'):
-                _images.get('https://example.org/a.png', deadline=start + 0.1)
-            self.assertLess(time.monotonic() - start, 0.4)
-        gate.set()
+        real_join = threading.Thread.join
+        waits = []
+
+        def bounded_join(worker, timeout=None):
+            waits.append(timeout)
+            return real_join(worker, timeout)
+
+        try:
+            with patch.object(_images.socket, 'getaddrinfo', side_effect=lambda *a, **k: gate.wait(5) and []), \
+                    patch.object(_images.threading.Thread, 'join', bounded_join):
+                start = time.monotonic()
+                deadline = start + 0.1
+                with self.assertRaisesRegex(_images.SourceError, 'too long'):
+                    _images.get('https://example.org/a.png', deadline=deadline)
+            # Check the requested wait, not elapsed runner time: a loaded CI
+            # host can deschedule this test after the bounded join returns.
+            self.assertEqual(len(waits), 1)
+            self.assertIsNotNone(waits[0])
+            self.assertGreaterEqual(waits[0], 0)
+            self.assertLessEqual(waits[0], deadline - start)
+        finally:
+            gate.set()
+        wait_for_idle_resolvers()
         with self.assertRaisesRegex(_images.SourceError, 'too long'):
             _images.get('https://example.org/a.png', deadline=time.monotonic() - 1)
 

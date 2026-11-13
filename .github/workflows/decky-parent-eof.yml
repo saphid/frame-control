@@ -1,0 +1,103 @@
+name: Decky parent EOF diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/framey-probe-decky-parent-eof.py'
+      - '.github/workflows/decky-parent-eof.yml'
+  pull_request:
+    paths:
+      - 'scripts/framey-probe-decky-parent-eof.py'
+      - '.github/workflows/decky-parent-eof.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  parent-eof:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            architecture: x86_64
+          - os: ubuntu-24.04-arm
+            architecture: aarch64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 3
+    env:
+      AUDIT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      EXPECTED_ARCH: ${{ matrix.architecture }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Fetch exact upstream source inputs
+        run: |
+          mkdir -p "$RUNNER_TEMP/parent-eof"
+          curl --fail --location --max-time 30 --max-filesize 1048576 \
+            --output "$RUNNER_TEMP/parent-eof/plugin.py" \
+            https://raw.githubusercontent.com/SteamDeckHomebrew/decky-loader/67196adfa9b299f20dfb0cc932e88a169417b7d5/backend/decky_loader/plugin/plugin.py
+          curl --fail --location --max-time 30 --max-filesize 1048576 \
+            --output "$RUNNER_TEMP/parent-eof/localsocket.py" \
+            https://raw.githubusercontent.com/SteamDeckHomebrew/decky-loader/67196adfa9b299f20dfb0cc932e88a169417b7d5/backend/decky_loader/localplatform/localsocket.py
+      - name: Controlled EOF and connected cancellation with owned cleanup
+        run: |
+          python3 scripts/framey-probe-decky-parent-eof.py \
+            --parent-source "$RUNNER_TEMP/parent-eof/plugin.py" \
+            --socket-source "$RUNNER_TEMP/parent-eof/localsocket.py" \
+            > "$RUNNER_TEMP/parent-eof/report.json"
+      - name: Bind diagnostic evidence to this head and native architecture
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, platform, subprocess
+          from pathlib import Path
+          folder = Path(os.environ['RUNNER_TEMP'])/'parent-eof'
+          raw = (folder/'report.json').read_bytes()
+          report = json.loads(raw)
+          head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert head == os.environ['AUDIT_HEAD']
+          arch = os.environ['EXPECTED_ARCH']
+          assert platform.machine() == report['architecture'] == arch
+          assert report['arm64Executed'] is (arch == 'aarch64')
+          assert report['sourceCommit'] == '67196adfa9b299f20dfb0cc932e88a169417b7d5'
+          assert report['connectedCancellationControlPassed'] is True
+          assert report['controlledParentEofStarvationReproduced'] is True
+          assert report['allOwnedProcessesReaped'] is True
+          for key in ('realFrameContacted', 'historicalArm64VmExecuted',
+                      'historicalCauseEstablished', 'releaseHoldCleared',
+                      'userSpaceStackCaptured', 'stackSamplingEnabled'):
+              assert report[key] is False, key
+          cancel, eof = report['results']
+          assert cancel['mode'] == 'cancel' and cancel['returncode'] == 0
+          assert not cancel['timedOut'] and cancel['stderr'] == ''
+          assert eof['mode'] == 'eof' and eof['returncode'] == -9
+          assert eof['timedOut'] and eof['stderr'] == ''
+          assert all(item['ownedProcessReaped'] for item in report['results'])
+          paths = ['scripts/framey-probe-decky-parent-eof.py',
+                   '.github/workflows/decky-parent-eof.yml']
+          hashes = {path: hashlib.sha256(Path(path).read_bytes()).hexdigest() for path in paths}
+          assert report['diagnosticSha256'] == hashes[paths[0]]
+          for kind, name in [('parent', 'plugin.py'), ('socket', 'localsocket.py')]:
+              assert hashlib.sha256((folder/name).read_bytes()).hexdigest() == report['sourceSha256'][kind]
+          receipt = dict(headSha=head, architecture=arch, python=platform.python_version(),
+                         sourceSha256=hashes, reportSha256=hashlib.sha256(raw).hexdigest(),
+                         controlledProbePassed=True, realFrameContacted=False,
+                         historicalCauseEstablished=False, releaseHoldCleared=False)
+          (folder/'exact-head.json').write_text(json.dumps(receipt, indent=2)+'\n')
+          print(json.dumps(receipt))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: decky-parent-eof-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/parent-eof/report.json
+            ${{ runner.temp }}/parent-eof/exact-head.json
+          if-no-files-found: error

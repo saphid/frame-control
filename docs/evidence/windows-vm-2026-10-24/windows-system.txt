@@ -1,0 +1,18 @@
+
+WindowsProductName WindowsVersion OsBuildNumber
+------------------ -------------- -------------
+Windows 10 Pro     2009           26200        
+
+
+
+Name                              DriverVersion     Status
+----                              -------------     ------
+Red Hat VirtIO GPU DOD controller 100.103.104.30200 OK    
+
+
+
+       Used       Free
+       ----       ----
+23951253504 9314816000
+
+

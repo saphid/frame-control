@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-24",
+  "command": "scripts/frame-power-sample.sh --count 2 --interval 1",
+  "exitCode": 0,
+  "stopped": null,
+  "lockPolicy": "Existing sampler checked local and remote /tmp/frame-test.lock before reading; no lock acquired, bypassed or removed. Read-only run only.",
+  "samples": [
+    {
+      "time": 1792828506.4317346,
+      "osBuild": "20261015.6141207",
+      "elapsedSeconds": 0.057539,
+      "battery": {
+        "battery.percent": {
+          "value": 99,
+          "unit": "%",
+          "source": "/sys/class/power_supply/max1720x_bat_7-36",
+          "state": "available"
+        },
+        "battery.status": {
+          "value": "Not charging",
+          "unit": "state",
+          "source": "/sys/class/power_supply/max1720x_bat_7-36",
+          "state": "available"
+        },
+        "battery.watts": {
+          "value": -0.06,
+          "unit": "W",
+          "source": "/sys/class/power_supply/max1720x_bat_7-36",
+          "state": "available"
+        },
+        "battery.tempC": {
+          "value": 24.0,
+          "unit": "C",
+          "source": "/sys/class/power_supply/max1720x_bat_7-36",
+          "state": "available"
+        }
+      }
+    },
+    {
+      "time": 1792828507.4357972,
+      "osBuild": "20261015.6141207",
+      "elapsedSeconds": 1.061612,
+      "battery": {
+        "battery.percent": {
+          "value": 99,
+          "unit": "%",
+          "source": "/sys/class/power_supply/max1720x_bat_7-36",
+          "state": "available"
+        },
+        "battery.status": {
+          "value": "Not charging",
+          "unit": "state",
+          "source": "/sys/class/power_supply/max1720x_bat_7-36",
+          "state": "available"
+        },
+        "battery.watts": {
+          "value": -0.05,
+          "unit": "W",
+          "source": "/sys/class/power_supply/max1720x_bat_7-36",
+          "state": "available"
+        },
+        "battery.tempC": {
+          "value": 24.0,
+          "unit": "C",
+          "source": "/sys/class/power_supply/max1720x_bat_7-36",
+          "state": "available"
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "No real low-charge or thermal condition induced.",
+    "No native notification delivery verified.",
+    "No worn-headset or native package tests.",
+    "Read-only parser/transport check; no background monitor or power-saving claim."
+  ],
+  "browserCheck": {
+    "page": "Production ui/index.html served statically; API calls intentionally unavailable",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "bridge": "Synthetic desktop notification bridge; no native OS notification sent",
+    "result": "Initially unchecked and visible only after desktop host/bridge setup. Checkbox enabled through browser. Synthetic 12%, Discharging, -4 W samples at 0/30/60 seconds produced one bridge request, an in-page status and a toast. No horizontal overflow.",
+    "apiLimit": "Static server returned expected 404/501 API errors; not an end-to-end live desktop connection test."
+  },
+  "offlineValidation": [
+    "test_desktop_battery_comfort.py: 2 tests, production JS with monotonic fake clock and notification bridge",
+    "test_comfort*.py: 25 tests",
+    "test_battery.py: 7 tests",
+    "test_power*.py: 36 tests (loopback HTTP test run outside socket-restricted sandbox)",
+    "test_ui_workspace.py: 1 Python wrapper / Node workspace suite",
+    "test_ui_review.py: 1 Python wrapper / 9 Node regression tests, including switch reset and retained cooldown"
+  ]
+}

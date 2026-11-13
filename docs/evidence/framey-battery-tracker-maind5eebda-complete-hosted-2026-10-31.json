@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-31T22:28:39.039466+00:00",
+  "pr": 519,
+  "executedHead": "8bf81f1fa4094c2c8916b0520a589a0988238bac",
+  "integratedSource": "09f3d092515be1c7dab28a5a0195086c6d05a6b5",
+  "integratedMain": "d5eebdac850bdedaf0472dc1bbc93afede17c710",
+  "allNonEvidenceFilesUnchanged": true,
+  "newLocalTestsRun": false,
+  "all18ChecksFiveRunsPassedOnExecutedHead": true,
+  "artifacts": 9,
+  "allFourPackageModesQualified": true,
+  "uniqueSources": 151,
+  "verifiedHashBindings": 1367,
+  "allArtifactSourceBindingsAlsoMatchIntegratedSource": true,
+  "nativeCasesPerArchitecture": 48,
+  "nativeRpcsPerArchitecture": 628,
+  "nativeSourceInputs": 22,
+  "batteryRpcs": [
+    38,
+    36
+  ],
+  "independentBatteryTabmasterTimerDeckyPartyBothArchitectures": true,
+  "hostedCatalogTests": 53,
+  "hostedCatalogSkips": 0,
+  "catalogPins": 116,
+  "catalogOutcomes": {
+    "installed-removed": 69,
+    "blocked": 47
+  },
+  "sourceInputEquivalenceOnly": true,
+  "freshPublicationHeadCiRequired": true,
+  "compatibility": "partial",
+  "realBatterySamplingAndOfficialUiUnverified": true,
+  "realSteamCef": false,
+  "genericCleanRuntimeClaim": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "a787c32959bed23b015c88afeb93ced0168be82b75677060a6161d17fbffcbc9",
+  "rawBytes": 6944862
+}

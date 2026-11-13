@@ -6,6 +6,45 @@ This is Frame Control code using Python, Steam and SteamVR already on the Frame.
 
 ![Family and comfort controls in the desktop app](img/comfort-desktop.png)
 
+## Desktop low-battery alert without a session
+
+In the desktop app, open **Tools → Family & comfort** and check **Alert on this
+computer at 15% or less**. This separate option does not start a session, install
+a worker or change the headset. It starts off whenever the page opens and turns
+off when you switch headsets. The choice is only for the current open page.
+
+It consumes the battery parser already used by normal status refreshes (also
+shared by the read-only power sampler). It adds no SSH calls, timers, sensor
+reads, third-party push or heat thresholds. Normal automatic status refreshes
+pause while the page is hidden, so this is **not a background or safety monitor**.
+Keep the app visible and connected. Use **Enable / test notifications** to check
+system delivery; operating-system settings may block notifications.
+
+Two fresh readings, at least 20 seconds and at most 90 seconds apart, must show
+15% or less, driver state `Discharging`, and signed battery power below −0.5 W.
+This avoids alerting on plugged-in idle readings, which can report discharging.
+Missing, invalid, stale or interrupted readings break confirmation. Disconnect,
+a failed status request, hiding the page or toggling the option also breaks
+confirmation. Unknown readings never mean zero charge.
+
+An alert appears in the page and requests a native desktop notification once
+per low-charge episode. Two readings at 20% or more rearm it, and at least ten
+minutes must pass between alerts (including across headset switches). A single
+recovery spike cannot rearm it. Toggling off/on does not clear the episode latch.
+Notification failure stays visible in the page and does not retry on every
+refresh. While an active family session has battery alerts enabled, that session
+handles battery alerts instead. Multiple app windows have independent state;
+this does not coordinate notifications between computers or windows.
+
+A read-only check on 2026-10-24, build **20261015.6141207**, received two samples
+at 99%, `Not charging`, approximately −0.06 W and 24 °C. No low-battery condition
+was induced, no notification was sent to the real headset, and no headset state
+was changed. The sampler's local and remote smoke-lock checks allowed the run;
+no lock was acquired or removed. Deterministic tests exercise low charge,
+recovery, missing readings, idle drain, timing and notification denial. See
+[recorded evidence](evidence/desktop-battery-comfort-2026-10-24.json). Native OS
+notification display, worn use and macOS/Windows packaging were not verified.
+
 ## Sessions
 
 Set a limit of 1–240 minutes, optional break and check-in intervals, then
@@ -58,7 +97,7 @@ not been verified and is not guaranteed.
 
 ## Casting
 
-**Cast headset view** starts the existing headset Live view and requests full
+**Cast to this screen** (Home → **Right now**) starts the existing headset Live view and requests full
 screen where supported. Show that screen to people in the room, or use the
 computer/phone's own screen mirroring. It creates no new stream transport,
 public URL or LAN server. iPhone uses the inline viewer if full screen is not

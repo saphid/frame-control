@@ -1,0 +1,68 @@
+{
+  "head": "6a2175e3f7fbfd1388db54a08a5942b0e7b5e4fd",
+  "architecture": "x86_64",
+  "allProductSourceHashesVerified": true,
+  "productSourceCount": 90,
+  "auxiliarySourcesSeparatelyFingerprinted": true,
+  "resultPacketSha256": "1408af47ce202a112a457ee3b9b489eba832eecebd8f8b85d8b46e32fd3340d1",
+  "resultPacketVerified": true,
+  "loaderStops": [
+    {
+      "returncode": 0,
+      "elapsedSeconds": 0.886
+    },
+    {
+      "returncode": 0,
+      "elapsedSeconds": 0.727
+    }
+  ],
+  "actualFrontendConnectionRoundTrip": true,
+  "actualFrontendPowerRoundTrip": true,
+  "poweredOffActivationDidNotWrite": true,
+  "actualFrontendRefresh": true,
+  "backendRestartVisible": true,
+  "pairedFilterAndBatteryVisible": true,
+  "syntheticWrites": [
+    [
+      "Disconnect",
+      "/org/bluez/hci1/dev_42_00_00_00_00_01"
+    ],
+    [
+      "Connect",
+      "/org/bluez/hci1/dev_42_00_00_00_00_01"
+    ],
+    [
+      "Set",
+      "/org/bluez/hci1",
+      "org.bluez.Adapter1",
+      "Powered",
+      false
+    ],
+    [
+      "Set",
+      "/org/bluez/hci1",
+      "org.bluez.Adapter1",
+      "Powered",
+      true
+    ]
+  ],
+  "rendererSandboxVerified": true,
+  "ownedCleanupVerified": true,
+  "screenshotSha256": {
+    "initial": "fe5978b0a4a6829f6c88f62db8e8a57ea3eae6894cc5e611424d0e683fcb28e2",
+    "disconnected": "8ab7a489e7c12f6204c0ada84638aad36d06fa634aefedd8d37f1e8cf1cc0752",
+    "poweredOff": "7e5424070637f8a5aaafde97a8b5d4e1a3e01021229856d322c0ce3fb11e5a12",
+    "restarted": "1841d1dcda7c90b259f008ec8248f0584c4e4cde42bbb2084f785e4f30188102"
+  },
+  "capturesVisuallyInspected": true,
+  "privateBridge": true,
+  "syntheticInput": true,
+  "syntheticBluez": true,
+  "productionHttpParentVerified": false,
+  "realSteamCef": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "realRadioVerified": false,
+  "realPairingVerified": false,
+  "visualObservation": "Two paired devices and 73% controller battery visible; disconnected label changes; power-off disables rows; restart restores connected view. Refresh control is unusually wide in this host; this is not native Steam CEF styling or physical usability proof."
+}

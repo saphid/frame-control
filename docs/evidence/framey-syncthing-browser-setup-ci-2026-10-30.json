@@ -1,0 +1,190 @@
+{
+  "head": "8b01a614b865ac9469f4a6fa7cc0605ebc31ab07",
+  "artifactId": 12973481694,
+  "workflowRun": 41048089800,
+  "artifactSha256": "c26a2051be036d7081d794d34eaa2bba5add6597fbfb6f423a73a78ee3a7882e",
+  "allSourceFingerprintsVerified": true,
+  "syntheticResponsesOnly": true,
+  "realBackend": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "installerEnabled": false,
+  "cases": {
+    "original": {
+      "expectedPass": false,
+      "actualPass": false,
+      "resultSha256": "ab25cc01ba91c4371e77758998978bc01bdecab2452522dbcd4ae57e73a66d2d",
+      "screenshotSha256": "e0a3a39bc48083f9873968a6129e3299ecd4e95ca0e5d4718e947ed58a6ab763",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 100,
+      "finalPort": 8384
+    },
+    "fresh": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "403e517595bf914e0f250fcda0ec8113da4bc4fd202faedc274ea81492b5b4ef",
+      "screenshotSha256": "a7fedebba54f777d55114da790dd185b2358a76370a8900f4e4ea6702aac0428",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 20,
+      "finalPort": 8384
+    },
+    "migrating": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "65053a5b7c7aef18b13a42d7b43b41fce67fb10d28a76eea4abcd62e132deec5",
+      "screenshotSha256": "691b771651e34fc6d1e56a32feb017ab2bfc5996c4cde094403617e81d780c74",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 2,
+      "finalPort": 8386
+    },
+    "configured": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "e08a6bea0d2a9f444ff893548273822ceda15beea0205bd3d425af62fb8b9c82",
+      "screenshotSha256": "b592b253921991820d599256e1ffad818460c7b989e94591a0fe0ce31723ddf7",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 4,
+      "finalPort": 8384
+    },
+    "finish-navigation": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "1a7a0aee6f7d93ce0e3932caa2503e3fc12265c5444d5040f01ee152491f7d36",
+      "screenshotSha256": "22c63757b83db89cfc560dc8cc4a0625cf0a4b5ea11fcb3c2cb8246f7a74bc95",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 24,
+      "finalPort": 8384
+    },
+    "manual-port": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "12923eeda2633230cd549b74d91b9907632a054d08476b16c38e7cbeec644670",
+      "screenshotSha256": "090a662dffce1a5af858c3ec787751fbed4f411cb225d0f44fbd20d83c91b300",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 25,
+      "finalPort": 8390
+    }
+  },
+  "allSixCapturesVisuallyInspected": true,
+  "visualScope": "Original Loading; fresh Finish; migrating Installation Method entry; configured/finish/manual final expected state-500 view. Manual-port screenshot is the final view, not the port field.",
+  "overallPullRequestVerified": false,
+  "independentNativeOwnershipCi": {
+    "workflowRun": 41048089307,
+    "artifacts": [
+      {
+        "artifactId": 12973283871,
+        "head": "8b01a614b865ac9469f4a6fa7cc0605ebc31ab07",
+        "architecture": "x86_64",
+        "artifactSha256": "9e519d77a9598a44b262fd5a5550b1fc649f822e27770cfb7266702ffd694ec7",
+        "allSourceFingerprintsVerified": true,
+        "actualDeckyNativeOwnership": true,
+        "actualRuntimeVersion": "v2.1.7",
+        "actualServiceResults": 17,
+        "ownershipRefusals": 18,
+        "signedFlatpakProof": false,
+        "realFrameContacted": false,
+        "installerEnabled": false
+      },
+      {
+        "artifactId": 12973806882,
+        "head": "8b01a614b865ac9469f4a6fa7cc0605ebc31ab07",
+        "architecture": "aarch64",
+        "artifactSha256": "3ae23e8ff83977a3eaa04bd23a120ec2f1e6e3ff52979ab1e1d1000ce3597e72",
+        "allSourceFingerprintsVerified": true,
+        "actualDeckyNativeOwnership": true,
+        "actualRuntimeVersion": "v2.1.7",
+        "actualServiceResults": 17,
+        "ownershipRefusals": 18,
+        "signedFlatpakProof": false,
+        "realFrameContacted": false,
+        "installerEnabled": false
+      }
+    ],
+    "signedPackageAmd64Failure": {
+      "workflowRun": 41048089270,
+      "artifactId": 12974371793,
+      "artifactSha256": "2399fcd778e4ff02e64c1a50ab6a90e7b9e6089014e4b5e6f9a9f7f44a9daeb4",
+      "failure": "actual Flatpak forward bytes: None",
+      "mergeGatePass": false
+    },
+    "signedPackageArm64": {
+      "workflowRun": 41048089270,
+      "artifactId": 12976035575,
+      "head": "8b01a614b865ac9469f4a6fa7cc0605ebc31ab07",
+      "architecture": "aarch64",
+      "artifactSha256": "986f2280c1aa6efc8b3cbb624d6ef96e0070ca02bfe7e89027137b6ee09d9643",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+        "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-arm64) flatbld@f9c7a45a62fa 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.667,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "setupPortScans": [
+        null,
+        null,
+        null,
+        8384
+      ],
+      "setupPortScanElapsedSeconds": 1.516,
+      "combinedDeckyVerified": true,
+      "requiredLifecycleResults": 17,
+      "wizardResults": {
+        "defaultPackageConfig": true,
+        "remainedUnconfiguredDuringScan": true,
+        "discoveredDefaultPort": true,
+        "discoveredDefaultApiKey": true,
+        "scannedBasicAuth": true,
+        "persistedThroughDeckyRpc": true,
+        "setupCommittedAndReloaded": true,
+        "authenticatedRestWithDiscoveredKey": true,
+        "ownedSetupServiceStopped": true
+      },
+      "ownershipRefusals": 18,
+      "processIdentityChecks": 10,
+      "uninstallPreservedCandidateData": true,
+      "migrationMountNamespaceAssertionSourceBound": true,
+      "migrationResults": 12,
+      "legacyPidBefore": 643,
+      "legacyPidAfter": 705,
+      "migrationDataPreservedAfterUninstall": true
+    }
+  },
+  "unchangedFailingNativeSources": {
+    "mainHead": "af0433ba36235e5cbd4dbcf14e6c44df591b399a",
+    "setupHead": "8b01a614b865ac9469f4a6fa7cc0605ebc31ab07",
+    "identicalRuntimeFingerprints": 13,
+    "mainFailurePhase": "Final immediate instance-list assertion",
+    "setupFailurePhase": "Forward sync byte deadline",
+    "rootCauseOfSyncTimeoutEstablished": false
+  }
+}

@@ -13,25 +13,113 @@ count. So a build reaches people only when you publish it, after testing it.
    ```
 
    `.github/workflows/release.yml` builds macOS, Windows and Linux, and
-   attaches everything to a **draft** release for that tag. Nobody is
-   offered a draft.
+   attaches everything to a **draft** release for that tag. After all ten
+   installers upload, the workflow also attaches `SHA256SUMS` built from
+   GitHub's SHA-256 digests of those uploaded bytes. Nobody is
+   offered a draft. Editing a draft while installers are uploading can make
+   GitHub temporarily show its tag as `untagged-…`. The workflow finds that
+   draft by its exact version title, restores the tag association and retries
+   the affected upload; it refuses ambiguous matches.
+   The Linux build runs `scripts/check-appimage-launch.py` before upload. It
+   starts the built x86_64 AppImage on an isolated Xvfb display, checks that
+   its bundled server answers, and checks that the server stops on exit. The
+   check disables telemetry and update requests, and keeps extraction in its
+   temporary profile. This CI test does not test a physical display, FUSE mount
+   or a headset.
+   Each Mac build also mounts its DMG and extracts its ZIP, then checks the
+   packaged app version, runner architecture and bundled resource bytes against
+   the unpacked build. This checks the delivered packages, but does not launch
+   them on a physical Mac.
 
-2. Download the draft's installers and test them. An installed copy of the
-   previous version won't offer the draft, so install it directly.
+2. Independently download and inspect the draft's installers on an x86_64
+   Linux host with `gh`, `dpkg-deb` and `xvfb-run` installed:
+
+   ```sh
+   scripts/audit-release-assets.py v0.4.0 \
+     --report /tmp/frame-v0.4.0-assets.json --launch-x86-appimage
+   ```
+
+   The command downloads each of the ten installers by asset ID, verifies its
+   size and SHA-256 against GitHub metadata, matches the downloaded
+   `SHA256SUMS` byte for byte, checks package formats and versions, and starts
+   the x86_64 AppImage with a temporary profile and isolated Xvfb display. It
+   writes the report only after all checks pass. Keep that report for the
+   publisher; it must match the same draft, all ten current asset digests,
+   package checks and the isolated x86 AppImage launch. This does not prove
+   that the Mac or Windows installers launch on physical machines. Test those packages
+   separately when the required machines are available. An installed copy of
+   the previous version won't offer the draft, so install it directly.
 
 3. Write the release notes on the draft. The update banner links to them.
 
 4. Publish:
+
+   Run the publisher from a clean checkout of the exact release tag commit.
+   Both its dry run and publish command reject a different commit, tracked or
+   untracked local changes, or a package version that differs from the tag.
+
+   Confirm the exact tag commit's main CI and e2e, the locked real Frame smoke,
+   release verification, independent package checks, and all four tagged
+   installer builds have passed. Hold the release if any gate is failed,
+   cancelled, skipped, still running, or unverified. The publisher also reads
+   the exact commit's GitHub CI, native Decky runtime and ownership/watchdog gates, signed Syncthing
+   package jobs (AMD64, ARM64, browser HTTP and production-parent HTTP), and tagged build
+   job records and refuses to
+   publish unless every required job succeeded; it cannot prove physical
+   headset or installer behavior on its own.
+
+   The ownership and signed-package workflows use path filters, so a
+   version-only commit may need explicit runs while `main` still points to
+   the release commit:
+
+   ```sh
+   gh workflow run syncthing-candidate.yml --ref main
+   gh workflow run syncthing-flatpak-package.yml --ref main
+   ```
+
+   Both ownership/watchdog jobs and every signed-package job must succeed at
+   the exact release commit on `main`, from a push or manual dispatch. PR results, another branch, or an
+   older commit do not satisfy it. Every matching main checks, native Decky,
+   ownership/watchdog, signed-package and tagged installer run and attempt
+   must pass;
+   a later success does not conceal a failure, cancellation or skip. The
+   signed-package evidence verifies the isolated candidate, not a managed installation or
+   wearer-visible Syncthing controls.
+
+   Supply the saved smoke result to the publisher. Both its dry run and publish
+   command reject a result from another or dirty commit, incomplete title or
+   cleanup steps, a skip or failure, or an unconfirmed headset lock release:
+
+   ```sh
+   export FRAME_SMOKE_RESULT=/path/to/smoke-result.json
+   export RELEASE_ASSET_AUDIT=/path/to/asset-audit.json
+   python3 scripts/verify-frame-smoke-result.py "$FRAME_SMOKE_RESULT" \
+     "$(git rev-parse 'v0.4.0^{commit}')"
+   ```
 
    ```sh
    scripts/publish-release.sh --dry-run v0.4.0   # checks and shows update.json, changes nothing
    scripts/publish-release.sh v0.4.0
    ```
 
-   The script checks that the tag is on GitHub and that all eight installers
-   are attached, each with the SHA-256 digest GitHub records. It attaches
+   The script checks that the tag is on GitHub, that exact-commit main CI
+   (including e2e), native amd64/ARM64 Decky runtime and ownership/watchdog checks, signed Syncthing
+   AMD64/ARM64, browser HTTP and production-parent HTTP package checks, and the tagged
+   release workflow are green with no failed, cancelled, skipped or running
+   jobs in any exact-tag push run or attempt, and that all ten installers are
+   attached, each with the SHA-256 digest GitHub records. It checks the saved
+   independent installer report against the current draft and requires its
+   package checks and isolated x86 AppImage launch. It also checks
+   that the draft does not begin with a `WITHDRAWN` notice, so the preserved
+   v0.4.48 draft cannot accidentally be offered again. It checks
+   that the uploaded `SHA256SUMS` digest matches a fresh list of those ten
+   installer digests. It attaches
    `update.json` (the version, the notes, the release page and each
-   installer's digest), then publishes the release and marks it latest. It
+   installer's digest), verifies the uploaded asset's SHA-256 and downloads
+   its bytes for an exact readback before publishing the release and marking
+   it latest. It
+   refuses an already published release before replacing its live update
+   manifest; use a new tested release for changes after publication. It
    uses only the REST API: `gh release view` can't find a draft whose
    `tag_name` still reads `untagged-…`, and GraphQL is often rate-limited.
    Such a draft is found by its exact title (`Frame Control 0.4.0`, or that
@@ -41,9 +129,66 @@ count. So a build reaches people only when you publish it, after testing it.
    seconds after starting, then every 6 hours, and anyone can use **Check for
    Updates…** (the app menu on macOS, the Help menu elsewhere).
 
+   After publication, rerun `audit-release-assets.py` with a new report path.
+   For a published release it also downloads `update.json`, verifies its
+   GitHub SHA-256, and checks that the offered version, release page, notes,
+   installer names, sizes, and digests match that release. This checks the
+   updater channel's published bytes, which the draft audit cannot inspect.
+
 To pull a bad release, mark the previous one as latest
 (`gh release edit v0.3.9 --latest`) or turn the bad one back into a draft.
 Copies that already updated stay on it. Nothing downgrades them.
+
+## NxNative and LÖVE candidate checks
+
+Before tagging a candidate, run the NxNative data/source/UI suites, headset
+bundle tests, LÖVE packaging tests and iOS contracts. Check the desktop resource
+gate includes every bundled profile's shader metadata, not just `game.tsv` and
+`dmsh_chain.h`. Desktop, iOS server and headset bundles must include the same
+helpers and metadata. No generated game APK, `.nxnative.zip`, rewritten module,
+shader bytecode, RomFS, private catalog, ROM URL, or key belongs in those packages
+or in public release assets. The official LÖVE engine download URL is a runtime
+source, not a game source.
+
+Record physical results for each game and version separately: installation via
+the app, cold launch, visible gameplay, controller input, audio, and save/reload
+after an APK or dataset update. Menu rendering or successful package creation
+does not satisfy gameplay or save checks. Keep experimental failures visible in
+the profile notes and release notes. Distinguish injected keyboard/touch input
+from physical Frame controller checks; record worn-headset comfort separately.
+Save-file creation alone does not establish a successful cold save reload.
+The locked release smoke above must still
+run on the exact clean candidate commit after the final changes.
+
+## TestFlight from the same candidate
+
+Use a clean checkout of the desktop candidate commit on the Mac. Generate the
+Xcode project with `(cd ios && xcodegen generate)` when needed. The Xcode build
+phase generates a fresh server bundle from that checkout; never reuse a bundle
+from an earlier candidate. See [iPhone signing setup](iphone.md#testflight-beta)
+for the existing App Store Connect app and account.
+
+Set `FRAME_IOS_VERSION` to the candidate's `app/package.json` version,
+`FRAME_IOS_BUILD` to a new unused positive integer, `FRAME_IOS_OUTPUT` to a fresh
+absolute output directory, and `FRAME_IOS_TEAM_ID` to the configured team. Select
+Xcode's device SDK with `DEVELOPER_DIR` if needed. Keep the existing App Store
+Connect API key outside the checkout; export/upload also need
+`FRAME_ASC_KEY_ID`, `FRAME_ASC_ISSUER_ID`, and `FRAME_ASC_KEY_PATH`.
+
+```sh
+ios/scripts/testflight.sh archive
+ios/scripts/testflight.sh export
+ios/scripts/testflight.sh upload
+```
+
+The archive checks bundle ID and version. Export checks the signed IPA's team,
+Store provisioning profile, version and build; upload rechecks it and submits
+the same archive. Save those results with the candidate commit and server-bundle
+digest. Confirm App Store Connect processing becomes valid, add the build to the
+intended tester group, and submit external beta review when required. Upload,
+processing, tester availability and external review are separate states; report
+the state actually observed. Exercise the phone's user-source UI against Frame
+after installing that build before calling the TestFlight path tested.
 
 ## How a copy updates itself
 

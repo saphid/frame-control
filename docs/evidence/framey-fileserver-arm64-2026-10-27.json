@@ -1,0 +1,128 @@
+{
+  "plugin": {
+    "id": 60,
+    "name": "DeckyFileServer",
+    "version": "1.2.0",
+    "sha256": "7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0"
+  },
+  "status": "partial",
+  "runtime": {
+    "decky": "v3.3.0",
+    "amd64LoaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "amd64Probes": [
+      {
+        "id": 60,
+        "result": "discovery, API1 settings, native HTTPS listing/download, thumbnail policy and stop passed; uploads disabled",
+        "discovered": [
+          {
+            "name": "DeckyFileServer",
+            "version": "1.2.0",
+            "load_type": 1,
+            "disabled": false
+          }
+        ]
+      },
+      {
+        "id": 60,
+        "result": "original empty argument bug reproduced: thumbnail policy ignored",
+        "discovered": [
+          {
+            "name": "DeckyFileServer",
+            "version": "1.2.0",
+            "load_type": 1,
+            "disabled": false
+          }
+        ]
+      }
+    ]
+  },
+  "realFrame": {
+    "timeUtc": "2026-10-27T00:21:17.975213+00:00",
+    "arch": "aarch64",
+    "uid": 1000,
+    "runtime": {
+      "version": "v3.3.0",
+      "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+    },
+    "publicFixtureOnly": true,
+    "uploadsEnabled": false,
+    "actions": {
+      "discoveryAndApi1Rpc": true,
+      "settingsInitialized": true,
+      "nativeHttpsListing": true,
+      "nativeHttpsDownload": true,
+      "uploadsDenied401": true,
+      "disabledThumbnailsRespected": true,
+      "serverStop": true
+    },
+    "normalServicesBefore": {
+      "decky": "failed",
+      "panel": "inactive"
+    },
+    "normalServicesAfter": {
+      "decky": "failed",
+      "panel": "inactive"
+    },
+    "batteryBefore": [
+      99
+    ],
+    "batteryAfter": [
+      100
+    ],
+    "cleanup": {
+      "baseAbsent": true,
+      "unitAbsent": true,
+      "archiveAbsent": true
+    },
+    "lockReleased": true,
+    "independentAudit": {
+      "baseAbsent": true,
+      "unitAbsent": true,
+      "process": "MainPID=0\nLoadState=not-found\n",
+      "lockAbsent": true
+    }
+  },
+  "localChromium": {
+    "opaqueOrigin": "null",
+    "warningVisible": true,
+    "uiStart": true,
+    "separateLanHostDownload": true,
+    "uiStop": true,
+    "settingsModal": true,
+    "reopenPersistedDirectory": true,
+    "passed": true
+  },
+  "fakeFrame": "Pinned official archive install/remove; native helper hash, manifest flags and shim receipt asserted; plugin code not executed by fake Frame.",
+  "limitations": [
+    "Frontend prints HTTP and steamdeck URLs although helper uses HTTPS.",
+    "Steam directory picker unavailable; a preconfigured directory was used.",
+    "Settings thumbnail toggle visually showed unchecked despite backend true; no settings save asserted.",
+    "Uploads and generated thumbnails unverified; all test requests read-only.",
+    "Timeout expiry, protected-file permissions and worn VR unverified."
+  ],
+  "builds": [
+    {
+      "arch": "x86_64",
+      "sha256": "5e90efd1bf5163bef1686045f4714ad0e4fd0f54edb037fce8cdb06c58177bcb",
+      "gzipSha256": "84e49f049bbc475bc553ef52adc05dcd323e36c5f5ec75008558ae87f3a0e6d7",
+      "bytes": 14815380
+    },
+    {
+      "arch": "aarch64",
+      "sha256": "86b80021ebd62ed619eba065757c1122defa5a74b2c045aa44a0c6b4403a508a",
+      "gzipSha256": "7ca1b8aebd4e8d2c8ce382ca561e1413ad8e581f85f419a1da777c87d86c4a19",
+      "bytes": 13893780
+    }
+  ],
+  "startupRetries": "Two private test-adapter failures (CEF reload, script syntax) and one overly early LAN readiness assertion preceded the successful run. Each run removed its private service/base/upload and released the lock; battery stayed 100.",
+  "rebuildMatchedBothAssets": true,
+  "automatedChecks": {
+    "pythonTests": 1662,
+    "pythonSkipped": 16,
+    "nodeAppTests": 46,
+    "publishedDecky330NativeAmd64Probes": 9,
+    "fakeFramePinnedInstallRemove": "passed",
+    "combinedDesktopResources": "passed",
+    "combinedHeadsetBundleBytes": 12485251
+  }
+}

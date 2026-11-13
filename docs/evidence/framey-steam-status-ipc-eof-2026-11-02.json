@@ -1,0 +1,325 @@
+{
+  "at": "2026-11-02T08:38:32.232144+00:00",
+  "implementation": "2bf45b2f4bc352eb470c84966cb831da3a24834d",
+  "baselineMain": "1c2e48c89f031ae70136106c1de3ba556a4c6c74",
+  "sourceAudit": {
+    "at": "2026-11-02T08:37:28.366793+00:00",
+    "implementation": "2bf45b2f4bc352eb470c84966cb831da3a24834d",
+    "baseline": "1c2e48c89f031ae70136106c1de3ba556a4c6c74",
+    "pluginId": 123,
+    "sourceChanges": [
+      "docs/framey-compatibility.md",
+      "scripts/framey-test-decky-runtime.py",
+      "tests/decky-runtime/cases.json",
+      "tests/decky-runtime/check.py",
+      "tests/decky-runtime/steam_status_private.py",
+      "tests/e2e/test_framey.py",
+      "tests/test_frame_decky_store.py",
+      "ui/frame_decky_store.py",
+      "ui/framey-compatibility.json"
+    ],
+    "allOtherInstallerCheckerE2eAndUnitASTsPreserved": true,
+    "allOther39NativeCasesPreserved": true,
+    "allOther115CatalogRowsPreserved": true,
+    "all116PinsFlagsPoliciesRatingsPreserved": true,
+    "primaryStrictGateUnchanged": true,
+    "sharedAdapterUnchanged": true,
+    "realFrameContacted": false
+  },
+  "nativeAudit": {
+    "at": "2026-11-02T08:37:27.367444+00:00",
+    "implementation": "2bf45b2f4bc352eb470c84966cb831da3a24834d",
+    "nativeTestCommit": "2bf45b2f4bc352eb470c84966cb831da3a24834d",
+    "architecture": "x86_64",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "f893b7fb013a2025b779083695185adecf8b0661c69bcd65a8099608251c64c1",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "e5b8681658fa74666886f654bf913e3649374f4ca4bcc45accd49a9f43c80cb9",
+      "ui/framey_discord_lifecycle.py": "f75b372fa48d39968abe60921847a154b5c485c5b462dfa3855aae9dd3b8520c",
+      "tests/decky-runtime/discord_private.py": "e7abd8c6a8ad5b85167b7ee73fca254e1857952d771bc1ae4a9d103f8c8cfb8c",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/download_all_private.py": "0258433b119d97beb0334cfaf115adb981ac7a86eb9f7795eb4d404e53a55a51",
+      "tests/decky-runtime/steam_status_private.py": "7765481fe144045aed28a1855822550bf957a02e0ab941f8b044c252ba33d26b",
+      "tests/decky-runtime/localsend_private.py": "f33dd326e92859192c3880ca4ef681a67cf1d97b9919a642f2b7c5762ba95f37",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/deck_shelves_private.py": "7601ff4ae19850dccf80ebc0f63ae7829af193367ac82d1357782e6c7e8f3b78",
+      "tests/decky-runtime/battery_private.py": "9ca0c40c87a70a47dba5ca6e98af9e5e06e4895804c93dc3e24da1a88f81ae0d",
+      "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
+      "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+      "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+      "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+      "tests/decky-runtime/reshadeck_private.py": "94bf1b762a6a0f9448a8e02c1fe6fd9be552557df61ee1a7083b7d8626bf8ee2",
+      "ui/framey_reshadeck.py": "5640fdf1d8bf9fd1df9e3e0637aca48fa8793c299ea2788bbaa70921d0b3f689",
+      "tests/decky-runtime/screensaver_private.py": "15aa711ce5578e8c4e691689c8174ae6e1f59a4b1cb558ba3a1803186d47c000",
+      "ui/framey_screensaver.py": "9708b949d6723584d3dfbed0ccb52becd4754a2172e479b1e8b8a0d522add45c",
+      "tests/decky-runtime/surround_private.py": "481876917ecbe9e7a4f82e20ab3ef6bbd6bd7d456194d2c01e09ffacafb5bcc2",
+      "ui/framey_surround.py": "5d697c4fe229a8d15dda1408c9177cb8e9f19571dd1f39817d5d45831318fc22",
+      "tests/decky-runtime/volume_mixer_private.py": "9b57b5b42445bac803a4308fb357c705048d92c8adbec63ae4710e34ce9f7f37",
+      "tests/decky-runtime/animation_private.py": "5ecc5acad0c33b95f852df35014d0b6189c1f7c64aaa556146ec86a76b6c617a",
+      "ui/framey_animation_overrides.py": "1be712568c6675dd77cff64eb0b06a97569d80daa81d269533c2ea8d3be20188",
+      "tests/decky-runtime/Containerfile": "f547357ca4832b87d5b72a7df8a235102e140d081963f7f292e9d8a84c712257",
+      "tests/decky-runtime/cases.json": "5cbb346a78b6882b2008696cadacf635b5cdd2ac6ce68655b5adba0560469c65",
+      "tests/framey_official.py": "dfa77356bbbd41082ae40673c1724c13d0a2a372aba69adabfa67b788b309ed0",
+      "ui/frame_decky_store.py": "c1766ebcc5d487f74fc0bc6eab8bacc81199256b872f9cb3d36b219631cec9dc",
+      "tests/decky-runtime/ludusavi_private.py": "c620d2c5a8bdb8a4fa52df378e4426a466d1e7271c800243aacd1486eb9482f9",
+      "tests/decky-runtime/protondb_private.py": "fa42f20a4f9487230ec2ace56bed14c47d50866a1ace559d2c861431bf3af32d",
+      "tests/decky-runtime/game_sync_private.py": "097b860de03d340fd9b857d87f67a5b0271381307d8cc97280a1f4c79985cb5b",
+      "tests/decky-runtime/steamgriddb_private.py": "ae815dc7e5f0e178e95c93e0bbf3eca232f3f2eb6f35af6b1b618345e332240e",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "reportSha256": "f13753ce8183050e83a5c18591b5e851f374ed7d586c06a48064ea6100f3ecd1",
+    "redCommit": "bf97c3c11aebbfa5335f039d5edcfea77823037e",
+    "redRejected": true,
+    "tlsReconstructionVerified": true,
+    "originalRpcCount": 3,
+    "managedRpcCount": 5,
+    "strictManagedStops": [
+      {
+        "loaderPid": 9,
+        "descendantsBefore": {
+          "10": {
+            "state": "S",
+            "parent": 9,
+            "start": "365935804"
+          },
+          "20": {
+            "state": "S",
+            "parent": 10,
+            "start": "365935837"
+          },
+          "21": {
+            "state": "S",
+            "parent": 10,
+            "start": "365935837"
+          },
+          "22": {
+            "state": "S",
+            "parent": 21,
+            "start": "365935850"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 20,
+            "returncode": 0
+          },
+          {
+            "pid": 21,
+            "returncode": 0
+          }
+        ],
+        "parentOnlySignal": true,
+        "loaderReturncode": 0,
+        "seconds": 0.214,
+        "fixtureClosedUnixPeers": [
+          "/tmp/plugin_socket_1793608608.6014051"
+        ],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steam Status (v1.2.3)\n[plugin][INFO]: Stopping response listener for Steam Status (v1.2.3)\nCalling Loader unload function for Steam Status (v1.2.3).\nAttempting to unload with plugin Steam Status (v1.2.3)'s \"_unload\" function.\n\nSteamStat plugin unloaded\nUnloaded Steam Status (v1.2.3)\n\n[plugin][INFO]: Plugin Steam Status (v1.2.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "affe25b75a769623975681179bbd74fd0e1cd469475498ab5ef1ac799eea3157",
+        "cleanShutdownVerified": true
+      },
+      {
+        "loaderPid": 24,
+        "descendantsBefore": {
+          "25": {
+            "state": "S",
+            "parent": 24,
+            "start": "365936121"
+          },
+          "35": {
+            "state": "S",
+            "parent": 25,
+            "start": "365936153"
+          },
+          "36": {
+            "state": "S",
+            "parent": 25,
+            "start": "365936153"
+          },
+          "37": {
+            "state": "S",
+            "parent": 36,
+            "start": "365936163"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 35,
+            "returncode": 0
+          },
+          {
+            "pid": 36,
+            "returncode": 0
+          }
+        ],
+        "parentOnlySignal": true,
+        "loaderReturncode": 0,
+        "seconds": 0.235,
+        "fixtureClosedUnixPeers": [],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steam Status (v1.2.3)\n[plugin][INFO]: Stopping response listener for Steam Status (v1.2.3)\nCalling Loader unload function for Steam Status (v1.2.3).\nAttempting to unload with plugin Steam Status (v1.2.3)'s \"_unload\" function.\n\nSteamStat plugin unloaded\nUnloaded Steam Status (v1.2.3)\n\n[plugin][INFO]: Plugin Steam Status (v1.2.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "affe25b75a769623975681179bbd74fd0e1cd469475498ab5ef1ac799eea3157",
+        "cleanShutdownVerified": true
+      }
+    ],
+    "explicitForcedNegative": {
+      "loaderPid": 9,
+      "descendantsBefore": {
+        "10": {
+          "state": "S",
+          "parent": 9,
+          "start": "365936489"
+        },
+        "20": {
+          "state": "S",
+          "parent": 10,
+          "start": "365936519"
+        },
+        "21": {
+          "state": "S",
+          "parent": 10,
+          "start": "365936519"
+        },
+        "22": {
+          "state": "S",
+          "parent": 21,
+          "start": "365936530"
+        }
+      },
+      "exactDescendantsRemaining": {},
+      "adoptedChildExits": [
+        {
+          "pid": 20,
+          "returncode": 0
+        },
+        {
+          "pid": 21,
+          "returncode": 0
+        }
+      ],
+      "parentOnlySignal": true,
+      "loaderReturncode": 0,
+      "seconds": 5.224,
+      "fixtureClosedUnixPeers": [
+        "/tmp/plugin_socket_1793608615.4167807"
+      ],
+      "forcedPluginKills": 1,
+      "errors": [],
+      "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steam Status (v1.2.3)\n[plugin][INFO]: Stopping response listener for Steam Status (v1.2.3)\n[plugin][WARNING]: Plugin Steam Status (v1.2.3) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Steam Status (v1.2.3) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+      "consoleSha256": "e99620739331be565d5b23c17c9397914af7765729d8b4cce0b8163f7da40750",
+      "cleanShutdownVerified": false
+    },
+    "arm64Verified": false,
+    "realFrameContacted": false,
+    "releaseQualified": false
+  },
+  "storeUnitTests": 79,
+  "storeUnitSkips": 0,
+  "runtimeCoverageTests": 3,
+  "retainedHostedFailure": {
+    "at": "2026-11-02T08:32:51.712463+00:00",
+    "head": "4d1168bf47be8f746a328ce8011ff9ece225e793",
+    "records": [
+      {
+        "artifact": 13125973234,
+        "sha256": "773abc6826694f14cf4c561d4c55e15119b21602f5b3df21402b682b4f46bb56",
+        "architecture": "aarch64",
+        "head": "4d1168bf47be8f746a328ce8011ff9ece225e793",
+        "sourceInputs": 43,
+        "completedCases": 21,
+        "failedCase": 123,
+        "lastCase": {
+          "id": 123,
+          "name": "Steam Status",
+          "version": "1.2.3",
+          "sha256": "9053308e04a74f44745b45b9f4f50af3673348d367e7b14bacc5677de707ac4e",
+          "shim": "steam-status-verified-tls",
+          "calls": [
+            {
+              "method": "get_settings",
+              "result": {
+                "gateway_url": "",
+                "gateway_api_key": "",
+                "refresh_interval_seconds": 120,
+                "show_regions": true,
+                "show_history": true,
+                "enable_notifications": true,
+                "enable_notification_antiflood": true,
+                "show_trending_games": true
+              }
+            },
+            {
+              "method": "set_setting",
+              "result": true
+            },
+            {
+              "method": "get_setting",
+              "result": 180
+            },
+            {
+              "method": "get_setting",
+              "result": 180
+            }
+          ],
+          "discovered": [
+            {
+              "name": "Steam Status",
+              "version": "1.2.3",
+              "load_type": 1,
+              "disabled": false
+            }
+          ],
+          "result": "published Decky discovery, private setting write/read and restart persistence passed; both managed public diagnostic contexts retain TLS verification; no public network diagnostics, Frame or VR test",
+          "runtimeConsole": {
+            "text": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: steamstatus-decky\n[loader][INFO]: Loaded Steam Status (v1.2.3)\nSteamStat plugin initialized\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steam Status (v1.2.3)\n[plugin][INFO]: Stopping response listener for Steam Status (v1.2.3)\nCalling Loader unload function for Steam Status (v1.2.3).\nAttempting to unload with plugin Steam Status (v1.2.3)'s \"_unload\" function.\n\nSteamStat plugin unloaded\nUnloaded Steam Status (v1.2.3)\n\n[plugin][INFO]: Plugin Steam Status (v1.2.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: steamstatus-decky\n[loader][INFO]: Loaded Steam Status (v1.2.3)\nSteamStat plugin initialized\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steam Status (v1.2.3)\n[plugin][INFO]: Stopping response listener for Steam Status (v1.2.3)\n[plugin][WARNING]: Plugin Steam Status (v1.2.3) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Steam Status (v1.2.3) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "sha256": "ba144b6676f7026bd77391c0af7b1bb6757cf8fdb1c3763de7d2f803c95bcabc",
+            "probeCompleted": true,
+            "cleanupCompleted": true,
+            "processStops": [
+              {
+                "pid": 24,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ],
+            "cleanShutdownVerified": false
+          }
+        },
+        "job": 125168806989,
+        "jobLogSha256": "325be84bad4693798a0b741587f9b59ca3693f7f68a80957532ed7d9af97ddc0",
+        "exactCheckoutVerified": true
+      }
+    ],
+    "realFrameContacted": false
+  },
+  "rawSha256": "b47fd113ff17af482215d1fa99f4ff7436d94dc081b9c4928cfd7e4a38f8fd2c",
+  "freshBothArchitectureFullCIRequired": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false
+}

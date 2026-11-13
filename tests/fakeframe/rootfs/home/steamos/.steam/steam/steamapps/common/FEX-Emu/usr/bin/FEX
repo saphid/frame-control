@@ -1,0 +1,3 @@
+#!/bin/sh
+# Fake Frame only: the host can run its native test ELF without FEX emulation.
+exec "$@"

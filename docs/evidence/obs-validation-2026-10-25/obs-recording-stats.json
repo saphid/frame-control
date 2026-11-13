@@ -1,0 +1,210 @@
+{
+  "result": {
+    "outputPath": "/evidence/2026-10-25 06-08-22.mkv"
+  },
+  "samples": [
+    {
+      "elapsed": 30.000104404054582,
+      "obs": {
+        "activeFps": 30.000000300000007,
+        "availableDiskSpace": 9068.64453125,
+        "averageFrameRenderTime": 18.458413,
+        "cpuUsage": 20.24916849878798,
+        "memoryUsage": 543.7109375,
+        "outputSkippedFrames": 0,
+        "outputTotalFrames": 959,
+        "renderSkippedFrames": 4,
+        "renderTotalFrames": 1783,
+        "webSocketSessionIncomingMessages": 14,
+        "webSocketSessionOutgoingMessages": 16
+      },
+      "record": {
+        "outputActive": true,
+        "outputBytes": 2243010,
+        "outputDuration": 30866,
+        "outputPaused": false,
+        "outputTimecode": "00:00:30.866"
+      },
+      "app": {
+        "state": "running",
+        "alias": "frame",
+        "error": "",
+        "supported": true
+      }
+    },
+    {
+      "elapsed": 60.002103955019265,
+      "obs": {
+        "activeFps": 30.000000300000007,
+        "availableDiskSpace": 8942.09375,
+        "averageFrameRenderTime": 13.660508,
+        "cpuUsage": 23.863888888888887,
+        "memoryUsage": 544.56640625,
+        "outputSkippedFrames": 0,
+        "outputTotalFrames": 1859,
+        "renderSkippedFrames": 5,
+        "renderTotalFrames": 2683,
+        "webSocketSessionIncomingMessages": 16,
+        "webSocketSessionOutgoingMessages": 18
+      },
+      "record": {
+        "outputActive": true,
+        "outputBytes": 4951606,
+        "outputDuration": 60866,
+        "outputPaused": false,
+        "outputTimecode": "00:01:00.866"
+      },
+      "app": {
+        "state": "running",
+        "alias": "frame",
+        "error": "",
+        "supported": true
+      }
+    },
+    {
+      "elapsed": 90.0040782331489,
+      "obs": {
+        "activeFps": 30.000000300000007,
+        "availableDiskSpace": 8900.6015625,
+        "averageFrameRenderTime": 12.110281,
+        "cpuUsage": 23.680555555555557,
+        "memoryUsage": 545.74609375,
+        "outputSkippedFrames": 0,
+        "outputTotalFrames": 2759,
+        "renderSkippedFrames": 13,
+        "renderTotalFrames": 3583,
+        "webSocketSessionIncomingMessages": 18,
+        "webSocketSessionOutgoingMessages": 20
+      },
+      "record": {
+        "outputActive": true,
+        "outputBytes": 7552329,
+        "outputDuration": 90866,
+        "outputPaused": false,
+        "outputTimecode": "00:01:30.866"
+      },
+      "app": {
+        "state": "running",
+        "alias": "frame",
+        "error": "",
+        "supported": true
+      }
+    },
+    {
+      "elapsed": 120.0062853959389,
+      "obs": {
+        "activeFps": 30.000000300000007,
+        "availableDiskSpace": 8603.08984375,
+        "averageFrameRenderTime": 14.892247,
+        "cpuUsage": 24.66111111111111,
+        "memoryUsage": 546.52734375,
+        "outputSkippedFrames": 0,
+        "outputTotalFrames": 3659,
+        "renderSkippedFrames": 13,
+        "renderTotalFrames": 4483,
+        "webSocketSessionIncomingMessages": 20,
+        "webSocketSessionOutgoingMessages": 22
+      },
+      "record": {
+        "outputActive": true,
+        "outputBytes": 10124530,
+        "outputDuration": 120866,
+        "outputPaused": false,
+        "outputTimecode": "00:02:00.866"
+      },
+      "app": {
+        "state": "running",
+        "alias": "frame",
+        "error": "",
+        "supported": true
+      }
+    },
+    {
+      "elapsed": 150.00849257130176,
+      "obs": {
+        "activeFps": 30.000000300000007,
+        "availableDiskSpace": 8484.58203125,
+        "averageFrameRenderTime": 15.3434,
+        "cpuUsage": 23.169444444444444,
+        "memoryUsage": 548.5546875,
+        "outputSkippedFrames": 0,
+        "outputTotalFrames": 4559,
+        "renderSkippedFrames": 78,
+        "renderTotalFrames": 5383,
+        "webSocketSessionIncomingMessages": 22,
+        "webSocketSessionOutgoingMessages": 24
+      },
+      "record": {
+        "outputActive": true,
+        "outputBytes": 12643085,
+        "outputDuration": 150833,
+        "outputPaused": false,
+        "outputTimecode": "00:02:30.833"
+      },
+      "app": {
+        "state": "running",
+        "alias": "frame",
+        "error": "",
+        "supported": true
+      }
+    },
+    {
+      "elapsed": 180.01099411491305,
+      "obs": {
+        "activeFps": 30.000000300000007,
+        "availableDiskSpace": 8382.75,
+        "averageFrameRenderTime": 31.402812,
+        "cpuUsage": 23.717094301899365,
+        "memoryUsage": 548.51953125,
+        "outputSkippedFrames": 0,
+        "outputTotalFrames": 5459,
+        "renderSkippedFrames": 90,
+        "renderTotalFrames": 6283,
+        "webSocketSessionIncomingMessages": 24,
+        "webSocketSessionOutgoingMessages": 26
+      },
+      "record": {
+        "outputActive": true,
+        "outputBytes": 15130232,
+        "outputDuration": 180833,
+        "outputPaused": false,
+        "outputTimecode": "00:03:00.833"
+      },
+      "app": {
+        "state": "running",
+        "alias": "frame",
+        "error": "",
+        "supported": true
+      }
+    },
+    {
+      "elapsed": 185.01674677524716,
+      "obs": {
+        "activeFps": 30.000000300000007,
+        "availableDiskSpace": 8366.79296875,
+        "averageFrameRenderTime": 22.859219,
+        "cpuUsage": 23.766666666666666,
+        "memoryUsage": 510.28515625,
+        "outputSkippedFrames": 0,
+        "outputTotalFrames": 5609,
+        "renderSkippedFrames": 90,
+        "renderTotalFrames": 6433,
+        "webSocketSessionIncomingMessages": 26,
+        "webSocketSessionOutgoingMessages": 28
+      },
+      "record": {
+        "outputActive": true,
+        "outputBytes": 15580161,
+        "outputDuration": 185833,
+        "outputPaused": false,
+        "outputTimecode": "00:03:05.833"
+      },
+      "app": {
+        "state": "running",
+        "alias": "frame",
+        "error": "",
+        "supported": true
+      }
+    }
+  ]
+}

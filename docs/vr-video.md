@@ -6,7 +6,7 @@ is required.** Chromium and immersive WebXR are not in this playback path.
 
 ## Use it
 
-In **Tools → Media in the headset**, send a file, choose its layout and press
+In **Tools → Media player** (or **Play a video or photo** on Home), send a file, choose its layout and press
 **Play**. **Theatre** gives it a larger screen and an 85% black surround.
 **Stop** removes both. Refresh reads the library and the player's state.
 The screen follows your head; it isn't a saved world-space panel.
@@ -100,6 +100,14 @@ when the headset wakes. The 8 s movie above dropped 40 frames and finished.
 Stills and the theatre surround are re-sent after waking. Five minutes
 without an accepted frame is reported as an error. Headset-view captures
 taken during standby show a flat dark frame, not our screen.
+
+**Optional surround:** if SteamVR refuses the theatre dark surround at startup
+or on a retry after standby, playback continues without it and the player log
+records `Theatre surround unavailable`. Screen errors still fail playback.
+On exit, the player attempts to destroy every owned overlay and calls OpenVR
+shutdown even if an overlay's teardown raises an exception. Refusal and
+teardown errors are covered by fake-OpenVR tests; a real surround refusal has
+not been induced safely. See the [current hardening checks](evidence/media-surround-2026-10-24.md).
 
 ![Media panel in Frame Control while a photo plays on the Frame](img/media-ui-panel.png)
 

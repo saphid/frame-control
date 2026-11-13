@@ -558,15 +558,21 @@ class Registry:
         self.config = Path(config) if config else None  # None: ssh_config() at call time
         self.lock = threading.RLock()
         self._depth = 0  # nested _changing() calls
-        self._mtime = None  # devices.json as last loaded or saved
+        self._stamp = None  # devices.json as last loaded or saved
         self.data = {"version": VERSION, "active": None, "devices": [], "networks": {}}
         self.load()
 
     # -- storage --
+    def _file_stamp(self):
+        stat = self.path.stat()
+        # Saves atomically replace the file. Fast consecutive saves can have the
+        # same timestamp and size; its identity still changes in that case.
+        return stat.st_dev, stat.st_ino, stat.st_mtime_ns, stat.st_size
+
     def load(self):
         with self.lock:
             try:
-                self._mtime = self.path.stat().st_mtime_ns
+                self._stamp = self._file_stamp()
                 data = json.loads(self.path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 return
@@ -593,6 +599,11 @@ class Registry:
             for a in d["addresses"]:
                 a.setdefault("networks", [])
                 a.setdefault("label", "")
+                # Old or hand-edited registries must not turn a cached route into an
+                # arbitrary hostname or an SSH option. Only a numeric address is used.
+                if not frame_network.valid_ip(a.get("last_ip", "")):
+                    a.pop("last_ip", None)
+                    a.pop("last_ip_network", None)
             if d.get("identity") or any(a.get("last_ok") for a in d["addresses"]):
                 # Files from before the flag existed: it had an identity (or a connection that
                 # worked, which saved one). Kept from now on, whatever happens to its addresses.
@@ -607,14 +618,14 @@ class Registry:
             tmp = self.path.with_name(self.path.name + ".tmp")
             tmp.write_text(json.dumps(self.data, indent=1), encoding="utf-8")
             os.replace(tmp, self.path)
-            self._mtime = self.path.stat().st_mtime_ns
+            self._stamp = self._file_stamp()
 
     def _refresh(self):
         """Pick up what another Frame Control server saved (the app and a standalone
         server can share devices.json)."""
         with self.lock:
             try:
-                if self.path.stat().st_mtime_ns != self._mtime:
+                if self._file_stamp() != self._stamp:
                     self.load()
             except OSError:
                 pass
@@ -740,7 +751,9 @@ class Registry:
                 return a
         raise DeviceError(f"{host} isn't one of this headset's addresses")
 
-    def add_address(self, device_id, host, kind=None, label=""):
+    def add_address(self, device_id, host, kind=None, label="", first=False):
+        """Add an address at the end of the list, or at the front (first=True), where the
+        user's order makes it win over the others that work on the same network."""
         with self._changing():
             d = self._find(device_id)
             a = new_address(host, kind, label)
@@ -748,7 +761,7 @@ class Registry:
                 raise DeviceError(f"{a['host']} is already on the list")
             if len(d["addresses"]) >= 32:
                 raise DeviceError("That's enough addresses for one headset")
-            d["addresses"].append(a)
+            d["addresses"].insert(0 if first else len(d["addresses"]), a)
             self.save()
             return copy.deepcopy(a)
 
@@ -766,6 +779,8 @@ class Registry:
             label = None if label is None else check_text(label, "label")
             if moved:
                 a.update(host=new_host, networks=[], last_ok=None, last_rtt_ms=None)  # a new place: learn again
+                a.pop("last_ip", None)
+                a.pop("last_ip_network", None)
             if kind is not None:
                 a["kind"] = kind
             if label is not None:
@@ -788,7 +803,7 @@ class Registry:
             d["addresses"].insert(j, d["addresses"].pop(i))
             self.save()
 
-    def record_success(self, device_id, host, network_id, rtt_ms):
+    def record_success(self, device_id, host, network_id, rtt_ms, ip=None):
         """Learn: this address worked on this network."""
         with self._changing():
             try:
@@ -799,6 +814,9 @@ class Registry:
                 a["networks"] = (a["networks"] + [network_id])[-16:]
             a["last_ok"] = time.time()
             a["last_rtt_ms"] = rtt_ms
+            if ip and frame_network.valid_ip(ip) and network_id:
+                a["last_ip"] = ip
+                a["last_ip_network"] = network_id
             self._find(device_id)["identity_established"] = True  # survives editing the address away
             self.save()
 

@@ -1,0 +1,63 @@
+{
+  "at": "2026-10-31T20:28:27.070487+00:00",
+  "sourceRevision": "0d8a71aa4d95d4ce8813192a31411c6de8d3dd41",
+  "priorHostedHead": "2d530add215db0b308b674d0bb9f588272973326",
+  "main": "7062ef4d81d7fa25e1562d22d0b1b92fa526b499",
+  "passed": true,
+  "normalMainMerge": true,
+  "allPrior18ChecksAndFiveRunsSucceeded": true,
+  "hostedArtifacts": 8,
+  "allPublishedZipDigestsVerified": true,
+  "sourceHashBindings": 1365,
+  "uniqueArtifactInputs": 150,
+  "allArtifactInputBytesUnchangedAtCombinedSource": true,
+  "nativeCasesPerArchitecture": 47,
+  "nativeRpcCallsPerArchitecture": 593,
+  "nativeInputs": 21,
+  "radiyoRpcs": [
+    9,
+    7
+  ],
+  "tabmasterRpcs": [
+    47,
+    48,
+    47
+  ],
+  "timerRpcs": [
+    31,
+    10,
+    18
+  ],
+  "nativeRerunLocally": false,
+  "allFourPriorHeadPackageModesQualified": true,
+  "packageBrowserScope": "Package/Syncthing controls; synthetic CEF; not RadiYo UI/audio",
+  "productionParentHttpRequests": 65,
+  "server": {
+    "tests": 1960,
+    "skips": 15
+  },
+  "site": {
+    "tests": 18,
+    "skips": 0
+  },
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 399.767,
+    "records": 116,
+    "installedRemoved": 69,
+    "expectedRefusals": 47,
+    "allPriorOutcomesAndReasonsMatch": true
+  },
+  "ownedCleanupVerified": true,
+  "priorHostedE2eSkipNotErased": true,
+  "oldHostedAuditExecutionClarifiedAndCountCorrected": true,
+  "newHeadHostedChecksAndPackagesPending": true,
+  "globalCleanRuntime": false,
+  "compatibility": "partial",
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "402cbc4cfc49e65933aca51a43e2285e00d9c4a4026b9af28b5269a7c98ec2fa",
+  "rawBytes": 950933
+}

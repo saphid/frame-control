@@ -1,0 +1,120 @@
+name: Syncthing ownership candidate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ui/vendor/syncthing-0.2.7/**'
+      - 'ui/framey_decky_ipc.py'
+      - 'scripts/build-framey-syncthing.py'
+      - 'scripts/framey-test-syncthing-candidate.py'
+      - 'scripts/framey-test-syncthing-runtime.py'
+      - 'scripts/framey-test-syncthing-service.py'
+      - 'tests/decky-runtime/syncthing_candidate.py'
+      - 'tests/decky-runtime/syncthing_runtime.py'
+      - 'tests/decky-runtime/syncthing_service*.py'
+      - 'tests/decky-runtime/Containerfile.systemd'
+      - 'tests/test_framey_syncthing_candidate.py'
+      - 'tests/test_framey_panel.py'
+      - 'tests/page/framey_syncthing_http.mjs'
+      - 'ui/framey-host.js'
+      - 'ui/framey_panel.py'
+      - 'ui/frame_decky_store.py'
+      - 'ui/frame_decky.py'
+      - 'scripts/ci-ubuntu-packages.py'
+      - '.github/workflows/syncthing-candidate.yml'
+      - '.github/actions/framey-runtime-inputs/**'
+      - 'scripts/framey-cache-runtime-inputs.py'
+  pull_request:
+    paths:
+      - 'ui/vendor/syncthing-0.2.7/**'
+      - 'ui/framey_decky_ipc.py'
+      - 'scripts/build-framey-syncthing.py'
+      - 'scripts/framey-test-syncthing-candidate.py'
+      - 'scripts/framey-test-syncthing-runtime.py'
+      - 'scripts/framey-test-syncthing-service.py'
+      - 'tests/decky-runtime/syncthing_candidate.py'
+      - 'tests/decky-runtime/syncthing_runtime.py'
+      - 'tests/decky-runtime/syncthing_service*.py'
+      - 'tests/decky-runtime/Containerfile.systemd'
+      - 'tests/test_framey_syncthing_candidate.py'
+      - 'tests/test_framey_panel.py'
+      - 'tests/page/framey_syncthing_http.mjs'
+      - 'ui/framey-host.js'
+      - 'ui/framey_panel.py'
+      - 'ui/frame_decky_store.py'
+      - 'ui/frame_decky.py'
+      - 'scripts/ci-ubuntu-packages.py'
+      - '.github/workflows/syncthing-candidate.yml'
+      - '.github/actions/framey-runtime-inputs/**'
+      - 'scripts/framey-cache-runtime-inputs.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  owned-watchdog:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: ./.github/actions/framey-runtime-inputs
+        with:
+          syncthing: 'true'
+      - name: Build pinned source with owned startup and private HTTP (not installed)
+        run: |
+          docker pull rust:1.98.1-bookworm
+          python3 scripts/build-framey-syncthing.py --image rust:1.98.1-bookworm --fetch \
+            --architectures "$(uname -m)" --output "$RUNNER_TEMP/syncthing-build"
+      - name: Actual released Decky discovery, private HTTP transport and unload ownership
+        run: |
+          python3 scripts/framey-test-syncthing-candidate.py \
+            --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" \
+            --helper "$RUNNER_TEMP/syncthing-build/$(uname -m).watchdog" \
+            --output "$RUNNER_TEMP/syncthing-native.json"
+      - name: Actual pinned Syncthing peers through candidate Decky RPC
+        run: |
+          python3 scripts/framey-test-syncthing-runtime.py \
+            --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" \
+            --syncthing-archive "$RUNNER_TEMP/framey-runtime-inputs/syncthing.tar.gz" \
+            --helper "$RUNNER_TEMP/syncthing-build/$(uname -m).watchdog" \
+            --output "$RUNNER_TEMP/syncthing-runtime.json"
+      - name: Install matching QEMU system emulator
+        timeout-minutes: 12
+        run: |
+          case "$(uname -m)" in
+            x86_64) emulator=qemu-system-x86 ;;
+            aarch64) emulator=qemu-system-arm ;;
+            *) exit 1 ;;
+          esac
+          sudo python3 scripts/ci-ubuntu-packages.py "$emulator"
+      - name: Actual systemd user service lifecycle in an isolated networkless VM
+        run: |
+          python3 scripts/framey-test-syncthing-service.py \
+            --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" \
+            --syncthing-archive "$RUNNER_TEMP/framey-runtime-inputs/syncthing.tar.gz" \
+            --helper "$RUNNER_TEMP/syncthing-build/$(uname -m).watchdog" \
+            --output "$RUNNER_TEMP/syncthing-service.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: syncthing-candidate-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/syncthing-build/*.log
+            ${{ runner.temp }}/syncthing-build/*.json
+            ${{ runner.temp }}/syncthing-native.json
+            ${{ runner.temp }}/syncthing-runtime.json
+            ${{ runner.temp }}/syncthing-service.json
+            ${{ runner.temp }}/syncthing-service.console.log
+          if-no-files-found: error

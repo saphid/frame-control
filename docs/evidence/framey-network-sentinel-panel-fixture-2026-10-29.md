@@ -1,0 +1,9 @@
+# Network Sentinel 1.0.4 local panel replay, 2026-10-29
+
+Official store ID 114, ZIP SHA-256 `d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5`.
+
+Run `python3 scripts/framey-audit-browser.py --cache <cache> --network-sentinel-fixture` with the exact ZIP stored as `<cache>/<sha256>.zip`. The opt-in fixture accepts only modern read calls for status, live ping, settings, connection info and history. It uses synthetic values (`192.0.2.1`, 18 ms, no history), keeps auto monitoring off, rejects every write/test/scan method, and retains the existing CSP and blocked fetch/WebSocket. This executes the exact frontend in Framey's opaque local Chromium iframe; it does not start the official Python backend or contact a network.
+
+In T3 Chromium, `runAudit([114],1800)` returned `ready: true`, no error or console logs, and precisely these mount calls: `get_network_status`, `get_live_ping`, `get_settings`, `get_connection_info`, `get_network_history`. The status view rendered 18 ms, GOOD 80/100, zero packet loss and data points, and the synthetic IP/host. Clicking Show History rendered Network History and the empty-history text; Back to Status returned to the status view. Clicking Show Settings rendered Check Interval 0.5 s, Auto Start Monitoring unchecked, and MBPS selected. History navigation added only one `get_network_history` call. The fixture unit test also checks every accepted reply and rejects monitoring, settings writes, history clearing, ping/DNS tests, Wi-Fi scanning and legacy calls.
+
+This proves local panel rendering and navigation with synthetic read-only replies. It does not prove real Frame backend operation, actual latency/DNS/Wi-Fi data, settings persistence, monitoring actions, physical controller use or worn VR visibility. Network Sentinel remains **partial**.

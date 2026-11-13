@@ -46,6 +46,8 @@ python3 scripts/tracking-on-frame.py install
 This copies our Python code and compiles our small C OpenXR reader into
 `~/.local/share/frame-control/tracking/` on the Frame. It uses the Frame's
 existing compiler, OpenXR headers/loader, Python, dbus-python, GI and GTK4.
+The experimental `pulse` command also needs `stdbuf` for line-buffered tool
+output; its revised capture path has not yet been checked on SteamVR hardware.
 Nothing is downloaded, and no sudo, driver registration, system setting,
 service or autostart is added. `FRAME_ALIAS` can select another SSH alias.
 The desktop app/server keeps its existing stdlib-only dependency set.
@@ -199,11 +201,22 @@ How it works:
   and log were unchanged and our OpenXR gaze session still started
   afterwards. **Untested:** whether the capture and the live tracker coexist
   while the headset is worn and tracking.
-- **Privacy.** Each image is reduced to a 16×16 grid of patch averages as
+- **Privacy (revised capture ownership; not yet checked on hardware).** The
+  tool runs through `stdbuf -oL -eL` so its own directory report can arrive
+  before processing starts. Only that newly created, non-symlink directory is
+  read or deleted; another capture directory is never adopted just because it
+  appeared during the run. If no report arrives within five seconds, analysis
+  is abandoned while the tool is allowed to finish naturally. Cleanup still
+  accepts a late report, but unidentified or replaced directories are left
+  untouched and an error is reported. This can leave images on the Frame;
+  inspect them manually rather than deleting other captures by guesswork.
+  `stdbuf` must be installed and the SteamVR tool must honor line buffering.
+  With an identified directory, each image is reduced to a 16×16 grid of patch averages as
   soon as it is complete, then deleted. Three worker processes do this beside
   the capture. If more than 900 images (about five seconds) ever wait, we stop
   reading them and delete them undecoded until the capture ends, and report
-  an error. The capture directory is removed on exit, even after errors. No image is kept or leaves the Frame. The estimate
+  an error. The identified capture directory is removed on exit, even after
+  errors; cleanup failures are reported. No image is sent off the Frame. The estimate
   is printed only with `--show`, and sent or saved only with `--osc` or
   `--log`, as for the strap.
 - **Estimate.** Patch traces are averaged down to 15 Hz and turned into
@@ -218,7 +231,8 @@ How it works:
   far off an unclear result was.
   The thresholds are provisional until checked on real wearers.
 
-**Verified on the Frame, unworn, 2026-09-29:** captures of 3,600-5,400 eye
+**Historical verification on the Frame, unworn, 2026-09-29 (before the
+reported-directory ownership repair):** captures of 3,600-5,400 eye
 frames never had more than 8 images on disk, finished a few seconds after the
 capture ended and left no capture directory. **The estimator alone gave a
 false "clear" pulse.** With nobody wearing the headset, five runs reported a
@@ -241,7 +255,7 @@ stuck "streaming": its log had no "Stopping streaming" line, and every later
 request failed with "Failed to start streaming". Head tracking kept working.
 Clearing it needs the DSP service restarted or the Frame rebooted, so `pulse`
 never signals the tool. After Ctrl-C or a failure it keeps deleting images
-until the tool ends by itself (at most the `--seconds` plus a few seconds),
+from its identified directory until the tool ends by itself (at most the `--seconds` plus a few seconds),
 and only kills a tool that overruns by 30 s, with a warning that the eye
 cameras may need a reboot. So an interrupted run can take a while to return.
 

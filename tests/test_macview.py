@@ -81,10 +81,19 @@ class Helpers(unittest.TestCase):
         self.assertIsNone(mv.tunnel)
         self.assertEqual(len(ended), 1)  # the tunnel to the old headset was closed
 
+    @unittest.skipUnless(shutil.which("node"), "needs Node.js")
+    def test_viewer_accumulates_subpixel_thumbstick_scroll(self):
+        result = subprocess.run(["node", str(ROOT / "tests/page/mac_view_scroll.mjs")],
+                                capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     @unittest.skipUnless(shutil.which("bash"), "needs bash")
     @unittest.skipIf(os.name == "nt", "Windows' bash.exe is WSL's launcher, and runners have no distribution")
     def test_launch_script_parses(self):
-        r = subprocess.run(["bash", "-n"], input=frame_macview.LAUNCH, text=True, capture_output=True)
+        bash = str(Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "Git/bin/bash.exe") if sys.platform == "win32" else "bash"
+        if sys.platform == "win32" and not Path(bash).exists():
+            self.skipTest("Git Bash is not installed (WSL bash is not a local shell)")
+        r = subprocess.run([bash, "-n"], input=frame_macview.LAUNCH.encode("utf-8"), capture_output=True)
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_show_checks_the_source_before_anything_else(self):
@@ -384,6 +393,7 @@ class Agent(unittest.TestCase):
         self.assertEqual(key[17:21], b"\x00\x00\x00\x01")
         self.assertEqual(key[21] & 0x1F, 7)  # NAL type 7, SPS
         ws.send_text(json.dumps({"t": "m", "e": "down", "b": 0, "x": 0.5, "y": 0.5}))
+        ws.send_text(json.dumps({"t": "wheel", "dx": 0, "dy": 1, "x": 0.5, "y": 0.5, "i": 91, "tv": 1}))
         ws.send_text(json.dumps({"t": "key-frame"}))
         got_key = False
         for _ in range(200):
@@ -392,6 +402,10 @@ class Agent(unittest.TestCase):
                 got_key = True
                 break
         self.assertTrue(got_key, "no keyframe after asking for one")
+        _, body = self.get(f"/stats?k={self.token}")
+        inputs = json.loads(body)["streams"][0]["inputs"]
+        self.assertTrue(any(i["id"] == 91 and i["kind"] == "wheel" for i in inputs),
+                        "the native agent did not handle the viewer's wheel message")
         _, body = self.get(f"/status?k={self.token}")
         self.assertEqual([s["src"] for s in json.loads(body)["streams"]], ["test"])
         status, body = self.get(f"/close?k={self.token}", method="POST")

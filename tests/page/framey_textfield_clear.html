@@ -1,0 +1,83 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div>
+<div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const failures=window.fixtureFailures;
+  const DFL=window.DFL, container=document.getElementById('fixture');
+  let root,changes=[];
+  const mount=element=>{
+    if(root)ReactDOM.flushSync(()=>root.unmount());
+    root=ReactDOM.createRoot(container);
+    ReactDOM.flushSync(()=>root.render(element));
+  };
+  const input=()=>container.querySelector('input');
+  const clear=()=>[...container.querySelectorAll('button')].find(node=>node.textContent==='Clear');
+  const tap=button=>ReactDOM.flushSync(()=>button.click());
+  const type=value=>ReactDOM.flushSync(()=>{
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input(),value);
+    input().dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  function PublishedSearch({disabled=false}={}) {
+    const [search,updateSearch]=React.useState('Private fixture game');
+    const setSearch=value=>{changes.push(value);updateSearch(value);};
+    const field=__OFFICIAL_CONTROL__;
+    return React.createElement('div',null,React.cloneElement(field,{disabled}),
+      React.createElement('output',null,search));
+  }
+  try {
+    assert(failures.length===0,failures.join('; '));
+    assert(DFL,'Framey API did not initialize');
+    mount(React.createElement(PublishedSearch));
+    assert(clear(),'published Wine Cellar search has no Clear action');
+    assert(input().getAttribute('aria-label')==='Search installed Steam games and non-Steam shortcuts','accessible name lost');
+    tap(clear());
+    assert(input().value===''&&container.querySelector('output').textContent==='','clear did not reach the original React callback');
+    assert(JSON.stringify(changes)==='[""]','clear must dispatch one change');
+    assert(!clear(),'empty controlled field should hide Clear');
+    type('Another fixture');
+    assert(clear(),'typing must restore Clear');
+    tap(clear());
+    assert(JSON.stringify(changes)==='["","Another fixture",""]','typing/clear must preserve ordered controlled changes');
+    ReactDOM.flushSync(()=>root.render(React.createElement(PublishedSearch)));
+    assert(input().value==='','controlled rerender must preserve the cleared search');
+
+    changes=[];
+    mount(React.createElement(DFL.TextField,{defaultValue:'Uncontrolled draft',bShowClearAction:true,
+      onChange:event=>{
+        assert(event.target===input()&&event.currentTarget===input(),'callback must receive the real input');
+        assert(event.nativeEvent.type==='input','clear must use the native React input path');
+        changes.push(event.currentTarget.value);
+      }}));
+    tap(clear());
+    assert(input().value===''&&!clear()&&JSON.stringify(changes)==='[""]','uncontrolled clear failed');
+    type('New draft');assert(clear(),'uncontrolled typing must restore Clear');tap(clear());
+    assert(JSON.stringify(changes)==='["","New draft",""]','uncontrolled changes lost');
+
+    changes=[];mount(React.createElement(PublishedSearch,{disabled:true}));
+    assert(clear().disabled,'disabled field must disable Clear');tap(clear());
+    assert(input().value==='Private fixture game'&&changes.length===0,'disabled Clear mutated the search');
+    mount(React.createElement(DFL.TextField,{value:'',bShowClearAction:true,bAlwaysShowClearAction:true,
+      onChange:()=>changes.push('unexpected')}));
+    assert(clear(),'always-visible Clear missing');tap(clear());tap(clear());
+    assert(changes.length===0,'clearing an empty field must not dispatch duplicate changes');
+    mount(React.createElement(DFL.TextField,{value:'Keep',onChange(){}}));
+    assert(!clear()&&input().value==='Keep','clear action must remain opt-in');
+    assert(failures.length===0,failures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());root=null;
+    result.textContent=JSON.stringify({passed:true,controlled:true,uncontrolled:true,
+      nativeReactChange:true,disabled:true,alwaysVisible:true,optIn:true,
+      syntheticInput:true,realFrameContacted:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

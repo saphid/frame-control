@@ -107,7 +107,7 @@ older versions that will install.
 It checks F-Droid, its archive and IzzyOnDroid, and verifies each download
 before it goes on the headset.
 
-https://github.com/saphid/steam-frame/pull/11
+https://github.com/saphid/frame-control/pull/11
 ```
 
 **#8, Mac mirror fixes**
@@ -118,7 +118,7 @@ the panel, asks for the right password, and shows the cursor.
 
 Tested end to end on a real Frame from macOS 27.
 
-https://github.com/saphid/steam-frame/pull/8
+https://github.com/saphid/frame-control/pull/8
 ```
 
 **v0.3.1**
@@ -129,7 +129,7 @@ Frame Control 0.3.1: install APKs without the Android SDK
 Frame Control now reads APK files itself, so there's nothing extra to install.
 Also: Linux and Windows game sideloading, and one-click install links.
 
-Windows, macOS and Linux: https://github.com/saphid/steam-frame/releases/tag/v0.3.1
+Windows, macOS and Linux: https://github.com/saphid/frame-control/releases/tag/v0.3.1
 #SteamFrame
 ```
 

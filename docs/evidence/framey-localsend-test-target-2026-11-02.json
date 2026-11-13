@@ -1,0 +1,117 @@
+{
+  "at": "2026-11-02T06:10:31.203219+00:00",
+  "implementation": "f03d19d1ae16596ee78cd4bc2ccd846fda82a55f",
+  "failedMacOS": {
+    "at": "2026-11-02T06:10:31.182912+00:00",
+    "failedHead": "7270d396eeaf3876c2a4321d4a0736e3a2efb940",
+    "job": 125121054266,
+    "run": 41397221723,
+    "checkoutMerge": "2b74e8ac51bc2f6aab7110ecdc127d37d2454f14",
+    "checkoutTree": "7a84b753ae53b3cb3abe119656c7683d6cece673",
+    "headTree": "7a84b753ae53b3cb3abe119656c7683d6cece673",
+    "mergeTreeEqualsExactHead": true,
+    "failedLogSha256": "fa3524a7512d1ddd7a00610cc6d7aeb0825e783b497ab4c81b110625e669bbb5",
+    "macosImage": "macos-26-arm64",
+    "ci": {
+      "tests": 2035,
+      "failures": 1,
+      "skips": 70
+    },
+    "failure": "LocalSend missing-IPC test used host arm64 alias instead of supported Linux target, so architecture guard ran first",
+    "failedHeadRerun": false
+  },
+  "sourceAudit": {
+    "at": "2026-11-02T06:10:04.120840+00:00",
+    "oldHead": "7270d396eeaf3876c2a4321d4a0736e3a2efb940",
+    "implementation": "f03d19d1ae16596ee78cd4bc2ccd846fda82a55f",
+    "changedSource": "tests/test_frame_decky_store.py",
+    "onlyModifiedFunction": "test_localsend_missing_ipc_payload_cannot_publish_install",
+    "allOtherTestAstUnchanged": true,
+    "productionAndNativeAndE2eSourcesUnchanged": true,
+    "all42NativeFingerprintsUnchanged": true,
+    "greenTestFileSha256": "94155f9205131e1e4d1e1e66de2af39bcb27642a73554ef9870e0bc62be52703",
+    "storeUnit": {
+      "tests": 77,
+      "skips": 0,
+      "seconds": 17.777,
+      "logSha256": "d8ce5ff8b3306432a6820a6e11b9f0f3b8a39c3e22c4ff9243e44bbeaa851489"
+    },
+    "hostAliases": [
+      "arm64",
+      "x86_64"
+    ],
+    "targetArchitectures": [
+      "x86_64",
+      "aarch64"
+    ],
+    "targetGuardRefusalAndNoPublishedFolderVerified": true,
+    "noNewSkips": true,
+    "actualMacOSRetest": false,
+    "actualNativeArm64Retest": false,
+    "realFrameContacted": false,
+    "mergeQualified": false,
+    "releaseQualified": false
+  },
+  "red": {
+    "head": "7270d396eeaf3876c2a4321d4a0736e3a2efb940",
+    "testFileSha256": "0fd79a989990e725041d0997ee904c3e15cd6c2d172285da7b24328146a5515f",
+    "hostIsLinux": true,
+    "actualMacOSExecution": false,
+    "simulatedSubprocessHostMachineAliases": true,
+    "records": [
+      {
+        "hostMachineAlias": "arm64",
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skips": 0,
+        "success": false,
+        "logSha256": "16d0b95463afe4f2e99a5b1f64002fbdec4a484a98d73f368f2ee1b1dac0cb8b"
+      },
+      {
+        "hostMachineAlias": "x86_64",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "success": true,
+        "logSha256": "d9951886f15c3fee4f6a24ea99581b44c7e18c2e94039f4138039979a4f15e54"
+      }
+    ],
+    "realFrameContacted": false
+  },
+  "green": {
+    "head": "7270d396eeaf3876c2a4321d4a0736e3a2efb940",
+    "testFileSha256": "94155f9205131e1e4d1e1e66de2af39bcb27642a73554ef9870e0bc62be52703",
+    "hostIsLinux": true,
+    "actualMacOSExecution": false,
+    "simulatedSubprocessHostMachineAliases": true,
+    "records": [
+      {
+        "hostMachineAlias": "arm64",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "success": true,
+        "logSha256": "790572f33b8bbd10a670e4ccfc457e5d09dc790252f515299a410239f1f22c3e"
+      },
+      {
+        "hostMachineAlias": "x86_64",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "success": true,
+        "logSha256": "790572f33b8bbd10a670e4ccfc457e5d09dc790252f515299a410239f1f22c3e"
+      }
+    ],
+    "realFrameContacted": false
+  },
+  "rawSha256": "0e16cb0a9cf108994c57a0b6f243b6f96acaea1a80ee4031249ab4d85dabefd4",
+  "freshExactPublicationCIRequired": true,
+  "actualMacOSRetest": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false
+}

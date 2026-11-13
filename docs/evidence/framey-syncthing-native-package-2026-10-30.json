@@ -1,0 +1,248 @@
+{
+  "date": "2026-10-30",
+  "scope": "Native AMD64/ARM64 package CI preparation; native runtime results remain separate",
+  "realFrameContacted": false,
+  "frameyManagedInstallerEnabled": false,
+  "nativeArm64PackageExecuted": false,
+  "nativePackageCiVerified": false,
+  "localFocusedTests": {
+    "command": "/usr/bin/python3 -m unittest discover -s tests -p 'test_syncthing_flatpak*.py' -q",
+    "tests": 12,
+    "passed": true
+  },
+  "localPreparations": {
+    "x86_64": {
+      "fetch": {
+        "architecture": "x86_64",
+        "commits": {
+          "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+          "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+        },
+        "payloadIntegrityVerified": false,
+        "packageLaunched": false,
+        "maximumObjectBytes": 67108864,
+        "maximumClosureBytes": 671088640,
+        "appDirectoryTrees": 92,
+        "runtimeDirectoryTrees": 2769,
+        "downloadComplete": true,
+        "totalObjectBytes": 415635300,
+        "fileContentObjects": 16780
+      },
+      "fetchReportSha256": "362ec453ab47d379c38224cebb1b973d7a030b44ccdc8b62abee836c4fdbc55e",
+      "offline": {
+        "architecture": "x86_64",
+        "commits": {
+          "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+          "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+        },
+        "signatures": {
+          "app": 1,
+          "runtime": 1
+        },
+        "bundles": {
+          "app": {
+            "sha256": "d79338cc03f765959f317e60c8d23b375e0033259e7334e0bb84e310011618eb",
+            "bytes": 9872520,
+            "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+          },
+          "runtime": {
+            "sha256": "5cf985cb7bfb39d4d5d4876b2a78232e6ed91240cd4a4f3d309191c1e29e8d72",
+            "bytes": 292381320,
+            "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          }
+        },
+        "payloadIntegrityVerified": true,
+        "packageInstalled": false,
+        "packageLaunched": false,
+        "keySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+        "fsck": "Validating refs...\nValidating refs in collections...\nEnumerating commits...\nVerifying content integrity of 2 commit objects...\nfsck objects (1/19643) 0%\nfsck objects (2520/19643) 12%\nfsck objects (6013/19643) 30%\nfsck objects (9138/19643) 46%\nfsck objects (11644/19643) 59%\nfsck objects (12666/19643) 64%\nfsck objects (14246/19643) 72%\nfsck objects (17485/19643) 89%\nfsck objects (18897/19643) 96%\nfsck objects (19643/19643) 100%\nobject fsck of 2 commits completed successfully - no errors found.\n",
+        "sourceSha256": {
+          "framey-prepare-syncthing-flatpak.py": "c4317b618e28f148d51ec4c3394d82b7fb1f031c35b0a96b674c9b9899419b1a",
+          "framey-fetch-syncthing-flatpak.py": "f26c64bc34daea5d846771b4513798df963a80bf2abb3386da163f1a7f5df0a8",
+          "framey-verify-syncthing-flatpak.py": "ad19c3d296066b608f540aa5ce84bfab8398c04fad611472ec3e06da0850d4d8"
+        }
+      },
+      "offlineReportSha256": "c8e5e65cc247675948824c2af481c5eccc5987efcf3a6eabaf70932cad99cbe0"
+    },
+    "aarch64": {
+      "fetch": {
+        "architecture": "aarch64",
+        "commits": {
+          "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+          "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+        },
+        "payloadIntegrityVerified": false,
+        "packageLaunched": false,
+        "maximumObjectBytes": 67108864,
+        "maximumClosureBytes": 671088640,
+        "appDirectoryTrees": 92,
+        "runtimeDirectoryTrees": 2768,
+        "downloadComplete": true,
+        "totalObjectBytes": 404556452,
+        "fileContentObjects": 16777
+      },
+      "fetchReportSha256": "c47b421e52fca8f2d52beab99c447b3ad5b88dfb4010a67733dc7169497b740b",
+      "offline": {
+        "architecture": "aarch64",
+        "commits": {
+          "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+          "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+        },
+        "signatures": {
+          "app": 1,
+          "runtime": 1
+        },
+        "bundles": {
+          "app": {
+            "sha256": "11e21eea253962938c696a6527fb908fd95e9f6a9f56e6f0e60849b34059b31c",
+            "bytes": 8872496,
+            "commit": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0"
+          },
+          "runtime": {
+            "sha256": "bc1178072761a4cb450aec0909923671869515a5de870a56c188d7c9bfdee732",
+            "bytes": 273202912,
+            "commit": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+          }
+        },
+        "payloadIntegrityVerified": true,
+        "packageInstalled": false,
+        "packageLaunched": false,
+        "keySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+        "fsck": "Validating refs...\nValidating refs in collections...\nEnumerating commits...\nVerifying content integrity of 2 commit objects...\nfsck objects (1/19639) 0%\nfsck objects (3593/19639) 18%\nfsck objects (5443/19639) 27%\nfsck objects (7368/19639) 37%\nfsck objects (7955/19639) 40%\nfsck objects (10851/19639) 55%\nfsck objects (12410/19639) 63%\nfsck objects (14225/19639) 72%\nfsck objects (17070/19639) 86%\nfsck objects (19639/19639) 100%\nobject fsck of 2 commits completed successfully - no errors found.\n",
+        "sourceSha256": {
+          "framey-prepare-syncthing-flatpak.py": "c4317b618e28f148d51ec4c3394d82b7fb1f031c35b0a96b674c9b9899419b1a",
+          "framey-fetch-syncthing-flatpak.py": "f26c64bc34daea5d846771b4513798df963a80bf2abb3386da163f1a7f5df0a8",
+          "framey-verify-syncthing-flatpak.py": "ad19c3d296066b608f540aa5ce84bfab8398c04fad611472ec3e06da0850d4d8"
+        }
+      },
+      "offlineReportSha256": "03adde2215371dd3540e7e0de5c56d53a7c183732cc9485ee3f54d2bf46ff073"
+    }
+  },
+  "baseCommit": "f27ef13149ec42b128e6bb9dd292e3efbb90b9bf",
+  "localOfflineImage": "sha256:64740b1024e09b1866ca7a659c67900016083a14b731d0e38d242c85cbef9f0e",
+  "precedingPr": {
+    "number": 471,
+    "head": "2ad077bb15927a9ef93a7d92e02f22f6450e27d2",
+    "mergeCommit": "f27ef13149ec42b128e6bb9dd292e3efbb90b9bf",
+    "premergeMainChecks": 9,
+    "exactHeadChecks": 14,
+    "allPassed": true,
+    "candidateArtifacts": {
+      "x86_64": {
+        "head": "2ad077bb15927a9ef93a7d92e02f22f6450e27d2",
+        "architecture": "x86_64",
+        "zipSha256": "3f6218c7d684bd369d4bdfdea2c04380ee0edb907f0f184337f8125d8cc9475f",
+        "allSourceFingerprintsVerified": true,
+        "helperSha256": "8902ad2f65c73cd1d08888722f9dba070c7486ab01fb1b7fa6a034a3e0446035",
+        "elevenRustTestsVerified": true,
+        "ownershipAndRealSyncVerified": true,
+        "actualServiceManagerVerified": true,
+        "actualFlatpakPackageVerified": false
+      },
+      "aarch64": {
+        "head": "2ad077bb15927a9ef93a7d92e02f22f6450e27d2",
+        "architecture": "aarch64",
+        "zipSha256": "b5627be7c6d928b008660e944022e4be43e6670f2d38b1a26c1f28b08e635032",
+        "allSourceFingerprintsVerified": true,
+        "helperSha256": "5228b92bc37f732711fef1c469bc8378f417e948b3e0eed639c0df92d7329ebe",
+        "elevenRustTestsVerified": true,
+        "ownershipAndRealSyncVerified": true,
+        "actualServiceManagerVerified": true,
+        "actualFlatpakPackageVerified": false
+      }
+    }
+  },
+  "localAmd64PreparedPackagePass": {
+    "result": {
+      "success": true,
+      "inputs": {
+        "rootfsTarSha256": "c9796e29a96fedc2639e5893d3019caa125a7980662c0acf401e98235e8d731d",
+        "rootfsTarBytes": 366236672,
+        "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+        "initrdSha256": "2fb74b361c284dd585bb30511eb5c1ad9a7954ffe041d2893c02c3fb2825e426",
+        "sourceSha256": {
+          "scripts/framey-test-syncthing-flatpak-package.py": "235dd2b89fb26d85f2dedaa9d0e0355fdb4589996e4abc9b09cb4d4969a5abcf",
+          "scripts/framey-test-syncthing-service.py": "9ca5466d872571b983e5eddbc93f1ac9a9d9b91045f259c46c3efe27bce3cc82",
+          "tests/decky-runtime/syncthing_flatpak_package_root.py": "7c66576c198f445cc044b34801823b5008fae0da762d3f1fd0e2d7a8ea02391d",
+          "tests/decky-runtime/syncthing_flatpak_package.py": "1b3a22f86ddf30fd04737a830426748e97b7e9c6e271e6e708a8278ca45575a2"
+        },
+        "bundles": {
+          "app": {
+            "sha256": "d79338cc03f765959f317e60c8d23b375e0033259e7334e0bb84e310011618eb",
+            "bytes": 9872520,
+            "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+          },
+          "runtime": {
+            "sha256": "5cf985cb7bfb39d4d5d4876b2a78232e6ed91240cd4a4f3d309191c1e29e8d72",
+            "bytes": 292381320,
+            "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          }
+        },
+        "architecture": "x86_64",
+        "preparationSha256": "c8e5e65cc247675948824c2af481c5eccc5987efcf3a6eabaf70932cad99cbe0",
+        "keySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+        "memoryMiB": 6144,
+        "timeoutSeconds": 960,
+        "networkDevice": false,
+        "hostBusExposed": false,
+        "realFrameContacted": false
+      },
+      "ownedQemuReaped": true,
+      "guest": {
+        "success": true,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "pid1": "systemd",
+        "userBusPresent": true,
+        "flatpak": {
+          "realFrameContacted": false,
+          "architecture": "x86_64",
+          "flatpakVersion": "Flatpak 1.16.6",
+          "signedBundlesInstalled": true,
+          "packageLaunched": true,
+          "actualTwoWaySync": true,
+          "installerEnabled": false,
+          "runtimeEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+          "runtimeInstallLog": "Installing runtime/org.gnome.Platform/x86_64/49",
+          "runtimeInstalledCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+          "runtimeOriginGpgVerificationEnabled": true,
+          "appEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+          "appInstallLog": "Installing app/me.kozec.syncthingtk/x86_64/stable",
+          "appInstalledCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+          "appOriginGpgVerificationEnabled": true,
+          "installedSignatures": {
+            "app": true,
+            "runtime": true
+          },
+          "userOverrides": "",
+          "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+          "flatpakInfo": "[Application]\nname=me.kozec.syncthingtk\nruntime=runtime/org.gnome.Platform/x86_64/49\n\n[Instance]\ninstance-id=1724555491\ninstance-path=/home/tester/.var/app/me.kozec.syncthingtk\napp-path=/home/tester/.local/share/flatpak/app/me.kozec.syncthingtk/x86_64/stable/2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034/files\napp-commit=2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034\nruntime-path=/home/tester/.local/share/flatpak/runtime/org.gnome.Platform/x86_64/49/2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d/files\nruntime-commit=2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d\nbranch=stable\narch=x86_64\nflatpak-version=1.16.6\nsession-bus-proxy=true\nsystem-bus-proxy=true\nextra-args=--usb-list=;--usb-list=;\n\n[Context]\nshared=network;ipc;\nsockets=x11;wayland;fallback-x11;\nfilesystems=host;\n\n[Session Bus Policy]\norg.kde.StatusNotifierWatcher=talk\n\n[Environment]\nALSA_CONFIG_PATH=/usr/share/alsa/alsa-flatpak.conf\nGI_TYPELIB_PATH=/app/lib/girepository-1.0\nGST_PLUGIN_SYSTEM_PATH=/app/lib/gstreamer-1.0:/usr/lib/extensions/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/codecs-extra/lib/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/gstreamer-1.0\nXDG_DATA_DIRS=/app/share:/usr/share:/usr/share/runtime/share:/run/host/user-share:/run/host/share\nALSA_CONFIG_DIR=/usr/share/alsa\n__EGL_EXTERNAL_PLATFORM_CONFIG_DIRS=/etc/egl/egl_external_platform.d:/usr/lib/x86_64-linux-gnu/GL/egl/egl_external_platform.d:/usr/share/egl/egl_external_platform.d\nPYTHONUSERBASE=/var/data/python",
+          "mountNamespaceOutside": "mnt:[4026531841]",
+          "mountNamespaceInside": "mnt:[4026532120]",
+          "serviceMainPid": 504,
+          "apiKeyErrorStatus": 403,
+          "serviceStopElapsedSeconds": 0.215,
+          "actualUserServiceLifecycle": true,
+          "serviceRestartPid": 562,
+          "certificateRetained": true,
+          "syncRetainedAfterRestart": true,
+          "forwardSha256": "4c17df9c90053c119aee0b5d7a33c79c374944fb252cdebbd03f2aba85897ef2",
+          "reverseSha256": "17fb3e94f39e81227f4539e16e4456c64a27208ff80ffdac77808e7b4183337e",
+          "ownedServiceRemoved": true,
+          "ownedProcessesReaped": true,
+          "forcedTermination": false,
+          "noOwnedFlatpakInstancesRemain": true,
+          "uninstallPreservedOwnedData": true
+        }
+      }
+    },
+    "consoleSha256": "1ba86ba5b45b90eeb7b3d32fe7e5b648fcb9c10f1e3c82ebc6bf3fe81224f451"
+  },
+  "cleanup": {
+    "ownedOfflineContainersRemoved": true,
+    "ownedOfflineImageRemoved": true,
+    "ownedQemuReaped": true,
+    "publicCachesPreserved": true,
+    "preexistingDataChanged": false
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "gstreamer": "1.28.8",
+  "plugins": [
+    "coreelements",
+    "videotestsrc",
+    "videoconvertscale",
+    "app",
+    "jpeg",
+    "videoparsersbad",
+    "d3d11",
+    "mediafoundation"
+  ],
+  "packages": [
+    "mingw-w64-ucrt-x86_64-gst-plugins-bad 1.28.8-2",
+    "mingw-w64-ucrt-x86_64-gst-plugins-bad-libs 1.28.8-2",
+    "mingw-w64-ucrt-x86_64-gstreamer 1.28.8-1"
+  ],
+  "elements": {
+    "d3d11screencapturesrc": {
+      "name": "The name of the object",
+      "parent": "The parent of the object",
+      "blocksize": "Size in bytes to read per buffer (-1 = default)",
+      "num-buffers": "Number of buffers to output before sending EOS (-1 = unlimited)",
+      "typefind": "Run typefind before negotiating (deprecated, non-functional)",
+      "do-timestamp": "Apply current stream time to buffers",
+      "automatic-eos": "Automatically EOS when the segment is done",
+      "monitor-index": "Zero-based index for monitor to capture (-1 = primary monitor)",
+      "monitor-handle": "A HMONITOR handle of monitor to capture",
+      "show-cursor": "Whether to show mouse cursor",
+      "crop-x": "Horizontal coordinate of top left corner for the screen capture area",
+      "crop-y": "Vertical coordinate of top left corner for the screen capture area",
+      "crop-width": "Width of screen capture area (0 = maximum)",
+      "crop-height": "Height of screen capture area (0 = maximum)"
+    },
+    "d3d12screencapturesrc": null,
+    "mfh264enc": {
+      "name": "The name of the object",
+      "parent": "The parent of the object",
+      "qos": "Handle Quality-of-Service events from downstream",
+      "min-force-key-unit-interval": "Minimum interval between force-keyunit requests in nanoseconds",
+      "bitrate": "Bitrate in kbit/sec",
+      "rc-mode": "Rate Control Mode",
+      "adaptive-mode": "Adaptive Mode",
+      "vbv-buffer-size": "VBV(HRD) Buffer Size in bytes (0 = MFT default)",
+      "max-bitrate": "The maximum bitrate applied when rc-mode is \"pcvbr\" in kbit/sec",
+      "quality-vs-speed": "Quality and speed tradeoff, [0, 33]: Low complexity, [34, 66]: Medium complexity, [67, 100]: High complexity",
+      "cabac": "Enable CABAC entropy coding",
+      "sps-id": "The SPS id to use",
+      "pps-id": "The PPS id to use",
+      "bframes": "The maximum number of consecutive B frames",
+      "gop-size": "The number of pictures from one GOP header to the next. Depending on GPU vendor implementation, zero gop-size might produce only one keyframe at the beginning (-1 for automatic)",
+      "threads": "The number of worker threads used by a encoder, (0 = MFT default)",
+      "content-type": "Indicates the type of video content",
+      "qp": "QP applied when rc-mode is \"qvbr\"",
+      "low-latency": "Enable low latency encoding",
+      "min-qp": "The minimum allowed QP applied to all rc-mode",
+      "max-qp": "The maximum allowed QP applied to all rc-mode",
+      "qp-i": "QP applied to I frames",
+      "qp-p": "QP applied to P frames",
+      "qp-b": "QP applied to B frames",
+      "ref": "The number of reference frames",
+      "d3d11-aware": "Whether device can support Direct3D11 interop"
+    }
+  }
+}

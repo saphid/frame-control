@@ -4,17 +4,18 @@
 // copies into the app's resources. Also KDE Connect for the Frame (the same arm64
 // packages for every build), into ../frame/kdeconnect/packages as listed in
 // ../frame/kdeconnect/packages.json. Everything is pinned by version and SHA-256.
-//   node build/fetch-deps.js mac arm64 | win x64 | linux x64 arm64
+//   node build/fetch-deps.js mac arm64 x64 | win x64 | linux x64 arm64
 const crypto = require("crypto");
 const fs = require("fs");
-const https = require("https");
 const path = require("path");
 const { execFileSync } = require("child_process");
+const { get, fetchWithRetry } = require("./fetch-retry");
 
 const PY = "3.12.14+20260924";
 const PY_URL = (triple) => "https://github.com/astral-sh/python-build-standalone/releases/download/"
   + `${PY.split("+")[1]}/cpython-${PY}-${triple}-install_only_stripped.tar.gz`;
 const PYTHON = {
+  "mac-x64": ["x86_64-apple-darwin", "7ea9761b9069c10b9a20531d568645849d604c59e9c7f11f6659f1e1790c968e"],
   "mac-arm64": ["aarch64-apple-darwin", "c2edb321cd32ec2b170df208db0446dccc4398db602ca27cf2079098fb1f7d9d"],
   "win-x64": ["x86_64-pc-windows-msvc", "c5bf8edfe858c1df9891be498b5bbc8761d383df5b9790658b088fea4870433a"],
   "linux-x64": ["x86_64-unknown-linux-gnu", "269b2c99e4db15b242bf01832f4fea1e8f1a664f273cff519393f296e9820b41"],
@@ -45,27 +46,8 @@ const PRUNE = [
     .flatMap((d) => [`lib/python3.12/${d}`, `Lib/${d}`]),
 ];
 
-function get(url, redirects = 5) {
-  return new Promise((resolve, reject) => {
-    https.get(url, { timeout: 60000 }, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        res.resume();
-        if (!redirects) return reject(new Error(`${url}: too many redirects`));
-        let next;
-        try { next = new URL(res.headers.location, url).href; }
-        catch { return reject(new Error(`${url}: bad redirect ${res.headers.location}`)); }
-        return resolve(get(next, redirects - 1));
-      }
-      if (res.statusCode !== 200) return reject(new Error(`${url}: HTTP ${res.statusCode}`));
-      const chunks = [];
-      res.on("data", (c) => chunks.push(c));
-      res.on("end", () => resolve(Buffer.concat(chunks)));
-    }).on("timeout", function () { this.destroy(new Error(`${url}: timed out`)); }).on("error", reject);
-  });
-}
-
 async function download(url, sha256, file) {
-  const data = await get(url);
+  const data = await fetchWithRetry(get, url);
   const sum = crypto.createHash("sha256").update(data).digest("hex");
   if (sum !== sha256) throw new Error(`checksum mismatch for ${url}: ${sum}`);
   fs.writeFileSync(file, data);

@@ -1,0 +1,253 @@
+{
+  "at": "2026-10-31T12:21:00.588060+00:00",
+  "sourceRevision": "fa726ad4734c564db66c516bcaf28e9ddb6e68ad",
+  "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+  "archiveSha256": "23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132",
+  "installedSource": {
+    "backendSha256": "7fb87f779459bfe2792331c038dd026eff06122617c1b9528863d517af602ba3",
+    "helperSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "receipt": {
+      "storeId": 93,
+      "sha256": "23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132",
+      "version": "1.2.6",
+      "compatShims": [
+        "deck-settings-verified-tls",
+        "deck-settings-ipc-eof"
+      ]
+    },
+    "preservedArchiveFiles": {
+      "LICENSE": "d59009348a9f861467776ddeaba881968d50eacf6a9802d65e00392f7055533c",
+      "package.json": "eefc52c76f56188bf6dfaef14d44d322aaf2f993c8604e1f28ec04aa6f432549",
+      "plugin.json": "d1d28dee5016e8f032bf42c6f37700d2d05ffb0da77fdfda2c73f915da464df8",
+      "README.md": "c581a7a98d4b1b77e9b651bbf79b565961ad07d292ef92caed31262fd5a37931",
+      "dist/index.js.map": "eaddd854b53f9a995f71761407390d8d136aed8da2b87fa6df5f4b1ed747fdd8",
+      "dist/index.js": "d485cb47e0b7d401c089b09f9c1f75b952695917b358b3df1c3086e32f51c493"
+    },
+    "archiveMembersIncludingDuplicates": 7,
+    "ownedRemovalVerified": true
+  },
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "22610546fd26730d0cea6c3308265c1d7c251198642d8fbdf8425c9e20e7117f",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "52b9ab988f7608a723627baaf01972e92a121efa120375b7fbcd654b3bafce56",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "745d2b155b24780b202d8281649fb5602f9f3d188e398317e57319c9437c0d3b",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "e2b849aa612455fc2eceef79c27d246276dfb87224a3dd36059d9b7447f6a163",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "nativeArchitecture": "x86_64",
+  "tlsAstPrinter": "CPython v3.13.0 Lib/ast.py dump",
+  "tlsAstPrinterSourceSha256": "0470e5589babd77cece7d7279d69b3c154730de980e40c376895d664624b938e",
+  "hostAstPrinterMismatchCorrected": true,
+  "focusedTests": 88,
+  "redTests": 2,
+  "correctedTestPathErrorRetained": true,
+  "normalMainStopWasCleanInThisRun": true,
+  "controlledDisconnectBaselineRevision": "dc443fb7eafce71dccdda42545360bcd82070648",
+  "controlledDisconnectBaselineForcedStopSeconds": 5.224,
+  "repairedAndPreviousManagedCases": [
+    {
+      "case": 0,
+      "negative": false,
+      "rpcs": 6,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "349958020"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "349958053"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "349958053"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "349958065"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.225,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793448830.7610137"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+          "cleanShutdownVerified": true
+        },
+        {
+          "loaderPid": 24,
+          "descendantsBefore": {
+            "25": {
+              "state": "S",
+              "parent": 24,
+              "start": "349958390"
+            },
+            "34": {
+              "state": "S",
+              "parent": 25,
+              "start": "349958423"
+            },
+            "35": {
+              "state": "S",
+              "parent": 25,
+              "start": "349958423"
+            },
+            "36": {
+              "state": "S",
+              "parent": 35,
+              "start": "349958434"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 34,
+              "returncode": 0
+            },
+            {
+              "pid": 35,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.185,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "consoleSha256": "6c99bbffcdf113b0f36b6a24d5a31db302fb80880a32959c722f71370f27f535"
+    },
+    {
+      "case": 1,
+      "negative": true,
+      "rpcs": 3,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "349958749"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "349958790"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "349958790"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "349958804"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 5.196,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793448838.124147"
+          ],
+          "forcedPluginKills": 1,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\n[plugin][WARNING]: Plugin Deck Settings (v1.2.6) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "716d3502c825fdeebc3c6181a4f5146aae1dd72d6e171247f8851796710f03f6",
+          "cleanShutdownVerified": false
+        }
+      ],
+      "consoleSha256": "266eefe6ac7485fde01e4ff869828f40d5a30f4adf873fefeee92393060583ba"
+    }
+  ],
+  "originalUnloadHookVerified": true,
+  "originalManagedTlsImplementationUnchanged": true,
+  "selfSignedHttpsRejectedBeforeHttpRequest": true,
+  "historicalArmFailureCauseProven": false,
+  "otherRuntimeBranchesPreserved": 36,
+  "otherCatalogRowsPreserved": 115,
+  "all116StatusInstallPoliciesPreserved": true,
+  "sharedIpcAdapterUnchanged": true,
+  "fullUnitTests": 1944,
+  "fullUnitSeconds": 244.747,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "installerTests": 1,
+  "installerFixtureCount": 37,
+  "installerSkips": 0,
+  "installerTestSeconds": 76.829,
+  "installerElapsedSeconds": 122.007,
+  "installerOwnedCleanupVerified": true,
+  "fullNativeMatrixExpected": {
+    "probes": 43,
+    "archivePins": 34,
+    "sourceFingerprints": 16
+  },
+  "globalCleanShutdownVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local native AMD64 only. Fresh exact-head CI/e2e, native AMD64/ARM64, PC, package and exact-main gates remain required.",
+    "Normal current-main local stop was clean; controlled owned Unix-peer disconnect reproduces the failure. The cause of earlier ARM64 forced stops is not established.",
+    "TLS proof uses the unchanged installed helper against a private self-signed listener; no real upload or credential is used.",
+    "One HTTP installer test covers 37 pinned fixtures without executing official backends; it is not full e2e or the 116-plugin audit.",
+    "Native descendant cleanup is checked by PID/start-time; Docker cleanup is runner/source-bound. Controlled baseline and Compose cleanup have independent absence checks.",
+    "No reports, settings writes, Steam integration, browser, managed Frame, wearer/controller or release proof."
+  ],
+  "rawJsonSha256": "6735ae7ffb9124dda4c9a78b78d6c8dc23983515bba3235d751fb32b8802e481",
+  "rawGzipSha256": "97f5c0b8e58aa4fd3c0d50fe1111ea562404ef5c3e63db8976990ee4ecb868ed"
+}

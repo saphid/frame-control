@@ -185,6 +185,7 @@ class ConfigBlock(unittest.TestCase):
                 fc.write_config("10.0.0.5", 22, "deck")
                 text = fc.CONFIG.read_text(encoding="utf-8")
                 self.assertEqual(fc.configured_user(), "deck")  # not "me" from Host other
+                self.assertEqual(fc.configured_host(), "10.0.0.5")
             finally:
                 fc.SSH_DIR, fc.CONFIG = saved
         self.assertEqual(text.count(fc.BEGIN), 1)

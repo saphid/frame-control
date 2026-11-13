@@ -7,9 +7,9 @@ visible in the average brightness of small patches of skin.
 
 Capture uses SteamVR's own `eyetracking --calib` mode, which writes PNG pairs
 to /tmp. Each image is reduced to a grid of patch averages the moment it is
-complete, then deleted; the capture directory is removed on exit. No image
-leaves the Frame or outlives the run. This is an experiment, not a medical
-measurement.
+complete, then deleted; the identified capture directory is removed on exit.
+Directories not identified by the launched tool are never read or removed.
+This is an experiment, not a medical measurement.
 """
 from array import array
 import bisect
@@ -20,6 +20,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import subprocess
 import time
 
@@ -72,10 +73,10 @@ def reduce_file(loader, path):
 class Capture:
     """Run SteamVR's eye-camera capture and reduce frames as they arrive."""
     NAME = re.compile(r"^(left|right)_(\d+)\.png$")
-    # Only SteamVR's own capture directories are read and removed.
+    # A prefix alone is not ownership: only the launched tool's report counts.
     PREFIX = "/tmp/etcalib_"
-    # Printed by the capture tool; its output is only flushed when it exits.
-    WRITING = re.compile(r"Writing capture to: (\S+)")
+    WRITING = re.compile(r"^Writing capture to: (.+?)\r?$", re.MULTILINE)
+    REPORT_TIMEOUT = 5.0
     # About five seconds of frames (~65 MB in RAM-backed /tmp). If reduction
     # falls further behind than this, the capture stops rather than letting
     # eye images pile up.
@@ -88,9 +89,9 @@ class Capture:
         self.pool = None
         self.submitted = set()
         self.futures = {}
-        self.new = set()  # every capture directory that appeared during our run
         self.before = None  # capture directories that existed before the run
         self.log = None
+        self.identity = None
 
     def candidates(self):
         parent, stem = os.path.split(self.PREFIX)
@@ -98,13 +99,13 @@ class Capture:
                 if entry.name.startswith(stem) and entry.is_dir(follow_symlinks=False)}
 
     def run(self):
-        # The capture tool's output goes to a private temporary file, read for
-        # failure messages. It is block-buffered, so the capture directory is
-        # found by watching for a new one rather than waiting for its name.
+        # Ask libc to flush each output line, so the tool can identify its
+        # directory before reduction starts. Never infer ownership from a new
+        # name in /tmp: it may belong to another capture.
         import tempfile
-        self.before = before = self.candidates()
+        self.before = self.candidates()
         process = None
-        with tempfile.TemporaryFile("w+") as log:
+        with tempfile.TemporaryDirectory() as logs, open(Path(logs) / "capture.log", "w+") as log:
             self.log = log
             try:
                 if self.workers:
@@ -113,38 +114,38 @@ class Capture:
                     import multiprocessing
                     self.pool = concurrent.futures.ProcessPoolExecutor(
                         self.workers, mp_context=multiprocessing.get_context("fork"))
-                process = self.runner([str(ET_BIN), "-b", "CDSP", "-w", str(ET_WEIGHTS), "--calib", str(self.seconds)],
-                                      cwd=str(ET_BIN.parent), stdout=log, stderr=subprocess.STDOUT)
-                deadline = time.monotonic() + self.seconds + 30
+                try:
+                    process = self.runner(["stdbuf", "-oL", "-eL", str(ET_BIN), "-b", "CDSP", "-w", str(ET_WEIGHTS), "--calib", str(self.seconds)],
+                                          cwd=str(ET_BIN.parent), stdout=log, stderr=subprocess.STDOUT)
+                except FileNotFoundError as error:
+                    raise RuntimeError("could not start capture; check stdbuf and the SteamVR tool path") from error
+                started = time.monotonic()
+                self.deadline = started + self.seconds + 30
                 while True:
-                    # Checked on every poll: a second capture directory means
-                    # we can't tell which images are ours, so stop.
-                    self.new |= self.candidates() - before
-                    if len(self.new) > 1:
-                        raise RuntimeError("another eye-camera capture is running")
-                    if not self.directory and self.new:
-                        self.directory = next(iter(self.new))
                     finished = process.poll() is not None
+                    self.adopt_reported()
                     self.reduce(final=finished)
                     if finished:
                         break
-                    if time.monotonic() > deadline:
+                    now = time.monotonic()
+                    if not self.directory and now - started > self.REPORT_TIMEOUT:
+                        raise RuntimeError("the capture did not identify its directory; "
+                                           "unidentified directories are left untouched")
+                    if now > self.deadline:
                         raise RuntimeError("eye-camera capture did not finish")
                     time.sleep(0.02)
-                log.seek(0)
-                text = log.read()
+                text = self.read_log()
                 if process.returncode or not self.directory:
                     reason = "cameras unavailable" if "Failed to" in text else f"exit {process.returncode}"
+                    if not self.directory and not process.returncode:
+                        reason = "directory not identified; unidentified directories are left untouched"
                     raise RuntimeError(f"eye-camera capture failed ({reason})")
-                named = self.written(log)
-                if named and named != self.directory:
-                    raise RuntimeError("the capture wrote somewhere else; not using those images")
                 return self.frames()
             finally:
-                # Each step runs even if an earlier one failed: eye images must
-                # be removed whatever else went wrong.
+                # Each step runs even if an earlier one failed. Only images
+                # in the directory identified by our child may be removed.
                 # Ctrl-C and SIGTERM (raised as KeyboardInterrupt) are held
-                # until the images are gone, then re-raised.
+                # until the tool ends and owned-directory cleanup is attempted.
                 interrupted, failed = None, None
                 for step in (lambda: self.finish(process),
                              lambda: self.pool and self.pool.shutdown(wait=True, cancel_futures=True),
@@ -172,14 +173,20 @@ class Capture:
         short. Only if it overruns by a wide margin is it killed."""
         if not process:
             return
-        interrupted = None
-        give_up = time.monotonic() + self.seconds + 30
+        interrupted, failed = None, None
         while True:
             try:
-                if process.poll() is not None:
+                finished = process.poll() is not None
+                for step in (self.adopt_reported, self.discard):
+                    try:
+                        step()
+                    except Exception as error:
+                        # Refusing another directory must not stop cleanup of
+                        # the already identified one, or the natural-exit wait.
+                        failed = failed or error
+                if finished:
                     break
-                self.discard()
-                if time.monotonic() > give_up:
+                if time.monotonic() > self.deadline:
                     process.kill()
                     process.wait()
                     raise RuntimeError("the eye-camera capture had to be killed; "
@@ -189,41 +196,72 @@ class Capture:
                 interrupted = interrupted or error
         if interrupted:
             raise interrupted
+        if failed:
+            raise failed
 
     def discard(self):
         """Delete the eye images written so far, without reading them."""
-        if self.before is not None:
-            self.new |= self.candidates() - self.before
-        for directory in self.new | ({self.directory} if self.directory else set()):
-            if str(directory).startswith(self.PREFIX) and directory.is_dir() and not directory.is_symlink():
-                for entry in os.scandir(directory):
-                    if self.NAME.match(entry.name):
-                        try:
-                            os.unlink(entry.path)
-                        except OSError:
-                            pass
+        if self.owned():
+            for entry in os.scandir(self.directory):
+                if self.NAME.match(entry.name) and entry.is_file(follow_symlinks=False):
+                    try:
+                        os.unlink(entry.path)
+                    except FileNotFoundError:
+                        pass
 
     def adopt_reported(self):
-        """The directory the tool reported is ours by its own account."""
-        named = self.written(self.log)
-        if named and str(named).startswith(self.PREFIX):
-            self.new.add(named)
+        """Accept one new directory, identified by our child's private output."""
+        reports = self.WRITING.findall(self.read_log())
+        if not reports:
+            return
+        names = {Path(report) for report in reports}
+        if len(names) != 1:
+            raise RuntimeError("the capture reported multiple directories; not adopting another")
+        named = names.pop()
+        parent, stem = os.path.split(self.PREFIX)
+        if (self.before is None or named.parent != Path(parent) or
+                not named.name.startswith(stem) or named in self.before):
+            raise RuntimeError("the capture reported an unsafe or pre-existing directory; left untouched")
+        if self.directory is None:
+            try:
+                info = named.lstat()
+            except FileNotFoundError:
+                return  # the tool may print just before creating it
+            if not stat.S_ISDIR(info.st_mode):
+                raise RuntimeError("the capture directory is not a real directory; left untouched")
+            self.directory = named
+            self.identity = (info.st_dev, info.st_ino)
 
-    def written(self, log):
-        """The directory the capture tool reported, once its output is flushed."""
-        log.seek(0)
-        match = self.WRITING.search(log.read())
-        return Path(match.group(1)) if match else None
+    def read_log(self):
+        # A separate handle avoids moving the child's shared write offset.
+        # Only complete lines count as a report; output is bounded for parsing.
+        if not self.log:
+            return ""
+        with open(self.log.name, encoding="utf-8", errors="replace") as reader:
+            text = reader.read(1024 * 1024)
+        return text[:text.rfind("\n") + 1]
+
+    def owned(self):
+        """Do not follow a replaced or symlinked capture directory."""
+        if self.directory is None or self.identity is None:
+            return False
+        try:
+            info = self.directory.lstat()
+        except FileNotFoundError:
+            return False
+        if not stat.S_ISDIR(info.st_mode) or (info.st_dev, info.st_ino) != self.identity:
+            raise RuntimeError("the capture directory was replaced; left untouched")
+        return True
 
     def reduce(self, final=False):
         """Reduce and delete every complete image; an image is complete once a
         later one of the same eye exists, or the capture has ended."""
-        if not self.directory or not self.directory.is_dir():
+        if not self.owned():
             return
         pending = {"left": [], "right": []}
         for entry in os.scandir(self.directory):
             match = self.NAME.match(entry.name)
-            if match:
+            if match and entry.is_file(follow_symlinks=False):
                 pending[match.group(1)].append((int(match.group(2)), entry.path))
         if sum(len(files) for files in pending.values()) > self.MAX_BACKLOG:
             raise RuntimeError("eye-image processing fell behind; capture abandoned")
@@ -245,6 +283,8 @@ class Capture:
 
     def frames(self):
         """[(monotonic seconds, eye, grid)] joined with the capture metadata."""
+        if not self.owned():
+            raise RuntimeError("the identified capture directory disappeared")
         meta = json.loads((self.directory / "meta.json").read_text())
         frames = []
         for pair in meta["frames"]:
@@ -257,22 +297,12 @@ class Capture:
         return frames
 
     def remove(self):
-        """Remove every capture directory that appeared during the run. Eye
-        images must not outlive it, so a failure to delete is an error."""
-        left = []
-        if self.before is not None:
+        """Remove only our identified directory; unknown captures are untouched."""
+        if self.owned():
             try:
-                self.new |= self.candidates() - self.before  # even if interrupted before the first poll
-            except OSError:
-                pass
-        for directory in self.new | ({self.directory} if self.directory else set()):
-            if str(directory).startswith(self.PREFIX) and directory.is_dir() and not directory.is_symlink():
-                try:
-                    shutil.rmtree(directory)
-                except OSError:
-                    left.append(str(directory))
-        if left:
-            raise RuntimeError("could not delete eye images in " + ", ".join(sorted(left)))
+                shutil.rmtree(self.directory)
+            except OSError as error:
+                raise RuntimeError("could not delete eye images in " + str(self.directory)) from error
 
 
 # --------------------------------------------------------------- analysis ---

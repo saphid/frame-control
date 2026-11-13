@@ -1,0 +1,354 @@
+{
+  "at": "2026-10-31T15:58:34.583693+00:00",
+  "sourceRevision": "8b3c518a027b98bfd30d9fac30f60965b456dd41",
+  "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+  "priorHead": "4c9b3b1bc826941e89595449a52285cba3f2410a",
+  "normalMerge": true,
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "cf18efd81cfef9055aaa895bae9a57eee1f2cf0200d4d40fe574b5a6e51b7572",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "f8892d3f33a23773f4668a13393be3fea51a67a7af4f309f7cbb8cbfb03cf891",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/deck_shelves_private.py": "7601ff4ae19850dccf80ebc0f63ae7829af193367ac82d1357782e6c7e8f3b78",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "296cdf51c16e00589504b4b50b9231dd4c0c1911cd6d2d71fd88b6e9e84b9328",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "eb2c09cff38cf920b8583fc3f23b794f559b7e94099d1dc1357cc74e7194cabc",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "all18NativeInputsVerified": true,
+  "archiveSha256": "b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91",
+  "originalBackendSha256": "f44495405452962de15cd3cdebd0b15b804de31cd5bb261b4bd6938191d06c5c",
+  "managedBackendSha256": "a8b4cf75ebe369cb738ae2a5babf1981d1c077b5edd59661c216cc145f8c4fd8",
+  "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "unmodifiedArchiveFiles": {
+    "LICENSE": "4405d01a3965d37ce9da85bcb654836f4658787fdf5a94e0326b7d9a3fc711f0",
+    "package.json": "cd7e3697f2df43f795aa553a71c3e1d4f030784b2081f8eec39aff8a4b2a52d4",
+    "plugin.json": "8aafd61365aaab44989c6b527092d782ec3590b03974c69ec484047d83a09b06",
+    "README.md": "22765579570444cb1fcb5c8e0bcdbb8131b080516118b7f19d828cc19983ea37",
+    "dist/chunks/pluginApi-B8sV7970.js.map": "5928529a6e1de5ce63f26aa2c0a0ff9912bc5274cbbcf30788d6360ddf2b0b19",
+    "dist/chunks/tabmaster-B0D9NGVh.js": "98ec697b848e5d5ea4e7045fa0770da634e2b46d5f513703a508abe2aaad0399",
+    "dist/chunks/registry-Be44bnJe.js": "e0896b4d04401cae847f73987db17150a94ceaa06233352ce5a75b61674bcbc4",
+    "dist/chunks/customfilters-BbnAknN_.js": "0ec9d610962330a944884baba5d3860673243b6bc936219548316e460b4c0d77",
+    "dist/chunks/tabmaster-B0D9NGVh.js.map": "8a8cc24d10b7b62010ef35f813176ff79482ddd08fec2c0b8aedf33197bb4edd",
+    "dist/chunks/smartShelves-Dvw7tlL5.js.map": "0f4ec05d0221d895c7362a7bdc97c35aebd0fc500f8258ecb5a13b4b19979a62",
+    "dist/chunks/pluginApi-B8sV7970.js": "053e9fde9bd7ad9da70b436a8b3b9bc0f8b9255cd984e5179db68493c479e326",
+    "dist/chunks/decky-api-WgbNuFYS.js": "81380f2780978520a41658b81f7a9c01377f01493f8969abde0d2004217de7b2",
+    "dist/chunks/decky-api-WgbNuFYS.js.map": "7354d1a169602132a8d8f0c32ed7fd8239a4b82e13b615bcbd769cad91fce29f",
+    "dist/chunks/smartShelves-Dvw7tlL5.js": "12c56b106f61ec5da6478a80f33fd0f8f9d3acc89cca3f6632a2dec6c2b89a3f",
+    "dist/chunks/registry-DeimEVYA.js": "d83d7f8e1f0859e2ea0e1c008f3d9c2eea6121f4e76cc796c34b500d83dbe336",
+    "dist/chunks/domtabs-DDHByDxZ.js.map": "aa36ce062b4cba7a1a739c98b0f5c6cdb1dd5959fbcc9399a506f9236b6d274a",
+    "dist/chunks/customfilters-BbnAknN_.js.map": "dba191144ffd55232a4fe0ebddab2e7a87c5f9de6d1a513fd20bd5cf4d879543",
+    "dist/chunks/registry-Be44bnJe.js.map": "a180e6386bf4b5e21b4a4b3b0c1913a601f86d728f9262081378409bea1f13b4",
+    "dist/chunks/domtabs-DDHByDxZ.js": "9a0b2e4b6104fd1739ee7df0e539810189d460ffb8666672f2157d4fca5cb35c",
+    "dist/index.js": "c49493c4e4d74dad5cf5ebcf3e5281762d11af290e7928af2a4b1e00baa7d515",
+    "dist/index.js.map": "6240a2eb42568f223520961ade380856f39498f8f610176eaa5bd9d473772592"
+  },
+  "historicalStrictRedNotRerun": true,
+  "sourceIntegrationAudit": {
+    "priorHead": "4c9b3b1bc826941e89595449a52285cba3f2410a",
+    "normalMerge": true,
+    "at": "2026-10-31T15:54:00.580885+00:00",
+    "sourceRevision": "8b3c518a027b98bfd30d9fac30f60965b456dd41",
+    "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+    "redSource": "60f69f8d18b5c689e4e546b87d988fc05de36acd",
+    "mainOther36RuntimeBodiesPreserved": true,
+    "mainOther33NativeCasesPreserved": true,
+    "mainOtherInstallerBranchesPreserved": true,
+    "onlyExactDeckShelvesInstallerAdded": true,
+    "allMainPayloadDispatchesPreserved": true,
+    "other115CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleInventoryAndFreeLoaderUnchanged": true,
+    "redStrictLifecycleHelperUnchanged": true,
+    "mainE2eAssertionsPreserved": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "cf18efd81cfef9055aaa895bae9a57eee1f2cf0200d4d40fe574b5a6e51b7572",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "f8892d3f33a23773f4668a13393be3fea51a67a7af4f309f7cbb8cbfb03cf891",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/deck_shelves_private.py": "7601ff4ae19850dccf80ebc0f63ae7829af193367ac82d1357782e6c7e8f3b78",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "296cdf51c16e00589504b4b50b9231dd4c0c1911cd6d2d71fd88b6e9e84b9328",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "eb2c09cff38cf920b8583fc3f23b794f559b7e94099d1dc1357cc74e7194cabc",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeInputCount": 18
+  },
+  "cases": [
+    {
+      "originalBackend": false,
+      "backendSha256": "a8b4cf75ebe369cb738ae2a5babf1981d1c077b5edd59661c216cc145f8c4fd8",
+      "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "rpcMethods": [
+        "get_settings",
+        "set_settings",
+        "get_settings",
+        "get_settings"
+      ],
+      "stopSeconds": [
+        0.2137228762730956,
+        0.2137152310460806
+      ],
+      "forcedKills": 0,
+      "cleanShutdownVerified": true,
+      "originalUnloadHooksVerified": true,
+      "settingsAndBackupBytesHashesJsonMetadataVerified": true,
+      "unrelatedSiblingPreserved": true,
+      "consoleSha256": "23cc369fc5d581f95de410601df1b7454ecadd7362d942453e626c7fd52f10c8"
+    },
+    {
+      "originalBackend": true,
+      "backendSha256": "f44495405452962de15cd3cdebd0b15b804de31cd5bb261b4bd6938191d06c5c",
+      "ipcAdapterSha256": null,
+      "rpcMethods": [
+        "get_settings",
+        "set_settings",
+        "get_settings"
+      ],
+      "stopSeconds": [
+        5.2235808707773685
+      ],
+      "forcedKills": 1,
+      "cleanShutdownVerified": false,
+      "originalUnloadHooksVerified": false,
+      "settingsAndBackupBytesHashesJsonMetadataVerified": true,
+      "unrelatedSiblingPreserved": true,
+      "consoleSha256": "a3373e8d7374e407eb306be55a248b115a51eb6e160be2c10162f8088acf5248"
+    }
+  ],
+  "controlsAudit": {
+    "at": "2026-10-31T15:55:49.608421+00:00",
+    "sourceRevision": "8b3c518a027b98bfd30d9fac30f60965b456dd41",
+    "architecture": "x86_64",
+    "freeLoader": [
+      {
+        "originalBackend": false,
+        "rpcs": 11,
+        "cleanShutdownVerified": true,
+        "stopSeconds": [
+          0.225,
+          0.246
+        ],
+        "forcedKills": 0,
+        "privateSnapshotsDecoded": true
+      },
+      {
+        "originalBackend": true,
+        "rpcs": 7,
+        "cleanShutdownVerified": false,
+        "stopSeconds": [
+          5.223
+        ],
+        "forcedKills": 1,
+        "privateSnapshotsDecoded": true
+      }
+    ],
+    "deckSettings": [
+      {
+        "negative": false,
+        "rpcs": 6,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351287824"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351287858"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351287858"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351287868"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.214,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793462128.806193"
+            ],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 24,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "351288135"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "351288165"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "351288165"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "351288176"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.264,
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          }
+        ]
+      },
+      {
+        "negative": true,
+        "rpcs": 3,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351288508"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351288540"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351288540"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351288551"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 5.255,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793462135.6329017"
+            ],
+            "forcedPluginKills": 1,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\n[plugin][WARNING]: Plugin Deck Settings (v1.2.6) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "716d3502c825fdeebc3c6181a4f5146aae1dd72d6e171247f8851796710f03f6",
+            "cleanShutdownVerified": false
+          }
+        ]
+      }
+    ],
+    "deckSettingsTlsPreserved": true,
+    "freeLoaderPrivateDataPreserved": true,
+    "allScopedConsolesHashed": true,
+    "realFrameContacted": false
+  },
+  "fullUnitTests": 1952,
+  "fullUnitSeconds": 252.142,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerSkips": 0,
+  "installerOwnedCleanupVerified": true,
+  "fullNativeMatrixRanLocally": false,
+  "fullE2eRanLocally": false,
+  "fullNativeMatrixExpected": {
+    "probes": 45,
+    "archivePins": 34,
+    "sourceFingerprints": 18
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Only Deck Shelves, Free Loader and Deck Settings focused native cases ran locally, on AMD64. Fresh final-head CI/full e2e/native AMD64+ARM64/ownership/PC/all triggered package modes/completed current-main/feedback/mergeability gates remain required.",
+    "Strict plugin-specific lifecycle assertions prove the repaired stops; generic runtimeConsole.cleanShutdownVerified remains false. Scoped results do not establish globally clean plugin runtime.",
+    "Original-source/previous-managed negative controls intentionally retain forced stops. The historical strict red and ARM64 discovery are not rerun; historical peer history remains unknown.",
+    "The 37-pin installer test exercises real HTTP/SSH install/receipt/removal in disposable fixtures without executing official backends; it is not the full e2e suite.",
+    "Compatibility remains partial. No Steam Home injection, actual Steam CEF, managed Frame, worn display, physical controller, tagged installer or release proof."
+  ],
+  "rawJsonSha256": "d55249c9556bc5a30c0647f95da422d42dcb2dcaeec385ced361f707fdc948e5",
+  "rawGzipSha256": "f6f6748f672e5d745c2fbdaf5b1f7a742834c48b6d7170159be00af5bc965067"
+}

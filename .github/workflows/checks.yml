@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 # A newer push to the same pull request supersedes a run still in progress.
 concurrency:
@@ -12,19 +13,25 @@ concurrency:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    # setup-python's Python 3.9 builds support Ubuntu 24.04, not 26.04.
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.9"   # the oldest python3 the Mac app may pick up (Xcode CLT)
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
       - name: Install zsh
-        # The runner image's third-party apt sources (packages.microsoft.com) sometimes
-        # fail to refresh; Ubuntu's own lists still update, and the install fails if not.
-        run: (sudo apt-get update -qq || true) && sudo apt-get install -y -qq zsh
+        timeout-minutes: 12
+        run: |
+          if command -v zsh >/dev/null 2>&1; then
+            zsh --version
+            exit 0
+          fi
+          sudo python3 scripts/ci-ubuntu-packages.py zsh
+          zsh --version
       - name: Script syntax
         run: |
           sh -n ui/local-bin/ssh
@@ -41,10 +48,14 @@ jobs:
           python -m py_compile $(find frame/devkit-utils -type f ! -name '*.*' ! -name LICENSE) frame/devkit-utils/devkit_utils/*.py
       - name: Server tests
         run: python -m unittest discover -s tests -v
+      - name: Linux Wireless Adapter doctor (read-only PC smoke)
+        run: |
+          python ui/frame_wireless_doctor.py --json > "$RUNNER_TEMP/linux-wireless-doctor.json"
+          python -c 'import json, os; from pathlib import Path; d=json.loads((Path(os.environ["RUNNER_TEMP"]) / "linux-wireless-doctor.json").read_text()); assert d["supported"] and d["selected"] is None and d["schema"] == 1'
       - name: App syntax
-        run: node --check app/main.js && node --check app/build/make-icon.js && node --check app/build/fetch-deps.js && node --check app/preload.js && node --check app/install-link.js && node --check app/updater.js
-      - name: Updater tests
-        run: node --test app/test/updater.test.js
+        run: node --check app/main.js && node --check app/obs-source.js && node --check app/build/make-icon.js && node --check app/build/fetch-deps.js && node --check app/preload.js && node --check app/install-link.js && node --check app/updater.js
+      - name: App tests
+        run: node --test app/test/*.test.js
       - name: Website
         run: node --test site/test/*.test.mjs && node --check site/public/js/site.js && node --check site/public/js/feedback.js
 
@@ -63,18 +74,43 @@ jobs:
             python: "3.13"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: OBS lifecycle tests
+        run: node app/test/obs-source.test.js
       - name: Server tests
+        # The dedicated wireless-windows job runs the live inventory on a fresh
+        # Windows runner; do not repeat it after the full server suite has
+        # consumed this runner's probe budget.
+        env:
+          FRAME_SKIP_WINDOWS_WIRELESS_LIVE: "1"
         run: python -m unittest discover -s tests -v
+
+  # Fast, PC-only Windows query validation, without capture libraries or a headset.
+  wireless-windows:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Wireless doctor fixtures, UI and live read-only Windows inventory
+        run: python -m unittest discover -s tests -p 'test_wireless.py' -v
 
   # The iPhone app: builds for the Simulator and runs its unit tests.
   ios:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Generate the project
         run: brew install xcodegen && cd ios && xcodegen generate
       - name: Build and test
@@ -89,10 +125,34 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ${{ runner.temp }}/framey-catalog
+          key: framey-catalog-v1-${{ hashFiles('ui/framey-compatibility.json') }}
+          restore-keys: framey-catalog-v1-
+      - name: Verify every pinned catalog archive
+        run: python3 scripts/framey-cache-catalog.py --cache "$RUNNER_TEMP/framey-catalog" --output "$RUNNER_TEMP/framey-e2e/catalog-cache.json"
       - name: Install zsh
-        # The runner image's third-party apt sources (packages.microsoft.com) sometimes
-        # fail to refresh; Ubuntu's own lists still update, and the install fails if not.
-        run: (sudo apt-get update -qq || true) && sudo apt-get install -y -qq zsh
+        timeout-minutes: 12
+        run: |
+          if command -v zsh >/dev/null 2>&1; then
+            zsh --version
+            exit 0
+          fi
+          sudo python3 scripts/ci-ubuntu-packages.py zsh
+          zsh --version
       - name: End-to-end tests
+        env:
+          FRAMEY_AUDIT_CACHE: ${{ runner.temp }}/framey-catalog
+          FRAMEY_AUDIT_OUTPUT: ${{ runner.temp }}/framey-e2e/catalog-result.json
         run: scripts/e2e.sh
+      - name: Retain catalog verification and installer outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-catalog
+          path: ${{ runner.temp }}/framey-e2e/
+          if-no-files-found: error

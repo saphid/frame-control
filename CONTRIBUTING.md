@@ -58,6 +58,9 @@ node --test site/test/*.test.mjs        # website feedback function
 
 Say what you tested, and whether you tried it on a real Steam Frame.
 
+To add a local feature without changing the core app, see the
+[extension guide](docs/extensions.md) and its working example.
+
 ## Blocking
 
 If you ignore this document twice, or spam the tracker with agent-generated

@@ -25,6 +25,8 @@ when the page asks.
 
 Python stdlib only. Runs on this computer, never on the Frame.
 """
+from bisect import bisect_right
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import copy
 import hashlib
 import ipaddress
@@ -168,6 +170,18 @@ def probe(host, port, timeout=PROBE_TIMEOUT, update=None):
     return last or {"state": "timeout", "detail": "No answer"}
 
 
+def probe_address(address, port, network_id, update=None):
+    """Try a saved mDNS address, then its last authenticated IP on this network."""
+    res = probe(address["host"], port, update=update)
+    cached = address.get("last_ip") if address.get("last_ip_network") == network_id else None
+    if (address["kind"] == "mdns" and cached and frame_network.valid_ip(cached) and
+            res["state"] in ("unresolved", "timeout", "unreachable")):
+        fallback = probe(cached, port)
+        if fallback["state"] == "answered":
+            return dict(fallback, detail="Last known IP answered (mDNS unavailable)")
+    return res
+
+
 def _ip_kind(text):
     """ipv4, ipv6, ipv6 link-local or tailscale for an IP address (zone allowed), else None."""
     try:
@@ -203,16 +217,33 @@ def probes_summary(probes):
 PLACEHOLDER = re.compile(r"(<(?:host|user|email|ip|mac|steamid|hex|token|ssh-key|pem|url|redacted)>)")
 
 
-def hide_hosts(text, hosts, keep=()):
-    """text with each of `hosts` (the headset's own addresses and names) replaced by <host>,
-    longest first and whatever the case, so a bare name like "steamdeck" that the scrubber
-    can't recognise goes too."""
-    keep = {k.lower() for k in keep if k} | KEYWORDS  # a headset called "host" mustn't eat ssh's wording
-    names = sorted({h for h in hosts if h and h.lower() not in keep}, key=len, reverse=True)
-    parts = PLACEHOLDER.split(text)  # never inside a scrubber's own <token> already there
-    for i in range(0, len(parts), 2):
-        for h in names:
-            parts[i] = re.sub(r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(h), "<host>", parts[i], flags=re.I)
+def _host_names(hosts, keep=()):
+    keep = {k.lower() for k in keep if k} | KEYWORDS
+    return sorted({h for h in hosts if h and h.lower() not in keep}, key=len, reverse=True)
+
+
+def _host_pattern(name):
+    return r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(name)
+
+
+def hide_hosts(text, hosts, keep=(), *, _trace=None):
+    """Hide whole known names, longest first, preserving existing scrubber tokens."""
+    names = _host_names(hosts, keep)
+    parts = PLACEHOLDER.split(text)
+    ranges, offset = [], 0
+    for i, part in enumerate(parts):
+        trace = _ScrubTrace(part) if _trace is not None else None
+        if trace is not None:
+            trace.ranges = _trace.ranges[offset:offset + len(part)]
+        offset += len(part)
+        if i % 2 == 0:
+            sub = trace.sub if trace is not None else re.sub
+            for name in names:
+                parts[i] = sub(_host_pattern(name), "<host>", parts[i], flags=re.I)
+        if trace is not None:
+            ranges.extend(trace.ranges)
+    if _trace is not None:
+        _trace.ranges = ranges
     return "".join(parts)
 
 
@@ -223,19 +254,128 @@ PLAIN_WORDS = {"answer", "the", "a", "an", "this", "it", "its", "be", "connect",
 KEYWORDS = {"host", "hostname", "to", "port"} | PLAIN_WORDS
 
 
-def hide_operands(text):
+def hide_operands(text, *, _sub=re.sub):
     def one(m):
         word = m.group(2).rstrip(".")
         dots = m.group(2)[len(word):]
         return m.group(0) if word.lower() in PLAIN_WORDS else f"{m.group(1)} <host>{dots}"
-    return OPERAND.sub(one, text)
+    return _sub(OPERAND, one, text)
+
+
+class _ScrubTrace:
+    """Map every output character to its source interval through sequential redactions.
+
+    Unchanged prefixes/suffixes retain their origins. The changed middle inherits
+    its source interval and is marked as replaced; extra spans can widen to cover
+    that whole interval without restoring anything the old pipeline removed.
+    """
+    def __init__(self, text):
+        self.ranges = [(i, i + 1, False) for i in range(len(text))]
+        self.redactions = []
+
+    def sub(self, pattern, replacement, text, flags=0):
+        pattern = re.compile(pattern, flags)
+        pieces, ranges, end = [], [], 0
+        for match in pattern.finditer(text):
+            start, stop = match.span()
+            value = replacement(match) if callable(replacement) else match.expand(replacement)
+            pieces.extend((text[end:start], value))
+            ranges.extend(self.ranges[end:start])
+            if value == match.group(0):
+                ranges.extend(self.ranges[start:stop])
+            else:
+                original = match.group(0)
+                prefix = 0
+                while prefix < min(len(original), len(value)) and original[prefix] == value[prefix]:
+                    prefix += 1
+                suffix = 0
+                while (suffix < min(len(original), len(value)) - prefix
+                       and original[-suffix - 1] == value[-suffix - 1]):
+                    suffix += 1
+                ranges.extend(self.ranges[start:start + prefix])
+                source = self.ranges[start + prefix:stop - suffix]
+                # A known name can itself be a prefix of "<host>". Attribute
+                # inserted characters to its last character in that case.
+                if not source:
+                    source = self.ranges[max(start, start + prefix - 1):start + prefix]
+                interval = (source[0][0], source[-1][1])
+                self.redactions.append(interval)
+                ranges.extend([(*interval, True)] * (len(value) - prefix - suffix))
+                if suffix:
+                    ranges.extend(self.ranges[stop - suffix:stop])
+            end = stop
+        pieces.append(text[end:])
+        ranges.extend(self.ranges[end:])
+        self.ranges = ranges
+        return "".join(pieces)
+
+
+def _failure_spans(text, hosts):
+    """Extra redactions discovered before any replacement can destroy context."""
+    spans = []
+    tokens = [m.span() for m in PLACEHOLDER.finditer(text)]
+    token_starts = [start for start, end in tokens]
+    for name in _host_names(hosts):
+        for match in re.finditer(_host_pattern(name), text, re.I):
+            # Standalone scrubber tokens survive; a whole display name may cross one.
+            token = bisect_right(token_starts, match.start()) - 1
+            if token < 0 or match.end() > tokens[token][1]:
+                spans.append(match.span())
+    start = 0
+    while True:
+        match = OPERAND.search(text, start)
+        if not match:
+            break
+        word = match.group(2).rstrip(".")
+        if word.lower() not in PLAIN_WORDS:
+            spans.append((match.start(2), match.start(2) + len(word)))
+        # An operand can itself be another marker ("to hostname bastion").
+        start = match.start(2)
+    merged = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(end, merged[-1][1]))
+        else:
+            merged.append((start, end))
+    return merged
 
 
 def scrub_failure(text, hosts=()):
-    """Free text about a failed attempt, for the log: the attempt's own names, whole and
-    longest first (case-insensitively, never ssh's own words), then anything ssh names as a
-    host, then the shared scrubber (addresses, paths, user names)."""
-    return frame_telemetry.scrub(hide_operands(hide_hosts(str(text or ""), hosts)), 600)
+    """Keep the existing scrubbed log, then hide additional original name/ssh spans.
+
+    Source ranges carry those spans through the existing substitutions. Applying
+    them only to that pipeline's output cannot reveal text it previously removed.
+    Keep the old output boundary, then truncate again after extra redaction so
+    shortening a name cannot pull previously omitted text into the log.
+    """
+    text = str(text or "")
+    hosts = tuple(hosts)
+    spans = _failure_spans(text, hosts)
+    # Also preserve rules whose context the old name/operand pass could destroy,
+    # such as a URL, home folder, or PEM footer containing a display name.
+    original = _ScrubTrace(text)
+    frame_telemetry.scrub(text, limit=None, _sub=original.sub)
+    privacy_spans = sorted(original.redactions)
+    trace = _ScrubTrace(text)
+    clean = frame_telemetry.scrub(
+        hide_operands(hide_hosts(text, hosts, _trace=trace), _sub=trace.sub),
+        limit=600, _sub=trace.sub)
+    out, hidden, index, privacy_index = [], False, 0, 0
+    for char, (start, end, replaced) in zip(clean, trace.ranges):
+        while index < len(spans) and spans[index][1] <= start:
+            index += 1
+        redact = index < len(spans) and spans[index][0] < end
+        while privacy_index < len(privacy_spans) and privacy_spans[privacy_index][1] <= start:
+            privacy_index += 1
+        if not replaced and privacy_index < len(privacy_spans):
+            redact |= privacy_spans[privacy_index][0] < end
+        if redact:
+            if not hidden:
+                out.append("<host>")
+        else:
+            out.append(char)
+        hidden = redact
+    return "".join(out)[:600]
 
 
 def failure_detail(error):
@@ -356,6 +496,7 @@ class Link:
         self.version = 0
         self.stopped = False
         self.kicks = []                 # reasons someone asked for a (re)connect
+        self.test_gen = {}              # device id -> its newest test of the addresses (see test())
         self.busy = False               # the loop is handling kicks
         self.state = {"phase": "idle", "reason": None, "device": None, "network": None, "stages": [],
                       "probes": [], "via": None, "error": None, "retry_at": None, "attempt": 0,
@@ -921,7 +1062,8 @@ class Link:
         attempt_no = self.state["attempt"]
 
         def run_probe(i, host):
-            res = probe(host, port, update=lambda **f: self.probe_update(i, attempt_no, **f))
+            res = probe_address(ranked[i][0], port, net.get("id"),
+                                update=lambda **f: self.probe_update(i, attempt_no, **f))
             res.setdefault("ip", None)
             res.setdefault("rtt_ms", None)
             self.probe_update(i, attempt_no, **{k: res[k] for k in ("state", "detail", "ip", "rtt_ms")})
@@ -952,7 +1094,7 @@ class Link:
                        "rtt_ms": results[pick]["rtt_ms"], "why": ranked[pick][1], "network": net.get("id"),
                        "network_name": net["name"]}
                 self.publish(via=via)
-                self.learn(device, a["host"], net, results[pick]["rtt_ms"])
+                self.learn(device, a["host"], net, results[pick]["rtt_ms"], results[pick]["ip"])
                 return True
             with self.cond:
                 why_not = failure_detail(self.state["error"])
@@ -1007,10 +1149,10 @@ class Link:
                 else:
                     done.wait(min(0.5, max(0.01, deadline - time.monotonic())))
 
-    def learn(self, device, host, net, rtt):
+    def learn(self, device, host, net, rtt, ip=None):
         if device.get("transient"):
             return
-        self.reg.record_success(device["id"], host, net.get("id"), rtt)
+        self.reg.record_success(device["id"], host, net.get("id"), rtt, ip=ip)
         self.reg.record_identity(device["id"], [f for _, f in frame_devices.pinned_keys(device["id"])])
         # Set Up Connection may have changed the block while this attempt ran: take that
         # in (and reconnect) rather than writing this attempt's older settings over it.
@@ -1306,9 +1448,13 @@ class Link:
         started = now()
         rows = [{"host": a["host"], "kind": a["kind"], "state": "waiting", "detail": "Waiting", "ip": None,
                  "rtt_ms": None, "ssh": None} for a in device["addresses"]]
+        with self.cond:
+            gen = self.test_gen[device_id] = self.test_gen.get(device_id, 0) + 1
 
         def put(**fields):
             with self.cond:
+                if gen != self.test_gen[device_id]:
+                    return  # a newer test has started: its results are the ones to show
                 self.state["tests"][device_id] = dict({"started": started, "done": False, "rows": rows}, **fields)
                 self.version += 1
                 self.cond.notify_all()
@@ -1617,7 +1763,8 @@ def devices_action(link, body, open_setup, busy=lambda: 0):
                 raise frame_devices.DeviceError(f"Removed, but couldn't edit ~/.ssh/config: {e}")
         msg = f"Removed {d['name']}" + (f" and its '{d['alias']}' entry in ~/.ssh/config" if removed else "")
     elif action == "address-add":
-        a = reg.add_address(did, body.get("host"), body.get("kind") or None, body.get("label") or "")
+        a = reg.add_address(did, body.get("host"), body.get("kind") or None, body.get("label") or "",
+                            first=body.get("first") is True)
         if is_active and link.state["phase"] == "failed":
             link.kick("retry")
         msg = f"Added {a['host']}"
@@ -1725,8 +1872,32 @@ def tailscale_find(link, device_id=None):
     return {"up": True, "peers": peers, "tailnet": ts.get("tailnet"), "message": None}
 
 
+def matches_pinned_key(host, port, saved):
+    """Only suggest a scanned SSH host when its key matches this headset's pin."""
+    if not saved or not frame_network.valid_ip(host):
+        return False
+    keyscan = frame_host.which("ssh-keyscan")
+    if not keyscan:
+        return False
+    try:
+        reply = frame_host.run_ssh([keyscan, "-T", "2", "-p", str(port), host],
+                                   capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=4)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    pins = set(saved)
+    for line in reply.stdout.splitlines():
+        fields = line.split()
+        if len(fields) >= 3 and (fields[1], frame_devices.fingerprint(fields[2])) in pins:
+            return True
+    return False
+
+
 def mdns_find(link, device_id=None):
-    """Headsets on this network: SteamOS devkit services (mDNS) and <alias>.local."""
+    """Find nearby SSH endpoints using mDNS, a remembered IP and a bounded /24 scan.
+
+    Finding an SSH port does not identify a headset. Adding an address still uses
+    the normal pinned SSH identity check before any command is run on it.
+    """
     device = link.reg.get(device_id) if device_id else link.active_device()
     known = {a["host"].rstrip(".").lower() for a in device.get("addresses") or []}
     try:
@@ -1734,11 +1905,15 @@ def mdns_find(link, device_id=None):
         found = frame_connect.discover_devkit()
     except (ImportError, SystemExit, OSError):
         found = []
-    names = list(dict.fromkeys([h.rstrip(".") for h in found] + [f"{device['alias']}.local", "frame.local"]))
+    cached = [a["last_ip"] for a in device.get("addresses", []) if a.get("kind") == "mdns" and a.get("last_ip") and
+              a.get("last_ip_network") == (link.state.get("network") or {}).get("id")]
+    names = list(dict.fromkeys([h.rstrip(".") for h in found] + cached +
+                               [f"{device['alias']}.local", "frame.local"]))
     rows = [None] * len(names)
+    port = device.get("port") or 22
 
     def check(i, host):
-        res = probe(host, 22, timeout=3)
+        res = probe(host, port, timeout=3)
         rows[i] = {"host": host, "state": res["state"], "ip": res.get("ip"), "rtt_ms": res.get("rtt_ms"),
                    "detail": res["detail"], "advertised": host in [h.rstrip(".") for h in found],
                    "added": host.lower() in known or (res.get("ip") or "").lower() in known}
@@ -1749,4 +1924,31 @@ def mdns_find(link, device_id=None):
     for t in threads:
         t.join(8)
     hosts = [r for r in rows if r and (r["advertised"] or r["state"] in ("answered", "refused"))]
-    return {"hosts": hosts, "tool": bool(frame_host.which("dns-sd") or frame_host.which("avahi-browse"))}
+    network = link.state.get("network") or {}
+    local = network.get("local_ip") or frame_network.local_ip()
+    candidates = frame_network.local_scan_candidates(local, network.get("gateway"), frame_network.neighbour_cache())
+    candidates = [ip for ip in candidates if ip not in names]
+    saved = frame_devices.pinned_keys(device["id"]) if device.get("id") else []
+    # A random SSH service on the subnet is not a Frame. With no existing pin,
+    # use explicit IP entry; do not offer unverified scan results for pairing.
+    if not saved:
+        candidates = []
+    if candidates:
+        def scan(ip):
+            res = probe(ip, port, timeout=0.3)
+            return res if res["state"] == "answered" and matches_pinned_key(ip, port, saved) else None
+
+        with ThreadPoolExecutor(max_workers=24) as pool:
+            futures = {pool.submit(scan, ip): ip for ip in candidates}
+            for future in as_completed(futures):
+                ip = futures[future]
+                try:
+                    res = future.result()
+                except OSError:
+                    continue
+                if res:
+                    hosts.append({"host": ip, "state": "answered", "ip": ip,
+                                  "rtt_ms": res.get("rtt_ms"), "detail": "Matches this headset's saved SSH identity",
+                                  "advertised": False, "added": ip.lower() in known})
+    return {"hosts": hosts, "tool": bool(frame_host.which("dns-sd") or frame_host.which("avahi-browse")),
+            "scanned": len(candidates), "scan_requires_pin": not bool(saved)}

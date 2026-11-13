@@ -1,0 +1,177 @@
+{
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "cases": [
+    {
+      "id": 104,
+      "name": "Game Sync",
+      "version": "1.0.4",
+      "sha256": "65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd",
+      "shim": "game-sync-bounded-selection",
+      "calls": [
+        {
+          "method": "get_config",
+          "result": {
+            "log_level": "INFO",
+            "sync_on_game_start": false,
+            "sync_on_game_stop": false,
+            "capture_upload": false,
+            "capture_upload_destination": "steam-captures",
+            "capture_delete_after_upload": false,
+            "additional_sync_args": [
+              "--no-update-dir-modtime",
+              "--ignore-checksum",
+              "--copy-links",
+              "--transfers",
+              "8",
+              "--checkers",
+              "16"
+            ],
+            "additional_bisync_args": [
+              "--conflict-loser",
+              "num"
+            ],
+            "advanced_mode": false,
+            "strict_game_sync": false,
+            "sync_root": "/",
+            "sync_destination": "sdh-game-sync"
+          }
+        },
+        {
+          "method": "set_config",
+          "result": null
+        },
+        {
+          "method": "get_config",
+          "result": {
+            "log_level": "INFO",
+            "sync_on_game_start": false,
+            "sync_on_game_stop": false,
+            "capture_upload": false,
+            "capture_upload_destination": "steam-captures",
+            "capture_delete_after_upload": false,
+            "additional_sync_args": [
+              "--no-update-dir-modtime",
+              "--ignore-checksum",
+              "--copy-links",
+              "--transfers",
+              "8",
+              "--checkers",
+              "16"
+            ],
+            "additional_bisync_args": [
+              "--conflict-loser",
+              "num"
+            ],
+            "advanced_mode": true,
+            "strict_game_sync": false,
+            "sync_root": "/",
+            "sync_destination": "sdh-game-sync"
+          }
+        },
+        {
+          "method": "set_config",
+          "result": null
+        },
+        {
+          "method": "test_syncpath",
+          "result": 1
+        },
+        {
+          "method": "test_syncpath",
+          "result": 1
+        },
+        {
+          "method": "test_syncpath",
+          "result": 1
+        },
+        {
+          "method": "test_syncpath",
+          "result": 1
+        },
+        {
+          "method": "get_config",
+          "result": {
+            "log_level": "INFO",
+            "sync_on_game_start": false,
+            "sync_on_game_stop": false,
+            "capture_upload": false,
+            "capture_upload_destination": "steam-captures",
+            "capture_delete_after_upload": false,
+            "additional_sync_args": [
+              "--no-update-dir-modtime",
+              "--ignore-checksum",
+              "--copy-links",
+              "--transfers",
+              "8",
+              "--checkers",
+              "16"
+            ],
+            "additional_bisync_args": [
+              "--conflict-loser",
+              "num"
+            ],
+            "advanced_mode": true,
+            "strict_game_sync": false,
+            "sync_root": "/home/tester/sync-selection/saves",
+            "sync_destination": "sdh-game-sync"
+          }
+        },
+        {
+          "method": "get_config",
+          "result": {
+            "log_level": "INFO",
+            "sync_on_game_start": false,
+            "sync_on_game_stop": false,
+            "capture_upload": false,
+            "capture_upload_destination": "steam-captures",
+            "capture_delete_after_upload": false,
+            "additional_sync_args": [
+              "--no-update-dir-modtime",
+              "--ignore-checksum",
+              "--copy-links",
+              "--transfers",
+              "8",
+              "--checkers",
+              "16"
+            ],
+            "additional_bisync_args": [
+              "--conflict-loser",
+              "num"
+            ],
+            "advanced_mode": true,
+            "strict_game_sync": false,
+            "sync_root": "/home/tester/sync-selection/saves",
+            "sync_destination": "sdh-game-sync"
+          }
+        },
+        {
+          "method": "test_syncpath",
+          "result": 1
+        }
+      ],
+      "discovered": [
+        {
+          "name": "Game Sync",
+          "version": "1.0.4",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "independentState": {
+        "outsideFileUnchanged": true,
+        "validSelectionCount": true,
+        "siblingAndParentEscapeRefused": true,
+        "outsideLinksRefused": true,
+        "insideLinksAllowed": true,
+        "cyclesRefused": true,
+        "restartBoundaryPreserved": true
+      },
+      "result": "discovery, default config, bounded private selections and setting restart persistence passed; rclone, cloud authentication, sync, process signals, real Frame and VR unverified"
+    }
+  ],
+  "hostSourceSha256": "645f778a6c06a9d2d2eb1b1631ea5cfabd18ba7a7b2e161e7d87ed4bfe1c3950",
+  "probeSourceSha256": "5d6a081c6f5042004dba1c69e11ff93211e5ac9d9396828f3e314c32c7cc64df",
+  "revisionScope": "Local working tree after 79d0f87: exact Game Sync selection adaptation and private RPC probe"
+}

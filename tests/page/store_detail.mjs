@@ -13,19 +13,19 @@ function grab(name) {
   if (start < 0) fail(`no top-level ${name} in index.html`);
   let depth = 0;
   for (let i = start; i < lines.length; i++) {
-    for (const c of lines[i]) depth += c === "{" ? 1 : c === "}" ? -1 : 0;
+    for (const c of lines[i]) depth += c === "{" || c === "[" ? 1 : c === "}" || c === "]" ? -1 : 0;
     if (depth <= 0) return lines.slice(start, i + 1).join("\n") + "\n";
   }
   fail(`unbalanced ${name}`);
 }
 const names = ["esc", "storeName", "storeHue", "storeInitial", "storeText", "storeOpenSource", "sourcePage", "storeImage",
-               "storeArt", "storeIcon", "sourceMark", "currentOffer", "detailBadges", "renderAppDetail", "renderAppDetailBody",
-               "updateInstall", "openStoreApp", "loadOfferDetails"];
+               "GLYPH_VR", "GLYPH_APP", "RUNS", "storeRuns", "storeReportDetails", "storePickEligible", "STORE_CATS", "storeCat", "storeCard", "storeRow", "storeKind", "storeArt", "storeIcon", "sourceMark", "currentOffer", "detailBadges", "renderAppDetail", "renderAppDetailBody",
+               "updateInstall", "openStoreApp", "loadOfferDetails", "installStoreApp"];
 const code = names.map(grab).join("");
 
 // A fake page: elements by id. The install panel's elements exist only while
 // #detailBody holds the real app page, as in the browser.
-function page(api = async () => ({})) {
+function page(api = async () => ({}), androidApps = []) {
   const els = { appDetail: { open: false, scrollTop: 0, showModal() { this.open = true; } } };
   const inPage = id => ["detailInstall", "detailInstallNote", "detailProgress", "detailOffers"].includes(id);
   const $ = id => inPage(id) && !(els.detailBody?.innerHTML || "").includes(`id="${id}"`) ? null
@@ -34,8 +34,10 @@ function page(api = async () => ({})) {
   const document = { activeElement: null, querySelector: () => null };
   const console = { error() {} };
   const calls = [];
-  const fns = new Function("$", "sourceState", "document", "console", "api", code + "; return { renderAppDetail, openStoreApp };")(
-    $, sourceState, document, console, (...a) => { calls.push(a); return api(...a); });
+  const fns = new Function("$", "sourceState", "document", "console", "api", "androidApps", "runJob", "loadAndroid", "act", "window", "devGen", code + "; return { renderAppDetail, openStoreApp, storeCard, storeRow, storePickEligible };")(
+    $, sourceState, document, console, (...a) => { calls.push(a); return api(...a); }, androidApps,
+    async (title, key, work) => work(), () => {}, async (title, work) => work(),
+    { open() { fail("an in-app installation opened an external page"); } }, 0);
   return { els, sourceState, calls, ...fns };
 }
 
@@ -54,6 +56,14 @@ const offer = { source: "fdroid", id: "org.example.brush", source_name: "F-Droid
   if (html.includes('role="alert"')) fail("a good listing showed the error state");
 }
 
+// A catalogue listing that is already installed offers its management page.
+{
+  const p = page(undefined, [{ package: offer.package }]);
+  p.sourceState.detail = { app: { name: offer.name, offers: [{ ...offer }] }, choice: 0 };
+  if (p.renderAppDetail() !== true) fail("an installed listing reported a render failure");
+  if (p.els.detailInstall.textContent !== "View installed app") fail("installed listing offered another install");
+}
+
 // A listing that can't render (no offer to show) gets a clear message, not an empty dialog.
 {
   const p = page();
@@ -68,7 +78,7 @@ const offer = { source: "fdroid", id: "org.example.brush", source_name: "F-Droid
 {
   const p = page(async () => { throw new Error("offline"); });
   p.sourceState.apps = [{ name: "Broken", offers: [] }];
-  await p.openStoreApp(0);
+  await p.openStoreApp(0, true);
   if (!p.els.appDetail.open || !p.els.detailBody.innerHTML.includes('role="alert"')) fail("broken listing didn't open with the error");
   if (p.calls.length) fail("asked for details of a listing that couldn't render");
 }
@@ -90,4 +100,45 @@ const offer = { source: "fdroid", id: "org.example.brush", source_name: "F-Droid
   if (!p.els.detailBody.innerHTML.includes('id="detailTitle">Open Brush<')) fail("page lost after a failed details request");
   if (!p.els.detailInstallNote.textContent.includes("couldn't be refreshed")) fail("no note after a failed details request");
 }
+// The featured Install starts a new or failed job, while a job already running or
+// installed opens its details without another install or a launch command.
+for (const [job, expected] of [[null, 1], [{ done: false }, 0],
+    [{ done: true, result: { package: offer.package } }, 0], [{ done: true, error: "offline" }, 1]]) {
+  const p = page(async path => path === "/api/sources/install" ? { package: offer.package } : {});
+  p.sourceState.apps = [{ name: "Open Brush", offers: [{ ...offer }] }];
+  if (job) p.sourceState.jobs.set(`${offer.source}:${offer.id}`, job);
+  await p.openStoreApp(0, true);
+  if (!p.els.appDetail.open || !p.els.detailBody.innerHTML.includes('id="detailInstall"')) fail("hero installation didn't open details");
+  const installs = p.calls.filter(([path]) => path === "/api/sources/install");
+  if (installs.length !== expected) fail(`expected ${expected} installation requests, got ${installs.length}`);
+  if (installs.some(([, body]) => body.source !== offer.source || body.id !== offer.id)) fail("installed a different offer");
+  if (p.calls.some(([path]) => path === "/api/android")) fail("hero Install launched an already installed app");
+}
+
+// Report warnings appear on real cards, shelves and details; they are advisory.
+for (const [kind, tone, label] of [['no', 'warning', 'Reported not working'], ['maybe', 'issues', 'Reported issues']]) {
+  const p = page();
+  const o = {...offer, verdict: {tone, label: label+' on the Frame'},
+    compat_report: {verdict: kind, lines: ['Reported <unsafe> notes', '2 reports, 0 working']}};
+  const app = {name: o.name, offers: [o]};
+  p.sourceState.apps = [app];
+  p.sourceState.detail = {app, choice: 0};
+  const card = p.storeCard(app), shelf = p.storeRow('VR picks', 'Synthetic fixtures', [app]);
+  if (!card.includes('>'+label+'</span>') || !shelf.includes('>'+label+'</span>')) fail('warning missing on card or shelf');
+  if (!p.renderAppDetail()) fail('report detail did not render');
+  const html = p.els.detailBody.innerHTML;
+  if (!html.includes('Saved compatibility reports') || !html.includes('Reported &lt;unsafe&gt; notes')) fail('report evidence missing or unescaped');
+  if (html.includes('Reported <unsafe>')) fail('report notes injected HTML');
+  if (p.els.detailInstall.disabled || p.els.detailInstall.textContent !== 'Install on the Frame') fail('report disabled installation');
+  if (kind==='no' && p.storePickEligible(o)) fail('broken report is eligible for featured/VR picks');
+  // A positive report cannot remove a hard blocker. Negative evidence stays visible too.
+  for (const reportKind of [kind, 'works']) {
+    const blocked = {...o, verdict: {tone: 'blocked', label: 'No arm64 build'}, compat_report: {...o.compat_report, verdict: reportKind}};
+    app.offers = [blocked];
+    if (!p.renderAppDetail() || !p.els.detailInstall.disabled) fail('report overrode hard blocker');
+    if (p.storePickEligible(blocked)) fail('blocked app eligible for picks');
+    if (reportKind!=='works' && !p.storeCard(app).includes('>'+label+'</span>')) fail('hard blocker hid report warning');
+  }
+}
+
 console.log("ok");

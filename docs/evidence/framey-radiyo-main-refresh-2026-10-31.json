@@ -1,0 +1,304 @@
+{
+  "at": "2026-10-31T12:44:53.554208+00:00",
+  "sourceRevision": "62a99ba8b7c395ffc4000c0195b1917f12ba95e4",
+  "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+  "priorHead": "570c685fe84c57a4a1d5e914fe26e049e04239b9",
+  "normalMerge": true,
+  "nativeArchitecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "30bfd09d2baa3d8075405059ed0c6c354a7f7fc18bb75b190e2c8d9798a4fa33",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "37bf77a7b03b644b8395d67d230280b091ee5f77ed04cb5d97f826a7d246c540",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "06616c66665f7da6352c06b2b4ba7bdab7c96418a94275b6f3733c18352610d5",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "0f0efacac5983c7982330ccac0c3eca0ee7ad2568e52ab1ba4e9935e40c27913",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "nativeSourceFingerprints": 16,
+  "archiveSha256": "647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43",
+  "backendSha256": "23cdff5bfa7f57e6c0341c825ab23cfb363e4408ae3c4f117fe3d1885f00a265",
+  "adapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "unmodifiedArchiveFiles": {
+    "LICENSE": "7f64a1130058fd9b965b366c26a125aeb055856d86b2d5297b7abc2a15beb400",
+    "package.json": "6334c9b75f3db2030d3e921076f8d11139ad73ae29d3cbb1a91b99e3546aab2a",
+    "plugin.json": "352523e9df7ca0c09e0764caed1055a4940071c202828722c82c1450a06f4cff",
+    "README.md": "fe549af9c94268beb30b0858f5ed6a68780e687986657ba3d5a818569b7cbec7",
+    "dist/index.js": "41ac20dfcc93b98df1aba0f0adc282077351e9f9ebb1340181fe364150f671db",
+    "dist/assets/logo-61e502bb.png": "307f46653dc13c18660c5bb0a2a383e6474953904f76249d231970a0e3c4fd47"
+  },
+  "radiyoCases": [
+    {
+      "rpcs": 9,
+      "tlsBothMethodsRejectedSelfSigned": true,
+      "httpReadbacks": [
+        {
+          "station": {
+            "body": "Framey lifecycle station\n",
+            "headers": {
+              "Server": "BaseHTTP/0.6 Python/3.13.5",
+              "Date": "Sat, 31 Oct 2026 12:39:59 GMT",
+              "Content-Type": "text/plain",
+              "Content-Length": "25"
+            },
+            "status": 200
+          },
+          "redirect": {
+            "response": "http://127.0.0.1:44899/station"
+          }
+        },
+        {
+          "station": {
+            "body": "Framey lifecycle station\n",
+            "headers": {
+              "Server": "BaseHTTP/0.6 Python/3.13.5",
+              "Date": "Sat, 31 Oct 2026 12:40:02 GMT",
+              "Content-Type": "text/plain",
+              "Content-Length": "25"
+            },
+            "status": 200
+          },
+          "redirect": {
+            "response": "http://127.0.0.1:44899/station"
+          }
+        }
+      ],
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "350114569"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "350114604"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "350114604"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "350114620"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.214,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793450396.265097"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down RadiYo! (v1.3)\n[plugin][INFO]: Stopping response listener for RadiYo! (v1.3)\n[plugin][INFO]: Plugin RadiYo! (v1.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a89ca196e9c7e61c7a7c295fc04d64e2b00411b934a24913d30efce20f1d8fde",
+          "cleanShutdownVerified": true
+        },
+        {
+          "loaderPid": 33,
+          "descendantsBefore": {
+            "34": {
+              "state": "S",
+              "parent": 33,
+              "start": "350115008"
+            },
+            "43": {
+              "state": "S",
+              "parent": 34,
+              "start": "350115047"
+            },
+            "44": {
+              "state": "S",
+              "parent": 34,
+              "start": "350115047"
+            },
+            "45": {
+              "state": "S",
+              "parent": 44,
+              "start": "350115063"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 43,
+              "returncode": 0
+            },
+            {
+              "pid": 44,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.225,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down RadiYo! (v1.3)\n[plugin][INFO]: Stopping response listener for RadiYo! (v1.3)\n[plugin][INFO]: Plugin RadiYo! (v1.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a89ca196e9c7e61c7a7c295fc04d64e2b00411b934a24913d30efce20f1d8fde",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "consoleSha256": "d63c8202aa597254264afaf7a64fe0b7039c924e36ccd42aadda5ed2dcb03480"
+    },
+    {
+      "rpcs": 7,
+      "tlsBothMethodsRejectedSelfSigned": true,
+      "httpReadbacks": [
+        {
+          "station": {
+            "body": "Framey lifecycle station\n",
+            "headers": {
+              "Server": "BaseHTTP/0.6 Python/3.13.5",
+              "Date": "Sat, 31 Oct 2026 12:40:08 GMT",
+              "Content-Type": "text/plain",
+              "Content-Length": "25"
+            },
+            "status": 200
+          },
+          "redirect": {
+            "response": "http://127.0.0.1:34843/station"
+          }
+        }
+      ],
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "350115423"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "350115469"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "350115469"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "350115486"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 5.225,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793450404.9167588"
+          ],
+          "forcedPluginKills": 1,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down RadiYo! (v1.3)\n[plugin][INFO]: Stopping response listener for RadiYo! (v1.3)\n[plugin][WARNING]: Plugin RadiYo! (v1.3) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin RadiYo! (v1.3) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "60707430106551f272c6fd16208fe73e2a3dfe97c53fa5b8ac2417e784bc13b4",
+          "cleanShutdownVerified": false
+        }
+      ],
+      "consoleSha256": "d487da146ebdca1769fecad894098389066af726076873d84d21fee482f36661"
+    }
+  ],
+  "radiyoRpcCounts": [
+    9,
+    7
+  ],
+  "repairedStopSeconds": [
+    0.214,
+    0.225
+  ],
+  "previousForcedStopSeconds": 5.225,
+  "bothTlsRejectionPathsPreserved": true,
+  "originalManagedTlsBackendIndependentlyReconstructed": true,
+  "radiyoTwoCleanParentOnlyStopsAndRestartVerified": true,
+  "priorManagedForcedKillVerified": true,
+  "tabmasterRpcCounts": [
+    47,
+    48
+  ],
+  "tabmasterRpcRestoreControlsVerified": true,
+  "tabmasterPositiveShutdownFailed": true,
+  "tabmasterUnexpectedForcedPluginKills": 1,
+  "tabmasterPositiveStopSeconds": [
+    5.224617586005479,
+    0.21367836510762572
+  ],
+  "originalStrictShutdownAuditFailed": true,
+  "blockedByTabmasterRuntime": true,
+  "tabmasterConsoleDiagnosticsAndMissingPositiveUnloadHookRetained": true,
+  "mainOther36RuntimeBodiesPreserved": true,
+  "priorRadiyoRuntimeBodyPreserved": true,
+  "all116StatusInstallPoliciesPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "mainOther33NativeCasesPreserved": true,
+  "sharedIpcConsoleAndInventoryUnchanged": true,
+  "fullUnitTests": 1943,
+  "fullUnitSeconds": 249.829,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerSkips": 0,
+  "installerOwnedCleanupVerified": true,
+  "fullNativeMatrixExpected": {
+    "probes": 43,
+    "archivePins": 34,
+    "sourceFingerprints": 16
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "globalCleanPluginShutdownVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local native AMD64 only; fresh exact-head hosted CI/e2e, native AMD64/ARM64, ownership, PC, every triggered package mode and exact-main gates remain required.",
+    "Native container/image cleanup is bound to the frozen runner; reported process cleanup is audited separately. Installer Docker-resource absence is independently checked.",
+    "The installer method covers 37 pins without executing official backends. It is not the full e2e or 116-plugin suite.",
+    "The positive TabMaster case required a forced plugin kill after 5.225 seconds on its first stop and did not log its unload hook. The strict audit failed. This remains a merge/release blocker; successful RPC/restore checks do not waive it. The original-source control retains a malformed-JSON diagnostic.",
+    "No new browser, external station, trusted HTTPS, playback, Steam CEF, real Frame, wearer/controller or release proof."
+  ],
+  "rawJsonSha256": "e882ce14eef8ffbb07f88a6ed0951cae4e4bea09c8cc3f2e93abfe43d88fbffe",
+  "rawGzipSha256": "5a1a944c45e971598fb7920fbc5285b81bb3b094c8b4a94d4de3a30228934035"
+}

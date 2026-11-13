@@ -4,6 +4,9 @@ Where to get the Steam Frame's operating system, what's inside it, and how to
 run it for testing without the headset. For recovering a Frame that won't boot,
 see the boot menu and boot-loop entries in
 [how-the-frame-works.md](how-the-frame-works.md#facts-worth-knowing).
+To keep your game saves, settings and Android app data through a factory reset
+(`Erase User Data`) or a re-image, and to get out of Desktop Mode, see
+[backup-and-recovery.md](backup-and-recovery.md).
 
 ## Downloads
 

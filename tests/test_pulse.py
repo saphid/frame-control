@@ -144,9 +144,10 @@ class FakeCaptureTool:
             stdout.flush()
             self.returncode = 1
             return self
-        # Real output is block-buffered until exit, so nothing is printed here.
-        stdout.flush()
         self.directory.mkdir()
+        # Capture now requests line buffering with stdbuf before it reads PNGs.
+        stdout.write(f"Writing capture to: {self.announce or self.directory}\n")
+        stdout.flush()
         return self
 
     def poll(self):
@@ -161,8 +162,7 @@ class FakeCaptureTool:
                                   "tsMono": 100 + i / 90, "valid": i != 2} for eye in ("left", "right")}
                            for i in range(self.frames)]}
         (self.directory / "meta.json").write_text(json.dumps(meta))
-        # The real tool's buffered output only appears once it exits.
-        self.stdout.write(f"Writing capture to: {self.announce or self.directory}\nCaptured images\n")
+        self.stdout.write("Captured images\n")
         self.stdout.flush()
         self.returncode = 0
         return 0
@@ -178,16 +178,20 @@ class FakeCaptureTool:
 
 class WornCheck(unittest.TestCase):
     def sensor(self, name, raw):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
         device = root / "iio:device2"
         device.mkdir()
         (device / "name").write_text(name + "\n")
         (device / "in_proximity_raw").write_text(raw + "\n")
         return root
 
+    @unittest.skipIf(os.name == "nt", "Linux sysfs device names contain a colon")
     def test_reads_the_proximity_sensor(self):
         self.assertEqual(pulse.proximity(self.sensor("vcnl4000", "3.250000000")), 3.25)
 
+    @unittest.skipIf(os.name == "nt", "Linux sysfs device names contain a colon")
     def test_unreadable_sensor_does_not_block(self):
         self.assertIsNone(pulse.proximity(self.sensor("other", "9")))
         self.assertIsNone(pulse.proximity(self.sensor("vcnl4000", "junk")))
@@ -231,6 +235,7 @@ class CaptureLifecycle(unittest.TestCase):
         self.assertTrue((self.root / "etcalib_older").exists())
         self.assertEqual(len(frames), 10)          # frame 2 invalid in both eyes
         self.assertEqual(tool.command[-2:], ["--calib", "20"])
+        self.assertEqual(tool.command[:3], ["stdbuf", "-oL", "-eL"])
         self.assertTrue(all(isinstance(t, float) and eye in ("left", "right") for t, eye, _ in frames))
 
     def test_camera_failure(self):
@@ -238,6 +243,14 @@ class CaptureLifecycle(unittest.TestCase):
         with self.assertRaises(RuntimeError) as raised:
             self.capture(tool)
         self.assertIn("cameras unavailable", str(raised.exception))
+
+    def test_missing_capture_command_reports_required_tools(self):
+        def missing(*args, **kwargs):
+            raise FileNotFoundError("not installed")
+        with self.assertRaisesRegex(RuntimeError, "check stdbuf"):
+            self.capture(missing)
+        self.assertEqual(self.loaded, [])
+        self.assertTrue((self.root / "etcalib_older").exists())
 
     def test_backlog_abandons_capture_and_removes_images(self):
         class Stalled(FakeCaptureTool):
@@ -263,31 +276,121 @@ class CaptureLifecycle(unittest.TestCase):
         self.assertEqual(tool.returncode, 0)         # left to end by itself, never signalled
         self.assertFalse(self.directory.exists())    # no image left behind
 
-    def test_second_capture_directory_stops_and_removes_both(self):
+    def test_competing_capture_is_not_read_or_deleted(self):
         foreign = self.root / "etcalib_foreign"
+        sentinel = b"another capture's private image"
         class Racing(FakeCaptureTool):
             def poll(self):
                 if self.polls == 2:
                     foreign.mkdir()
-                    (foreign / "left_0.png").write_bytes(b"png")
+                    (foreign / "left_999.png").write_bytes(sentinel)
+                    (foreign / "notes.txt").write_text("keep this")
                 return super().poll()
         tool = Racing(self.directory)
-        with self.assertRaises(RuntimeError) as raised:
-            self.capture(tool)
-        self.assertIn("another eye-camera capture", str(raised.exception))
+        self.capture(tool)
         self.assertFalse(self.directory.exists())
-        self.assertFalse(foreign.exists())  # no eye image outlives the run
+        self.assertEqual((foreign / "left_999.png").read_bytes(), sentinel)
+        self.assertEqual((foreign / "notes.txt").read_text(), "keep this")
+        self.assertNotIn("left_999.png", self.loaded)
         self.assertTrue((self.root / "etcalib_older").exists())
 
-    def test_images_elsewhere_are_not_used_but_are_removed(self):
+    def test_reported_preexisting_directory_is_not_read_or_removed(self):
         tool = FakeCaptureTool(self.directory)
         tool.announce = self.root / "etcalib_reported"
         tool.announce.mkdir()
         (tool.announce / "left_0.png").write_bytes(b"png")
         with self.assertRaises(RuntimeError) as raised:
             self.capture(tool)
-        self.assertIn("somewhere else", str(raised.exception))
-        self.assertFalse(tool.announce.exists())
+        self.assertEqual((tool.announce / "left_0.png").read_bytes(), b"png")
+        self.assertTrue(self.directory.exists())  # never identified by the child
+        self.assertEqual(self.loaded, [])
+        self.assertEqual(tool.returncode, 0)  # refusal still waits for natural exit
+        self.assertIn("pre-existing", str(raised.exception))
+
+    def test_foreign_directory_before_the_first_report_is_not_adopted(self):
+        foreign = self.root / "etcalib_foreign"
+        class LateStart(FakeCaptureTool):
+            def __call__(self, command, cwd, stdout, stderr):
+                foreign.mkdir()
+                (foreign / "left_999.png").write_bytes(b"private")
+                return super().__call__(command, cwd, stdout, stderr)
+        self.capture(LateStart(self.directory))
+        self.assertEqual((foreign / "left_999.png").read_bytes(), b"private")
+        self.assertNotIn("left_999.png", self.loaded)
+        self.assertFalse(self.directory.exists())
+
+    def test_conflicting_report_does_not_stop_owned_cleanup_while_waiting(self):
+        foreign = self.root / "etcalib_foreign"
+        class Conflicting(FakeCaptureTool):
+            maximum = 0
+            def poll(self):
+                self.maximum = max(self.maximum, len(list(self.directory.glob("*.png"))))
+                if self.polls == 2:
+                    foreign.mkdir()
+                    (foreign / "left_999.png").write_bytes(b"private")
+                    self.stdout.write(f"Writing capture to: {foreign}\n")
+                    self.stdout.flush()
+                return super().poll()
+        tool = Conflicting(self.directory)
+        with self.assertRaisesRegex(RuntimeError, "multiple directories"):
+            self.capture(tool)
+        self.assertLessEqual(tool.maximum, 4)
+        self.assertEqual(tool.returncode, 0)
+        self.assertFalse(self.directory.exists())
+        self.assertEqual((foreign / "left_999.png").read_bytes(), b"private")
+        self.assertNotIn("left_999.png", self.loaded)
+
+    def test_image_symlink_is_not_decoded_or_followed(self):
+        foreign = self.root / "private.png"
+        foreign.write_bytes(b"private")
+        class Linked(FakeCaptureTool):
+            def __call__(self, command, cwd, stdout, stderr):
+                result = super().__call__(command, cwd, stdout, stderr)
+                try:
+                    (self.directory / "left_999.png").symlink_to(foreign)
+                except OSError as error:
+                    raise unittest.SkipTest("symlinks unavailable: " + str(error))
+                return result
+        self.capture(Linked(self.directory))
+        self.assertNotIn("left_999.png", self.loaded)
+        self.assertEqual(foreign.read_bytes(), b"private")
+
+    def test_no_report_never_guesses_a_directory(self):
+        class Silent(FakeCaptureTool):
+            def __call__(self, command, cwd, stdout, stderr):
+                result = super().__call__(command, cwd, stdout, stderr)
+                stdout.seek(0)
+                stdout.truncate()
+                stdout.flush()
+                return result
+        tool = Silent(self.directory)
+        with self.assertRaisesRegex(RuntimeError, "directory not identified"):
+            self.capture(tool)
+        self.assertEqual(self.loaded, [])
+        self.assertTrue((self.directory / "left_0.png").exists())
+        self.assertEqual(tool.returncode, 0)
+
+    def test_delayed_report_allows_cleanup_without_guessing(self):
+        class Delayed(FakeCaptureTool):
+            def __call__(self, command, cwd, stdout, stderr):
+                result = super().__call__(command, cwd, stdout, stderr)
+                stdout.seek(0)
+                stdout.truncate()
+                stdout.flush()
+                return result
+            def poll(self):
+                result = super().poll()
+                if result is not None:
+                    self.stdout.write(f"Writing capture to: {self.directory}\n")
+                    self.stdout.flush()
+                return result
+        tool = Delayed(self.directory)
+        clock = iter(range(1000))
+        with patch.object(pulse.time, "monotonic", lambda: next(clock)), \
+                self.assertRaisesRegex(RuntimeError, "did not identify"):
+            self.capture(tool)
+        self.assertEqual(self.loaded, [])
+        self.assertEqual(tool.returncode, 0)
         self.assertFalse(self.directory.exists())
 
     def test_interrupt_during_cleanup_still_removes_images(self):
@@ -321,25 +424,18 @@ class CaptureLifecycle(unittest.TestCase):
         self.assertTrue(tool.killed)
         self.assertFalse(self.directory.exists())
 
-    def test_cleanup_tries_every_directory(self):
+    def test_cleanup_failure_is_reported(self):
         capture = pulse.Capture(20)
         capture.PREFIX = str(self.root / "etcalib_")
-        first, second = self.root / "etcalib_a", self.root / "etcalib_b"
-        for directory in (first, second):
-            directory.mkdir()
-            (directory / "left_0.png").write_bytes(b"png")
-        capture.new = {first, second}
-        real = pulse.shutil.rmtree
-        def flaky(path):
-            if Path(path) == first:
-                raise OSError("busy")
-            real(path)
-        with patch.object(pulse.shutil, "rmtree", flaky), self.assertRaises(RuntimeError) as raised:
+        self.directory.mkdir()
+        capture.directory = self.directory
+        info = self.directory.stat()
+        capture.identity = (info.st_dev, info.st_ino)
+        with patch.object(pulse.shutil, "rmtree", side_effect=OSError("busy")), self.assertRaises(RuntimeError) as raised:
             capture.remove()
-        self.assertIn("etcalib_a", str(raised.exception))
-        self.assertFalse(second.exists())
+        self.assertIn("could not delete eye images", str(raised.exception))
 
-    def test_removes_a_directory_seen_only_at_the_end(self):
+    def test_late_unidentified_directory_is_not_removed(self):
         capture = pulse.Capture(20)
         capture.PREFIX = str(self.root / "etcalib_")
         capture.before = capture.candidates()
@@ -347,7 +443,7 @@ class CaptureLifecycle(unittest.TestCase):
         late.mkdir()
         (late / "left_0.png").write_bytes(b"png")
         capture.remove()
-        self.assertFalse(late.exists())
+        self.assertEqual((late / "left_0.png").read_bytes(), b"png")
         self.assertTrue((self.root / "etcalib_older").exists())
 
     def test_never_adopts_directories_without_a_baseline(self):
@@ -362,10 +458,27 @@ class CaptureLifecycle(unittest.TestCase):
         capture.remove()
         self.assertTrue(self.root.exists())
 
+    def test_replaced_owned_directory_is_not_read_or_removed(self):
+        class Replacing(FakeCaptureTool):
+            def poll(self):
+                if self.polls == 2:
+                    self.directory.rename(self.directory.with_name("saved"))
+                    self.directory.mkdir()
+                    (self.directory / "left_999.png").write_bytes(b"foreign")
+                return super().poll()
+        tool = Replacing(self.directory)
+        with self.assertRaisesRegex(RuntimeError, "replaced"):
+            self.capture(tool)
+        self.assertNotIn("left_999.png", self.loaded)
+        self.assertEqual((self.directory / "left_999.png").read_bytes(), b"foreign")
+        self.assertEqual(tool.returncode, 0)
+
 
 class HeartCheck(unittest.TestCase):
     def write(self, name, text):
-        path = Path(self.enterContext(tempfile.TemporaryDirectory())) / name
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        path = Path(temporary.name) / name
         path.write_text(text)
         return path
 
@@ -398,7 +511,8 @@ class HeartCheck(unittest.TestCase):
             self.assertEqual(count, 1)
             self.assertIn("72 bpm", shown.getvalue())
             self.assertEqual(out.read_text().splitlines()[1].split(",")[1], "72")
-            self.assertEqual(out.stat().st_mode & 0o777, 0o600)
+            if os.name != "nt":  # Windows does not implement POSIX permission bits.
+                self.assertEqual(out.stat().st_mode & 0o777, 0o600)
 
     def test_compare_finds_lag_and_contact_loss(self):
         reference = [(1000.0 + i, 60 + i, 6) for i in range(40)] + [(1040.0 + i, 150, 4) for i in range(5)]

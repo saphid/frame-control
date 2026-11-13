@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-31T01:41:47.220324+00:00",
+  "oldHead": "e85e760b490106ce6f01fe50943ac55709389f16",
+  "main": "8b56eeaf9c9bfb0ca82fc1706145e8e2a95bb766",
+  "mainMergeWithoutConflicts": true,
+  "all116VersionsDigestsRatingsInstallPoliciesPreserved": true,
+  "other115CompleteRecordsMatchMain": true,
+  "tabmasterCompleteRecordMatchesPrior": true,
+  "caseListExactMainPlusTabmaster": true,
+  "allMainProbeBodiesAstPreserved": true,
+  "tabmasterProbeBodyAstPreserved": true,
+  "productionStoreSourceMatchesMain": true,
+  "nativeCases": 32,
+  "nativeResultsPending": true,
+  "realFrameContacted": false,
+  "localTests": 146,
+  "localTestsPassed": true,
+  "localTestLogSha256": "7e0c121b203cb33ec49cd523d96d2c94ebf8a322c99a1029c5cbf2b96ad86d5e",
+  "focusedModules": [
+    "test_framey_decky_runtime",
+    "test_frame_decky_store",
+    "test_framey_compatibility",
+    "test_framey_official",
+    "test_framey_panel",
+    "test_syncthing_flatpak_package"
+  ],
+  "generatedDocsCheckPassed": true,
+  "diffAgainstCurrentMainCheckPassed": true,
+  "inheritedConsoleBytesPreserved": true,
+  "previousExactHeadQualificationHistorical": true,
+  "freshExactHeadCiNativeE2eAllPackagesRequired": true
+}

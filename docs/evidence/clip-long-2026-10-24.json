@@ -1,0 +1,29 @@
+{
+  "date_utc": "2026-10-24",
+  "version": "v0.4.17",
+  "steam_os_version": "0.5.6",
+  "steam_os_build": "20261015.6141207",
+  "result": "PASS: the real Steam-saved clip exported beyond 60 seconds",
+  "method": "Steam manual recording of a reserved test title, then Frame Control's production frame_clips.export_clip path; no packaged GUI button click",
+  "source": {
+    "kind": "saved Steam clip",
+    "duration_seconds": 100.801,
+    "chunks": 68,
+    "gaps": 0
+  },
+  "export": {
+    "format": "MP4",
+    "bytes": 1377849,
+    "sha256": "82ef31f65e6933d122bc326d664beb2eb2e3ba6969f26c0032552e80fbe8d823",
+    "duration_seconds_ffprobe": 100.833335,
+    "video": "H.264, 1920x1080, 6049 frames",
+    "audio": "AAC, 48000 Hz, stereo",
+    "full_ffmpeg_decode": "passed without errors"
+  },
+  "cleanup": "Restored Steam recording mode to its prior off setting; stopped and removed only the reserved title and its processes; no recording or running Steam apps remained; Game Mode active, battery 100%, shared test lock released",
+  "limits": [
+    "This exercised the production export code path, not a packaged GUI Export click.",
+    "Visible gameplay quality, perceptual audio/video sync, trims and longer recordings were not checked.",
+    "The newly saved Steam source clip was retained; no user recording was deleted."
+  ]
+}

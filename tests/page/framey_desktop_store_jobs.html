@@ -1,0 +1,111 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'">
+<div id="deckyManagedList"></div>
+<div id="deckyPlugins"></div>
+<div id="deckyState"></div>
+<div id="deckyStoreList"></div>
+<div id="deckyStoreState"></div>
+<div id="deckyPluginJobState"></div><button id="deckyPluginJobCheck" hidden>Check result</button>
+<button id="deckyStorePrevious"></button><span id="deckyStorePage"></span><button id="deckyStoreNext"></button>
+<input id="deckyAck" type="checkbox" checked><input id="deckyStoreSearch">
+<button id="deckyInstall"></button><button id="deckyUpdate"></button><button id="deckyRemove"></button>
+<pre id="result">Pending</pre>
+<script type="module">
+// Actual DOM and production functions; all API replies and timers are synthetic.
+
+const assert=(condition,message)=>{if(!condition)throw Error(message);};
+const tick=()=>new Promise(resolve=>originalTimer(resolve,0));
+const requests=[], posts=[], confirmations=[];
+const $=id=>document.getElementById(id);
+const originalTimer=window.setTimeout.bind(window);
+const setTimeout=(callback,delay)=>originalTimer(callback,0);
+const installing=new Set(),queued=new Set();let jobsRunning=0;
+const showJobs=()=>{},log=()=>{},toast=()=>{},loadQueue=()=>{};
+const confirm=message=>{confirmations.push(message);return true;};
+const api=(path,body)=>{
+  assert(['/api/decky','/api/decky/store','/api/decky/plugin'].includes(path)||/^\/api\/job\?id=[0-9a-f]{32}$/.test(path),'unexpected API path');
+  if(body)posts.push({path,body});
+  return new Promise((resolve,reject)=>requests.push({path,resolve,reject}));
+};
+__STORE__
+__RUN_JOB__
+const plugin={id:2,name:'Private synthetic plugin',description:'Fixture',version:'1',sha256:'a'.repeat(64),root:false};
+const status={managed:true,running:true,arch:'aarch64',variant:'vr',cef:true,
+  plugins:[{storeId:2,name:plugin.name,version:'1',sha256:'a'.repeat(64)}],upstreamPlugins:[]};
+const buttons=()=>[...$('deckyStoreList').querySelectorAll('button'),...$('deckyManagedList').querySelectorAll('button')];
+const next=path=>{const index=requests.findIndex(request=>request.path===path);assert(index>=0,'missing '+path);return requests.splice(index,1)[0];};
+const jobPath=()=>'/api/job?id='+posts.at(-1).body.requestId;
+const refresh=async()=>{const read=loadDecky();next('/api/decky').resolve(status);await read;};
+try {
+  const catalog=Array.from({length:83},(_,index)=>({...plugin,id:index+1,
+    name:`Fixture ${index+1}`,author:index===81?'Distinct author':'Maker'}));
+  const catalogRead=loadDeckyStore();next('/api/decky/store').resolve({plugins:catalog});await catalogRead;
+  assert($('deckyStorePrevious').disabled && $('deckyStoreList').children.length===40,'first page changed');
+  $('deckyStoreNext').click();$('deckyStoreNext').click();
+  assert($('deckyStoreList').children.length===3 && $('deckyStoreList').textContent.includes('Fixture 83 ·'),
+    'catalogue tail is unreachable');
+  assert($('deckyStoreNext').disabled && $('deckyStorePage').textContent.includes('Page 3 of 3'),'last page changed');
+  $('deckyStoreNext').click();assert($('deckyStoreList').children.length===3,'disabled Next passed the last page');
+  $('deckyStorePrevious').click();assert($('deckyStorePage').textContent.includes('Page 2 of 3'),'Previous failed');
+  $('deckyStoreSearch').value='distinct AUTHOR';$('deckyStoreSearch').dispatchEvent(new Event('input'));
+  assert($('deckyStoreList').children.length===1 && $('deckyStoreList').textContent.includes('Fixture 82 ·'),
+    'author search failed');
+  assert($('deckyStorePrevious').disabled && $('deckyStoreNext').disabled,'search did not reset pagination');
+  $('deckyStoreSearch').value='';$('deckyStoreSearch').dispatchEvent(new Event('input'));
+  assert($('deckyStorePage').textContent.includes('Page 1 of 3'),'cleared search did not reset the page');
+  assert(posts.length===0 && confirmations.length===0,'navigation submitted a change');
+  await refresh();deckyCatalog=[plugin];showDeckyStore();
+  const update=[...$('deckyStoreList').querySelectorAll('button')].find(button=>button.textContent==='Reinstall');
+  const retained=update.onclick, remove=$('deckyManagedList').querySelector('button').onclick;
+  const first=retained();const duplicate=retained(),duplicateRemove=remove();
+  assert(posts.length===1 && confirmations.length===1,'retained callbacks started overlapping jobs');
+  await duplicate;await duplicateRemove;
+  assert(buttons().length===3 && buttons().every(button=>button.disabled),'real DOM buttons not disabled');
+  for(const button of buttons())button.click();
+  assert(posts.length===1,'disabled DOM button started job');
+  $('deckyAck').checked=false;$('deckyAck').dispatchEvent(new Event('change'));
+  $('deckyAck').checked=true;$('deckyAck').dispatchEvent(new Event('change'));
+  assert(buttons().every(button=>button.disabled),'acknowledgement unlocked job');
+  await refresh();assert(buttons().every(button=>button.disabled),'manual refresh unlocked job');
+  assert(/^[0-9a-f]{32}$/.test(posts[0].body.requestId),'POST omitted reserved request ID');
+  next('/api/decky/plugin').resolve({job:posts[0].body.requestId});
+  await tick();await tick();
+  next(jobPath()).resolve({done:false,queued:false});
+  await tick();await tick();
+  await retained();assert(posts.length===1,'pending poll unlocked job');
+  next(jobPath()).resolve({done:true,result:{},message:'Synthetic complete',queued:false});
+  await tick();await tick();
+  await retained();await remove();assert(posts.length===1,'final status refresh unlocked job');
+  next('/api/decky').resolve(status);await first;
+  assert(buttons().every(button=>!button.disabled),'successful status refresh did not unlock buttons');
+  assert(jobsRunning===0 && installing.size===0 && queued.size===0,'actual runJob did not finish cleanup');
+  const second=retained();next('/api/decky/plugin').reject(Object.assign(Error('synthetic startup rejection'),{status:400}));
+  await tick();await tick();next('/api/decky').reject(Error('synthetic status error'));await second;
+  assert(buttons().every(button=>button.disabled),'failed status left buttons usable');
+  await retained();assert(posts.length===2,'retained callback bypassed failed status');
+  await refresh();const retry=retained();next('/api/decky/plugin').resolve({job:posts.at(-1).body.requestId});
+  await tick();await tick();next(jobPath()).resolve({done:true,error:'synthetic job failure',queued:false});
+  await tick();await tick();next('/api/decky').resolve(status);await retry;
+  assert(posts.length===3 && buttons().every(button=>!button.disabled),'explicit recovery did not restore actions');
+  assert(jobsRunning===0 && installing.size===0 && queued.size===0,'failed job leaked shared state');
+  const uncertain=retained();next('/api/decky/plugin').reject(Error('synthetic lost POST reply'));
+  await tick();await tick();next('/api/decky').resolve(status);await uncertain;
+  assert(buttons().every(button=>button.disabled)&&!$('deckyPluginJobCheck').hidden,'lost reply did not retain recovery controls');
+  await refresh();await retained();await remove();assert(posts.length===4,'status refresh or retained callback resubmitted uncertain job');
+  $('deckyPluginJobCheck').click();await tick();await tick();
+  next(jobPath()).resolve({done:true,result:{},message:'Recovered same request',queued:false});
+  await tick();await tick();assert(buttons().every(button=>button.disabled),'recovery unlocked before final status');
+  next('/api/decky').resolve(status);await tick();await tick();
+  assert(posts.length===4&&buttons().every(button=>!button.disabled),'Check result resubmitted or failed to recover');
+  assert($('deckyPluginJobCheck').hidden&&jobsRunning===0,'recovery leaked pending job state');
+  document.getElementById('result').textContent=JSON.stringify({passed:true,realDOM:true,
+    catalogueTailReachable:true,pageBoundariesPreserved:true,authorSearchResetsPage:true,
+    actualRunJobExecuted:true,retainedCallbacksBlocked:true,disabledClicksBlocked:true,
+    acknowledgementAndManualRefreshLocked:true,pollingAndFinalStatusLocked:true,
+    failedStatusBlocked:true,explicitRecoveryPassed:true,reservedRequestId:true,
+    lostPostReplyLocked:true,checkResultWithoutResubmitting:true,syntheticApiReplies:true,
+    realFrameContacted:false,realMutationVerified:false});
+} catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+
+</script>
