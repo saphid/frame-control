@@ -171,22 +171,30 @@ def startup_diagnostics(browser, profile, log):
     return report
 
 
+def browser_document(panel):
+    """Install the parent receiver before the opaque child can send its seed request."""
+    # The parent permits embedded runtime scripts; the opaque child separately
+    # denies every network connection, including the private parent's RPC URL.
+    policy = '''<meta http-equiv="Content-Security-Policy" content="default-src 'none';
+script-src 'unsafe-inline' data: blob:; connect-src 'none'; style-src 'unsafe-inline'; img-src data:">'''
+    panel = panel.replace('<html lang="en">', '<html lang="en">'+policy)
+    panel = panel.replace('</html>', '<script>'+PROBE+'</script></html>')
+    child = 'data:text/html;base64,' + base64.b64encode(panel.encode()).decode() + '#fixture'
+    return '''<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy"
+content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src data:; connect-src 'self'; style-src 'unsafe-inline'; img-src data:">
+<title>Owned Syncthing actual backend</title><style>body{margin:0;background:#0d1925;color:white}iframe{width:1200px;height:1050px;border:0}</style>
+<iframe id="panel" sandbox="allow-scripts"></iframe><script>''' + PARENT + '''
+document.getElementById('panel').src = ''' + json.dumps(child) + ''';
+</script>'''
+
+
 def exercise(legacy_rpc, runtime_identity, service):
     from syncthing_service import prop
     assert os.getuid() == 1100 and Path('/framey-owned-vm').read_text() == 'Frame Control Flatpak VM v1\n'
     assert not Path('/sys/class/net/eth0').exists()
     initial = json.loads(legacy_rpc('get_settings_json'))
     assert initial['is_setup'] is False and not initial['api_key']
-    # The parent permits embedded runtime scripts; the opaque child separately
-    # denies every network connection, including the private parent's RPC URL.
-    policy = '''<meta http-equiv="Content-Security-Policy" content="default-src 'none';
-script-src 'unsafe-inline' data: blob:; connect-src 'none'; style-src 'unsafe-inline'; img-src data:">'''
-    panel = Path('/input/browser-panel.html').read_text().replace('<html lang="en">', '<html lang="en">'+policy)
-    panel = panel.replace('</html>', '<script>'+PROBE+'</script></html>')
-    document = '''<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy"
-content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src data:; connect-src 'self'; style-src 'unsafe-inline'; img-src data:">
-<title>Owned Syncthing actual backend</title><style>body{margin:0;background:#0d1925;color:white}iframe{width:1200px;height:1050px;border:0}</style>
-<iframe id="panel" sandbox="allow-scripts" src="data:text/html;base64,''' + base64.b64encode(panel.encode()).decode() + '''#fixture"></iframe><script>''' + PARENT + '</script>'
+    document = browser_document(Path('/input/browser-panel.html').read_text())
     calls, stages, screenshots, observations = [], [], {}, []
     rpc_lock = threading.Lock()
 
