@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import sys
+import subprocess
 import tempfile
 import threading
 import unittest
@@ -68,6 +69,7 @@ class MigrationStacks(unittest.TestCase):
     def report(self):
         metadata = {'executableSha256': 'a' * 64, 'architecture': 'x86_64'}
         return dict(sampler=metadata, unit=self.observer.UNIT, observerJoined=True,
+                    queryHelperJoined=True, errors=[],
                     deactivationTimeBasis='first observed deactivating state',
                     changesStopBudget=False, historicalCauseEstablished=False,
                     snapshots=[dict(window='baseline', activeState='active', pythonServerReady=True,
@@ -180,19 +182,56 @@ class MigrationStacks(unittest.TestCase):
         capture.assert_called_once()
 
     def test_readiness_checks_status_without_reading_an_auth_token(self):
-        properties = '\n'.join(k+'='+v for k, v in self.properties.items()
-                               if k != 'PythonReady')
+        properties = {k:v for k, v in self.properties.items() if k != 'PythonReady'}
         response = Mock(status=200)
         connection = Mock()
         connection.getresponse.return_value = response
-        observer = self.observer.Observer(Path('/unused'), {}, ['owned-user'])
-        with patch.object(self.observer.subprocess, 'run', return_value=Mock(
-                returncode=0, stdout=properties)), patch.object(
+        observer = self.observer.Observer(Path('/unused'), {}, ['owned-user'], cgroups=self.cgroups)
+        with patch.object(observer.transport, 'query', return_value=properties), patch.object(
                 self.observer.http.client, 'HTTPConnection', return_value=connection):
             self.assertTrue(observer.properties()['PythonReady'])
         connection.request.assert_called_once_with('HEAD', '/auth/token')
         response.read.assert_not_called()
         connection.close.assert_called_once()
+
+    def test_bootloader_not_ready_does_not_open_the_unit_query_connection(self):
+        for failure in (False, True):
+            with self.subTest(connection_failure=failure):
+                connection = Mock()
+                response = Mock(status=503)
+                connection.getresponse.return_value = response
+                if failure:
+                    connection.request.side_effect = ConnectionRefusedError()
+                observer = self.observer.Observer(Path('/unused'), {}, [], cgroups=self.cgroups)
+                with patch.object(observer.transport, 'query') as query, patch.object(
+                        self.observer.http.client, 'HTTPConnection', return_value=connection):
+                    self.assertEqual(observer.properties(), {})
+                query.assert_not_called()
+                response.read.assert_not_called()
+                connection.close.assert_called_once()
+                self.assertEqual(observer.report['unitQueries'], 0)
+                self.assertEqual(observer.report['snapshots'], [])
+
+    def test_captured_baseline_keeps_shutdown_queries_independent_of_http_server(self):
+        observer = self.observer.Observer(Path('/unused'), {}, [], cgroups=self.cgroups)
+        observer.baseline = True
+        properties = dict(self.properties, ActiveState='deactivating')
+        with patch.object(observer.transport, 'query', return_value=properties) as query, patch.object(
+                self.observer.http.client, 'HTTPConnection') as connection:
+            self.assertEqual(observer.properties(), properties)
+        query.assert_called_once()
+        connection.assert_not_called()
+        self.assertEqual(observer.report['unitQueries'], 1)
+
+    def test_absent_migration_cgroup_skips_bus_queries_and_http_readiness(self):
+        observer = self.observer.Observer(Path('/unused'), {}, [], cgroups=self.folder/'absent')
+        with patch.object(observer.transport, 'query') as query, patch.object(
+                self.observer.http.client, 'HTTPConnection') as connection:
+            self.assertEqual(observer.properties(), {})
+        query.assert_not_called()
+        connection.assert_not_called()
+        self.assertEqual(observer.report['absentCgroupPolls'], 1)
+        self.assertEqual(observer.report['unitQueries'], 0)
 
     def test_sampler_payload_binds_loader_observer_and_pinned_sampler(self):
         sampler = Mock()
@@ -231,6 +270,75 @@ class MigrationStacks(unittest.TestCase):
                 raise RuntimeError('user probe')
         self.assertTrue(observer.report['observerJoined'])
         self.assertFalse(observer.thread.is_alive())
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest helper uses Linux pipes')
+    def test_persistent_query_reuses_one_helper_for_multiple_requests(self):
+        properties = {k:v for k,v in self.properties.items() if k != 'PythonReady'}
+        code = ('import json,sys\nprint(json.dumps({"ready":True}),flush=True)\n'
+                'for request in sys.stdin:\n'
+                ' assert request=="query\\n"\n'
+                ' print('+repr(json.dumps(properties))+',flush=True)\n')
+        query = self.observer.UnitQuery([], executable=sys.executable, helper=code)
+        self.addCleanup(query.close)
+        query.start()
+        pid = query.process.pid
+        self.assertEqual(query.query(), properties)
+        self.assertEqual(query.query(), properties)
+        self.assertEqual(query.process.pid, pid)
+        query.close()
+        self.assertIsNotNone(query.process.poll())
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest helper uses Linux pipes')
+    def test_query_timeout_reaps_helper_and_cannot_consume_a_late_reply(self):
+        code = ('import json,sys,time\nprint(json.dumps({"ready":True}),flush=True)\n'
+                'sys.stdin.readline()\ntime.sleep(60)\n')
+        query = self.observer.UnitQuery([], executable=sys.executable, helper=code)
+        self.addCleanup(query.close)
+        query.start()
+        read = query.read
+        with patch.object(query, 'read', side_effect=lambda _: read(.1)):
+            with self.assertRaises(TimeoutError):
+                query.query()
+        self.assertIsNotNone(query.process.poll())
+        with self.assertRaisesRegex(RuntimeError, 'unavailable'):
+            query.query()
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest helper uses Linux pipes')
+    def test_oversized_query_and_startup_replies_are_bounded_and_reaped(self):
+        for startup in (False, True):
+            with self.subTest(startup=startup):
+                code = 'import json,sys\n'
+                if not startup:
+                    code += 'print(json.dumps({"ready":True}),flush=True)\nsys.stdin.readline()\n'
+                code += 'print("x"*5000,flush=True)\n'
+                query = self.observer.UnitQuery([], executable=sys.executable, helper=code)
+                self.addCleanup(query.close)
+                with self.assertRaisesRegex(ValueError, 'Oversized'):
+                    query.start()
+                    query.query()
+                self.assertIsNotNone(query.process.poll())
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest helper uses Linux pipes')
+    def test_probe_failure_joins_real_query_helper(self):
+        code = ('import json,sys\nprint(json.dumps({"ready":True}),flush=True)\n'
+                'for request in sys.stdin: print("{}",flush=True)\n')
+        query = self.observer.UnitQuery([], executable=sys.executable, helper=code)
+        observer = self.observer.Observer(Path('/unused'), {}, [])
+        observer.transport = query
+        with self.assertRaisesRegex(RuntimeError, 'user probe'):
+            with observer:
+                raise RuntimeError('user probe')
+        self.assertTrue(observer.report['observerJoined'])
+        self.assertTrue(observer.report['queryHelperJoined'])
+        self.assertIsNotNone(query.process.poll())
+
+    def test_broken_query_pipe_does_not_bypass_reaping(self):
+        query = self.observer.UnitQuery([])
+        query.process = Mock()
+        query.process.stdin.close.side_effect = BrokenPipeError
+        query.close()
+        query.process.wait.assert_called_once_with(timeout=1)
+        query.process.stdout.close.assert_called_once()
 
     def test_query_failures_retain_timing_and_cgroup_context_without_sampling(self):
         query = Mock(side_effect=[RuntimeError('NoReply'), RuntimeError('helper unavailable')])
@@ -277,9 +385,16 @@ class MigrationStacks(unittest.TestCase):
         self.package.verify_migration_stacks(report, report['sampler'])
         self.assertFalse(report['historicalCauseEstablished'])
 
+    def test_valid_baseline_does_not_hide_later_observer_failure(self):
+        report = self.report()
+        report['errors'] = ['RuntimeError: Migration unit bus error: org.freedesktop.DBus.Error.NoReply']
+        with self.assertRaisesRegex(ValueError, 'Migration unit observation failed'):
+            self.package.verify_migration_stacks(report, report['sampler'])
+
     def test_proof_rejects_missing_identity_tampered_stacks_and_incomplete_cleanup(self):
         original = self.report()
         changes = [lambda r: r.update(observerJoined=False),
+                   lambda r: r.update(queryHelperJoined=False),
                    lambda r: r.update(deactivationTimeBasis='exact stop invocation'),
                    lambda r: r.update(historicalCauseEstablished=True),
                    lambda r: r['snapshots'][0].update(activeState='deactivating'),
@@ -314,7 +429,7 @@ class MigrationStacks(unittest.TestCase):
     def test_host_and_unprivileged_invocation_are_refused(self):
         with patch.object(self.observer.os, 'getuid', return_value=1100, create=True):
             with self.assertRaisesRegex(RuntimeError, 'private systemd guest'):
-                self.observer.guest_observer({}, [])
+                self.observer.guest_observer({})
 
     def test_guest_refuses_changed_sampler_loader_or_observer_before_install(self):
         values = {'migration-py-spy': b'sampler', 'PluginLoader': b'loader',
@@ -341,7 +456,7 @@ class MigrationStacks(unittest.TestCase):
                         patch.object(self.observer, 'Path', guest_path), \
                         patch.object(self.observer, '__file__', '/repo/syncthing_migration_stacks.py'):
                     with self.assertRaisesRegex(ValueError, 'provenance mismatch'):
-                        self.observer.guest_observer(metadata, [])
+                        self.observer.guest_observer(metadata)
                     opened.assert_not_called()
 
     @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest sampler uses Linux pipes')

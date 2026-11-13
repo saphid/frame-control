@@ -753,7 +753,7 @@
     label != null && R.createElement('h3', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
-    bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
+    bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, bDestructiveWarning, children}) => {
     const inFlight = R.useRef(false);
     const mounted = R.useRef(true);
     const [busy, setBusy] = R.useState(false);
@@ -800,7 +800,9 @@
       R.createElement('h2', null, strTitle),
       strDescription && R.createElement('div', null, strDescription), children,
       error && R.createElement('p', {role:'alert'}, error),
+      bDestructiveWarning && R.createElement('p', {className:'framey-destructive-note'}, 'Destructive action'),
       R.createElement('button', {type:'button', disabled:!!bOKDisabled || busy,
+        className:bDestructiveWarning ? 'framey-destructive' : undefined,
         onClick:action(onOK, bOKDisabled)}, strOKButtonText || 'OK'),
       onMiddleButton && R.createElement('button', {type:'button', disabled:!!bMiddleDisabled || busy,
         onClick:action(onMiddleButton, bMiddleDisabled)}, strMiddleButtonText || 'More'),
