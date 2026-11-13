@@ -143,13 +143,20 @@ case was tested with separate fake sources, not two real same-name screenshots.
 - **Only what's new.** It copies what you take after turning it on, so the
   shots and clips already on the headset don't all arrive at once. **Copy
   everything now** copies everything that isn't on this computer yet, once.
+- **Turning it off.** Disabling a switch stops new automatic work for that
+  kind. The current screenshot batch or clip can finish, but the next one
+  won't start. If both switches were off, turning one back on starts with
+  new captures. **Copy everything now** is a separate explicit request
+  and continues even if you turn the automatic switches off.
 - **Deleted stays deleted.** What it has copied is remembered, per headset, in
   `auto-sync.json` in Frame Control's data folder, so a file you delete here
   isn't copied again (**Copy everything now** would bring it back).
 - **Saved clips only.** Steam's background recording is a rolling buffer, not
   something you chose to keep, so it isn't copied; export it by hand. A clip
   Steam wrote to in the last 30 seconds is still being saved and waits for the
-  next look.
+  next look. **Copy everything now** keeps checking these pending clips until
+  they settle, even when both automatic switches are off. Copies already saved
+  on this computer are skipped while it waits.
 - **It gives way.** It waits while an install, an export, a recording or
   anything else is running on the headset, and stops between files if one
   starts. While a copy is running, switching headsets waits for it, as it does

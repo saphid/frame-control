@@ -82,6 +82,7 @@ class AutoSync:
         self.clock, self.space = clock, space
         self._lock = threading.RLock()
         self._wake = threading.Event()
+        self._revision = 0  # automatic passes retire when their settings change
         self._all = False  # Copy everything now, waiting for the next pass
         self._running = False
         self._backoff = 0
@@ -129,9 +130,12 @@ class AutoSync:
         """{"screenshots": bool, "clips": bool}: turning it on starts the watermark now."""
         with self._lock:
             was = self.enabled()
+            before = self._s["screenshots"], self._s["clips"]
             for key in ("screenshots", "clips"):
                 if key in changes:
                     self._s[key] = bool(changes[key])
+            if before != (self._s["screenshots"], self._s["clips"]):
+                self._revision += 1
             if self.enabled() and (not was or self._s["since"] is None):
                 self._s["since"] = self.clock()
             if not self.enabled():
@@ -179,6 +183,7 @@ class AutoSync:
             if not (shots or clips) or self._s["paused"]:
                 return INTERVAL
             since = None if want_all else self._s["since"] or 0
+            revision = None if want_all else self._revision
         device = self.device()
         if not device:
             return INTERVAL  # nothing connected: nothing to ask
@@ -188,7 +193,7 @@ class AutoSync:
             self._running = True
         self._errors = []
         try:
-            copied, waiting, done = self._pass(device, shots, clips, since)
+            copied, waiting, done = self._pass(device, shots, clips, since, revision)
         except DiskFull as e:
             with self._lock:
                 self._s.update(paused=str(e), error=str(e))
@@ -211,7 +216,9 @@ class AutoSync:
             self._s.update(checked=self.clock(), waiting=waiting)
             if done:
                 self._s["error"] = self._errors[0] if self._errors else None
-                if want_all:
+                # A manual request also waits for clips Steam is still writing,
+                # even when both automatic switches are off.
+                if want_all and not waiting:
                     self._all = False
             self._save()
         return INTERVAL if done else BUSY_WAIT
@@ -260,17 +267,23 @@ class AutoSync:
             self._errors.append(self._failures[key])
             return False
 
-    def _interrupted(self, device):
-        return self.busy() or self.device() != device
+    def _interrupted(self, device, revision):
+        if self.busy() or self.device() != device:
+            return True
+        with self._lock:
+            # Manual Copy everything now requests survive toggle changes.
+            # Automatic listings belong to the settings that started them,
+            # even if a switch was quickly turned off and back on again.
+            return revision is not None and revision != self._revision
 
-    def _pass(self, device, shots, clips, since):
+    def _pass(self, device, shots, clips, since, revision):
         """-> (copied, clips still being written, finished without stopping for other work)."""
         copied = waiting = 0
         if shots:
-            if self._interrupted(device):
+            if self._interrupted(device, revision):
                 return copied, waiting, False
             listing = self.list_shots(device)["shots"]
-            if self._interrupted(device):
+            if self._interrupted(device, revision):
                 return copied, waiting, False
             done = self._synced(device, "shots")
             self._mark(device, "shots", [s["id"] for s in listing if s.get("saved")])
@@ -278,10 +291,10 @@ class AutoSync:
                     if not s.get("saved") and (since is None or (s["time"] >= since and s["id"] not in done))
                     and self._retry_allowed(device, s["id"])]
             for i in range(0, len(todo), BATCH):
-                if self._interrupted(device):
+                if self._interrupted(device, revision):
                     return copied, waiting, False
                 self._room(self.shots_folder)
-                if self._interrupted(device):
+                if self._interrupted(device, revision):
                     return copied, waiting, False
                 batch = todo[i:i + BATCH]
                 try:
@@ -295,10 +308,10 @@ class AutoSync:
                 self._mark(device, "shots", batch)
                 copied += len(batch)
         if clips:
-            if self._interrupted(device):
+            if self._interrupted(device, revision):
                 return copied, waiting, False
             listing = [c for c in self.list_clips(device)["clips"] if c.get("kind") == "clip"]
-            if self._interrupted(device):
+            if self._interrupted(device, revision):
                 return copied, waiting, False
             done = self._synced(device, "clips")
             self._mark(device, "clips", [c["id"] for c in listing if c.get("saved")])
@@ -312,10 +325,10 @@ class AutoSync:
                 if c.get("idle") is None or c["idle"] < SETTLE:
                     waiting += 1  # still being written: copied on a later look
                     continue
-                if self._interrupted(device):
+                if self._interrupted(device, revision):
                     return copied, waiting, False
                 self._room(self.clips_folder)
-                if self._interrupted(device):
+                if self._interrupted(device, revision):
                     return copied, waiting, False
                 try:
                     self.export_clip(device, c["id"])
