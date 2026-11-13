@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-13T04:16:22.882376+00:00",
+  "base": "36ab7efec97fcfe0998d1774c9017c1f1dfeb0ec",
+  "feature": "fbfa613eea972834bedac6c210f5af9dd546aa9e",
+  "integration": "38717817649348243f8595d4cc4cd60fc8c5afb0",
+  "tests": 92,
+  "skips": 0,
+  "fieldHostUnchangedFromQualifiedFeature": true,
+  "testLogSha256": "8fd49b415d84d79ca8a4686a3b65041c25b26dd3e5bac84af2d940866da8d5c9",
+  "sourceSha256": {
+    "ui/framey-host.js": "0c4266f0ba8ca73a116611bf7ca4a0c4b5b1ef17fd32744565cbae8e38bf99ca",
+    "tests/page/framey_field_refs.html": "d3c5ce6974f83389cfcd1c49c2f400414b7fba84829440ecb0524fa85e8a9c00",
+    "tests/test_framey_field_refs_browser.py": "34678df9d5d453eb6979e0e0cb2cc81ceec3a43791b76c206417417914a1e69c",
+    "tests/decky-runtime/syncthing_migration_stacks.py": "77412f91a6d964560f362f36284f7f59ddb077495e6ca9d7725c94dff3d5dab0",
+    "tests/test_syncthing_flatpak_migration_stacks.py": "180a664d6b20fcb85449ad9624d813522d1179e2324d6d6b109a78b7d68f22df"
+  },
+  "realFrameContacted": false,
+  "wornVisibilityVerified": false,
+  "controllerInputVerified": false,
+  "releaseQualified": false
+}
