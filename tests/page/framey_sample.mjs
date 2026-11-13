@@ -93,7 +93,7 @@ assert.equal(calls.filter(call=>call.method==='set_setting').length,2,
 // sample setting only after explicit confirmation.
 const reset=content.children[0][2].children[0];
 const setCalls=()=>calls.filter(call=>call.method==='set_setting');
-const dialog=()=>roots.get(elements.get('framey-modal')).value[0].children[1];
+const dialog=()=>roots.get(elements.get('framey-modal')).value[0].children[1].children[0];
 reset.props.onClick();
 reset.props.onClick();
 assert.equal(roots.get(elements.get('framey-modal')).value.length,1,
