@@ -170,6 +170,9 @@ case was tested with separate fake sources, not two real same-name screenshots.
   to allow another three attempts without restarting Frame Control. **Copy
   everything now** also resets failed attempts and includes older files.
   Resume keeps the history of successful copies, so it does not recopy them.
+  A manual copy request keeps its failed files pending even with both automatic
+  switches off. It uses the same three-attempt limit; **Resume** allows another
+  three attempts. Once the request finishes, it stops checking.
 - **With several headsets** each check and copy belongs to the headset selected
   when the check began. Switching between lists or copies stops that pass;
   another headset's saved files cannot become part of its copy history.
