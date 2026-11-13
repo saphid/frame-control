@@ -130,7 +130,8 @@ class Observer:
         self.stop = threading.Event()
         self.thread = None
         self.report = dict(sampler=metadata, unit=UNIT, snapshots=[],
-                           errors=[], deactivationTimeBasis='first observed deactivating state',
+                           errors=[], observationErrorCount=0, observationErrorDetails=[],
+                           deactivationTimeBasis='first observed deactivating state',
                            changesStopBudget=False, historicalCauseEstablished=False)
         self.baseline = False
         self.deactivating_at = None
@@ -192,12 +193,33 @@ class Observer:
             snapshot['error'] = type(error).__name__ + ': ' + str(error)
 
     def run(self):
-        while not self.stop.is_set():
+        self.report['observerStartedMonotonic'] = time.monotonic()
+        group = Path('/sys/fs/cgroup') / GROUP.lstrip('/')
+
+        def present():
             try:
-                self.tick(self.query(), time.monotonic())
+                return group.is_dir()
+            except OSError:
+                return None  # An unreadable cgroup is not evidence of absence.
+
+        while not self.stop.is_set():
+            started = time.monotonic()
+            before = present()
+            phase = 'query'
+            try:
+                properties = self.query()
+                phase = 'sampling'
+                self.tick(properties, time.monotonic())
             except Exception as error:
+                self.report['observationErrorCount'] += 1
                 if len(self.report['errors']) < 8:
-                    self.report['errors'].append(type(error).__name__ + ': ' + str(error))
+                    message = type(error).__name__ + ': ' + str(error)
+                    self.report['errors'].append(message)
+                    self.report['observationErrorDetails'].append(dict(
+                        error=message, phase=phase, startedMonotonic=started,
+                        elapsedSeconds=round(time.monotonic() - started, 3),
+                        cgroupPresentBefore=before, cgroupPresentAfter=present(),
+                        baselineAttempted=self.baseline))
             self.stop.wait(0.2)
 
     def __enter__(self):
