@@ -7,7 +7,7 @@ import argparse
 import hashlib
 import io
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import sys
 import zipfile
@@ -41,9 +41,13 @@ def api_v1_bridge(archive, folder, bundle):
     if len(children) > 128:
         return False
     supported = False
-    for item in children.values():
-        if item is None or item.is_dir() or not item.filename.endswith('.js'):
+    for child, item in children.items():
+        if PurePosixPath(child).suffix != '.js':
             continue
+        # The runtime rejects direct children with a .js suffix unless they
+        # are files, including directories implied by deeper archive members.
+        if item is None or item.is_dir():
+            return False
         if item.file_size > 8 * 1024 * 1024:
             return False
         if API_V1_MARKER in archive.read(item):
@@ -60,7 +64,7 @@ def check(path, name):
     folder = frame_decky_store.archive_info(data, digest, name)
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         manifest_entry = archive.getinfo(folder + '/plugin.json')
-        manifest = json.loads(archive.read(manifest_entry))
+        manifest = json.loads(archive.read(manifest_entry).decode('utf-8'))
         entry = folder + '/dist/index.js'
         frontend = next((item for item in archive.infolist() if item.filename == entry and not item.is_dir()), None)
         version = manifest.get('api_version')

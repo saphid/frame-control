@@ -1,0 +1,46 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  const section=()=>container.querySelector('section'),status=()=>container.querySelector('[role="status"]');
+  const loading=()=>__OFFICIAL_LOADING__;
+  let gamesWithShaderCache=[],totalShaderCacheSize='Loading';
+  let clicks=0;
+  const children=React.createElement('button',{onClick:()=>clicks++},'Synthetic child action');
+  // Exact published section header/condition, with synthetic children only.
+  const cache=()=>__OFFICIAL_CACHE_HEADER__,children);
+  try {
+    render(loading());
+    assert(status()?.textContent==='Loading…','published loading section lost its spinner');
+    assert(section().getAttribute('aria-busy')==='true','loading section was not marked busy');
+    assert(section().querySelector('h2')?.textContent==='Fetching settings...','loading title changed');
+    render(cache());
+    assert(status()&&section().getAttribute('aria-busy')==='true','unknown cache total looked ready');
+    assert(section().querySelector('h2')?.textContent==='Shader Cache','cache title changed');
+    container.querySelector('button').click();assert(clicks===1,'loading hid or disabled the plugin child action');
+    totalShaderCacheSize='0B';render(cache());
+    assert(!status()&&!section().hasAttribute('aria-busy'),'known empty cache still looked busy');
+    assert(container.querySelector('button'),'ready state lost children');
+    totalShaderCacheSize='Synthetic size';gamesWithShaderCache=[{id:424242}];render(cache());
+    assert(!status(),'populated cache still looked busy');
+    gamesWithShaderCache=[];render(cache());
+    assert(status(),'loading did not return after an update');
+    render(React.createElement(DFL.PanelSection,null,children));
+    assert(!status()&&!section().hasAttribute('aria-busy')&&!section().querySelector('h2'),'default section changed');
+    container.querySelector('button').click();assert(clicks===2,'default child callback changed');
+    ReactDOM.flushSync(()=>root.unmount());assert(!container.textContent,'section did not unmount cleanly');
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedLoadingSection:true,publishedCacheCondition:true,loadingStatusVisible:true,
+      busyStateCleared:true,knownEmptyDistinct:true,childrenPreserved:true,childCallbackPreserved:true,
+      loadingUpdates:true,defaultSectionPreserved:true,syntheticData:true,
+      realFrameContacted:false,realSettingsLoaded:false,realCacheReadOrRemoval:false,
+      controllerInputVerified:false,wornVisibilityVerified:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

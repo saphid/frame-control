@@ -24,9 +24,14 @@ jobs:
         with:
           node-version: "24"
       - name: Install zsh
-        # The runner image's third-party apt sources (packages.microsoft.com) sometimes
-        # fail to refresh; Ubuntu's own lists still update, and the install fails if not.
-        run: (sudo apt-get update -qq || true) && sudo apt-get install -y -qq zsh
+        timeout-minutes: 12
+        run: |
+          if command -v zsh >/dev/null 2>&1; then
+            zsh --version
+            exit 0
+          fi
+          sudo python3 scripts/ci-ubuntu-packages.py zsh
+          zsh --version
       - name: Script syntax
         run: |
           sh -n ui/local-bin/ssh
@@ -131,9 +136,14 @@ jobs:
       - name: Verify every pinned catalog archive
         run: python3 scripts/framey-cache-catalog.py --cache "$RUNNER_TEMP/framey-catalog" --output "$RUNNER_TEMP/framey-e2e/catalog-cache.json"
       - name: Install zsh
-        # The runner image's third-party apt sources (packages.microsoft.com) sometimes
-        # fail to refresh; Ubuntu's own lists still update, and the install fails if not.
-        run: (sudo apt-get update -qq || true) && sudo apt-get install -y -qq zsh
+        timeout-minutes: 12
+        run: |
+          if command -v zsh >/dev/null 2>&1; then
+            zsh --version
+            exit 0
+          fi
+          sudo python3 scripts/ci-ubuntu-packages.py zsh
+          zsh --version
       - name: End-to-end tests
         env:
           FRAMEY_AUDIT_CACHE: ${{ runner.temp }}/framey-catalog
