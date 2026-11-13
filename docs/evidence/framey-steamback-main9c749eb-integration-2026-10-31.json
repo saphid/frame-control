@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-31T23:14:43.781134+00:00",
+  "pr": 527,
+  "testedSource": "6eb461b1f4922e99ba95ea0d2457e314c6edfbf3",
+  "integratedMain": "9c749eb2ac1707229759adb1c42f69079e8df19d",
+  "normalMergeParents": [
+    "028719b36a1547d94bfeb4318a741636bfe5581c",
+    "9c749eb2ac1707229759adb1c42f69079e8df19d"
+  ],
+  "sourceInputs": 23,
+  "serverTests": 1963,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 5,
+  "localNativePluginIds": [
+    46,
+    130
+  ],
+  "steambackRpcs": [
+    11,
+    9
+  ],
+  "independentPrivateSaveSnapshotsVerified": true,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "store130Pin": "1.0.1",
+  "github102CandidateStatus": "unverified",
+  "prefixBothExactArchiveInstallOutputsUnchangedFromMain": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 404.246,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "partial",
+  "realSteamSavesAutomaticTriggersOfficialUiWearerControllerUnverified": true,
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "31ab1e2ddee23f19501a5bd069f55f971dac9c0f10cdc2d7167dcf7134255329",
+  "rawBytes": 53270
+}

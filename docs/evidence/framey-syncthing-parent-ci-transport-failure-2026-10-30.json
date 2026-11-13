@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-10-30T16:11:58.267244+00:00",
+  "head": "369d6f2c7f2a8f598530d48975f83ab930ff7aea",
+  "runId": 41083756367,
+  "jobId": 124159381885,
+  "artifactId": 12991877694,
+  "architecture": "x86_64",
+  "artifactSha256": "c3b0ef682da58c847f4abd7d9a1f6504766cda13a47555e31f805c30a156b3cb",
+  "allDeclaredSourcesMatched": true,
+  "exactSourceFingerprints": 126,
+  "inputFingerprints": 123,
+  "conclusion": "failure",
+  "error": "Incomplete/ambiguous chunked guest result",
+  "guestChunkTotal": 246,
+  "guestChunksRetained": 245,
+  "missingGuestChunkIndexes": [
+    187
+  ],
+  "oversizedGuestChunks": [
+    {
+      "index": 186,
+      "dataCharacters": 4903
+    }
+  ],
+  "guestFirstChunkClaimsSuccess": true,
+  "fullGuestResultVerified": false,
+  "allEightCapturesVerified": false,
+  "artifactPngFiles": 0,
+  "ownedQemuReaped": true,
+  "rootCauseEstablished": false,
+  "realFrameContacted": false,
+  "installerEnabled": false
+}

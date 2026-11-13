@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-31T22:13:02.228089+00:00",
+  "pr": 520,
+  "executedHead": "fc59e757c6ca99149c109c25529ca020a532b2fe",
+  "integratedSource": "fabebf75d3d1b313337e521206ded796b3fa9f19",
+  "integratedMain": "d5eebdac850bdedaf0472dc1bbc93afede17c710",
+  "allNonEvidenceFilesUnchanged": true,
+  "newLocalTestsRun": false,
+  "all18ChecksFiveRunsPassedOnExecutedHead": true,
+  "artifacts": 9,
+  "allFourPackageModesQualified": true,
+  "uniqueSources": 151,
+  "verifiedHashBindings": 1367,
+  "allArtifactSourceBindingsAlsoMatchIntegratedSource": true,
+  "nativeCasesPerArchitecture": 48,
+  "nativeRpcsPerArchitecture": 601,
+  "nativeSourceInputs": 22,
+  "radiyoRpcs": [
+    9,
+    7
+  ],
+  "independentRadiyoTabmasterTimerDeckyPartyBothArchitectures": true,
+  "hostedCatalogTests": 53,
+  "hostedCatalogSkips": 0,
+  "catalogPins": 116,
+  "catalogOutcomes": {
+    "installed-removed": 69,
+    "blocked": 47
+  },
+  "sourceInputEquivalenceOnly": true,
+  "freshPublicationHeadCiRequired": true,
+  "compatibility": "partial",
+  "trustedExternalStationsAudioAndOfficialUiUnverified": true,
+  "realSteamCef": false,
+  "genericCleanRuntimeClaim": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "4ace1042cee7ae971532c94e32296cf1c65fc6f673cfda07179e1daba34ea5e3",
+  "rawBytes": 6948654
+}

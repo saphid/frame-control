@@ -1,0 +1,423 @@
+{
+  "baseMain": "51841728090a45f9f452b4cd4ccf93f4caf8df14",
+  "branch": {
+    "sourceRevision": "a6a32451af03d9f0079251aebbcd9fdf82e0d716",
+    "native": {
+      "decky": "v3.3.0",
+      "architecture": "x86_64",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "sourceSha256": {
+        "scripts/framey-test-decky-runtime.py": "e4a765e3d0051a1a706737d4a532250038660410c4060a08d32fe506b34d1fbd",
+        "ui/framey_decky_ipc.py": "b938352007c2ac17cb2e79e73cf364884d8d92e6f39be954c92c1dd67e9943b0",
+        "tests/decky-runtime/check.py": "32d95209b1265a6085c97a17b35b09d3d56a55e9f1d8f8811e71d416a782aa01",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/decky-runtime/cases.json": "f4b46a00ca0591b5ec8f141d23211a6203950104f65ddac1bcc13aa3f8b558b6",
+        "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+        "ui/frame_decky_store.py": "57264ec04c2011dc7f416d3a0ccc75cb1a76bfb966cae0ff0658f16ef6806503",
+        "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+        "tests/decky-runtime/wine_cellar_private.py": "357bd5c472218c510dcdd579cb972706ec3ccc176e6177f3ed2548c8cc448128",
+        "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+        "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+        ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+      },
+      "cases": [
+        {
+          "id": 61,
+          "name": "TabMaster",
+          "version": "2.15.1",
+          "sha256": "e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5",
+          "shim": null,
+          "calls": [
+            {
+              "method": "get_setting",
+              "result": "ready"
+            },
+            {
+              "method": "get_user_desktop",
+              "result": "/home/tester/Desktop"
+            },
+            {
+              "method": "get_users_dict",
+              "result": {}
+            },
+            {
+              "method": "get_tags",
+              "result": []
+            },
+            {
+              "method": "set_active_user_id",
+              "result": false
+            },
+            {
+              "method": "get_tabs",
+              "result": {}
+            },
+            {
+              "method": "get_tab_profiles",
+              "result": {}
+            },
+            {
+              "method": "set_tabs",
+              "result": null
+            },
+            {
+              "method": "set_tab_profiles",
+              "result": null
+            },
+            {
+              "method": "set_friends",
+              "result": null
+            },
+            {
+              "method": "set_friends_games",
+              "result": null
+            },
+            {
+              "method": "set_tags",
+              "result": null
+            },
+            {
+              "method": "set_setting",
+              "result": false
+            },
+            {
+              "method": "get_setting",
+              "result": false
+            },
+            {
+              "method": "get_tabs",
+              "result": {
+                "shared": {
+                  "name": "Private shared tab",
+                  "visibleToOthers": true,
+                  "filters": [
+                    {
+                      "type": "installed",
+                      "value": false
+                    }
+                  ]
+                },
+                "private": {
+                  "name": "Private hidden tab",
+                  "visibleToOthers": false
+                }
+              }
+            },
+            {
+              "method": "get_tab_profiles",
+              "result": {
+                "private-profile": [
+                  "shared",
+                  "private"
+                ]
+              }
+            },
+            {
+              "method": "get_friends",
+              "result": [
+                {
+                  "id": "fixture-friend",
+                  "name": "Private Friend"
+                }
+              ]
+            },
+            {
+              "method": "get_friends_games",
+              "result": {
+                "fixture-friend": [
+                  777,
+                  888
+                ]
+              }
+            },
+            {
+              "method": "get_tags",
+              "result": [
+                {
+                  "id": 17,
+                  "name": "Private tag"
+                }
+              ]
+            },
+            {
+              "method": "set_active_user_id",
+              "result": false
+            },
+            {
+              "method": "get_tabs",
+              "result": {}
+            },
+            {
+              "method": "get_friends",
+              "result": []
+            },
+            {
+              "method": "get_friends_games",
+              "result": {}
+            },
+            {
+              "method": "get_tab_profiles",
+              "result": {}
+            },
+            {
+              "method": "get_shared_tabs",
+              "result": {
+                "framey-alice": {
+                  "shared": {
+                    "name": "Private shared tab",
+                    "visibleToOthers": true,
+                    "filters": [
+                      {
+                        "type": "installed",
+                        "value": false
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "method": "set_tabs",
+              "result": null
+            },
+            {
+              "method": "set_active_user_id",
+              "result": false
+            },
+            {
+              "method": "get_tabs",
+              "result": {
+                "shared": {
+                  "name": "Private shared tab",
+                  "visibleToOthers": true,
+                  "filters": [
+                    {
+                      "type": "installed",
+                      "value": false
+                    }
+                  ]
+                },
+                "private": {
+                  "name": "Private hidden tab",
+                  "visibleToOthers": false
+                }
+              }
+            },
+            {
+              "method": "get_shared_tabs",
+              "result": {}
+            },
+            {
+              "method": "get_users_dict",
+              "result": {
+                "framey-alice": {
+                  "tabs": {
+                    "shared": {
+                      "name": "Private shared tab",
+                      "visibleToOthers": true,
+                      "filters": [
+                        {
+                          "type": "installed",
+                          "value": false
+                        }
+                      ]
+                    },
+                    "private": {
+                      "name": "Private hidden tab",
+                      "visibleToOthers": false
+                    }
+                  },
+                  "friends": [
+                    {
+                      "id": "fixture-friend",
+                      "name": "Private Friend"
+                    }
+                  ],
+                  "friendsGames": {
+                    "fixture-friend": [
+                      777,
+                      888
+                    ]
+                  },
+                  "tabProfiles": {
+                    "private-profile": [
+                      "shared",
+                      "private"
+                    ]
+                  }
+                },
+                "framey-bob": {
+                  "tabs": {
+                    "bob-only": {
+                      "name": "Private Bob tab",
+                      "visibleToOthers": false
+                    }
+                  },
+                  "friends": [],
+                  "friendsGames": {}
+                }
+              }
+            },
+            {
+              "method": "get_tags",
+              "result": [
+                {
+                  "id": 17,
+                  "name": "Private tag"
+                }
+              ]
+            },
+            {
+              "method": "get_setting",
+              "result": false
+            },
+            {
+              "method": "set_active_user_id",
+              "result": false
+            },
+            {
+              "method": "get_tabs",
+              "result": {
+                "bob-only": {
+                  "name": "Private Bob tab",
+                  "visibleToOthers": false
+                }
+              }
+            },
+            {
+              "method": "get_shared_tabs",
+              "result": {
+                "framey-alice": {
+                  "shared": {
+                    "name": "Private shared tab",
+                    "visibleToOthers": true,
+                    "filters": [
+                      {
+                        "type": "installed",
+                        "value": false
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "method": "set_active_user_id",
+              "result": false
+            },
+            {
+              "method": "get_tabs",
+              "result": {
+                "shared": {
+                  "name": "Private shared tab",
+                  "visibleToOthers": true,
+                  "filters": [
+                    {
+                      "type": "installed",
+                      "value": false
+                    }
+                  ]
+                },
+                "private": {
+                  "name": "Private hidden tab",
+                  "visibleToOthers": false
+                }
+              }
+            },
+            {
+              "method": "get_tab_profiles",
+              "result": {
+                "private-profile": [
+                  "shared",
+                  "private"
+                ]
+              }
+            },
+            {
+              "method": "get_friends",
+              "result": [
+                {
+                  "id": "fixture-friend",
+                  "name": "Private Friend"
+                }
+              ]
+            },
+            {
+              "method": "get_friends_games",
+              "result": {
+                "fixture-friend": [
+                  777,
+                  888
+                ]
+              }
+            }
+          ],
+          "discovered": [
+            {
+              "name": "TabMaster",
+              "version": "2.15.1",
+              "load_type": 1,
+              "disabled": false
+            }
+          ],
+          "privateSettings": {
+            "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: TabMaster\n[loader][INFO]: Loaded TabMaster (v2.15.1)\nInitializing Tab Master.\nGot 0 tags\nactive user id: framey-alice\nUser framey-alice had no settings.\nGot tabs {}\nGot tab profiles {}\nGot tabs {'shared': {'name': 'Private shared tab', 'visibleToOthers': True, 'filters': [{'type': 'installed', 'value': False}]}, 'private': {'name': 'Private hidden tab', 'visibleToOthers': False}}\nGot tab profiles {'private-profile': ['shared', 'private']}\nGot 1 friends\nGot 1 friendsGames\nGot 1 tags\nactive user id: framey-bob\nUser framey-bob had no settings.\nGot tabs {}\nGot 0 friends\nGot 0 friendsGames\nGot tab profiles {}\nGot shared tabs {'framey-alice': {'shared': {'name': 'Private shared tab', 'visibleToOthers': True, 'filters': [{'type': 'installed', 'value': False}]}}}\nactive user id: framey-alice\nGot tabs {'shared': {'name': 'Private shared tab', 'visibleToOthers': True, 'filters': [{'type': 'installed', 'value': False}]}, 'private': {'name': 'Private hidden tab', 'visibleToOthers': False}}\nGot shared tabs {}\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: TabMaster\n[loader][INFO]: Loaded TabMaster (v2.15.1)\nInitializing Tab Master.\nGot 1 tags\nactive user id: framey-bob\nGot tabs {'bob-only': {'name': 'Private Bob tab', 'visibleToOthers': False}}\nGot shared tabs {'framey-alice': {'shared': {'name': 'Private shared tab', 'visibleToOthers': True, 'filters': [{'type': 'installed', 'value': False}]}}}\nactive user id: framey-alice\nGot tabs {'shared': {'name': 'Private shared tab', 'visibleToOthers': True, 'filters': [{'type': 'installed', 'value': False}]}, 'private': {'name': 'Private hidden tab', 'visibleToOthers': False}}\nGot tab profiles {'private-profile': ['shared', 'private']}\nGot 1 friends\nGot 1 friendsGames\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "loaderConsoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+            "jsonDecodeDiagnosticCount": 1,
+            "loaderConsoleErrorFree": false,
+            "publishedBackendUnmodified": true,
+            "backendSha256": "cd34adcd3ea0cef90ca96d8ceff15cbd86a5f3b6116da35eeb892e2fc4870347",
+            "actualUserHome": true,
+            "emptyDefaults": true,
+            "falseValuesPreserved": true,
+            "perUserTabsAndProfiles": true,
+            "perUserFriendsAndGames": true,
+            "sharedTabVisibilityFiltered": true,
+            "globalTags": true,
+            "settingsPersistedToDisk": true,
+            "settingsPersistedAcrossLoaderRestart": true,
+            "settingsSha256": "371f4640e224ccb908d3470c91fbdda3e2d582836700a674145709cd36a1d7d4",
+            "ownedLoaderStops": [
+              {
+                "returncode": 0,
+                "elapsedSeconds": 0.2138057081028819,
+                "signaledOnlyOwnedLoader": true,
+                "ownedProcessIdentitiesReaped": true,
+                "ownedProcessCount": 5
+              },
+              {
+                "returncode": 0,
+                "elapsedSeconds": 0.26682066498324275,
+                "signaledOnlyOwnedLoader": true,
+                "ownedProcessIdentitiesReaped": true,
+                "ownedProcessCount": 5
+              }
+            ],
+            "completeLoaderShutdownLogged": true,
+            "steamLibraryEditingVerified": false,
+            "backupRestoreVerified": false,
+            "browserVerified": false,
+            "realSteamCef": false,
+            "realFrameContacted": false,
+            "physicalControllerVerified": false
+          },
+          "result": "published Decky API1 discovery, private per-user settings, shared-tab filtering, false values and disk/loader-restart persistence passed; Steam library editing, backup/restore, browser, Frame and VR unverified"
+        }
+      ]
+    },
+    "focusedTests": 105,
+    "unitLogSha256": "b86e957726a2b20dcc6c9f96941dfe1dcf7ca28ef9d5e8ff0b88ab7531a13b51",
+    "allTwelveFingerprintsVerified": true,
+    "exactLiteralRpcsAndManagedBackendVerified": true,
+    "main31ProbeBodiesPreserved": true,
+    "catalogPoliciesAndOther115RecordsPreserved": true,
+    "ownedNativeResourcesRemoved": true,
+    "cleanConsoleClaimed": false
+  },
+  "realFrameContacted": false,
+  "localPreparationFailure": "An initial fixture string-match assertion failed; the shell continued to a local merge commit with conflict markers. Corrected at a6a32451 before verification or any push, with stop-on-error enabled. This was not counted as a passing check.",
+  "limits": [
+    "Local native AMD64 targeted check only; full exact-head hosted gates still required",
+    "One unattributed shutdown JSON diagnostic retained; no error-free console or Steam editing/VR claim"
+  ]
+}

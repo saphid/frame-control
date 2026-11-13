@@ -1,0 +1,73 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<style>#fixture > div {height:80px; overflow-y:auto}</style>
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div><div id="framey-modal"></div>
+<div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container),SP_REACT=React;
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  const content=height=>React.createElement('div',{style:{height}},'Local content');
+  // Run the exact pinned ref, overflow effect and panel expression within a
+  // private bounded viewport. The surrounding TabMaster modal/CSS, library,
+  // controller descriptions and plugin initializer do not execute.
+  function Published({children,height=80}){
+    const noScrollDescription=true,alwaysFocus=false,actionDescriptionMap={},focusableProps={};
+    __OFFICIAL_LOGIC__
+    return React.createElement(React.Fragment,null,panel,
+      React.createElement('output',{id:'overflow'},String(isOverflowing)));
+  }
+  try {
+    render(React.createElement(Published,null,content(240)));
+    const viewport=container.firstElementChild;
+    assert(viewport.scrollHeight>viewport.clientHeight,'fixture did not overflow');
+    assert(document.getElementById('overflow').textContent==='true','published overflow effect lost its native ref');
+    viewport.scrollTop=80;assert(viewport.scrollTop===80,'native viewport cannot scroll');
+    render(React.createElement(Published,null,content(20)));
+    assert(document.getElementById('overflow').textContent==='false','published effect retained stale overflow');
+    render(React.createElement(Published,{height:90},content(280)));
+    assert(document.getElementById('overflow').textContent==='true','published effect lost ref after update');
+    render(null);
+
+    for(const type of [DFL.ScrollPanel,DFL.ScrollPanelGroup]){
+      const first=React.createRef(),second=React.createRef();
+      let childClicks=0;
+      const local=(ref,extra={})=>React.createElement(type,{ref,className:'local-scroll',
+        style:{height:90,overflowY:'auto'},'data-local':'kept',...extra},
+        React.createElement('button',{onClick:()=>childClicks++},'Local action'),content(300));
+      render(local(first));const node=container.firstElementChild;
+      assert(first.current===node&&node instanceof HTMLDivElement,'object ref did not receive native div');
+      assert(node.className==='local-scroll'&&node.style.height==='90px'&&node.dataset.local==='kept',
+        'native container props lost');
+      node.scrollTop=60;assert(first.current.scrollTop===60,'ref did not expose native scroll position');
+      ReactDOM.flushSync(()=>node.querySelector('button').click());assert(childClicks===1,'child callback changed');
+      render(local(second));
+      assert(first.current===null&&second.current===node,'object ref replacement did not detach/attach');
+      const seen=[],callback=value=>seen.push(value);
+      render(local(callback));
+      assert(second.current===null&&seen.length===1&&seen[0]===node,'callback ref replacement failed');
+      render(local(callback, {className:'updated-scroll',style:{height:100,overflowY:'scroll'}}));
+      assert(seen.length===1&&seen[0]===node&&node.className==='updated-scroll'&&node.style.height==='100px',
+        'ordinary update recreated native ref or lost props');
+      const name=type===DFL.ScrollPanel?'ScrollPanel':'ScrollPanelGroup';
+      assert(DFL.findModuleByExport(value=>value===type)?.[name]===type,'ref component missing from local module lookup');
+      render(null);assert(seen.length===2&&seen[1]===null&&!node.isConnected,'unmount did not retire callback ref');
+    }
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedTabMasterOverflowEffect:true,overflowUpdates:true,nativeScrollPosition:true,
+      bothScrollContainers:true,objectRefReplacement:true,callbackRefReplacement:true,
+      stableNativeNode:true,unmountClearsRefs:true,propsAndChildCallbacksRetained:true,localModuleLookup:true,
+      syntheticViewport:true,fullTabMasterModalVerified:false,realFrameContacted:false,
+      wornVisibilityVerified:false,controllerInputVerified:false,vrKeyboardVerified:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

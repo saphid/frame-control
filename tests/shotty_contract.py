@@ -13,6 +13,10 @@ decky = types.ModuleType('decky_plugin')
 decky.logger = logging.getLogger('shotty-contract')
 decky.DECKY_PLUGIN_DIR = str(folder)
 sys.modules['decky_plugin'] = decky
+# Copy contracts isolate filesystem behavior; published Decky IPC is tested natively.
+ipc = types.ModuleType('framey_decky_ipc')
+ipc.install = lambda: None
+sys.modules['framey_decky_ipc'] = ipc
 spec = importlib.util.spec_from_file_location('shotty', folder/'main.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)

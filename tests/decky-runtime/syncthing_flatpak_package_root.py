@@ -1,5 +1,6 @@
 """Bootstrap only the marked disposable package VM, never the host."""
 
+import contextlib
 import json
 import os
 import subprocess
@@ -15,6 +16,7 @@ if (
     raise RuntimeError("Only the private Flatpak VM may run this bootstrap")
 report = {"success": False, "realFrameContacted": False, "hostBusExposed": False}
 browser = False
+stack_inputs = None
 try:
     assert Path("/proc/1/comm").read_text().strip() == "systemd"
     # Separate bounded guest-only data filesystem; retain OSTree's default
@@ -42,17 +44,28 @@ try:
         "XDG_RUNTIME_DIR=/run/user/1100",
         "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1100/bus",
     ]
-    limits = json.loads(Path('/input/flatpak-inputs.json').read_text())['timeouts']
-    browser = json.loads(Path('/input/flatpak-inputs.json').read_text()).get('browserSetupRequested', False)
+    inputs = json.loads(Path('/input/flatpak-inputs.json').read_text())
+    limits = inputs['timeouts']
+    browser = inputs.get('browserSetupRequested', False)
+    stack_inputs = inputs.get('migrationStacks')
     assert os.uname().machine in ('x86_64', 'aarch64')
     expected_user_limit = 2400 if os.uname().machine == 'aarch64' else (1440 if browser else 840)
     assert limits['userSeconds'] == expected_user_limit
-    result = subprocess.run(
-        user + ["python3", "/framey-user.py"],
-        capture_output=True,
-        text=True,
-        timeout=limits['userSeconds'],
-    )
+    observer = contextlib.nullcontext()
+    if stack_inputs:
+        import sys
+        sys.path.insert(0, '/input')
+        from syncthing_migration_stacks import guest_observer
+        assert not browser
+        observer = guest_observer(stack_inputs)
+        report['migrationStacks'] = observer.report
+    with observer:
+        result = subprocess.run(
+            user + ["python3", "/framey-user.py"],
+            capture_output=True,
+            text=True,
+            timeout=limits['userSeconds'],
+        )
     print(result.stdout, flush=True)
     print(result.stderr[-12000:], flush=True)
     partial = [
@@ -79,13 +92,17 @@ except BaseException:
     report["success"] = False
     traceback.print_exc()
     subprocess.run(["journalctl", "-b", "--no-pager", "-n", "100"], timeout=20)
-if browser:
-    encoded = json.dumps(report)
-    chunks = [encoded[offset:offset+4096] for offset in range(0, len(encoded), 4096)]
-    assert 1 <= len(chunks) <= 4096
-    for index, chunk in enumerate(chunks):
-        print('FRAMEY_SYSTEMD_PROBE_CHUNK_JSON=' + json.dumps(
-            {'index': index, 'total': len(chunks), 'data': chunk}), flush=True)
+if browser or stack_inputs:
+    # A separate owned write-only channel avoids journald/console loss and
+    # interleaving. Never reconstruct success from partial log fragments.
+    import sys
+    sys.path.insert(0, '/input')
+    from guest_result import PORT, write_result
+    ports = [p for p in Path('/sys/class/virtio-ports').glob('vport*p*')
+             if (p/'name').read_text().strip() == PORT]
+    assert len(ports) == 1, 'Dedicated guest result port unavailable'
+    with (Path('/dev')/ports[0].name).open('wb', buffering=0) as stream:
+        write_result(stream, report)
 else:
     print("FRAMEY_SYSTEMD_PROBE_JSON=" + json.dumps(report), flush=True)
 subprocess.run(

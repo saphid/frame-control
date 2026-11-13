@@ -6,10 +6,10 @@ const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'ut
 const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface; window.__legacy=legacyServerAPI; window.__library=setLibrarySnapshot; window.__running=setRunningSnapshot; window.__refreshRunning=refreshRunning;\n})();');
 assert.notEqual(testSource,source);
 const states=[];
-const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,next=>states.push(next)], useRef:value=>({current:value}),
-  useEffect(){},isValidElement:value=>!!value?.type};
+  useEffect(){},useLayoutEffect(){},useImperativeHandle(){},isValidElement:value=>!!value?.type};
 class Element {constructor(){this.children=[];this.textContent='';this.attributes={};}
   append(...children){this.children.push(...children);}setAttribute(key,value){this.attributes[key]=value;}
   remove(){this.removed=true;}}
@@ -268,10 +268,30 @@ nodes(tabs,'button')[0].props.onClick();
 nodes(tabs,'button')[2].props.onClick();
 assert.deepEqual(tabChanges,['one']);
 assert.equal(window.DFL.Spinner({}).props.role,'status');
+// Decky's custom validValues predicate applies to every way of changing a
+// slider setting, including editable values and reset defaults.
+const allowed=[],validValues=value=>[1,2,4,8].includes(value);
+const constrained=window.DFL.SliderField({label:'Workers',value:2,min:1,max:8,step:1,
+  editableValue:true,resetValue:4,validValues,onChange:value=>allowed.push(value)});
+const constrainedInputs=nodes(constrained,'input');
+constrainedInputs[0].props.onChange({target:{value:'3'}});
+constrainedInputs[1].props.onChange({target:{value:'3',validity:{valid:true}}});
+assert.deepEqual(allowed,[],'range and typed input cannot save a value rejected by the plugin');
+constrainedInputs[0].props.onChange({target:{value:'4'}});
+constrainedInputs[1].props.onChange({target:{value:'8',validity:{valid:true}}});
+nodes(constrained,'button')[0].props.onClick();
+assert.deepEqual(allowed,[4,8,4]);
+const rejectedReset=window.DFL.SliderField({value:2,min:1,max:8,resetValue:3,validValues});
+assert.equal(nodes(rejectedReset,'button').length,0,'invalid reset values must not be offered');
+const disabledSlider=window.DFL.SliderField({value:2,min:1,max:8,disabled:true,
+  editableValue:true,resetValue:4,validValues,onChange:value=>allowed.push(value)});
+for(const input of nodes(disabledSlider,'input'))input.props.onChange({target:{value:'4'}});
+nodes(disabledSlider,'button')[0].props.onClick();
+assert.deepEqual(allowed,[4,8,4],'disabled handlers stay inert');
 assert.equal(window.DFL.ProgressBar({nProgress:120}).props.value,100);
 assert.equal(window.DFL.ProgressBar({nProgress:40,indeterminate:true}).props.value,undefined,
   'an indeterminate progress element must omit its value');
-assert.equal(window.DFL.ProgressBarItem({nProgress:35}).props.value,35);
+assert.equal(nodes(window.DFL.ProgressBarItem({nProgress:35}),'progress')[0].props.value,35);
 const progressInfo=window.DFL.ProgressBarWithInfo({indeterminate:true,
   sOperationText:'Downloading plugin'});
 assert.equal(nodes(progressInfo,'progress')[0].props.value,undefined);
@@ -618,10 +638,40 @@ assert.equal(unsubscribeRequest.args[0].length,0);
 onMessage({source:parent,data:{type:'framey:reply',id:unsubscribeRequest.id,
   result:{events:[{event:'timer:tick',args:[99]}],cursor:2}}});
 for(let i=0;i<12;i++)await Promise.resolve();assert.equal(eventValues.length,1);
+// A cleanup callback can dispose another listener while a received batch is
+// queued. That retired listener must not overwrite a newer view's state.
+const deliveries=[];
+const retired=value=>deliveries.push(`retired:${value}`);
+const live=value=>deliveries.push(`live:${value}`);
+const cleanup=()=>{
+  deliveries.push('cleanup');
+  api.removeEventListener('simple_timer_seconds_updated',retired);
+};
+api.addEventListener('timer:cleanup',cleanup);
+const firstRegistration=messages.at(-1);
+api.addEventListener('simple_timer_seconds_updated',retired);
+api.addEventListener('simple_timer_seconds_updated',live);
+onMessage({source:parent,data:{type:'framey:reply',id:firstRegistration.id,
+  result:{events:[],cursor:2}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+const batchRequest=messages.at(-1);
+assert.equal(batchRequest.type,'framey:events');
+assert.deepEqual(Array.from(batchRequest.args[0]),['timer:cleanup','simple_timer_seconds_updated']);
+onMessage({source:parent,data:{type:'framey:reply',id:batchRequest.id,
+  result:{events:[{event:'timer:cleanup',args:[]},
+    {event:'simple_timer_seconds_updated',args:[7]}],cursor:4}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+assert.deepEqual(deliveries,['cleanup','live:7'],'removed listeners cannot receive queued events');
 assert.throws(()=>api.addEventListener('bad event',callback),/Invalid Decky event/);
 assert.throws(()=>api.addEventListener('tick',null),/Invalid Decky event/);
+const lateEvents=messages.at(-1);
+assert.equal(lateEvents.type,'framey:events');
 listeners.find(x=>x.type==='unload').handler();
 assert.equal(messages.at(-1).type,'framey:events:close');
+onMessage({source:parent,data:{type:'framey:reply',id:lateEvents.id,
+  result:{events:[{event:'simple_timer_seconds_updated',args:[99]}],cursor:5}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+assert.deepEqual(deliveries,['cleanup','live:7'],'closed panels ignore late event replies');
 const finalRefresh=window.__refreshRunning();
 assert.equal(window.__refreshRunning(),finalRefresh,'Running reads must not overlap');
 const finalRequest=messages.at(-1);

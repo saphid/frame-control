@@ -1,3 +1,7 @@
+# Frame Control: let child IPC EOF yield to Decky shutdown.
+from framey_decky_ipc import install as _framey_install_ipc_eof
+_framey_install_ipc_eof()
+del _framey_install_ipc_eof
 import asyncio
 import json
 import os
@@ -136,6 +140,7 @@ class OwnedWatchdog:
                 return
             self.stop()
         env = patch_env(dict(os.environ))
+        env['FRAMEY_SYNCTHING_OWNER_PID'] = str(os.getpid())
         env.setdefault("DBUS_SESSION_BUS_ADDRESS", f"unix:path=/run/user/{os.getuid()}/bus")
         self.runtime = tempfile.TemporaryDirectory(prefix='framey-syncthing-')
         env['FRAMEY_SYNCTHING_SOCKET'] = str(Path(self.runtime.name)/'watchdog.sock')

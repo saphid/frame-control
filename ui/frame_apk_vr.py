@@ -57,9 +57,13 @@ def _append_string(chunk, text):
     _, hs, size, count, styles, flags, start, style_start = struct.unpack_from('<HHIIIIII', chunk)
     strings_end = style_start or size
     encoded = text.encode('utf-8' if flags & 0x100 else 'utf-16-le')
-    # LAUNCHER is short enough for both single-unit length encodings.
-    new = (bytes([len(text), len(encoded)]) + encoded + b'\0' if flags & 0x100
-           else struct.pack('<H', len(text)) + encoded + b'\0\0')
+    units = len(text.encode('utf-16-le')) // 2
+    def length8(n):
+        return bytes([n]) if n < 128 else bytes([(n >> 8) | 0x80, n & 255])
+    length16 = (struct.pack('<H', units) if units < 0x8000 else
+                struct.pack('<HH', (units >> 16) | 0x8000, units & 0xffff))
+    new = (length8(units) + length8(len(encoded)) + encoded + b'\0' if flags & 0x100
+           else length16 + encoded + b'\0\0')
     string_data = chunk[start:strings_end] + new
     string_data += bytes(-len(string_data) % 4)
     header = bytearray(chunk[:hs])

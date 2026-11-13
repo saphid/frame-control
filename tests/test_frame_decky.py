@@ -78,6 +78,7 @@ class DeckyServiceScript(unittest.TestCase):
         self.assertEqual(json.loads(receipt.read_text())['version'], 'v3.3.0')
         service = Path(self.tmp.name) / '.config/systemd/user/frame-control-decky.service'
         first_unit = service.read_text()
+        self.assertIn('\nKillMode=mixed\n', first_unit)
         self.assertIn('Environment=PATH='+str(Path(self.tmp.name) / '.local/bin')+
                       ':/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n', first_unit)
 
@@ -92,6 +93,7 @@ class DeckyServiceScript(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual((self.base / 'PluginLoader').read_bytes(), second)
         self.assertIn('Environment=PATH=', service.read_text())
+        self.assertIn('\nKillMode=mixed\n', service.read_text())
         result = self.apply('remove')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.base / 'PluginLoader').exists())

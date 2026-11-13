@@ -1,22 +1,38 @@
 """Actual legacy service/profile migration, only inside the owned package VM."""
 
 import configparser
+from contextlib import ExitStack
 import hashlib
 import json
 import os
 from pathlib import Path
 import shutil
-import signal
 import subprocess
+import time
 import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
 
-from syncthing_service import ctl, prop, rpc, wait
+from syncthing_service import ctl, prop, rpc, stop_decky_service, verify_decky_log, wait
 
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def wait_for_instances(app, report):
+    """Observe registry drain after service stop; never remove or kill entries."""
+    began = time.monotonic()
+    def empty():
+        applications = subprocess.check_output(
+            ['/usr/bin/flatpak', 'ps', '--columns=application'], text=True, timeout=10).splitlines()
+        report['remainingFlatpakApplications'] = applications
+        return app not in applications
+    try:
+        wait(empty, 'legacy Flatpak instance registry cleanup')
+    except RuntimeError as error:
+        raise RuntimeError(f"{error}; remaining applications={report.get('remainingFlatpakApplications')!r}") from error
+    report['instanceCleanupElapsedSeconds'] = round(time.monotonic() - began, 3)
 
 
 def main():
@@ -79,7 +95,8 @@ def main():
         '[Install]\nWantedBy=default.target\n'
     ).encode()
     unit.write_bytes(unit_bytes)
-    backend = unrelated = None
+    decky_unit = None
+    unrelated = None
     helper_pid = None
     logs = []
     report = dict(architecture=os.uname().machine, installerEnabled=False,
@@ -150,6 +167,8 @@ def main():
                     target.write_bytes(packed.read(entry))
         plugin = plugins / 'decky-syncthing'
         shutil.copy('/input/main.py', plugin / 'main.py')
+        (plugin / 'py_modules').mkdir(exist_ok=True)
+        shutil.copy('/input/framey_decky_ipc.py', plugin / 'py_modules/framey_decky_ipc.py')
         shutil.copy('/input/watchdog', plugin / 'bin/decky-syncthing-watchdog')
         (plugin / 'bin/decky-syncthing-watchdog').chmod(0o700)
         settings_path = base / 'settings/decky-syncthing/decky-syncthing.json'
@@ -160,7 +179,8 @@ def main():
         distractor = home / 'migration-unrelated/decky-syncthing-watchdog'
         distractor.parent.mkdir()
         shutil.copy('/usr/bin/sleep', distractor)
-        unrelated = subprocess.Popen([str(distractor), '900'], start_new_session=True)
+        unrelated = subprocess.Popen([str(distractor), '900'], start_new_session=True,
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         loader = base / 'PluginLoader'
         shutil.copy('/input/PluginLoader', loader)
         loader.chmod(0o700)
@@ -170,7 +190,21 @@ def main():
                    XDG_RUNTIME_DIR='/run/user/1100', STNOUPGRADE='1')
         log = (home / 'migration-decky.log').open('w+')
         logs.append(log)
-        backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
+        decky_unit = directory / 'frame-control-migration-decky-fixture.service'
+        assert not decky_unit.exists()
+        variables = ('UNPRIVILEGED_PATH', 'PRIVILEGED_PATH', 'CHOWN_PLUGIN_PATH',
+                     'LIVE_RELOAD', 'USE_CEF_CLOSE_WORKAROUND', 'KEEP_SYSTEMD_SERVICE',
+                     'PATH', 'DBUS_SESSION_BUS_ADDRESS', 'XDG_RUNTIME_DIR', 'STNOUPGRADE')
+        decky_unit.write_text('[Unit]\nDescription=Owned migration Decky fixture\n'
+            '[Service]\nType=exec\nKillMode=mixed\nExecStart='+json.dumps(str(loader))+'\n'
+            + ''.join('Environment='+json.dumps(key+'='+env[key])+'\n' for key in variables)
+            + 'StandardOutput=append:'+str(home/'migration-decky.log')+'\n'
+            + 'StandardError=append:'+str(home/'migration-decky.log')+'\n')
+        ctl('daemon-reload')
+        ctl('start', decky_unit.name)
+        assert prop(decky_unit.name, 'ActiveState') == 'active'
+        assert prop(decky_unit.name, 'KillMode') == 'mixed'
+        report['actualMigrationDeckyUserService'] = True
         wait(lambda: rpc('loader/get_plugins'), 'migration Decky discovery')
 
         def current_pid():
@@ -180,7 +214,7 @@ def main():
             pid = int(paths[0].read_text())
             return pid if Path(f'/proc/{pid}/exe').exists() else None
 
-        helper_pid = wait(current_pid, 'migrated owned helper')
+        helper_pid = wait(current_pid, 'migrated owned helper', timeout=80)
 
         def method(name, **kwargs):
             result = rpc('loader/call_legacy_plugin_method', 'Syncthing', name, kwargs)
@@ -239,30 +273,46 @@ def main():
                       legacyDataRetainedAfterRestart=True, legacyIdentityAfterRestart=restarted,
                       legacyMainPidAfterRestart=restarted_pid)
     finally:
-        if backend is not None:
-            if backend.poll() is None:
-                os.killpg(backend.pid, signal.SIGTERM)
-            backend.wait(timeout=20)
-        if helper_pid is not None:
-            wait(lambda: not Path(f'/proc/{helper_pid}').exists(), 'migration helper reaped')
-        if unrelated is not None:
-            if unrelated.poll() is None:
-                unrelated.terminate()
-            unrelated.wait(timeout=5)
-        if unit.exists():
-            assert unit.read_bytes() == unit_bytes
-            ctl('disable', unit.name, check=False)
-            ctl('stop', unit.name)
-            assert prop(unit.name, 'MainPID') == '0'
-            unit.unlink()
-            ctl('daemon-reload')
-        for log in logs:
-            log.seek(0)
-            print(log.read()[-2500:], flush=True)
-            log.close()
+        # Stop failures must not bypass the remaining owned cleanup or lose the
+        # loader log. ExitStack runs every callback and preserves exceptions;
+        # a forced/timed-out Decky stop still fails the package probe.
+        with ExitStack() as cleanup:
+            def check_logs():
+                for log in logs:
+                    try:
+                        verify_decky_log(log)
+                        report['deckyShutdownLogChecked'] = True
+                    finally:
+                        log.close()
+            cleanup.callback(check_logs)
+
+            def remove_legacy_fixture():
+                if unit.exists():
+                    assert unit.read_bytes() == unit_bytes
+                    ctl('disable', unit.name, check=False)
+                    ctl('stop', unit.name)
+                    assert prop(unit.name, 'MainPID') == '0'
+                    unit.unlink()
+                    ctl('daemon-reload')
+            cleanup.callback(remove_legacy_fixture)
+
+            def reap_unrelated_fixture():
+                if unrelated is not None:
+                    if unrelated.poll() is None:
+                        unrelated.terminate()
+                    unrelated.wait(timeout=5)
+            cleanup.callback(reap_unrelated_fixture)
+            if helper_pid is not None:
+                cleanup.callback(wait, lambda: not Path(f'/proc/{helper_pid}').exists(),
+                                 'migration helper reaped')
+            if decky_unit is not None:
+                stop_decky_service(decky_unit.name, report, logs)
+                decky_unit.unlink()
+                ctl('daemon-reload')
+                report['ownedMigrationDeckyServiceRemoved'] = True
     assert {name: sha(runtime / name) for name in retained} == retained
     assert not managed.exists() and not receipt.exists()
-    assert app not in subprocess.check_output(['/usr/bin/flatpak', 'ps', '--columns=application'], text=True, timeout=20)
+    wait_for_instances(app, report)
     report.update(ownedProcessesReaped=True, ownedLegacyFixtureRemoved=True,
                   noOwnedFlatpakInstancesRemain=True, retainedRuntime=str(runtime))
     print('FRAMEY_MIGRATION_JSON=' + json.dumps(report), flush=True)

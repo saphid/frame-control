@@ -119,6 +119,12 @@ the same-plugin navigation regression without a headset.
    Sensor activity and trusted pointers can also be produced synthetically and
    cannot identify controller hardware.
    The JSON `passed` value covers only the script's machine checks.
+   Panel and input events must match this run's nonce and start time, have fresh
+   timestamps and identify an installed plugin. A timed-out or foreign challenge
+   stops before overlay/screenshot reads. The final activity, proximity and
+   battery check must also pass, and challenge or lock cleanup errors force a
+   failed result. These gates are covered by offline fixtures; they have not
+   been exercised with a wearer.
    `wornVisualComfortVerified` and `controllerHardwareVerified` stay false;
    record the wearer's visual and physical-controller observations separately.
 3. **1:15–2:15:** Use the controller to open Settings, return to Panel, invoke

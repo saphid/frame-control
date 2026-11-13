@@ -1,0 +1,36 @@
+{
+  "at": "2026-11-01T07:10:16.275345+00:00",
+  "baseline": "cfa6a54415c3f858e2d2659d99ce9d9241c8c7d8",
+  "file": "tests/test_surround_runtime.py",
+  "realFrameContacted": false,
+  "symlinkTemporaryRootExercised": true,
+  "productionGuardUnchanged": true,
+  "ownedTemporaryFilesRemoved": true,
+  "outcomes": [
+    {
+      "mode": "original",
+      "tests": 9,
+      "failures": 0,
+      "errors": 14,
+      "skips": 0,
+      "success": false,
+      "sourceSha256": "a1de6c323eff14d31f4ce2c5a85d30b0c97d64e65dc83e3280884d4c449e2e4b"
+    },
+    {
+      "mode": "repaired",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "success": true,
+      "sourceSha256": "85e473d9118b19cc2dc2b7604f7b4ff1bf9ed16d5b15f7cc5919e5dfb80a8fd7"
+    }
+  ],
+  "exactFailedJob": 124777797268,
+  "failedJobSource": "cfa6a54415c3f858e2d2659d99ce9d9241c8c7d8",
+  "onlyTestFixtureChanged": true,
+  "productionAndNativeInputsByteIdenticalTo": "cfa6a54415c3f858e2d2659d99ce9d9241c8c7d8",
+  "macOsHostedRecheckRequired": true,
+  "mergeQualified": false,
+  "releaseQualified": false
+}

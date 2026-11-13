@@ -27,3 +27,16 @@ The deterministic gzip SHA-256 is
 The exact helper answered read-only `GetState` against a private fake Steam home
 on the real ARM64 Frame; see
 [`docs/evidence/framey-wine-cellar-arm64-2026-10-29.md`](../../../docs/evidence/framey-wine-cellar-arm64-2026-10-29.md).
+
+The managed `main.py` also installs Frame Control's child-local Decky 3.3.0
+IPC EOF repair. Without it, the published loader can spin on a closed parent
+socket, preventing Wine Cask's exit from being reaped before Decky's five-second
+plugin stop deadline. The managed backend waits for its exact helper, bounds
+TERM/kill waits, and stops its supervisor within that deadline. It does not patch
+the global loader or change the Rust helper. Existing managed installations must
+be updated or reinstalled to receive the `wine-cellar-ipc-eof` receipt marker.
+
+The AMD64 read-only state, restart, open-socket unload and prior-source negative
+control are recorded in
+[`framey-wine-cellar-unload-2026-10-31.md`](../../../docs/evidence/framey-wine-cellar-unload-2026-10-31.md).
+Fresh ARM64 lifecycle qualification and real Frame operation remain unverified.

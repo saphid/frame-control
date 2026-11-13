@@ -33,6 +33,22 @@ NET = {"id": "n-test", "gateway": "192.168.1.1", "gateway_mac": "aa:bb:cc:dd:ee:
        "ssid": None, "wifi": True, "local_ip": "192.168.1.9", "tailscale": {"up": False, "installed": False}}
 
 
+def fixture_dns(test):
+    """Reserved fixture names fail immediately; loopback still uses real sockets."""
+    resolve = socket.getaddrinfo
+
+    def lookup(host, *args, **kwargs):
+        if isinstance(host, str) and host.lower().rstrip(".").endswith(".invalid"):
+            raise socket.gaierror(socket.EAI_NONAME, "Reserved test hostname")
+        return resolve(host, *args, **kwargs)
+
+    # An OS resolver can block on .invalid past the connection deadline. Tests
+    # expecting an unknown name must not depend on the runner's DNS latency.
+    patcher = mock.patch.object(fl.socket, "getaddrinfo", side_effect=lookup)
+    patcher.start()
+    test.addCleanup(patcher.stop)
+
+
 def explain(msg):
     """A cut-down server.unreachable, so this needs no server import."""
     if "Could not resolve" in msg:
@@ -58,6 +74,9 @@ class FailureDetail(unittest.TestCase):
 
 
 class Probe(unittest.TestCase):
+    def setUp(self):
+        fixture_dns(self)
+
     def test_mdns_falls_back_only_to_ip_authenticated_on_this_network(self):
         address = {"host": "frame.local", "kind": "mdns", "last_ip": "192.168.1.40",
                    "last_ip_network": "n-home"}
@@ -151,6 +170,7 @@ class Pick(unittest.TestCase):
 @unittest.skipIf(os.name == "nt", "the stand-in ssh is a POSIX script")
 class Connecting(unittest.TestCase):
     def setUp(self):
+        fixture_dns(self)
         self.dir = Path(tempfile.mkdtemp(prefix="frame-link-"))
         self.addCleanup(shutil.rmtree, self.dir, ignore_errors=True)
         (self.dir / "ssh").mkdir()
@@ -1144,7 +1164,9 @@ class Connecting(unittest.TestCase):
         self.link.connect(["start"])
         line = err.getvalue()
         self.assertIn("frame_link: login failed: The Frame didn't accept this computer's SSH key.", line)
-        self.assertIn("addresses: hostname unresolved; hostname->ipv4", line)
+        # SSH can reject the answering address while the other DNS probe is
+        # still pending. Its timing does not change what the log must scrub.
+        self.assertRegex(line, r"addresses: hostname (?:waiting|resolving|unresolved); hostname->ipv4")
         for leaked in ("steamdeck-jane", "127.0.0.1", "localhost"):
             self.assertNotIn(leaked, line)
         self.assertEqual(self.link.last_failure["stage"], "login")

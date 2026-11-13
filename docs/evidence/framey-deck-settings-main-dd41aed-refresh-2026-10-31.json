@@ -1,0 +1,4606 @@
+{
+  "at": "2026-10-31T14:20:02.034078+00:00",
+  "sourceRevision": "e256d5a0b65e2418de777f5026b7664ac11efc1e",
+  "baseMain": "dd41aede875d7a6b7abac68520784824b96103e9",
+  "priorHead": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+  "sourceAudit": {
+    "at": "2026-10-31T14:16:18.491188+00:00",
+    "sourceRevision": "e256d5a0b65e2418de777f5026b7664ac11efc1e",
+    "baseMain": "dd41aede875d7a6b7abac68520784824b96103e9",
+    "priorHead": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+    "normalMerge": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorDeckSettingsBodyPreserved": true,
+    "all37RuntimeDispatchOccurrencesVerified": true,
+    "mainOtherInstallerBranchesPreserved": true,
+    "onlyPriorDeckSettingsInstallerBranchChanged": true,
+    "allMainApplyScriptDispatchesPreserved": true,
+    "freeLoaderRuntimeAndFixtureMatchMain": true,
+    "other115CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleInventoryUnchanged": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "d07b884d781a8d74588eca160fc48b992bb8f1cc597b48443a2195abaf70be47",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "ad3f9691714864e5aa4b692add498f7530350d52f201bd59159213eb0cc55b46",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "99f9b1c396fe239d6a7e38ed8ede9db23cdb14da65ce81f4f723ee42a219e53f",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "16bd15f65fb8c2c271cdba36260243109a90e986e2ef6b2ebf5a161463c8fdd6",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeInputCount": 17
+  },
+  "localNativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "d07b884d781a8d74588eca160fc48b992bb8f1cc597b48443a2195abaf70be47",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "ad3f9691714864e5aa4b692add498f7530350d52f201bd59159213eb0cc55b46",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "99f9b1c396fe239d6a7e38ed8ede9db23cdb14da65ce81f4f723ee42a219e53f",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "16bd15f65fb8c2c271cdba36260243109a90e986e2ef6b2ebf5a161463c8fdd6",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "deckSettingsRpcCounts": [
+    6,
+    3
+  ],
+  "deckSettingsRepairedStops": [
+    0.215,
+    0.214
+  ],
+  "deckSettingsNegativeStop": 5.224,
+  "freeLoaderCases": [
+    {
+      "caseIndex": 0,
+      "rpcs": 11,
+      "cleanShutdownVerified": true,
+      "expectedNegative": false,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "350696841"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "350696872"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "350696872"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "350696885"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.214,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793456218.9445164"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\nCalling Loader unload function for Free Loader (v1.6.0).\nAttempting to unload with plugin Free Loader (v1.6.0)'s \"_unload\" function.\n\nUnloading Free Loader\nUnloaded Free Loader (v1.6.0)\n\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a79c31079f11c0e2e5bac3ff79a807043e23e618752d085dbf02b11b17a03720",
+          "cleanShutdownVerified": true
+        },
+        {
+          "loaderPid": 23,
+          "descendantsBefore": {
+            "24": {
+              "state": "S",
+              "parent": 23,
+              "start": "350697151"
+            },
+            "33": {
+              "state": "S",
+              "parent": 24,
+              "start": "350697183"
+            },
+            "34": {
+              "state": "S",
+              "parent": 24,
+              "start": "350697183"
+            },
+            "35": {
+              "state": "S",
+              "parent": 34,
+              "start": "350697194"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 33,
+              "returncode": 0
+            },
+            {
+              "pid": 34,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.214,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\nCalling Loader unload function for Free Loader (v1.6.0).\nAttempting to unload with plugin Free Loader (v1.6.0)'s \"_unload\" function.\n\nUnloading Free Loader\nUnloaded Free Loader (v1.6.0)\n\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a79c31079f11c0e2e5bac3ff79a807043e23e618752d085dbf02b11b17a03720",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "diskReadbacks": [
+        {
+          "before": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          },
+          "after": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "before": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": false\n    }\n}",
+              "sha256": "135174cec8912531fb14c949ea91829394f6b5ed4104f02f0064e755d454a139",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": false
+                }
+              }
+            }
+          },
+          "after": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": false\n    }\n}",
+              "sha256": "135174cec8912531fb14c949ea91829394f6b5ed4104f02f0064e755d454a139",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": false
+                }
+              }
+            }
+          }
+        }
+      ],
+      "consoleSha256": "5f1991991e494c242267ec0fa855904faaff1764e16483a9bad2e26f1580f894",
+      "jsonDecodeDiagnosticCount": 0
+    },
+    {
+      "caseIndex": 1,
+      "rpcs": 7,
+      "cleanShutdownVerified": false,
+      "expectedNegative": true,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "350697580"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "350697615"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "350697615"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "350697625"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 5.234,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793456226.3784566"
+          ],
+          "forcedPluginKills": 1,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\n[plugin][WARNING]: Plugin Free Loader (v1.6.0) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "e828dbb632a87eb0b7b8133e31b4009667630a1409eb4d3204cca09d08d40fa9",
+          "cleanShutdownVerified": false
+        }
+      ],
+      "diskReadbacks": [
+        {
+          "before": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          },
+          "after": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          }
+        }
+      ],
+      "consoleSha256": "f947b3880c9940ff2498f4226c45adf4ade429eec454a3b3a004f1604d5dcd21",
+      "jsonDecodeDiagnosticCount": 0
+    }
+  ],
+  "freeLoaderRpcCounts": [
+    11,
+    7
+  ],
+  "fullServerTests": 1948,
+  "fullServerSkips": 16,
+  "fullServerSeconds": 253.623,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerOwnedCleanupVerified": true,
+  "hostedPriorHead": {
+    "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+    "native": {
+      "x86_64": {
+        "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+        "architecture": "x86_64",
+        "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+        "archiveSha256": "d01659bea0122ae4badcd52d8c50b25d9778c212c1e63d152c81c465561ab3af",
+        "nativeCasesCompleted": 43,
+        "officialArchiveDigestsVerified": 34,
+        "sourceSha256": {
+          "scripts/framey-test-decky-runtime.py": "22610546fd26730d0cea6c3308265c1d7c251198642d8fbdf8425c9e20e7117f",
+          "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+          "tests/decky-runtime/check.py": "52b9ab988f7608a723627baaf01972e92a121efa120375b7fbcd654b3bafce56",
+          "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+          "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+          "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+          "tests/decky-runtime/cases.json": "745d2b155b24780b202d8281649fb5602f9f3d188e398317e57319c9437c0d3b",
+          "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+          "ui/frame_decky_store.py": "e2b849aa612455fc2eceef79c27d246276dfb87224a3dd36059d9b7447f6a163",
+          "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+          "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+          "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+          "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+          "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+          "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+          ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+        },
+        "allSixteenSourceFingerprintsVerified": true,
+        "caseInventoryAndDiscoveryVerified": true,
+        "expectedNegativeRegressionsVerified": true,
+        "deckProgressRpcsPerCase": 18,
+        "deckProgressSqliteSnapshotsIndependentlyDecoded": 4,
+        "deckProgressPositiveNoForcedKills": true,
+        "deckProgressOriginalTwoForcedKillsRetained": true,
+        "deckProgressRawConsoleAudited": true,
+        "deckProgressSourceBoundArchivePreservationVerified": true,
+        "ownedStops": [
+          [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.21411446900000186,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.21408518300000878,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            }
+          ],
+          [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 5.22609178700003,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 5.225628584000049,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            }
+          ]
+        ],
+        "realFrameContacted": false,
+        "physicalControllerVerified": false,
+        "run": 41200729134,
+        "job": 124535833793,
+        "artifactId": 13043039468,
+        "artifactDigestMatchesGitHub": true,
+        "exactCompletedJobVerified": true,
+        "exactHeadCheckoutVerified": true,
+        "jobLogSha256": "e4ce877b90db4188cb1b632ffdaf0c726a0539eb788f9b84878ddcff9082ea2f",
+        "all43ConsoleHashesVerified": true,
+        "deckSettingsCases": [
+          {
+            "negative": false,
+            "rpcs": 6,
+            "stops": [
+              {
+                "loaderPid": 9,
+                "descendantsBefore": {
+                  "10": {
+                    "state": "S",
+                    "parent": 9,
+                    "start": "12528"
+                  },
+                  "19": {
+                    "state": "S",
+                    "parent": 10,
+                    "start": "12559"
+                  },
+                  "20": {
+                    "state": "S",
+                    "parent": 10,
+                    "start": "12559"
+                  },
+                  "21": {
+                    "state": "S",
+                    "parent": 20,
+                    "start": "12569"
+                  }
+                },
+                "exactDescendantsRemaining": {},
+                "adoptedChildExits": [
+                  {
+                    "pid": 19,
+                    "returncode": 0
+                  },
+                  {
+                    "pid": 20,
+                    "returncode": 0
+                  }
+                ],
+                "parentOnlySignal": true,
+                "loaderReturncode": 0,
+                "seconds": 0.214,
+                "fixtureClosedUnixPeers": [
+                  "/tmp/plugin_socket_1793451151.5050893"
+                ],
+                "forcedPluginKills": 0,
+                "errors": [],
+                "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+                "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+                "cleanShutdownVerified": true
+              },
+              {
+                "loaderPid": 24,
+                "descendantsBefore": {
+                  "25": {
+                    "state": "S",
+                    "parent": 24,
+                    "start": "12887"
+                  },
+                  "34": {
+                    "state": "S",
+                    "parent": 25,
+                    "start": "12916"
+                  },
+                  "35": {
+                    "state": "S",
+                    "parent": 25,
+                    "start": "12916"
+                  },
+                  "36": {
+                    "state": "S",
+                    "parent": 35,
+                    "start": "12927"
+                  }
+                },
+                "exactDescendantsRemaining": {},
+                "adoptedChildExits": [
+                  {
+                    "pid": 34,
+                    "returncode": 0
+                  },
+                  {
+                    "pid": 35,
+                    "returncode": 0
+                  }
+                ],
+                "parentOnlySignal": true,
+                "loaderReturncode": 0,
+                "seconds": 0.196,
+                "fixtureClosedUnixPeers": [],
+                "forcedPluginKills": 0,
+                "errors": [],
+                "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+                "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+                "cleanShutdownVerified": true
+              }
+            ]
+          },
+          {
+            "negative": true,
+            "rpcs": 3,
+            "stops": [
+              {
+                "loaderPid": 9,
+                "descendantsBefore": {
+                  "10": {
+                    "state": "S",
+                    "parent": 9,
+                    "start": "29294"
+                  },
+                  "19": {
+                    "state": "S",
+                    "parent": 10,
+                    "start": "29323"
+                  },
+                  "20": {
+                    "state": "S",
+                    "parent": 10,
+                    "start": "29323"
+                  },
+                  "21": {
+                    "state": "S",
+                    "parent": 20,
+                    "start": "29333"
+                  }
+                },
+                "exactDescendantsRemaining": {},
+                "adoptedChildExits": [
+                  {
+                    "pid": 19,
+                    "returncode": 0
+                  },
+                  {
+                    "pid": 20,
+                    "returncode": 0
+                  }
+                ],
+                "parentOnlySignal": true,
+                "loaderReturncode": 0,
+                "seconds": 5.227,
+                "fixtureClosedUnixPeers": [
+                  "/tmp/plugin_socket_1793451319.151209"
+                ],
+                "forcedPluginKills": 1,
+                "errors": [],
+                "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\n[plugin][WARNING]: Plugin Deck Settings (v1.2.6) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+                "consoleSha256": "716d3502c825fdeebc3c6181a4f5146aae1dd72d6e171247f8851796710f03f6",
+                "cleanShutdownVerified": false
+              }
+            ]
+          }
+        ],
+        "deckSettingsPositiveTwoCleanStops": true,
+        "deckSettingsPreviousManagedForcedStopRetained": true,
+        "deckSettingsTlsRejectionPreserved": true,
+        "generalConsoleObservations": [
+          {
+            "id": 61,
+            "version": "2.15.1",
+            "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 103,
+            "version": "1.2.2",
+            "consoleSha256": "cc5f5ec06bbc8f9085a8196412ed4f7cf17ea107944c14b3f3d20a239d717093",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 3
+            },
+            "processStops": [
+              {
+                "pid": 62,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 44,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 27,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 134,
+            "version": "1.3.6",
+            "consoleSha256": "0778d107b15c59c6e58e4c5e3fb8cbffcb369bba88c6e542ddf65c2eeb8a3263",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 36,
+            "version": "1.8.1",
+            "consoleSha256": "98bb71372bc053b892f1e10f6e2f6a5e15a5ea6e98edf564597450ca3d03cd6d",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 27,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 18,
+            "version": "3.1.1",
+            "consoleSha256": "8a802a530b1f488c46b63bcdc7b909f5b24cda6f965d7db1b14471879b7cecc0",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 11,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 14,
+            "version": "1.3.4",
+            "consoleSha256": "2285bb2a3ea0f108fc073ebc061863f776653ef96c50806ccfefd7aea737d634",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 143,
+            "version": "0.1.0",
+            "consoleSha256": "3ef082a698a3b9a149581e5a63ad23f6eee86e72d345978b6e27410419437893",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 117,
+            "version": "1.0.0",
+            "consoleSha256": "fabc9fa2f6863e9a93bba818bc217c6eb35e0bb46e7f9b8eb917eed3b9dde3ab",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 84,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 131,
+            "version": "1.1.0",
+            "consoleSha256": "a8fc1c361a3fc5ff0c9b534b24e45b962eb3fc896c50b5cfa523fe5b1c6c6478",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 130,
+            "version": "1.0.1",
+            "consoleSha256": "d4e1addd9b735015af42d3c65f1214003a169dbe42e275a29e1db9085d4b08e7",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 130,
+            "version": "1.0.2",
+            "consoleSha256": "f2de8d13aa2cd740d284d65ac86becd270ff79af6f4f75c728f6bff2badb3b3d",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 68,
+            "version": "0.2.1",
+            "consoleSha256": "b828b61950ea0483c0e09ad84cb2030c6e920ea25ce2d7b642a2f35263899842",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 3
+            },
+            "processStops": [
+              {
+                "pid": 29,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 52,
+            "version": "1.7.1-1",
+            "consoleSha256": "494daaca9d27ab6d1e8ce9a0381579646b9fba329c7b698761886112861e1a3c",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 93,
+            "version": "1.2.6",
+            "consoleSha256": "6c99bbffcdf113b0f36b6a24d5a31db302fb80880a32959c722f71370f27f535",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 24,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 123,
+            "version": "1.2.3",
+            "consoleSha256": "285ed8d5d01bea849c7c19d25a8dedfff1a56931c2ac8e1fc109ac657f7f14a7",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 28,
+            "version": "2.0.5",
+            "consoleSha256": "f8bfa749ad6eb213eca30a1e5fcdfa00eeb653918c131258eaf6c3e60791db04",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 67,
+            "version": "0.2.0",
+            "consoleSha256": "3a3394fe3275bb52594ad7658c2af009a9017e61c58e4c1b09f5ec34c399b47f",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 114,
+            "version": "1.0.4",
+            "consoleSha256": "504ca9264b49206fe4abd15659906ac4ce182291b58c9b1c9ade6bdc8d29264c",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 13,
+            "version": "1.0.3",
+            "consoleSha256": "068540840d0b8d3dadfc3be23ba0e06b9cacf44dad5a8ace86d8a069674200b5",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 24,
+            "version": "1.3",
+            "consoleSha256": "467550ec01c68f0dc920484b69ab6a861f8636d9782068587d50e87171158749",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 132,
+            "version": "1.5.3",
+            "consoleSha256": "cf7ddc01f7c6026401762d583145f8e5afe878891d342ff9c783874c8d8d5c60",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 79,
+            "version": "1.0.1",
+            "consoleSha256": "1db90ef72c0eb7dd7136e126b77ef70c9ac85d4fa658ffad8b1974d8d172501b",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 26,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 135,
+            "version": "2.0.0",
+            "consoleSha256": "23cc369fc5d581f95de410601df1b7454ecadd7362d942453e626c7fd52f10c8",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 50,
+            "version": "1.4.0",
+            "consoleSha256": "761fb3f0e6020b4cf072ab692195a669aa012024d42a28f0f6b1ba9bd45a3aee",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 8,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 46,
+            "version": "1.0.0-1",
+            "consoleSha256": "7f0867c40c8d28984c528acc42c112f2d5a2ec8f5c404a1cd2657f68c369ec99",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 10,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 104,
+            "version": "1.0.4",
+            "consoleSha256": "79ce57dc430ff9b4fc046326cf075a9738ace760f70198d3a94f49d1f260f21c",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 63,
+            "version": "1.6.0",
+            "consoleSha256": "2e450d432cc1a542ffd84d9ee40314b400476c7645c6b558af355d4695a25b25",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 12,
+            "version": "1.1.6",
+            "consoleSha256": "9082d7cf7aebd39470d42212857a897aa6af8a093e196b1311cb8dbf843e1ec9",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 11,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 111,
+            "version": "1.1.7",
+            "consoleSha256": "7d6d592b41d981c938e5b08aaae06f740da4933fdea01ed5046075460cbe44bc",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 11,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 53,
+            "version": "0.1.0",
+            "consoleSha256": "9f11b46557fe03f31061fd2ab8494a0b608e70fb6ec85493318f392deede371e",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 89,
+            "version": "0.6.7",
+            "consoleSha256": "8fa334a2ac929fcb1c2b3376c579bca552eaac14a69730b1a4d8805cbc8e4439",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 8,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 96,
+            "version": "1.0.0",
+            "consoleSha256": "03bd394cf98af23342661bc04223c075c2cf08a452ff93b1787da6d981689b88",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 51,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 37,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 60,
+            "version": "1.2.0",
+            "consoleSha256": "22836f103d4e66d9e98eb7a1195d4905e585244171897a966cae5b33eb1f5882",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 125,
+            "version": "0.4.5",
+            "consoleSha256": "b5ab744d717402fdc57ba8925c4f5f9386043608961aabca20334658ef5b45ae",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 111,
+            "version": "1.1.7",
+            "consoleSha256": "7d6d592b41d981c938e5b08aaae06f740da4933fdea01ed5046075460cbe44bc",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 11,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 96,
+            "version": "1.0.0",
+            "consoleSha256": "20f88d21c7a8cde7817fbd607931aa37fb8f3bc2d6573af3cdb047171ebcb2d2",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 2
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 60,
+            "version": "1.2.0",
+            "consoleSha256": "22836f103d4e66d9e98eb7a1195d4905e585244171897a966cae5b33eb1f5882",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 10,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 93,
+            "version": "1.2.6",
+            "consoleSha256": "266eefe6ac7485fde01e4ff869828f40d5a30f4adf873fefeee92393060583ba",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 65,
+            "version": "0.5.3",
+            "consoleSha256": "e9dc5045410adc73df12d29804b9adf5ae4c79f649af14e1c6a1f4bdafb7dcaa",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 61,
+            "version": "2.15.1",
+            "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 134,
+            "version": "1.3.6",
+            "consoleSha256": "ab726c6581c8b0f424af466025d49dbab9c4f2926ffed2fc6b0ba3b87047e65a",
+            "markers": {
+              "Sending SIGKILL!": 2,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 68,
+            "version": "0.2.1",
+            "consoleSha256": "ab199e5ba74da94d0411fa7177e1f6cd0ff9af71973f3e8e0d16253cc25383ca",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 53,
+            "version": "0.1.0",
+            "consoleSha256": "6ce40ac89c21463cb1a131a3d0689592c9c3271744ba9bb3338195097b780de4",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          }
+        ],
+        "otherPositiveForcedStops": [
+          {
+            "id": 67,
+            "version": "0.2.0",
+            "consoleSha256": "3a3394fe3275bb52594ad7658c2af009a9017e61c58e4c1b09f5ec34c399b47f",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 96,
+            "version": "1.0.0",
+            "consoleSha256": "03bd394cf98af23342661bc04223c075c2cf08a452ff93b1787da6d981689b88",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 51,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 37,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          }
+        ],
+        "globalCleanShutdownVerified": false,
+        "mergeQualified": false,
+        "releaseQualified": false
+      },
+      "aarch64": {
+        "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+        "architecture": "aarch64",
+        "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+        "archiveSha256": "5d62c2d25af6ca11f61803145585f74134f7ea4b375ef026f33300a905f73240",
+        "nativeCasesCompleted": 43,
+        "officialArchiveDigestsVerified": 34,
+        "sourceSha256": {
+          "scripts/framey-test-decky-runtime.py": "22610546fd26730d0cea6c3308265c1d7c251198642d8fbdf8425c9e20e7117f",
+          "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+          "tests/decky-runtime/check.py": "52b9ab988f7608a723627baaf01972e92a121efa120375b7fbcd654b3bafce56",
+          "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+          "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+          "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+          "tests/decky-runtime/cases.json": "745d2b155b24780b202d8281649fb5602f9f3d188e398317e57319c9437c0d3b",
+          "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+          "ui/frame_decky_store.py": "e2b849aa612455fc2eceef79c27d246276dfb87224a3dd36059d9b7447f6a163",
+          "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+          "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+          "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+          "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+          "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+          "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+          ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+        },
+        "allSixteenSourceFingerprintsVerified": true,
+        "caseInventoryAndDiscoveryVerified": true,
+        "expectedNegativeRegressionsVerified": true,
+        "deckProgressRpcsPerCase": 18,
+        "deckProgressSqliteSnapshotsIndependentlyDecoded": 4,
+        "deckProgressPositiveNoForcedKills": true,
+        "deckProgressOriginalTwoForcedKillsRetained": true,
+        "deckProgressRawConsoleAudited": true,
+        "deckProgressSourceBoundArchivePreservationVerified": true,
+        "ownedStops": [
+          [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.21407792999980302,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.2141406289997576,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            }
+          ],
+          [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 5.223964967000029,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 5.231973346999894,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            }
+          ]
+        ],
+        "realFrameContacted": false,
+        "physicalControllerVerified": false,
+        "run": 41200729134,
+        "job": 124535833590,
+        "artifactId": 13042149685,
+        "artifactDigestMatchesGitHub": true,
+        "exactCompletedJobVerified": true,
+        "exactHeadCheckoutVerified": true,
+        "jobLogSha256": "2918dcb518ef996aa61b38633cb138a91ea8e7dc9e75d8a01f7b651475972045",
+        "all43ConsoleHashesVerified": true,
+        "deckSettingsCases": [
+          {
+            "negative": false,
+            "rpcs": 6,
+            "stops": [
+              {
+                "loaderPid": 9,
+                "descendantsBefore": {
+                  "10": {
+                    "state": "S",
+                    "parent": 9,
+                    "start": "288824"
+                  },
+                  "19": {
+                    "state": "S",
+                    "parent": 10,
+                    "start": "288852"
+                  },
+                  "20": {
+                    "state": "S",
+                    "parent": 10,
+                    "start": "288852"
+                  },
+                  "21": {
+                    "state": "S",
+                    "parent": 20,
+                    "start": "288863"
+                  }
+                },
+                "exactDescendantsRemaining": {},
+                "adoptedChildExits": [
+                  {
+                    "pid": 19,
+                    "returncode": 0
+                  },
+                  {
+                    "pid": 20,
+                    "returncode": 0
+                  }
+                ],
+                "parentOnlySignal": true,
+                "loaderReturncode": 0,
+                "seconds": 0.214,
+                "fixtureClosedUnixPeers": [
+                  "/tmp/plugin_socket_1793450515.763982"
+                ],
+                "forcedPluginKills": 0,
+                "errors": [],
+                "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+                "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+                "cleanShutdownVerified": true
+              },
+              {
+                "loaderPid": 24,
+                "descendantsBefore": {
+                  "25": {
+                    "state": "S",
+                    "parent": 24,
+                    "start": "289121"
+                  },
+                  "34": {
+                    "state": "S",
+                    "parent": 25,
+                    "start": "289150"
+                  },
+                  "35": {
+                    "state": "S",
+                    "parent": 25,
+                    "start": "289150"
+                  },
+                  "36": {
+                    "state": "S",
+                    "parent": 35,
+                    "start": "289160"
+                  }
+                },
+                "exactDescendantsRemaining": {},
+                "adoptedChildExits": [
+                  {
+                    "pid": 34,
+                    "returncode": 0
+                  },
+                  {
+                    "pid": 35,
+                    "returncode": 0
+                  }
+                ],
+                "parentOnlySignal": true,
+                "loaderReturncode": 0,
+                "seconds": 0.214,
+                "fixtureClosedUnixPeers": [],
+                "forcedPluginKills": 0,
+                "errors": [],
+                "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+                "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+                "cleanShutdownVerified": true
+              }
+            ]
+          },
+          {
+            "negative": true,
+            "rpcs": 3,
+            "stops": [
+              {
+                "loaderPid": 9,
+                "descendantsBefore": {
+                  "10": {
+                    "state": "S",
+                    "parent": 9,
+                    "start": "306272"
+                  },
+                  "19": {
+                    "state": "S",
+                    "parent": 10,
+                    "start": "306300"
+                  },
+                  "20": {
+                    "state": "S",
+                    "parent": 10,
+                    "start": "306300"
+                  },
+                  "21": {
+                    "state": "S",
+                    "parent": 20,
+                    "start": "306310"
+                  }
+                },
+                "exactDescendantsRemaining": {},
+                "adoptedChildExits": [
+                  {
+                    "pid": 19,
+                    "returncode": 0
+                  },
+                  {
+                    "pid": 20,
+                    "returncode": 0
+                  }
+                ],
+                "parentOnlySignal": true,
+                "loaderReturncode": 0,
+                "seconds": 5.226,
+                "fixtureClosedUnixPeers": [
+                  "/tmp/plugin_socket_1793450690.2417428"
+                ],
+                "forcedPluginKills": 1,
+                "errors": [],
+                "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\n[plugin][WARNING]: Plugin Deck Settings (v1.2.6) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+                "consoleSha256": "716d3502c825fdeebc3c6181a4f5146aae1dd72d6e171247f8851796710f03f6",
+                "cleanShutdownVerified": false
+              }
+            ]
+          }
+        ],
+        "deckSettingsPositiveTwoCleanStops": true,
+        "deckSettingsPreviousManagedForcedStopRetained": true,
+        "deckSettingsTlsRejectionPreserved": true,
+        "generalConsoleObservations": [
+          {
+            "id": 61,
+            "version": "2.15.1",
+            "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 103,
+            "version": "1.2.2",
+            "consoleSha256": "cc5f5ec06bbc8f9085a8196412ed4f7cf17ea107944c14b3f3d20a239d717093",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 3
+            },
+            "processStops": [
+              {
+                "pid": 62,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 44,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 27,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 134,
+            "version": "1.3.6",
+            "consoleSha256": "7ba9f4ece44846d15c8b0935d434a4bdffb221948e8058fbffbdf8b1b1a9db97",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 36,
+            "version": "1.8.1",
+            "consoleSha256": "98bb71372bc053b892f1e10f6e2f6a5e15a5ea6e98edf564597450ca3d03cd6d",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 27,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 18,
+            "version": "3.1.1",
+            "consoleSha256": "8a802a530b1f488c46b63bcdc7b909f5b24cda6f965d7db1b14471879b7cecc0",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 11,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 14,
+            "version": "1.3.4",
+            "consoleSha256": "2285bb2a3ea0f108fc073ebc061863f776653ef96c50806ccfefd7aea737d634",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 143,
+            "version": "0.1.0",
+            "consoleSha256": "3ef082a698a3b9a149581e5a63ad23f6eee86e72d345978b6e27410419437893",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 117,
+            "version": "1.0.0",
+            "consoleSha256": "fabc9fa2f6863e9a93bba818bc217c6eb35e0bb46e7f9b8eb917eed3b9dde3ab",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 84,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 131,
+            "version": "1.1.0",
+            "consoleSha256": "a8fc1c361a3fc5ff0c9b534b24e45b962eb3fc896c50b5cfa523fe5b1c6c6478",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 130,
+            "version": "1.0.1",
+            "consoleSha256": "d4e1addd9b735015af42d3c65f1214003a169dbe42e275a29e1db9085d4b08e7",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 130,
+            "version": "1.0.2",
+            "consoleSha256": "f2de8d13aa2cd740d284d65ac86becd270ff79af6f4f75c728f6bff2badb3b3d",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 68,
+            "version": "0.2.1",
+            "consoleSha256": "163abb244309e83296403b093144564a3fa8b67ed1d82d3b014f411fa06b5bcb",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 3
+            },
+            "processStops": [
+              {
+                "pid": 29,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 52,
+            "version": "1.7.1-1",
+            "consoleSha256": "494daaca9d27ab6d1e8ce9a0381579646b9fba329c7b698761886112861e1a3c",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 24,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 93,
+            "version": "1.2.6",
+            "consoleSha256": "6c99bbffcdf113b0f36b6a24d5a31db302fb80880a32959c722f71370f27f535",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 24,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 123,
+            "version": "1.2.3",
+            "consoleSha256": "285ed8d5d01bea849c7c19d25a8dedfff1a56931c2ac8e1fc109ac657f7f14a7",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 28,
+            "version": "2.0.5",
+            "consoleSha256": "f8bfa749ad6eb213eca30a1e5fcdfa00eeb653918c131258eaf6c3e60791db04",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 67,
+            "version": "0.2.0",
+            "consoleSha256": "3a3394fe3275bb52594ad7658c2af009a9017e61c58e4c1b09f5ec34c399b47f",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 114,
+            "version": "1.0.4",
+            "consoleSha256": "504ca9264b49206fe4abd15659906ac4ce182291b58c9b1c9ade6bdc8d29264c",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 13,
+            "version": "1.0.3",
+            "consoleSha256": "068540840d0b8d3dadfc3be23ba0e06b9cacf44dad5a8ace86d8a069674200b5",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 24,
+            "version": "1.3",
+            "consoleSha256": "467550ec01c68f0dc920484b69ab6a861f8636d9782068587d50e87171158749",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 132,
+            "version": "1.5.3",
+            "consoleSha256": "cf7ddc01f7c6026401762d583145f8e5afe878891d342ff9c783874c8d8d5c60",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 79,
+            "version": "1.0.1",
+            "consoleSha256": "1db90ef72c0eb7dd7136e126b77ef70c9ac85d4fa658ffad8b1974d8d172501b",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 26,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 135,
+            "version": "2.0.0",
+            "consoleSha256": "23cc369fc5d581f95de410601df1b7454ecadd7362d942453e626c7fd52f10c8",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 50,
+            "version": "1.4.0",
+            "consoleSha256": "761fb3f0e6020b4cf072ab692195a669aa012024d42a28f0f6b1ba9bd45a3aee",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 46,
+            "version": "1.0.0-1",
+            "consoleSha256": "ff2d7cab02f88066774ccd8c9ca7b0eaa1eafeab866a3bdac3eda537700df7b8",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 104,
+            "version": "1.0.4",
+            "consoleSha256": "79ce57dc430ff9b4fc046326cf075a9738ace760f70198d3a94f49d1f260f21c",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 63,
+            "version": "1.6.0",
+            "consoleSha256": "d4339b12523a49dcf777d1b9c4e2e5d0bfaa045b0156d65bb358090ae489089d",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 12,
+            "version": "1.1.6",
+            "consoleSha256": "9082d7cf7aebd39470d42212857a897aa6af8a093e196b1311cb8dbf843e1ec9",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 11,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 111,
+            "version": "1.1.7",
+            "consoleSha256": "7d6d592b41d981c938e5b08aaae06f740da4933fdea01ed5046075460cbe44bc",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 11,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 53,
+            "version": "0.1.0",
+            "consoleSha256": "9f11b46557fe03f31061fd2ab8494a0b608e70fb6ec85493318f392deede371e",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 89,
+            "version": "0.6.7",
+            "consoleSha256": "99c1baa5606726fe59349498ffe37861663fa9a3fd71f2875d6894cf8fec8b01",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 96,
+            "version": "1.0.0",
+            "consoleSha256": "34d6e6a7dea1ac713e065f478b894cf6dabe2c76c7e08ea844beaf15d6665b75",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 2
+            },
+            "processStops": [
+              {
+                "pid": 51,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 37,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 60,
+            "version": "1.2.0",
+            "consoleSha256": "22836f103d4e66d9e98eb7a1195d4905e585244171897a966cae5b33eb1f5882",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 10,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 125,
+            "version": "0.4.5",
+            "consoleSha256": "7ee5d1914d63d1a32238f2c87b225fcfc899c4a035ccb3cf792e3398bbecc85d",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 111,
+            "version": "1.1.7",
+            "consoleSha256": "7d6d592b41d981c938e5b08aaae06f740da4933fdea01ed5046075460cbe44bc",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 11,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": true,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 96,
+            "version": "1.0.0",
+            "consoleSha256": "e4e38a8b72fdef4696a97a792adb64adc2c940b4e18d8d45e1ecdca25bf6d5b1",
+            "markers": {
+              "Sending SIGKILL!": 2,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 60,
+            "version": "1.2.0",
+            "consoleSha256": "22836f103d4e66d9e98eb7a1195d4905e585244171897a966cae5b33eb1f5882",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 93,
+            "version": "1.2.6",
+            "consoleSha256": "266eefe6ac7485fde01e4ff869828f40d5a30f4adf873fefeee92393060583ba",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 65,
+            "version": "0.5.3",
+            "consoleSha256": "e9dc5045410adc73df12d29804b9adf5ae4c79f649af14e1c6a1f4bdafb7dcaa",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 61,
+            "version": "2.15.1",
+            "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+            "markers": {
+              "Sending SIGKILL!": 0,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 1
+            },
+            "processStops": [
+              {
+                "pid": 24,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 10,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 134,
+            "version": "1.3.6",
+            "consoleSha256": "2d627b6da60112a1f97520346431d6f46b911ff25f7a79681f3254597b29603b",
+            "markers": {
+              "Sending SIGKILL!": 2,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 23,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 68,
+            "version": "0.2.1",
+            "consoleSha256": "6e43208356d61cb6ce1f15eea77fabda2cc277ed774d7a60f16383cf932f1f8a",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 53,
+            "version": "0.1.0",
+            "consoleSha256": "6ce40ac89c21463cb1a131a3d0689592c9c3271744ba9bb3338195097b780de4",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": false,
+                "parentOnlySignal": false,
+                "returncode": -15
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          }
+        ],
+        "otherPositiveForcedStops": [
+          {
+            "id": 67,
+            "version": "0.2.0",
+            "consoleSha256": "3a3394fe3275bb52594ad7658c2af009a9017e61c58e4c1b09f5ec34c399b47f",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 46,
+            "version": "1.0.0-1",
+            "consoleSha256": "ff2d7cab02f88066774ccd8c9ca7b0eaa1eafeab866a3bdac3eda537700df7b8",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              }
+            ]
+          },
+          {
+            "id": 63,
+            "version": "1.6.0",
+            "consoleSha256": "d4339b12523a49dcf777d1b9c4e2e5d0bfaa045b0156d65bb358090ae489089d",
+            "markers": {
+              "Sending SIGKILL!": 1,
+              "Error during shutdown:": 0,
+              "asyncio.exceptions.CancelledError": 0,
+              "Task was destroyed but it is pending": 0,
+              "Bad file descriptor": 0,
+              "Expecting value: line 1 column 1 (char 0)": 0
+            },
+            "processStops": [
+              {
+                "pid": 22,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": true,
+                "returncode": 0
+              },
+              {
+                "pid": 9,
+                "signaledProcessGroup": false,
+                "forcedKill": false,
+                "loader": true,
+                "parentOnlySignal": false,
+                "returncode": 0
+              }
+            ]
+          }
+        ],
+        "globalCleanShutdownVerified": false,
+        "mergeQualified": false,
+        "releaseQualified": false
+      }
+    },
+    "ciAndPc": {
+      "at": "2026-10-31T14:11:43.563088+00:00",
+      "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+      "tree": "ce4abcc60ead02919dca513593156f28459c9442",
+      "jobs": [
+        {
+          "run": 41200729016,
+          "job": 124535832902,
+          "name": "wireless-windows",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729016/job/124535832902",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "900159ce78dd3bb1437ca1b3018c9f06235d7300f323243e206639dfe738fd89",
+          "testSummaries": [
+            "Ran 15 tests in 6.904s",
+            "OK"
+          ]
+        },
+        {
+          "run": 41200729016,
+          "job": 124535833025,
+          "name": "checks",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729016/job/124535833025",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "4e969e786eef15e2b137dd4744b42829654db0c1460f346e8d7b32a68a9687bb",
+          "testSummaries": [
+            "==> 6 passed, 1 skipped, 0 failed on build fake; results in /tmp/tmpj046nmaa/results/2026-10-31T123137Z-fake.json",
+            "Ran 1944 tests in 227.496s",
+            "OK (skipped=27)"
+          ]
+        },
+        {
+          "run": 41200729016,
+          "job": 124535833100,
+          "name": "server-tests (ubuntu-latest, 3.13)",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729016/job/124535833100",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "ec06b0cd0b5b2c36b9bdef4d400a08593580b42944de3944a4dc8f0d1ed58500",
+          "testSummaries": [
+            "==> 6 passed, 1 skipped, 0 failed on build fake; results in /tmp/tmpoeh95_sp/results/2026-10-31T130129Z-fake.json",
+            "Ran 1944 tests in 200.916s",
+            "OK (skipped=28)"
+          ]
+        },
+        {
+          "run": 41200729016,
+          "job": 124535833116,
+          "name": "ios",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729016/job/124535833116",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "db6596361e6b7ba6eb63dc719153988ae888a8d10c69658f49d7fea128813a24",
+          "testSummaries": []
+        },
+        {
+          "run": 41200729016,
+          "job": 124535833129,
+          "name": "server-tests (macos-latest, 3.12)",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729016/job/124535833129",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "6843f7df3b97849be8c5b39c31d2e73e017228b4d2eee508e941e85143c88c4e",
+          "testSummaries": [
+            "==> 6 passed, 1 skipped, 0 failed on build fake; results in /var/folders/n6/hn37q6pj7sj_9dmqqc2113800000gn/T/tmpxunvy5ex/results/2026-10-31T130739Z-fake.json",
+            "Ran 1935 tests in 352.579s",
+            "OK (skipped=69)"
+          ]
+        },
+        {
+          "run": 41200729016,
+          "job": 124535833140,
+          "name": "e2e",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729016/job/124535833140",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "a79fe5b4d188f7b754da2122c947aa53f63957fd29e4ecaa7056d0df43f10269",
+          "testSummaries": [
+            "Ran 53 tests in 238.301s",
+            "OK (skipped=1)"
+          ]
+        },
+        {
+          "run": 41200729016,
+          "job": 124535833179,
+          "name": "server-tests (windows-latest, 3.12)",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729016/job/124535833179",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "5aa678d5c793ade73082cc00ffc4db999c3220c05836318edc35974b18d72972",
+          "testSummaries": [
+            "==> 6 passed, 1 skipped, 0 failed on build fake; results in C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmpi630hdv5\\results\\2026-10-31T124356Z-fake.json",
+            "Ran 1935 tests in 298.561s",
+            "OK (skipped=301)"
+          ]
+        },
+        {
+          "run": 41200729044,
+          "job": 124535832687,
+          "name": "windows",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729044/job/124535832687",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "ecefe20ef1e8e3e31a21302633a782961f8838b2ee9578edf7f2d8cf461d6dbf",
+          "testSummaries": [
+            "Ran 33 tests in 2.724s",
+            "OK (skipped=2)"
+          ]
+        },
+        {
+          "run": 41200729044,
+          "job": 124535832925,
+          "name": "linux (ubuntu-latest)",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729044/job/124535832925",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "d804a9030a25a9fff165e0a3610d0a97f7d1c5f5a25e1560c1a59f565cbc115c",
+          "testSummaries": [
+            "Ran 33 tests in 1.664s",
+            "OK (skipped=1)"
+          ]
+        },
+        {
+          "run": 41200729044,
+          "job": 124535832945,
+          "name": "linux (ubuntu-24.04-arm)",
+          "url": "https://github.com/saphid/frame-control/actions/runs/41200729044/job/124535832945",
+          "allStepsPassed": true,
+          "checkout": "6f99bb5b113caa21f09ef7c758e15ed650aed96b",
+          "checkoutTree": "ce4abcc60ead02919dca513593156f28459c9442",
+          "checkoutTreeEqualsExactHead": true,
+          "logSha256": "3a485dabf3f1f6e1be1c24a8ac874956dd4bda1f68f36d1fef7a81f7ffabd952",
+          "testSummaries": [
+            "Ran 33 tests in 1.606s",
+            "OK (skipped=1)"
+          ]
+        }
+      ],
+      "allHostedCheckAndPcJobsSourceMatched": true,
+      "manualUserGatesStillRequired": true,
+      "realFrameContacted": false
+    },
+    "ownership": {
+      "at": "2026-10-31T14:11:42.320342+00:00",
+      "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+      "ownership": {
+        "x86_64": {
+          "success": true,
+          "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+          "architecture": "x86_64",
+          "archiveSha256": "3d480b1b915ec4fd36c528beaea7400040ea7cc1d5106770b2f0bb7f6fcac284",
+          "exactSourceFingerprintsVerified": 14,
+          "sourceSha256": {
+            "scripts/framey-test-syncthing-candidate.py": "cebe1625a15b58c6797790d5c207c4496dfb42fb3ea2aa3ce908e1477122bd1e",
+            "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+            "tests/decky-runtime/syncthing_candidate.py": "a2048cc5ce16bca5a4d1b8efe833a9d6ba62c2ef88d6d70df88c8616fa1f4d63",
+            "ui/vendor/syncthing-0.2.7/main.py": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+            "ui/vendor/syncthing-0.2.7/watchdog.patch": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+            "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+            "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+            "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+            "scripts/framey-test-syncthing-service.py": "32831e46d805bc6e1f6bd1ae21a9325b56a5c85d6596ec874f4f6b9a0db6678b",
+            "tests/decky-runtime/Containerfile.systemd": "b2d4bfd834c50baa25d97a746ea956ad05802fc63ee5eb7645c6dd980986b5b2",
+            "tests/decky-runtime/syncthing_service.py": "dfd92d0d2b66a675b952e0611369943e34d186a9a91ba7af92371e37cf1f5309",
+            "tests/decky-runtime/syncthing_service_root.py": "7860ab6124766191e0bc644ee70c798ce25af3781d690adade1722d1366b76d1",
+            "scripts/framey-test-decky-runtime.py": "22610546fd26730d0cea6c3308265c1d7c251198642d8fbdf8425c9e20e7117f",
+            "ui/frame_decky.py": "48a6e70d88d104e097e3267caf379107c1b9774c85f85a0c7c86443fb9e5389f"
+          },
+          "nativeOwnershipChecksVerified": true,
+          "actualRuntimeTwoWaySyncVerified": true,
+          "serviceLifecycleAssertions": 17,
+          "ownershipRefusals": 18,
+          "ownedDeckyStop": {
+            "mainPidBefore": 329,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 1.49
+          },
+          "flatpakPackageVerified": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false,
+          "rawPeerLoaderConsoleSeparatelyRetained": false,
+          "rawPeerLoaderExitCodeSeparatelyRetained": false,
+          "rawPeerCleanShutdownUnverified": true,
+          "artifactId": 13042944632,
+          "run": 41200728855,
+          "job": 124535832354,
+          "githubArtifactDigestVerified": true,
+          "exactJobAndCheckoutVerified": true,
+          "strictDeckyShutdownVerified": true,
+          "jobLogSha256": "d733b8d7b5c00b2c9abf0c97858d758257efe0eed3f6a9bbe0a63626d9fee55f",
+          "rawDeckyConsoleIndependentlyAudited": false,
+          "wholeWorkflowPassed": true
+        },
+        "aarch64": {
+          "success": true,
+          "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+          "architecture": "aarch64",
+          "archiveSha256": "4d4e0ad93c9b1320dcedb37f9e4d6127a0acd786a1458eadf81170bf247cce46",
+          "exactSourceFingerprintsVerified": 14,
+          "sourceSha256": {
+            "scripts/framey-test-syncthing-candidate.py": "cebe1625a15b58c6797790d5c207c4496dfb42fb3ea2aa3ce908e1477122bd1e",
+            "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+            "tests/decky-runtime/syncthing_candidate.py": "a2048cc5ce16bca5a4d1b8efe833a9d6ba62c2ef88d6d70df88c8616fa1f4d63",
+            "ui/vendor/syncthing-0.2.7/main.py": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+            "ui/vendor/syncthing-0.2.7/watchdog.patch": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+            "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+            "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+            "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+            "scripts/framey-test-syncthing-service.py": "32831e46d805bc6e1f6bd1ae21a9325b56a5c85d6596ec874f4f6b9a0db6678b",
+            "tests/decky-runtime/Containerfile.systemd": "b2d4bfd834c50baa25d97a746ea956ad05802fc63ee5eb7645c6dd980986b5b2",
+            "tests/decky-runtime/syncthing_service.py": "dfd92d0d2b66a675b952e0611369943e34d186a9a91ba7af92371e37cf1f5309",
+            "tests/decky-runtime/syncthing_service_root.py": "7860ab6124766191e0bc644ee70c798ce25af3781d690adade1722d1366b76d1",
+            "scripts/framey-test-decky-runtime.py": "22610546fd26730d0cea6c3308265c1d7c251198642d8fbdf8425c9e20e7117f",
+            "ui/frame_decky.py": "48a6e70d88d104e097e3267caf379107c1b9774c85f85a0c7c86443fb9e5389f"
+          },
+          "nativeOwnershipChecksVerified": true,
+          "actualRuntimeTwoWaySyncVerified": true,
+          "serviceLifecycleAssertions": 17,
+          "ownershipRefusals": 18,
+          "ownedDeckyStop": {
+            "mainPidBefore": 326,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 8.701
+          },
+          "flatpakPackageVerified": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false,
+          "rawPeerLoaderConsoleSeparatelyRetained": false,
+          "rawPeerLoaderExitCodeSeparatelyRetained": false,
+          "rawPeerCleanShutdownUnverified": true,
+          "artifactId": 13043276989,
+          "run": 41200728855,
+          "job": 124535832604,
+          "githubArtifactDigestVerified": true,
+          "exactJobAndCheckoutVerified": true,
+          "strictDeckyShutdownVerified": true,
+          "jobLogSha256": "b095dd9d62f77dea603d6eaa8a8ba8da7dd85d37d79c064552b06c1f8b98997c",
+          "rawDeckyConsoleIndependentlyAudited": false,
+          "wholeWorkflowPassed": true
+        }
+      },
+      "pending": [],
+      "realFrameContacted": false
+    },
+    "packages": {
+      "at": "2026-10-31T14:11:07.368630+00:00",
+      "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+      "run": 41200728967,
+      "packages": {
+        "amd": {
+          "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+          "architecture": "x86_64",
+          "artifactSha256": "d8018d5c12f4bc0fa60178d774d1b19c1db5a0c59c6362821d8a4c45548ef33f",
+          "allSourceFingerprintsVerified": true,
+          "signedContentAndActualPackageVerified": true,
+          "requiredResults": {
+            "signedBundlesInstalled": true,
+            "packageLaunched": true,
+            "actualTwoWaySync": true,
+            "runtimeOriginGpgVerificationEnabled": true,
+            "appOriginGpgVerificationEnabled": true,
+            "actualUserServiceLifecycle": true,
+            "certificateRetained": true,
+            "syncRetainedAfterRestart": true,
+            "ownedServiceRemoved": true,
+            "ownedProcessesReaped": true,
+            "noOwnedFlatpakInstancesRemain": true,
+            "uninstallPreservedOwnedData": true
+          },
+          "commits": {
+            "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+          "stopElapsedSeconds": 0.139,
+          "installerEnabled": false,
+          "realFrameContacted": false,
+          "setupPortScans": [
+            8384
+          ],
+          "setupPortScanElapsedSeconds": 0.303,
+          "combinedDeckyVerified": true,
+          "requiredLifecycleResults": 17,
+          "wizardResults": {
+            "defaultPackageConfig": true,
+            "remainedUnconfiguredDuringScan": true,
+            "discoveredDefaultPort": true,
+            "discoveredDefaultApiKey": true,
+            "scannedBasicAuth": true,
+            "persistedThroughDeckyRpc": true,
+            "setupCommittedAndReloaded": true,
+            "authenticatedRestWithDiscoveredKey": true,
+            "ownedSetupServiceStopped": true
+          },
+          "ownershipRefusals": 18,
+          "processIdentityChecks": 10,
+          "uninstallPreservedCandidateData": true,
+          "migrationMountNamespaceAssertionSourceBound": true,
+          "migrationResults": 12,
+          "legacyPidBefore": 641,
+          "legacyPidAfter": 710,
+          "migrationDataPreservedAfterUninstall": true,
+          "artifactDigestMatchesGitHub": true,
+          "artifactId": 13042749565,
+          "sourceCount": 13,
+          "exactSourceCount": 26,
+          "ownedDeckyStop": {
+            "mainPidBefore": 880,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 7.134
+          },
+          "migrationDeckyStop": {
+            "mainPidBefore": 676,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 2.057
+          },
+          "sourceBoundGuestShutdownLogCheckPassed": true,
+          "rawDeckyConsoleRetainedInArtifact": false,
+          "rawDeckyConsoleIndependentlyAudited": false,
+          "job": 124535832974,
+          "run": 41200728967,
+          "exactCompletedJobVerified": true,
+          "exactHeadCheckoutVerified": true,
+          "jobLogSha256": "37a6a85242f2bded5475abf8f2bcbb07c3f03927df41e854dcdc6493724fbab5",
+          "fullGuestResultVerified": true
+        },
+        "arm": {
+          "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+          "architecture": "aarch64",
+          "artifactSha256": "995373584a4c4535bf734a9294f32024cc5207ef15c5da4a59c47269a5aac584",
+          "allSourceFingerprintsVerified": true,
+          "signedContentAndActualPackageVerified": true,
+          "requiredResults": {
+            "signedBundlesInstalled": true,
+            "packageLaunched": true,
+            "actualTwoWaySync": true,
+            "runtimeOriginGpgVerificationEnabled": true,
+            "appOriginGpgVerificationEnabled": true,
+            "actualUserServiceLifecycle": true,
+            "certificateRetained": true,
+            "syncRetainedAfterRestart": true,
+            "ownedServiceRemoved": true,
+            "ownedProcessesReaped": true,
+            "noOwnedFlatpakInstancesRemain": true,
+            "uninstallPreservedOwnedData": true
+          },
+          "commits": {
+            "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+            "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+          },
+          "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-arm64) flatbld@f9c7a45a62fa 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+          "stopElapsedSeconds": 0.873,
+          "installerEnabled": false,
+          "realFrameContacted": false,
+          "setupPortScans": [
+            null,
+            null,
+            8384
+          ],
+          "setupPortScanElapsedSeconds": 1.028,
+          "combinedDeckyVerified": true,
+          "requiredLifecycleResults": 17,
+          "wizardResults": {
+            "defaultPackageConfig": true,
+            "remainedUnconfiguredDuringScan": true,
+            "discoveredDefaultPort": true,
+            "discoveredDefaultApiKey": true,
+            "scannedBasicAuth": true,
+            "persistedThroughDeckyRpc": true,
+            "setupCommittedAndReloaded": true,
+            "authenticatedRestWithDiscoveredKey": true,
+            "ownedSetupServiceStopped": true
+          },
+          "ownershipRefusals": 18,
+          "processIdentityChecks": 10,
+          "uninstallPreservedCandidateData": true,
+          "migrationMountNamespaceAssertionSourceBound": true,
+          "migrationResults": 12,
+          "legacyPidBefore": 643,
+          "legacyPidAfter": 715,
+          "migrationDataPreservedAfterUninstall": true,
+          "artifactDigestMatchesGitHub": true,
+          "artifactId": 13044335044,
+          "sourceCount": 13,
+          "exactSourceCount": 26,
+          "ownedDeckyStop": {
+            "mainPidBefore": 888,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 13.725
+          },
+          "migrationDeckyStop": {
+            "mainPidBefore": 679,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 9.423
+          },
+          "sourceBoundGuestShutdownLogCheckPassed": true,
+          "rawDeckyConsoleRetainedInArtifact": false,
+          "rawDeckyConsoleIndependentlyAudited": false,
+          "job": 124535832972,
+          "run": 41200728967,
+          "exactCompletedJobVerified": true,
+          "exactHeadCheckoutVerified": true,
+          "jobLogSha256": "0acbe8f01d5319a048221168c4d203666839fe51382b8af11e416ed7b447e51b",
+          "fullGuestResultVerified": true
+        },
+        "http": {
+          "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+          "architecture": "x86_64",
+          "artifactSha256": "68730c861142126914dffc5205beeac7248ce35fbef9958cc135ddf61746612e",
+          "allSourceFingerprintsVerified": true,
+          "signedContentAndActualPackageVerified": true,
+          "requiredResults": {
+            "signedBundlesInstalled": true,
+            "packageLaunched": true,
+            "actualTwoWaySync": true,
+            "runtimeOriginGpgVerificationEnabled": true,
+            "appOriginGpgVerificationEnabled": true,
+            "actualUserServiceLifecycle": true,
+            "certificateRetained": true,
+            "syncRetainedAfterRestart": true,
+            "ownedServiceRemoved": true,
+            "ownedProcessesReaped": true,
+            "noOwnedFlatpakInstancesRemain": true,
+            "uninstallPreservedOwnedData": true
+          },
+          "commits": {
+            "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+          "stopElapsedSeconds": 0.148,
+          "installerEnabled": false,
+          "realFrameContacted": false,
+          "setupPortScans": [
+            8384
+          ],
+          "setupPortScanElapsedSeconds": 0.187,
+          "combinedDeckyVerified": true,
+          "requiredLifecycleResults": 17,
+          "wizardResults": {
+            "defaultPackageConfig": true,
+            "remainedUnconfiguredDuringScan": true,
+            "discoveredDefaultPort": true,
+            "discoveredDefaultApiKey": true,
+            "scannedBasicAuth": true,
+            "persistedThroughDeckyRpc": true,
+            "setupCommittedAndReloaded": true,
+            "authenticatedRestWithDiscoveredKey": true,
+            "ownedSetupServiceStopped": true
+          },
+          "ownershipRefusals": 18,
+          "processIdentityChecks": 16,
+          "uninstallPreservedCandidateData": true,
+          "migrationMountNamespaceAssertionSourceBound": true,
+          "migrationResults": 12,
+          "legacyPidBefore": 639,
+          "legacyPidAfter": 708,
+          "migrationDataPreservedAfterUninstall": true,
+          "browserStages": [
+            "running",
+            "stopped",
+            "restarted",
+            "stopped"
+          ],
+          "browserCalls": 70,
+          "manualPortFallbackUsed": false,
+          "sandboxedRendererCount": 4,
+          "signedBrowserPidTransitions": [
+            {
+              "stage": "running",
+              "pids": [
+                1067,
+                1077,
+                1085
+              ]
+            },
+            {
+              "stage": "restarted",
+              "pids": [
+                1154,
+                1166,
+                1176
+              ]
+            }
+          ],
+          "screenshotSha256": {
+            "running1": "5020626453756457511d66a62bca3fe2c15fd7cb0fc5397188826f8fdcc2548a",
+            "stopped2": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+            "restarted3": "5020626453756457511d66a62bca3fe2c15fd7cb0fc5397188826f8fdcc2548a",
+            "stopped4": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+          },
+          "syntheticInput": true,
+          "privateTestBridge": true,
+          "productionHttpParentVerified": false,
+          "realSteamCef": false,
+          "physicalControllerVerified": false,
+          "httpGateway": {
+            "success": true,
+            "realFrameContacted": false,
+            "syntheticCef": true,
+            "syntheticStoreReceipt": true,
+            "realSteamCef": false,
+            "managedInstallVerified": false,
+            "installerEnabled": false,
+            "browserSandboxDisabled": false,
+            "productionHttpHandler": true,
+            "productionPanelDispatcher": true,
+            "productionMethodScript": true,
+            "productionLocalSshWrapper": true,
+            "uiSourceFingerprints": 106,
+            "statusImportProfiling": false,
+            "productionStatusCommandUnchanged": true,
+            "rejectedRequests": {
+              "missingUiKey": 403,
+              "staleReceipt": 400,
+              "wrongPlugin": 400,
+              "modernHttpCall": 400,
+              "missingHttpShim": 400
+            },
+            "actualSignedProcessPids": [
+              1413,
+              1430,
+              1438
+            ],
+            "actualDeckyRpc": true,
+            "authenticatedSyncthingRest": true,
+            "serviceStartStopVerified": true,
+            "stoppedStateBeforeAndAfter": true,
+            "requests": [
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 403,
+                "authenticated": false,
+                "httpMethod": "GET",
+                "path": "/__decky-watchdog/state"
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 400,
+                "authenticated": true,
+                "httpMethod": "GET",
+                "path": "/__decky-watchdog/state"
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 400,
+                "authenticated": true,
+                "httpMethod": "GET",
+                "path": "/__decky-watchdog/state"
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 400,
+                "authenticated": true,
+                "httpMethod": "GET",
+                "path": "/__decky-watchdog/state"
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 400,
+                "authenticated": true,
+                "httpMethod": "GET",
+                "path": "/__decky-watchdog/state"
+              },
+              {
+                "method": "get_settings_json",
+                "httpStatus": 200,
+                "authenticated": true
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 200,
+                "authenticated": true,
+                "httpMethod": "GET",
+                "path": "/__decky-watchdog/state"
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 200,
+                "authenticated": true,
+                "httpMethod": "POST",
+                "path": "/__decky-watchdog/start"
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 200,
+                "authenticated": true,
+                "httpMethod": "GET",
+                "path": "/rest/system/status"
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 200,
+                "authenticated": true,
+                "httpMethod": "GET",
+                "path": "/rest/system/status"
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 200,
+                "authenticated": true,
+                "httpMethod": "POST",
+                "path": "/__decky-watchdog/stop"
+              },
+              {
+                "method": "framey_http_fetch",
+                "httpStatus": 200,
+                "authenticated": true,
+                "httpMethod": "GET",
+                "path": "/__decky-watchdog/state"
+              }
+            ],
+            "fixtureCefTrace": {
+              "records": [
+                {
+                  "requestId": 1,
+                  "method": "get_settings_json",
+                  "startedAfterMilliseconds": 5957,
+                  "outcome": "succeeded",
+                  "openElapsedMilliseconds": 98,
+                  "elapsedMilliseconds": 129
+                },
+                {
+                  "requestId": 2,
+                  "method": "framey_http_fetch",
+                  "startedAfterMilliseconds": 9065,
+                  "outcome": "succeeded",
+                  "openElapsedMilliseconds": 1,
+                  "elapsedMilliseconds": 183
+                },
+                {
+                  "requestId": 3,
+                  "method": "framey_http_fetch",
+                  "startedAfterMilliseconds": 11794,
+                  "outcome": "succeeded",
+                  "openElapsedMilliseconds": 0,
+                  "elapsedMilliseconds": 176
+                },
+                {
+                  "requestId": 4,
+                  "method": "framey_http_fetch",
+                  "startedAfterMilliseconds": 14791,
+                  "outcome": "succeeded",
+                  "openElapsedMilliseconds": 0,
+                  "elapsedMilliseconds": 116
+                },
+                {
+                  "requestId": 5,
+                  "method": "framey_http_fetch",
+                  "startedAfterMilliseconds": 18295,
+                  "outcome": "succeeded",
+                  "openElapsedMilliseconds": 0,
+                  "elapsedMilliseconds": 21
+                },
+                {
+                  "requestId": 6,
+                  "method": "framey_http_fetch",
+                  "startedAfterMilliseconds": 20947,
+                  "outcome": "succeeded",
+                  "openElapsedMilliseconds": 0,
+                  "elapsedMilliseconds": 106
+                },
+                {
+                  "requestId": 7,
+                  "method": "framey_http_fetch",
+                  "startedAfterMilliseconds": 23739,
+                  "outcome": "succeeded",
+                  "openElapsedMilliseconds": 0,
+                  "elapsedMilliseconds": 177
+                }
+              ],
+              "overflow": false,
+              "authenticatedSocketCount": 1,
+              "issuedRequestCount": 7
+            },
+            "ownedBrowserReaped": true,
+            "httpServerStopped": true,
+            "ownedReceiptRemoved": true,
+            "sshObserverRemoved": true
+          },
+          "httpSourceCount": 106,
+          "sourceCount": 124,
+          "productionHttpDispatcherVerified": true,
+          "managedInstallVerified": false,
+          "guestPacketSha256IndependentlyVerified": "0f15cdd0915eb73b1bfd946b406c9dab054260f00354f83cbc2ffec70f7f0e71",
+          "artifactDigestMatchesGitHub": true,
+          "artifactId": 13045581232,
+          "exactSourceCount": 127,
+          "ownedDeckyStop": {
+            "mainPidBefore": 878,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 1.924
+          },
+          "migrationDeckyStop": {
+            "mainPidBefore": 674,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 2.042
+          },
+          "sourceBoundGuestShutdownLogCheckPassed": true,
+          "rawDeckyConsoleRetainedInArtifact": false,
+          "rawDeckyConsoleIndependentlyAudited": false,
+          "job": 124535832984,
+          "run": 41200728967,
+          "exactCompletedJobVerified": true,
+          "exactHeadCheckoutVerified": true,
+          "jobLogSha256": "2adcb02579317f1d8773aa3d005d22e51265f01ada372b14e83f06cd483a9659",
+          "fullGuestResultVerified": true
+        },
+        "parent": {
+          "head": "cb9fb6e83785e68cfe8c83a85533021c1c6dde16",
+          "architecture": "x86_64",
+          "artifactSha256": "ae42b3e0db556514d17abb5dc724ee2945b13e5cdc8deab20d9c61a31022c901",
+          "allSourceFingerprintsVerified": true,
+          "signedContentAndActualPackageVerified": true,
+          "requiredResults": {
+            "signedBundlesInstalled": true,
+            "packageLaunched": true,
+            "actualTwoWaySync": true,
+            "runtimeOriginGpgVerificationEnabled": true,
+            "appOriginGpgVerificationEnabled": true,
+            "actualUserServiceLifecycle": true,
+            "certificateRetained": true,
+            "syncRetainedAfterRestart": true,
+            "ownedServiceRemoved": true,
+            "ownedProcessesReaped": true,
+            "noOwnedFlatpakInstancesRemain": true,
+            "uninstallPreservedOwnedData": true
+          },
+          "commits": {
+            "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+          "stopElapsedSeconds": 0.146,
+          "installerEnabled": false,
+          "realFrameContacted": false,
+          "setupPortScans": [
+            8384
+          ],
+          "setupPortScanElapsedSeconds": 0.196,
+          "combinedDeckyVerified": true,
+          "requiredLifecycleResults": 17,
+          "wizardResults": {
+            "defaultPackageConfig": true,
+            "remainedUnconfiguredDuringScan": true,
+            "discoveredDefaultPort": true,
+            "discoveredDefaultApiKey": true,
+            "scannedBasicAuth": true,
+            "persistedThroughDeckyRpc": true,
+            "setupCommittedAndReloaded": true,
+            "authenticatedRestWithDiscoveredKey": true,
+            "ownedSetupServiceStopped": true
+          },
+          "ownershipRefusals": 18,
+          "processIdentityChecks": 20,
+          "uninstallPreservedCandidateData": true,
+          "migrationMountNamespaceAssertionSourceBound": true,
+          "migrationResults": 12,
+          "legacyPidBefore": 641,
+          "legacyPidAfter": 710,
+          "migrationDataPreservedAfterUninstall": true,
+          "productionParentVerified": true,
+          "productionParentArchitecture": "x86_64",
+          "parentHttpCalls": 64,
+          "cefAuthenticatedSockets": 1,
+          "cefUniqueSuccessfulRequests": 72,
+          "allEightCapturePayloadsVerified": true,
+          "captureSha256": {
+            "browser-running1.png": "f77976c399c81540f75763bf4dcc6b4fc0b755a6589055e9647a470ab63253fd",
+            "browser-stopped2.png": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+            "browser-restarted3.png": "f77976c399c81540f75763bf4dcc6b4fc0b755a6589055e9647a470ab63253fd",
+            "browser-stopped4.png": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+            "http-parent-running1.png": "b6333cef69c87a10de1967856334aa4c472707b301eb4eaf907b8dc620103ddc",
+            "http-parent-stopped2.png": "f4d94092a724300b4f5ad109f24142b7c70bd2ad6738309df937ec10c98e2455",
+            "http-parent-restarted3.png": "b6333cef69c87a10de1967856334aa4c472707b301eb4eaf907b8dc620103ddc",
+            "http-parent-stopped4.png": "f4d94092a724300b4f5ad109f24142b7c70bd2ad6738309df937ec10c98e2455"
+          },
+          "capturesVisuallyInspected": false,
+          "realSteamCef": false,
+          "managedInstallVerified": false,
+          "physicalControllerVerified": false,
+          "guestPacketSha256IndependentlyVerified": "f947c59f51cb1a8cacc865d0b7cb11c76d6044e5a25bbd4e4eb243d9e51d9fa1",
+          "artifactDigestMatchesGitHub": true,
+          "artifactId": 13045435701,
+          "sourceCount": 125,
+          "exactSourceCount": 128,
+          "ownedDeckyStop": {
+            "mainPidBefore": 899,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 7.209
+          },
+          "migrationDeckyStop": {
+            "mainPidBefore": 675,
+            "timeoutStopUSec": "1min 30s",
+            "killMode": "mixed",
+            "activeState": "inactive",
+            "result": "success",
+            "mainPidAfter": 0,
+            "execMainCode": "0",
+            "execMainStatus": "0",
+            "elapsedSeconds": 7.2
+          },
+          "sourceBoundGuestShutdownLogCheckPassed": true,
+          "rawDeckyConsoleRetainedInArtifact": false,
+          "rawDeckyConsoleIndependentlyAudited": false,
+          "job": 124535832830,
+          "run": 41200728967,
+          "exactCompletedJobVerified": true,
+          "exactHeadCheckoutVerified": true,
+          "jobLogSha256": "4f084d38c1d3c04beb5a17852656af1c75b021fb5e04e3d0ae4a1f73e30df205",
+          "fullGuestResultVerified": true
+        }
+      },
+      "pending": [],
+      "wholeWorkflowPassed": true,
+      "allFourModesAudited": true,
+      "realFrameContacted": false
+    }
+  },
+  "initialNativeCliErrorCorrected": true,
+  "zeroWebsiteTestSelectionCorrected": true,
+  "globalCleanShutdownVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Old-head hosted results do not qualify the integration. Fresh exact pushed-head/current-main checks, e2e, native architectures, ownership, PC and all package modes remain necessary.",
+    "Other positive old-head cases contain forced stops; scoped Deck Settings success does not establish global clean shutdown.",
+    "Local integration native controls run only AMD64; no real upload, settings write, browser, Steam CEF, managed Frame, wearer/controller or release proof.",
+    "The production installer method checks 37 pinned fixtures without executing official plugin backends; it is not full e2e."
+  ],
+  "rawJsonSha256": "a5a7c6e7f5d63814974f2f4f30ad7dd9732ac382e3642e88c70713219adf206e",
+  "rawGzipSha256": "1eac8295183d5a4510f9f727f1cc37442fc5a5f326c5e528b68b4e10791248bb"
+}

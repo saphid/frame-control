@@ -62,10 +62,29 @@ count. So a build reaches people only when you publish it, after testing it.
    release verification, independent package checks, and all four tagged
    installer builds have passed. Hold the release if any gate is failed,
    cancelled, skipped, still running, or unverified. The publisher also reads
-   the exact commit's GitHub CI, native Decky runtime gate, and tagged build
+   the exact commit's GitHub CI, native Decky runtime and ownership/watchdog gates, signed Syncthing
+   package jobs (AMD64, ARM64, browser HTTP and production-parent HTTP), and tagged build
    job records and refuses to
    publish unless every required job succeeded; it cannot prove physical
    headset or installer behavior on its own.
+
+   The ownership and signed-package workflows use path filters, so a
+   version-only commit may need explicit runs while `main` still points to
+   the release commit:
+
+   ```sh
+   gh workflow run syncthing-candidate.yml --ref main
+   gh workflow run syncthing-flatpak-package.yml --ref main
+   ```
+
+   Both ownership/watchdog jobs and every signed-package job must succeed at
+   the exact release commit on `main`, from a push or manual dispatch. PR results, another branch, or an
+   older commit do not satisfy it. Every matching main checks, native Decky,
+   ownership/watchdog, signed-package and tagged installer run and attempt
+   must pass;
+   a later success does not conceal a failure, cancellation or skip. The
+   signed-package evidence verifies the isolated candidate, not a managed installation or
+   wearer-visible Syncthing controls.
 
    Supply the saved smoke result to the publisher. Both its dry run and publish
    command reject a result from another or dirty commit, incomplete title or
@@ -84,7 +103,8 @@ count. So a build reaches people only when you publish it, after testing it.
    ```
 
    The script checks that the tag is on GitHub, that exact-commit main CI
-   (including e2e), native amd64/ARM64 Decky runtime checks, and the tagged
+   (including e2e), native amd64/ARM64 Decky runtime and ownership/watchdog checks, signed Syncthing
+   AMD64/ARM64, browser HTTP and production-parent HTTP package checks, and the tagged
    release workflow are green with no failed, cancelled, skipped or running
    jobs in any exact-tag push run or attempt, and that all ten installers are
    attached, each with the SHA-256 digest GitHub records. It checks the saved
@@ -118,6 +138,57 @@ count. So a build reaches people only when you publish it, after testing it.
 To pull a bad release, mark the previous one as latest
 (`gh release edit v0.3.9 --latest`) or turn the bad one back into a draft.
 Copies that already updated stay on it. Nothing downgrades them.
+
+## NxNative and LÖVE candidate checks
+
+Before tagging a candidate, run the NxNative data/source/UI suites, headset
+bundle tests, LÖVE packaging tests and iOS contracts. Check the desktop resource
+gate includes every bundled profile's shader metadata, not just `game.tsv` and
+`dmsh_chain.h`. Desktop, iOS server and headset bundles must include the same
+helpers and metadata. No generated game APK, `.nxnative.zip`, rewritten module,
+shader bytecode, RomFS, private catalog, ROM URL, or key belongs in those packages
+or in public release assets. The official LÖVE engine download URL is a runtime
+source, not a game source.
+
+Record physical results for each game and version separately: installation via
+the app, cold launch, visible gameplay, controller input, audio, and save/reload
+after an APK or dataset update. Menu rendering or successful package creation
+does not satisfy gameplay or save checks. Keep experimental failures visible in
+the profile notes and release notes. Distinguish injected keyboard/touch input
+from physical Frame controller checks; record worn-headset comfort separately.
+Save-file creation alone does not establish a successful cold save reload.
+The locked release smoke above must still
+run on the exact clean candidate commit after the final changes.
+
+## TestFlight from the same candidate
+
+Use a clean checkout of the desktop candidate commit on the Mac. Generate the
+Xcode project with `(cd ios && xcodegen generate)` when needed. The Xcode build
+phase generates a fresh server bundle from that checkout; never reuse a bundle
+from an earlier candidate. See [iPhone signing setup](iphone.md#testflight-beta)
+for the existing App Store Connect app and account.
+
+Set `FRAME_IOS_VERSION` to the candidate's `app/package.json` version,
+`FRAME_IOS_BUILD` to a new unused positive integer, `FRAME_IOS_OUTPUT` to a fresh
+absolute output directory, and `FRAME_IOS_TEAM_ID` to the configured team. Select
+Xcode's device SDK with `DEVELOPER_DIR` if needed. Keep the existing App Store
+Connect API key outside the checkout; export/upload also need
+`FRAME_ASC_KEY_ID`, `FRAME_ASC_ISSUER_ID`, and `FRAME_ASC_KEY_PATH`.
+
+```sh
+ios/scripts/testflight.sh archive
+ios/scripts/testflight.sh export
+ios/scripts/testflight.sh upload
+```
+
+The archive checks bundle ID and version. Export checks the signed IPA's team,
+Store provisioning profile, version and build; upload rechecks it and submits
+the same archive. Save those results with the candidate commit and server-bundle
+digest. Confirm App Store Connect processing becomes valid, add the build to the
+intended tester group, and submit external beta review when required. Upload,
+processing, tester availability and external review are separate states; report
+the state actually observed. Exercise the phone's user-source UI against Frame
+after installing that build before calling the TestFlight path tested.
 
 ## How a copy updates itself
 

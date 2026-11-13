@@ -1,0 +1,46 @@
+{
+  "at": "2026-11-01T03:49:41.688119+00:00",
+  "pr": 519,
+  "testedSource": "b562a7dc42d98817a44c55617f0e3419b3439934",
+  "integratedMain": "2b4d1474ec71573ab91845b46e21f773284bebad",
+  "priorPublishedHead": "f36b5fd9e0ba7242fd6f27846616369fc4b6fc51",
+  "normalMergeParents": [
+    "f36b5fd9e0ba7242fd6f27846616369fc4b6fc51",
+    "2b4d1474ec71573ab91845b46e21f773284bebad"
+  ],
+  "conflictsResolved": 3,
+  "nativeSourceInputs": 26,
+  "serverTests": 1968,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeCases": 11,
+  "independentAudits": 5,
+  "batteryRpcCounts": [
+    37,
+    36
+  ],
+  "steambackRpcCounts": [
+    11,
+    9
+  ],
+  "independentPrivateSqliteSnapshotsVerified": true,
+  "independentPrivateSaveBytesVerified": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 405.362,
+  "catalogPins": 116,
+  "ownedCleanupAndPreexistingSimulatorImagesVerified": true,
+  "oldHeadAll18ChecksFiveWorkflowsSuccessful": true,
+  "exactCurrentMainCiStillPending": true,
+  "compatibility": "partial",
+  "store130Version": "1.0.1",
+  "github102LookupStatus": "unverified",
+  "actualSteamCef": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "freshHostedGatesRequired": true,
+  "rawSha256": "586b6eaa442b91bf3dba084e69d481059a0c8f2b86068a6d9314dd77931688d8",
+  "rawBytes": 152182
+}

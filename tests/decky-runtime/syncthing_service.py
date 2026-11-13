@@ -29,8 +29,8 @@ def rpc(route, *args):
     return asyncio.run(request(route, list(args)))
 
 
-def wait(read, description):
-    end = time.monotonic() + 60
+def wait(read, description, *, timeout=60):
+    end = time.monotonic() + timeout
     last = None
     while time.monotonic() < end:
         try:
@@ -63,6 +63,125 @@ def prop(unit, key):
     return ctl('show', unit, '--property=' + key, '--value')
 
 
+def decky_stop_snapshot(unit, logs, *, proc=Path('/proc'), cgroups=Path('/sys/fs/cgroup')):
+    """Read bounded diagnostics only for the disposable fixture's own cgroup."""
+    if unit not in ('frame-control-decky.service', 'frame-control-migration-decky-fixture.service'):
+        raise ValueError('Not an owned Decky fixture unit')
+    group = prop(unit, 'ControlGroup')
+    relative = Path(group.lstrip('/'))
+    if not group.startswith('/') or '..' in relative.parts or relative.name != unit:
+        raise ValueError('Unexpected owned Decky cgroup')
+    pids = sorted({int(pid) for pid in (cgroups / relative / 'cgroup.procs').read_text().split()})
+    snapshot = {'unit': unit, 'controlGroup': group, 'processes': [], 'logs': [],
+                'processesTruncated': len(pids) > 32}
+    for pid in pids[:32]:
+        entry = {'pid': pid}
+        snapshot['processes'].append(entry)
+        try:
+            base = proc / str(pid)
+            membership = (base / 'cgroup').read_text().splitlines()
+            if '0::' + group not in membership:
+                entry['error'] = 'Process left the owned cgroup; not inspected'
+                continue
+            before = (base / 'stat').read_text().rsplit(')', 1)[1].split()
+            entry.update(state=before[0], parentPid=int(before[1]),
+                         userTicks=int(before[11]), systemTicks=int(before[12]),
+                         startTicks=int(before[19]), threads=[])
+            tasks = sorted((base / 'task').iterdir(), key=lambda path: int(path.name))
+            entry['threadsTruncated'] = len(tasks) > 8
+            for task in tasks[:8]:
+                thread = {'tid': int(task.name)}
+                entry['threads'].append(thread)
+                for field, limit in (('wchan', 256), ('stack', 4096)):
+                    try:
+                        with (task / field).open('rb') as stream:
+                            thread[field] = stream.read(limit).decode(errors='replace')
+                    except OSError as error:
+                        thread[field + 'Error'] = type(error).__name__
+            after = (base / 'stat').read_text().rsplit(')', 1)[1].split()
+            if after[19] != before[19] or '0::' + group not in (base / 'cgroup').read_text().splitlines():
+                entry.clear()
+                entry.update(pid=pid, error='Process identity changed during inspection')
+        except (OSError, ValueError, IndexError) as error:
+            entry['error'] = type(error).__name__
+    for log in logs:
+        entry = {'name': Path(log.name).name}
+        snapshot['logs'].append(entry)
+        try:
+            # A separate reader preserves the caller's stream position and
+            # also lets the observer's fixture tests run on desktop Windows.
+            with open(log.name, 'rb') as stream:
+                size = os.fstat(stream.fileno()).st_size
+                stream.seek(max(0, size - 8192))
+                entry.update(bytes=size, tail=stream.read(8192).decode(errors='replace'))
+        except (OSError, ValueError) as error:
+            entry['error'] = type(error).__name__
+    return snapshot
+
+
+def stop_decky_service(unit, report, logs=()):
+    """Observe the owned manager's stop job; forced or incomplete stops fail."""
+    began = time.monotonic()
+    report['ownedDeckyStop'] = state = {
+        'mainPidBefore': int(prop(unit, 'MainPID')),
+        'timeoutStopUSec': prop(unit, 'TimeoutStopUSec'),
+        'killMode': prop(unit, 'KillMode'),
+    }
+    try:
+        # Retain an identity/CPU baseline while the unit is still alive. This
+        # also exercises the observer on fast clean stops in the actual VM.
+        try:
+            state['beforeStopDiagnostics'] = decky_stop_snapshot(unit, logs)
+        except Exception as error:
+            state['beforeStopDiagnostics'] = {'error': type(error).__name__ + ': ' + str(error)}
+        # The manager's default stop budget is 90 seconds. A blocking
+        # systemctl command with the general 35-second RPC budget can expire
+        # before that job completes, losing both its result and our logs.
+        ctl('stop', '--no-block', unit)
+        thresholds = iter((10, 30, 60))
+        next_snapshot = next(thresholds)
+        def stopped():
+            nonlocal next_snapshot
+            state['activeState'] = prop(unit, 'ActiveState')
+            if state['activeState'] == 'deactivating':
+                elapsed = time.monotonic() - began
+                if next_snapshot is not None and elapsed >= next_snapshot:
+                    # Observation must never mask a strict stop failure, signal
+                    # another process, or extend systemd's stop budget.
+                    try:
+                        snapshot = decky_stop_snapshot(unit, logs)
+                    except Exception as error:
+                        snapshot = {'error': type(error).__name__ + ': ' + str(error)}
+                    snapshot['elapsedSeconds'] = round(elapsed, 3)
+                    state.setdefault('slowStopDiagnostics', []).append(snapshot)
+                    print('FRAMEY_DECKY_SLOW_STOP_JSON=' + json.dumps(snapshot), flush=True)
+                    next_snapshot = next(thresholds, None)
+            return state['activeState'] in ('inactive', 'failed')
+        wait(stopped, 'owned Decky service stop', timeout=100)
+        state['result'] = prop(unit, 'Result')
+        state['mainPidAfter'] = int(prop(unit, 'MainPID'))
+        state['execMainCode'] = prop(unit, 'ExecMainCode')
+        state['execMainStatus'] = prop(unit, 'ExecMainStatus')
+        assert state['activeState'] == 'inactive' and state['result'] == 'success', state
+        assert state['execMainStatus'] == '0', state
+        assert state['mainPidBefore'] > 0 and state['mainPidAfter'] == 0, state
+        assert not Path('/proc/'+str(state['mainPidBefore'])).exists(), state
+    finally:
+        state['elapsedSeconds'] = round(time.monotonic() - began, 3)
+        print('FRAMEY_DECKY_STOP_JSON=' + json.dumps(state), flush=True)
+
+
+def verify_decky_log(log):
+    """A successful manager result alone does not prove plugin shutdown."""
+    log.seek(0)
+    text = log.read()
+    print(text[-3000:], flush=True)
+    errors = [marker for marker in ('Error during shutdown:',
+              'asyncio.exceptions.CancelledError', 'Task was destroyed but it is pending')
+              if marker in text]
+    assert not errors, f'Decky shutdown errors: {errors}'
+
+
 def main(signed_flatpak=False):
     assert (
         os.getuid() == 1100
@@ -87,7 +206,7 @@ def main(signed_flatpak=False):
         subprocess.run(command, check=True, capture_output=True, timeout=60)
 
     service = 'frame-control-syncthing.service'
-    backend = None
+    decky_service = None
     logs = []
     directory = home / '.config/systemd/user'
     directory.mkdir(parents=True, exist_ok=True)
@@ -253,6 +372,8 @@ def main(signed_flatpak=False):
                 destination.write_bytes(archive.read(entry))
     plugin = plugins / 'decky-syncthing'
     shutil.copy('/input/main.py', plugin / 'main.py')
+    (plugin / 'py_modules').mkdir(exist_ok=True)
+    shutil.copy('/input/framey_decky_ipc.py', plugin / 'py_modules/framey_decky_ipc.py')
     helper = plugin / 'bin/decky-syncthing-watchdog'
     shutil.copy('/input/watchdog', helper)
     helper.chmod(0o700)
@@ -362,9 +483,21 @@ def main(signed_flatpak=False):
     try:
         log = (home / 'decky.log').open('w+')
         logs.append(log)
-        backend = subprocess.Popen(
-            [str(loader)], env=env, stdout=log, stderr=log, start_new_session=True
-        )
+        decky_service = directory/'frame-control-decky.service'
+        assert not decky_service.exists()
+        variables = ('UNPRIVILEGED_PATH', 'PRIVILEGED_PATH', 'CHOWN_PLUGIN_PATH',
+                     'LIVE_RELOAD', 'USE_CEF_CLOSE_WORKAROUND', 'KEEP_SYSTEMD_SERVICE',
+                     'PATH', 'DBUS_SESSION_BUS_ADDRESS', 'XDG_RUNTIME_DIR', 'STNOUPGRADE')
+        decky_service.write_text('[Unit]\nDescription=Owned actual Decky parent probe\n'
+            '[Service]\nType=exec\nKillMode=mixed\nExecStart='+json.dumps(str(loader))+'\n'
+            + ''.join('Environment='+json.dumps(key+'='+env[key])+'\n' for key in variables)
+            + 'StandardOutput=append:'+str(home/'decky.log')+'\n'
+            + 'StandardError=append:'+str(home/'decky.log')+'\n')
+        ctl('daemon-reload')
+        ctl('start', decky_service.name)
+        assert prop(decky_service.name, 'ActiveState') == 'active'
+        assert prop(decky_service.name, 'KillMode') == 'mixed'
+        report['actualDeckyUserService'] = True
         found = wait(lambda: rpc('loader/get_plugins'), 'Decky discovery')
         assert any(p['name'] == 'Syncthing' for p in found)
 
@@ -376,7 +509,7 @@ def main(signed_flatpak=False):
             return result['result']
 
         assert json.loads(legacy_rpc('get_settings_json'))['is_setup'] is False
-        wait(lambda: list(base.rglob('watchdog.pid')), 'candidate watchdog')
+        wait(lambda: list(base.rglob('watchdog.pid')), 'candidate watchdog', timeout=80)
         helper_pid = int(next(base.rglob('watchdog.pid')).read_text())
 
         def http(method, route):
@@ -764,14 +897,20 @@ def main(signed_flatpak=False):
         peer.wait(timeout=30)
         assert peer.returncode in ((0, -signal.SIGTERM) if signed_flatpak else (0,))
         report['peerExitStatus'] = peer.returncode
-        if backend is not None:
-            if backend.poll() is None:
-                os.killpg(backend.pid, signal.SIGTERM)
-            backend.wait(timeout=15)
-        for log in logs:
-            log.seek(0)
-            print(log.read()[-3000:], flush=True)
-            log.close()
+        try:
+            if decky_service is not None:
+                stop_decky_service(decky_service.name, report, logs)
+                decky_service.unlink()
+                ctl('daemon-reload')
+                report['ownedDeckyServiceRemoved'] = True
+        finally:
+            # Preserve the actual loader tail even if cleanup fails.
+            for log in logs:
+                try:
+                    verify_decky_log(log)
+                    report['deckyShutdownLogChecked'] = True
+                finally:
+                    log.close()
     assert not Path(f'/proc/{helper_pid}').exists()
     if signed_flatpak:
         instances = subprocess.check_output(

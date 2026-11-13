@@ -159,12 +159,16 @@ class PageGoneAway(unittest.TestCase):
     """The report's server log: the page closed while index.html was being sent, and the
     server logged it as a 500, tried to answer anyway, and filed an error diagnostic."""
 
-    def handler(self, path="/"):
+    def handler(self, path="/", method="GET", body=b""):
         h = server.Handler.__new__(server.Handler)
-        h.command, h.path, h.request_version = "GET", path, "HTTP/1.1"
-        h.requestline, h.client_address = f"GET {path} HTTP/1.1", ("127.0.0.1", 1)
+        h.command, h.path, h.request_version = method, path, "HTTP/1.1"
+        h.requestline, h.client_address = f"{method} {path} HTTP/1.1", ("127.0.0.1", 1)
         h.headers = email.message.Message()
         h.headers["Host"] = "127.0.0.1:1"
+        if method == "POST":
+            h.headers["X-Frame-UI"] = server.UI_KEY
+            h.headers["Content-Length"] = str(len(body))
+        h.rfile = io.BytesIO(body)
         h.wfile = mock.Mock(write=mock.Mock(side_effect=ConnectionAbortedError(10053, "aborted")))
         h.close_connection = True
         return h
@@ -176,6 +180,16 @@ class PageGoneAway(unittest.TestCase):
             h.do_GET()
         diagnostic.assert_not_called()
         self.assertEqual(h.wfile.write.call_count, 1)  # no second, 500 reply
+
+    def test_post_disconnect_is_not_an_error(self):
+        body = json.dumps({"what": "anything-else"}).encode()
+        h = self.handler("/api/open", "POST", body)
+        with mock.patch.multiple(server, LINK=None, LOCAL=False), \
+                mock.patch.object(server.frame_telemetry, "diagnostic") as diagnostic, \
+                mock.patch.object(sys, "stderr", io.StringIO()), self.assertRaises(server.ClientGone):
+            h.do_POST()
+        diagnostic.assert_not_called()
+        self.assertEqual(h.wfile.write.call_count, 1)
 
     def test_server_logs_nothing(self):
         srv = server.LoopbackServer.__new__(server.LoopbackServer)

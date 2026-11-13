@@ -1,5 +1,16 @@
 # Pinned Decky store test archives
 
+`59.zip` is Web Browser 1.4.3, downloaded from the official CDN on 2026-11-07
+and matched to the existing catalog SHA-256
+`1192864fddc5d72550346b8dff02c21d71f0c40a06ac41c4e67bb6220d267f9d`.
+Its upstream LICENSE is retained. The SimpleModal regression evaluates only
+the exact published `UsageWarningModal`, with synthetic accept/cancel
+callbacks. It does not initialize the plugin, invoke its backend, navigate
+externally, open Steam tabs, or change its catalog compatibility status.
+This is local React/DOM evidence, not worn-headset or controller proof.
+
+`37.zip` was downloaded from the official CDN on 2026-11-01 and matched the existing catalog digest. This is not a fresh full-store metadata claim. Its private IPC tests use a disposable local wire peer; no real Discord account or Frame is contacted.
+
 These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
 2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27,
@@ -15,8 +26,13 @@ from a local fixture so CI does not depend on the store being online.
 `117.zip` was added from the digest-verified static audit cache on 2026-10-30.
 A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
+`134.zip` was downloaded from the official CDN on 2026-10-31 and matched the existing catalog digest. This is not a fresh full-store metadata claim.
+
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `37.zip` | Discord Status | 1.5.0 | `00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45` |
+| `23.zip` | Animation Changer | 1.3.2 | `f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133` |
+| `134.zip` | Deck Progress Tracker | 1.3.6 | `784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3` |
 | `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |
 | `130.zip` | Games Prefix Manager | 1.0.1 | `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473` |
 | `130-v102.zip` | Games Prefix Manager upstream GitHub release asset; **not in the Decky store on 2026-10-30** | 1.0.2 | `12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6` |
@@ -153,3 +169,25 @@ marker transfer outside Decky. The native Decky gate checks discovery and
 read-only backend status/configuration with its network helper stopped. The
 managed ARM64 helper and transfer remain separately gated; the fixture does
 not prove worn VR or a transfer on Frame.
+
+Decky Ludusavi 1.2.2 (store ID 103) is pinned for dependency-discovery coverage.
+Only its managed `py_modules/ludusavi.py` initializes the missing-binary state
+and bounds version probes. The published loader checks missing dependencies,
+a slow private executable and fallback, restart, and the unchanged-original
+negative case. No real Ludusavi install, backup, restore or cloud operation is
+run. See [the evidence](../../../docs/evidence/framey-ludusavi-dependency-2026-10-31.md).
+
+TabMaster 2.15.1 (`61.zip`, SHA-256 `e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5`)
+runs its exact unmodified backend in published Decky 3.3.0. Its native case
+uses only synthetic users, tab/filter/profile/friend/tag settings and an owned
+container home. It verifies disk readback, shared-tab visibility, false values,
+loader restart persistence and two clean owned loader exits. It does not
+exercise Steam library-tab editing, backups/restores, browser rendering,
+real Frame or physical controllers. These remain separate verification gates.
+
+`75.zip` (Reshadeck 0.2.0) was added from the digest-verified full-catalog audit cache on 2026-11-01, without changing its catalog pin. Its upstream LICENSE is retained.
+`87.zip` is the existing pinned ScreenSaver 1.1.2 store archive (87), SHA-256 `5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822`, copied from the previously verified full-catalog cache on 2026-11-01. No fresh live-store version claim.
+`23.zip` was added on 2026-11-01 from the existing digest-verified catalog cache; no fresh store metadata is claimed.
+
+
+`38.zip` is Volume Mixer 1.2.1-1, SHA-256 `11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3`, copied from the previously verified catalog cache on 2026-11-01. This does not claim a fresh live-store version lookup. The native case uses UID 1100, private D-Bus and silent Pulse streams, without PULSE_SERVER overriding runtime discovery. It checks real stereo volume readback, an unrelated stream, restart and strict shutdown including an extra child IPC EOF. Its original-source negative must fail Pulse discovery. Bluetooth, audible output, adapted ARM64/Frame and worn/controller use are unverified.

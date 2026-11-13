@@ -1,0 +1,51 @@
+{
+  "terminalOriginalImportRegression": {
+    "id": 65,
+    "name": "Decky Terminal",
+    "version": "0.5.3",
+    "sha256": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+    "shim": null,
+    "calls": [],
+    "discovered": [
+      {
+        "name": "Decky Terminal",
+        "version": "0.5.3",
+        "load_type": 1,
+        "disabled": false
+      }
+    ],
+    "expectedRegression": {
+      "success": false,
+      "phase": "backend import",
+      "exception": "ModuleNotFoundError: No module named 'termios'",
+      "originalPluginUnmodified": true,
+      "backendSourceSha256": {
+        "main.py": "aa049c7e0e9724de9f697e6a2f74f982d6553be8be93c87b31315d3b00952923",
+        "py_modules/decky_terminal/terminal.py": "6324d71bfd1d74c06f8c45f4592eca16e84a0b8e2dd23de594353097d5b99238"
+      },
+      "backendRpcNotAttempted": true,
+      "rpcMethodsSucceeded": 0,
+      "ptyCommandsExecuted": 0,
+      "realFrameContacted": false,
+      "physicalControllerVerified": false
+    },
+    "result": "original published Terminal import regression reproduced; discovery is not backend usability; no PTY or input executed"
+  },
+  "allSevenSourceFingerprintsVerified": true,
+  "head": "526473fe47f89ad794c984fb67fc767bf6fad512",
+  "runId": null,
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "archiveSha256": "ae1abbd4fc6c83c8abe82cfa088ec1979a22e558f29cbf80a51ddd52434ab6c1",
+  "nativeCasesCompleted": 34,
+  "officialArchiveDigestsVerified": 30,
+  "exactWorkflowRunVerified": false,
+  "caseInventoryAndDiscoveryVerified": true,
+  "expectedNegativeRegressionsVerified": true,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "localOnly": true,
+  "arm64Verified": false,
+  "browserVerified": false,
+  "productionAdaptationEnabled": false
+}

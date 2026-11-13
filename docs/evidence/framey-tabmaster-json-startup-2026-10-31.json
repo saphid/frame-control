@@ -1,0 +1,40 @@
+{
+  "at": "2026-10-31T08:20:31.096247+00:00",
+  "sourceHead": "0dc8da2114e145da8598d0b1763ba17154924715",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "diagnosticOnly": true,
+  "rawGzipSha256": "1d6fde0bf909441c8b7450f9054601f183cd322eab0411c66597b17289279c0a",
+  "rawJsonSha256": "a43b8ddb6716508738fe1801e2bce643ab50d7ec51c888897f502fe009209a9f",
+  "diagnosticPatchSha256": "3cb3a6f8ef5b0c191eb3ac2db203e6c267e4ec34acc1c3e90ddf19e0d695b5c9",
+  "diagnosticRunnerSha256": "c58261fa0203f1ca5c7aaebfecb35f7162d250bdf88847d29a13f8c923b4c5ce",
+  "completeConsoleSha256": "69424f8f790f74691806bdff7fa481962a26ff188909ca3772cb5de13d133ee5",
+  "jsonDecodeDiagnosticCount": 1,
+  "emptyStringTraceCount": 1,
+  "observedDuringStartup": true,
+  "bothParentOnlyZeroExitStopsVerified": true,
+  "ownedProcessIdentitiesReaped": true,
+  "newOwnedContainersRemaining": 0,
+  "newOwnedTagsRemaining": 0,
+  "sourceFingerprints": {
+    "scripts/framey-test-decky-runtime.py": "e4a765e3d0051a1a706737d4a532250038660410c4060a08d32fe506b34d1fbd",
+    "ui/framey_decky_ipc.py": "b938352007c2ac17cb2e79e73cf364884d8d92e6f39be954c92c1dd67e9943b0",
+    "tests/decky-runtime/check.py": "c58261fa0203f1ca5c7aaebfecb35f7162d250bdf88847d29a13f8c923b4c5ce",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "f4b46a00ca0591b5ec8f141d23211a6203950104f65ddac1bcc13aa3f8b558b6",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "57264ec04c2011dc7f416d3a0ccc75cb1a76bfb966cae0ff0658f16ef6806503",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "357bd5c472218c510dcdd579cb972706ec3ccc176e6177f3ed2548c8cc448128",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "realFrameContacted": false,
+  "limits": [
+    "Diagnostic appends a parser trace in a disposable child; exact published backend equivalence is intentionally false for this run",
+    "One local AMD64 observation, not the current hosted whole matrix or an ARM64 cause diagnosis",
+    "Tagged source provides context but its byte-for-byte equivalence with bundled loader source is not established",
+    "No Steam page changes, wearer/controller behavior, compatibility promotion or release qualification"
+  ]
+}

@@ -270,6 +270,7 @@ async function connect() {
     if (codec === "h264") onH264(isKey, seq, payload); else onJPEG(seq, payload);
   };
   ws.onclose = () => {
+    dropWheelCarry();
     ws = null;
     clearInterval(pingTimer);
     if (closing) return;
@@ -381,10 +382,25 @@ addEventListener("pointerup", e => {
 // Let go of any held button where the pointer is on the Mac, not at a corner.
 addEventListener("pointercancel", () => send({ t: "release" }));
 addEventListener("contextmenu", e => e.preventDefault());
+function wholeWheel(carry, dx, dy) {
+  carry.x += dx;
+  carry.y += dy;
+  const whole = { dx: Math.trunc(carry.x), dy: Math.trunc(carry.y) };
+  carry.x -= whole.dx;
+  carry.y -= whole.dy;
+  return whole;
+}
+const wheelCarry = { x: 0, y: 0 };
+// A leftover fraction belongs to the gesture in progress, not the next one.
+function dropWheelCarry() { wheelCarry.x = wheelCarry.y = 0; }
 addEventListener("wheel", e => {
   if (e.target === switchButton) return;
   const p = toPicture(e), unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
-  send(stamp({ t: "wheel", dx: e.deltaX * unit, dy: e.deltaY * unit, x: p.x, y: p.y }, e));
+  // CGEvent's pixel wheel fields are integers. SteamVR's thumbstick sends
+  // smaller smooth deltas, so keep them until they add up to a real pixel.
+  const delta = wholeWheel(wheelCarry, e.deltaX * unit, e.deltaY * unit);
+  if (delta.dx || delta.dy)
+    send(stamp({ t: "wheel", ...delta, x: p.x, y: p.y }, e));
   e.preventDefault();
 }, { passive: false });
 function mods(e) {
@@ -427,7 +443,7 @@ function bench(m) {
 }
 addEventListener("keydown", e => onKey(e, true));
 addEventListener("keyup", e => onKey(e, false));
-addEventListener("blur", () => send({ t: "release" }));
+addEventListener("blur", () => { dropWheelCarry(); send({ t: "release" }); });
 
 show("Connecting to your computer…");
 connect();

@@ -38,6 +38,10 @@ handling, route cancellation, and intended-headset start/status guards.
 `tests/page/pad_queue.mjs` and `tests/page/ctrl_gestures.mjs` execute the page's
 real queue and gesture functions in Node. These are offline tests; their
 acknowledgements do not prove that a real application received input.
+`tests/test_keyboard_chords.py` also executes the production typing-tool browser
+handlers through server validation, gamescope translation and the libei key-call
+boundary, with HTTP/SSH transport and the final device stubbed. It checks modifier holds, shortcut
+menus and focus-loss releases; see [keyboard support](keyboard-input.md).
 See [the 2026-10-24 PR #66 evidence](evidence/pad-gamescope-2026-10-24.md)
 for the real focused-panel click/key observation, cleanup and remaining limits.
 
@@ -112,6 +116,19 @@ It needs a Linux host with Docker and `docker compose`, and zsh. The images
 are `fakeframe-frame` and `fakeframe-host`; the compose project, network and
 volumes are `fakeframe-e2e*`. CI runs it on a native arm64 runner
 (`ubuntu-24.04-arm`, the `e2e` job in `.github/workflows/checks.yml`).
+
+CI prepares all exact version/digest archives from `ui/framey-compatibility.json`,
+verifies SHA-256 even on cache hits, and mounts the cache read-only for the full
+catalog installer audit. A missing download, bad digest or missing result fails
+the job. The `e2e-catalog` artifact retains the cache verification and per-plugin
+install/remove or expected-refusal results, including partial results on failure.
+This tests transport and installer policy; it does not execute official plugin
+backends or prove browser, real Frame or worn VR usability.
+
+To include that audit locally, prepare the cache with
+`python3 scripts/framey-cache-catalog.py --cache /tmp/framey-catalog --output /tmp/catalog-cache.json`,
+then run `FRAMEY_AUDIT_CACHE=/tmp/framey-catalog FRAMEY_AUDIT_OUTPUT=/tmp/catalog-result.json scripts/e2e.sh`.
+Without a cache, local e2e keeps the explicit optional-catalog skip.
 
 The host container exists because OpenSSH reads `~/.ssh/config` from the
 passwd home directory, not `$HOME`. There, `ssh frame` reaches the fake Frame
@@ -642,6 +659,18 @@ mounts, capabilities or writable repository. Each case has its own unprivileged
 container, private tmpfs home and temporary files. Nothing contacts the headset
 or its shared lock. Failed/timed-out containers and the private image tag are
 removed by the runner.
+
+Each completed native case retains `runtimeConsole.text` and its SHA-256 after
+final fixture cleanup, plus process return codes and any forced-kill escalation.
+Probe or cleanup exceptions print the complete available console to stderr and
+do not emit a successful case result. Five tests exercise long output, normal
+shutdown, a failed probe, forced cleanup, cleanup exceptions and parent-owned
+child shutdown; four use real subprocesses. The fixture sends SIGTERM only to
+the owned Decky loader and waits eight seconds for its unload protocol. Auxiliary
+fixtures retain group cleanup, and bounded group SIGKILL escalation remains
+recorded. `cleanShutdownVerified: false` explicitly prevents treating captured
+output or a zero loader exit as clean plugin shutdown. Case-specific lifecycle
+gates still apply.
 
 Every `compat_shims.append` in the managed installer must have a case in
 `tests/decky-runtime/cases.json`. Add each affected pinned official archive and

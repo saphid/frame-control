@@ -38,3 +38,12 @@ let replaced=0;
 window.DeckyBackend={...backend,addEventListener(name,fn){replaced++;backend.addEventListener(name,fn);}};
 poll();assert.equal(replaced,1);assert.equal(handlers.size,1);
 poll('one','Simple Timer',[]);assert.equal(handlers.size,0);
+
+// Output is scoped to both the actual plugin and the selected Terminal ID.
+poll('terminal','Decky Terminal',['terminal_output#private-pty']);
+emit('Other plugin','terminal_output#private-pty','wrong plugin');
+emit('Decky Terminal','terminal_output#another-pty','wrong terminal');
+emit('Decky Terminal','terminal_output#private-pty','private output');
+assert.deepEqual(poll('terminal','Decky Terminal',['terminal_output#private-pty']).events,
+  [{sequence:1,event:'terminal_output#private-pty',args:['private output']}]);
+poll('terminal','Decky Terminal',[]);assert.equal(handlers.size,0);

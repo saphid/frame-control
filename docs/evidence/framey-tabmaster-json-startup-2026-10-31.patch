@@ -1,0 +1,13 @@
+--- a/tests/decky-runtime/check.py
++++ b/tests/decky-runtime/check.py
+@@ -201,0 +202,4 @@
++    diagnostic_patch = b'\n# Diagnostic-only: trace JSON parsing failures inside this disposable plugin child.\nimport json as _framey_diag_json\nimport sys as _framey_diag_sys\nimport traceback as _framey_diag_traceback\n_framey_diag_original_loads = _framey_diag_json.loads\ndef _framey_diag_loads(value, *args, **kwargs):\n    try:\n        return _framey_diag_original_loads(value, *args, **kwargs)\n    except _framey_diag_json.JSONDecodeError:\n        print("FRAMEY_JSON_PARSE_TRACE", repr(value), file=_framey_diag_sys.stderr)\n        _framey_diag_traceback.print_stack(file=_framey_diag_sys.stderr)\n        raise\n_framey_diag_json.loads = _framey_diag_loads\n'
++    assert record["id"] == 61
++    with (plugin/"main.py").open("ab") as diagnostic_backend:
++        diagnostic_backend.write(diagnostic_patch)
+@@ -810 +814 @@
+-                assert (plugin/'main.py').read_bytes() == original_backend
++                assert (plugin/'main.py').read_bytes() == original_backend + diagnostic_patch
+@@ -879 +883 @@
+-                    publishedBackendUnmodified=True,
++                    publishedBackendUnmodified=False, diagnosticOnly=True, diagnosticPatchSha256=hashlib.sha256(diagnostic_patch).hexdigest(),

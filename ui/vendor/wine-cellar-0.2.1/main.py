@@ -1,3 +1,8 @@
+# Frame Control: repair IPC EOF only in this exact managed plugin child.
+from framey_decky_ipc import install as _framey_install_ipc_eof
+_framey_install_ipc_eof()
+del _framey_install_ipc_eof
+
 import asyncio
 import asyncio.subprocess
 import base64
@@ -213,25 +218,32 @@ class Plugin:
     async def _stop_backend(cls):
         cls.BACKEND_STOPPING = True
 
-        if cls.BACKEND_PROC is None:
+        process = cls.BACKEND_PROC
+        if process is None:
             logger.warning("Wine Cask is not running!")
         else:
             logger.info("Terminating Wine Cask (the Wine Cellar backend)...")
-            cls.BACKEND_PROC.terminate()
-
-            try:
-                await asyncio.wait_for(cls.BACKEND_PROC.wait(), timeout=5)
-            except asyncio.TimeoutError:
-                logger.warning("Wine Cask did not exit after SIGTERM, killing process...")
-                cls.BACKEND_PROC.kill()
-                await cls.BACKEND_PROC.wait()
-
-            cls.BACKEND_PROC = None
+            if process.returncode is None:
+                try:
+                    process.terminate()
+                except ProcessLookupError:
+                    pass
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=2)
+                except asyncio.TimeoutError:
+                    logger.warning("Wine Cask did not exit after SIGTERM, killing process...")
+                    try:
+                        process.kill()
+                    except ProcessLookupError:
+                        pass
+                    await asyncio.wait_for(process.wait(), timeout=1)
+            if cls.BACKEND_PROC is process:
+                cls.BACKEND_PROC = None
 
         watch_task = cls.BACKEND_WATCH_TASK
         if watch_task is not None and watch_task is not asyncio.current_task():
             try:
-                await asyncio.wait_for(watch_task, timeout=6)
+                await asyncio.wait_for(watch_task, timeout=1)
             except asyncio.TimeoutError:
                 watch_task.cancel()
             except asyncio.CancelledError:

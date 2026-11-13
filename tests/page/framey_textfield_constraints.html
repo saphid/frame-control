@@ -1,0 +1,102 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><button id="outside">Outside</button><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container),events=[];
+  const input=()=>container.querySelector('input'),ref=React.createRef();
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  function Draft({constraints}) {
+    const [value,setValue]=React.useState('');
+    return React.createElement(DFL.TextField,{ref,label:'Synthetic identifier',value,bShowClearAction:true,
+      ...constraints,onChange:event=>{
+        assert(event.target===input()&&event.currentTarget===input(),'native React input event was replaced');
+        events.push({value:event.currentTarget.value,valid:event.currentTarget.validity.valid,
+          missing:event.currentTarget.validity.valueMissing,minimum:event.currentTarget.minLength,
+          pattern:event.currentTarget.validity.patternMismatch});
+        setValue(event.currentTarget.value);
+      }});
+  }
+  const edit=text=>ReactDOM.flushSync(()=>{
+    input().focus();input().select();
+    document.execCommand('insertText',false,text);
+  });
+  try {
+    render(React.createElement(Draft,{constraints:{required:true,minLength:3,maxLength:4,pattern:'[A-Z]+'}}));
+    assert(input().required&&input().minLength===3&&input().maxLength===4&&input().pattern==='[A-Z]+','text constraints were dropped');
+    assert(!input().checkValidity()&&input().validity.valueMissing,'required empty value accepted');
+    const handle=ref.current;
+    edit('ab');
+    // execCommand is synthetic: Chromium does not set the user-edit flag
+    // needed for tooShort. Check the native attribute and actual pattern
+    // validity without claiming physical keyboard/minimum-length proof.
+    assert(input().value==='ab'&&input().minLength===3&&input().validity.patternMismatch,'minimum-length attribute or pattern validity lost');
+    assert(events.length===1&&events[0].minimum===3&&events[0].pattern&&!events[0].valid,'invalid draft was hidden from plugin callback');
+    edit('ABCDE');
+    assert(input().value==='ABCD'&&events.at(-1).value==='ABCD'&&input().checkValidity(),'native maxLength did not constrain editing');
+    assert(ref.current===handle&&handle.element===input(),'controlled constraint updates replaced native input handle');
+    ReactDOM.flushSync(()=>container.querySelector('button').click());
+    assert(input().value===''&&events.at(-1).missing&&!events.at(-1).valid,'clear action bypassed required validation or change event');
+
+    render(React.createElement(Draft,{constraints:{required:true,minLength:2,maxLength:6,pattern:'[0-9]+'}}));
+    edit('123456789');
+    assert(input().value==='123456'&&input().checkValidity(),'updated constraints were not applied');
+    render(React.createElement(Draft,{constraints:{required:true,minLength:2,maxLength:6,pattern:'[0-9]+',disabled:true}}));
+    const before=events.length;
+    document.getElementById('outside').focus();handle.Focus();
+    assert(document.activeElement!==input()&&input().disabled&&!input().willValidate,'disabled native state lost');
+    ReactDOM.flushSync(()=>{
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input(),'bad');
+      input().dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    assert(events.length===before,'disabled synthetic edit reached plugin callback');
+
+    render(React.createElement(Draft,{constraints:{}}));
+    assert(['maxlength','minlength','pattern','required'].every(name=>!input().hasAttribute(name)),'removed constraints survived');
+    edit('any unrestricted draft');
+    assert(input().value==='any unrestricted draft'&&input().checkValidity(),'ordinary field stayed constrained');
+    render(React.createElement(DFL.TextField,{key:'uncontrolled',label:'Uncontrolled',defaultValue:'',required:true,maxLength:2,minLength:2,pattern:'[a-z]+',
+      onChange:event=>events.push({uncontrolled:event.currentTarget.value})}));
+    edit('xyz');
+    assert(input().value==='xy'&&events.at(-1).uncontrolled==='xy'&&input().checkValidity(),'uncontrolled native constraints failed');
+    render(React.createElement(DFL.TextField,{key:'zero',label:'Empty only',defaultValue:'',maxLength:0}));
+    edit('x');assert(input().value==='','zero maxLength was treated as absent');
+
+    const numeric=[];
+    const numberField=bounds=>React.createElement(DFL.TextField,{key:'number',label:'Numeric fixture',
+      mustBeNumeric:true,defaultValue:'0',...bounds,onChange:event=>numeric.push({
+        value:event.currentTarget.value,underflow:event.currentTarget.validity.rangeUnderflow,
+        overflow:event.currentTarget.validity.rangeOverflow})});
+    const number=value=>ReactDOM.flushSync(()=>{
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input(),value);
+      input().dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    render(numberField({rangeMin:0,rangeMax:5}));
+    assert(input().type==='number'&&input().min==='0'&&input().max==='5'&&input().checkValidity(),'declared numeric bounds were dropped');
+    number('-1');assert(numeric.at(-1).underflow&&!numeric.at(-1).overflow,'numeric lower-bound validity lost');
+    number('6');assert(numeric.at(-1).overflow&&!numeric.at(-1).underflow,'numeric upper-bound validity lost');
+    number('0');assert(input().checkValidity()&&numeric.at(-1).value==='0','valid zero bound changed');
+    render(numberField({rangeMin:2,rangeMax:3}));
+    assert(input().min==='2'&&input().max==='3'&&input().validity.rangeUnderflow,'updated numeric bounds lost');
+    render(numberField({}));
+    assert(!input().hasAttribute('min')&&!input().hasAttribute('max')&&input().checkValidity(),'removed numeric bounds survived');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      nativeMaximumLength:true,nativeMinimumLengthAttribute:true,requiredAndPatternValidity:true,
+      originalReactChangeEvent:true,invalidDraftReachesPlugin:true,clearUsesValidation:true,
+      controlledAndUncontrolled:true,updatedAndRemovedConstraints:true,disabledCallbacksSuppressed:true,
+      zeroMaximumLength:true,stableInputRef:true,syntheticDrafts:true,realBackendContacted:false,
+      numericBoundsAndValidity:true,numericDraftsReachPlugin:true,
+      realSettingsSaved:false,realFrameContacted:false,controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

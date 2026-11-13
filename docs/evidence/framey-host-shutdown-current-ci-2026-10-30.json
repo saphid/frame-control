@@ -1,0 +1,1030 @@
+{
+  "at": "2026-10-30T21:04:16.265320+00:00",
+  "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+  "currentMain": "d89291ef3fcfbe94056ad4a1b659ee0d9e8b6b8c",
+  "mergeHeld": "four current-main signed-package jobs remain live",
+  "reports": {
+    "package-amd": {
+      "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "architecture": "x86_64",
+      "artifactSha256": "3f51a1eebedee0cf604c904c75d73b7412af53859dd3ac794860ce0d1b39a925",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.152,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "setupPortScans": [
+        8384
+      ],
+      "setupPortScanElapsedSeconds": 0.296,
+      "combinedDeckyVerified": true,
+      "requiredLifecycleResults": 17,
+      "wizardResults": {
+        "defaultPackageConfig": true,
+        "remainedUnconfiguredDuringScan": true,
+        "discoveredDefaultPort": true,
+        "discoveredDefaultApiKey": true,
+        "scannedBasicAuth": true,
+        "persistedThroughDeckyRpc": true,
+        "setupCommittedAndReloaded": true,
+        "authenticatedRestWithDiscoveredKey": true,
+        "ownedSetupServiceStopped": true
+      },
+      "ownershipRefusals": 18,
+      "processIdentityChecks": 10,
+      "uninstallPreservedCandidateData": true,
+      "migrationMountNamespaceAssertionSourceBound": true,
+      "migrationResults": 12,
+      "legacyPidBefore": 639,
+      "legacyPidAfter": 708,
+      "migrationDataPreservedAfterUninstall": true,
+      "artifactDigestMatchesGitHub": true,
+      "artifactId": 13009952620,
+      "sourceCount": 13,
+      "exactSourceCount": 26,
+      "ownedDeckyStop": {
+        "mainPidBefore": 880,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 1.886
+      },
+      "migrationDeckyStop": {
+        "mainPidBefore": 674,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 2.093
+      },
+      "sourceBoundGuestShutdownLogCheckPassed": true,
+      "rawDeckyConsoleRetainedInArtifact": false,
+      "rawDeckyConsoleIndependentlyAudited": false,
+      "job": 124283629453,
+      "run": 41119888801,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "jobLogSha256": "6bb8f2be840f9b327772e15777403420a104ac4e630bf9b123bb7533257dfe7e",
+      "fullGuestResultVerified": true
+    },
+    "package-arm": {
+      "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "architecture": "aarch64",
+      "artifactSha256": "59f3d5d5ea97b41a6b7aba6a05c3c46a94b5426a6432258ce7290801b70332de",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+        "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-arm64) flatbld@f9c7a45a62fa 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.715,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "setupPortScans": [
+        null,
+        null,
+        8384
+      ],
+      "setupPortScanElapsedSeconds": 1.15,
+      "combinedDeckyVerified": true,
+      "requiredLifecycleResults": 17,
+      "wizardResults": {
+        "defaultPackageConfig": true,
+        "remainedUnconfiguredDuringScan": true,
+        "discoveredDefaultPort": true,
+        "discoveredDefaultApiKey": true,
+        "scannedBasicAuth": true,
+        "persistedThroughDeckyRpc": true,
+        "setupCommittedAndReloaded": true,
+        "authenticatedRestWithDiscoveredKey": true,
+        "ownedSetupServiceStopped": true
+      },
+      "ownershipRefusals": 18,
+      "processIdentityChecks": 10,
+      "uninstallPreservedCandidateData": true,
+      "migrationMountNamespaceAssertionSourceBound": true,
+      "migrationResults": 12,
+      "legacyPidBefore": 647,
+      "legacyPidAfter": 718,
+      "migrationDataPreservedAfterUninstall": true,
+      "artifactDigestMatchesGitHub": true,
+      "artifactId": 13012135163,
+      "sourceCount": 13,
+      "exactSourceCount": 26,
+      "ownedDeckyStop": {
+        "mainPidBefore": 892,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 9.136
+      },
+      "migrationDeckyStop": {
+        "mainPidBefore": 682,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 9.494
+      },
+      "sourceBoundGuestShutdownLogCheckPassed": true,
+      "rawDeckyConsoleRetainedInArtifact": false,
+      "rawDeckyConsoleIndependentlyAudited": false,
+      "job": 124283629552,
+      "run": 41119888801,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "jobLogSha256": "bcabac1a53bfea52b3e10a3932b045888e37a13dc23fca4416e78696403cf773",
+      "fullGuestResultVerified": true
+    },
+    "package-http": {
+      "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "architecture": "x86_64",
+      "artifactSha256": "d4097b95b3be5e16f5073a9a479d8f23f7a8698e9dbcf02b3b48c5fd8a59425f",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.134,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "setupPortScans": [
+        8384
+      ],
+      "setupPortScanElapsedSeconds": 0.198,
+      "combinedDeckyVerified": true,
+      "requiredLifecycleResults": 17,
+      "wizardResults": {
+        "defaultPackageConfig": true,
+        "remainedUnconfiguredDuringScan": true,
+        "discoveredDefaultPort": true,
+        "discoveredDefaultApiKey": true,
+        "scannedBasicAuth": true,
+        "persistedThroughDeckyRpc": true,
+        "setupCommittedAndReloaded": true,
+        "authenticatedRestWithDiscoveredKey": true,
+        "ownedSetupServiceStopped": true
+      },
+      "ownershipRefusals": 18,
+      "processIdentityChecks": 16,
+      "uninstallPreservedCandidateData": true,
+      "migrationMountNamespaceAssertionSourceBound": true,
+      "migrationResults": 12,
+      "legacyPidBefore": 641,
+      "legacyPidAfter": 710,
+      "migrationDataPreservedAfterUninstall": true,
+      "browserStages": [
+        "running",
+        "stopped",
+        "restarted",
+        "stopped"
+      ],
+      "browserCalls": 70,
+      "manualPortFallbackUsed": false,
+      "sandboxedRendererCount": 4,
+      "signedBrowserPidTransitions": [
+        {
+          "stage": "running",
+          "pids": [
+            1071,
+            1081,
+            1089
+          ]
+        },
+        {
+          "stage": "restarted",
+          "pids": [
+            1159,
+            1171,
+            1182
+          ]
+        }
+      ],
+      "screenshotSha256": {
+        "running1": "80245b789a3c7954fcc5e0f796ad890fbb1589cbc2140d095f3348f271ca0453",
+        "stopped2": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+        "restarted3": "80245b789a3c7954fcc5e0f796ad890fbb1589cbc2140d095f3348f271ca0453",
+        "stopped4": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+      },
+      "syntheticInput": true,
+      "privateTestBridge": true,
+      "productionHttpParentVerified": false,
+      "realSteamCef": false,
+      "physicalControllerVerified": false,
+      "httpGateway": {
+        "success": true,
+        "realFrameContacted": false,
+        "syntheticCef": true,
+        "syntheticStoreReceipt": true,
+        "realSteamCef": false,
+        "managedInstallVerified": false,
+        "installerEnabled": false,
+        "browserSandboxDisabled": false,
+        "productionHttpHandler": true,
+        "productionPanelDispatcher": true,
+        "productionMethodScript": true,
+        "productionLocalSshWrapper": true,
+        "uiSourceFingerprints": 105,
+        "statusImportProfiling": false,
+        "productionStatusCommandUnchanged": true,
+        "rejectedRequests": {
+          "missingUiKey": 403,
+          "staleReceipt": 400,
+          "wrongPlugin": 400,
+          "modernHttpCall": 400,
+          "missingHttpShim": 400
+        },
+        "actualSignedProcessPids": [
+          1420,
+          1437,
+          1445
+        ],
+        "actualDeckyRpc": true,
+        "authenticatedSyncthingRest": true,
+        "serviceStartStopVerified": true,
+        "stoppedStateBeforeAndAfter": true,
+        "requests": [
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 403,
+            "authenticated": false,
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 400,
+            "authenticated": true,
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 400,
+            "authenticated": true,
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 400,
+            "authenticated": true,
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 400,
+            "authenticated": true,
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state"
+          },
+          {
+            "method": "get_settings_json",
+            "httpStatus": 200,
+            "authenticated": true
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 200,
+            "authenticated": true,
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 200,
+            "authenticated": true,
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/start"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 200,
+            "authenticated": true,
+            "httpMethod": "GET",
+            "path": "/rest/system/status"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 200,
+            "authenticated": true,
+            "httpMethod": "GET",
+            "path": "/rest/system/status"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 200,
+            "authenticated": true,
+            "httpMethod": "GET",
+            "path": "/rest/system/status"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 200,
+            "authenticated": true,
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/stop"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpStatus": 200,
+            "authenticated": true,
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state"
+          }
+        ],
+        "fixtureCefTrace": {
+          "records": [
+            {
+              "requestId": 1,
+              "method": "get_settings_json",
+              "startedAfterMilliseconds": 5356,
+              "outcome": "succeeded",
+              "openElapsedMilliseconds": 97,
+              "elapsedMilliseconds": 129
+            },
+            {
+              "requestId": 2,
+              "method": "framey_http_fetch",
+              "startedAfterMilliseconds": 8521,
+              "outcome": "succeeded",
+              "openElapsedMilliseconds": 1,
+              "elapsedMilliseconds": 170
+            },
+            {
+              "requestId": 3,
+              "method": "framey_http_fetch",
+              "startedAfterMilliseconds": 11034,
+              "outcome": "succeeded",
+              "openElapsedMilliseconds": 1,
+              "elapsedMilliseconds": 159
+            },
+            {
+              "requestId": 4,
+              "method": "framey_http_fetch",
+              "startedAfterMilliseconds": 13516,
+              "outcome": "succeeded",
+              "openElapsedMilliseconds": 0,
+              "elapsedMilliseconds": 28
+            },
+            {
+              "requestId": 5,
+              "method": "framey_http_fetch",
+              "startedAfterMilliseconds": 15929,
+              "outcome": "succeeded",
+              "openElapsedMilliseconds": 0,
+              "elapsedMilliseconds": 99
+            },
+            {
+              "requestId": 6,
+              "method": "framey_http_fetch",
+              "startedAfterMilliseconds": 19201,
+              "outcome": "succeeded",
+              "openElapsedMilliseconds": 0,
+              "elapsedMilliseconds": 21
+            },
+            {
+              "requestId": 7,
+              "method": "framey_http_fetch",
+              "startedAfterMilliseconds": 21544,
+              "outcome": "succeeded",
+              "openElapsedMilliseconds": 0,
+              "elapsedMilliseconds": 112
+            },
+            {
+              "requestId": 8,
+              "method": "framey_http_fetch",
+              "startedAfterMilliseconds": 23957,
+              "outcome": "succeeded",
+              "openElapsedMilliseconds": 0,
+              "elapsedMilliseconds": 159
+            }
+          ],
+          "overflow": false,
+          "authenticatedSocketCount": 1,
+          "issuedRequestCount": 8
+        },
+        "ownedBrowserReaped": true,
+        "httpServerStopped": true,
+        "ownedReceiptRemoved": true,
+        "sshObserverRemoved": true
+      },
+      "httpSourceCount": 105,
+      "sourceCount": 123,
+      "productionHttpDispatcherVerified": true,
+      "managedInstallVerified": false,
+      "guestPacketSha256IndependentlyVerified": "81bd08740787a7c5822d4069d735845a6b72329fecacdb7137c0f8ffe7655dd1",
+      "artifactDigestMatchesGitHub": true,
+      "artifactId": 13009892726,
+      "exactSourceCount": 126,
+      "ownedDeckyStop": {
+        "mainPidBefore": 882,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 1.757
+      },
+      "migrationDeckyStop": {
+        "mainPidBefore": 676,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 1.895
+      },
+      "sourceBoundGuestShutdownLogCheckPassed": true,
+      "rawDeckyConsoleRetainedInArtifact": false,
+      "rawDeckyConsoleIndependentlyAudited": false,
+      "job": 124283629022,
+      "run": 41119888801,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "jobLogSha256": "1bc6a28ed6185148168fec20315cce29024a43a07c5353e74b01240799c6929c",
+      "fullGuestResultVerified": true,
+      "capturesVisuallyInspected": true,
+      "allCapturesInspected": true
+    },
+    "package-parent": {
+      "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "architecture": "x86_64",
+      "artifactSha256": "32dcab763c01b0ab3e475a6c89726e60fa7669c61195591e987e97897908980b",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.134,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "setupPortScans": [
+        8384
+      ],
+      "setupPortScanElapsedSeconds": 0.206,
+      "combinedDeckyVerified": true,
+      "requiredLifecycleResults": 17,
+      "wizardResults": {
+        "defaultPackageConfig": true,
+        "remainedUnconfiguredDuringScan": true,
+        "discoveredDefaultPort": true,
+        "discoveredDefaultApiKey": true,
+        "scannedBasicAuth": true,
+        "persistedThroughDeckyRpc": true,
+        "setupCommittedAndReloaded": true,
+        "authenticatedRestWithDiscoveredKey": true,
+        "ownedSetupServiceStopped": true
+      },
+      "ownershipRefusals": 18,
+      "processIdentityChecks": 20,
+      "uninstallPreservedCandidateData": true,
+      "migrationMountNamespaceAssertionSourceBound": true,
+      "migrationResults": 12,
+      "legacyPidBefore": 641,
+      "legacyPidAfter": 711,
+      "migrationDataPreservedAfterUninstall": true,
+      "productionParentVerified": true,
+      "productionParentArchitecture": "x86_64",
+      "parentHttpCalls": 64,
+      "cefAuthenticatedSockets": 1,
+      "cefUniqueSuccessfulRequests": 73,
+      "allEightCapturePayloadsVerified": true,
+      "captureSha256": {
+        "browser-running1.png": "b57d89338a970645233143f05c57822e1f5c4794f6e9dff99880e7b3511d7564",
+        "browser-stopped2.png": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+        "browser-restarted3.png": "b57d89338a970645233143f05c57822e1f5c4794f6e9dff99880e7b3511d7564",
+        "browser-stopped4.png": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+        "http-parent-running1.png": "d5f5721e9dcee64d2e8930015f3d75756318da71dcb11f4f2e7a58158b7b7dad",
+        "http-parent-stopped2.png": "f4d94092a724300b4f5ad109f24142b7c70bd2ad6738309df937ec10c98e2455",
+        "http-parent-restarted3.png": "d5f5721e9dcee64d2e8930015f3d75756318da71dcb11f4f2e7a58158b7b7dad",
+        "http-parent-stopped4.png": "f4d94092a724300b4f5ad109f24142b7c70bd2ad6738309df937ec10c98e2455"
+      },
+      "capturesVisuallyInspected": true,
+      "realSteamCef": false,
+      "managedInstallVerified": false,
+      "physicalControllerVerified": false,
+      "guestPacketSha256IndependentlyVerified": "5cbf2d3e4b06a595ea563d17e8699b6ac11eed26cc52156192ac6a3a43b62e82",
+      "artifactDigestMatchesGitHub": true,
+      "artifactId": 13011311294,
+      "sourceCount": 124,
+      "exactSourceCount": 127,
+      "ownedDeckyStop": {
+        "mainPidBefore": 879,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 7.106
+      },
+      "migrationDeckyStop": {
+        "mainPidBefore": 677,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 2.071
+      },
+      "sourceBoundGuestShutdownLogCheckPassed": true,
+      "rawDeckyConsoleRetainedInArtifact": false,
+      "rawDeckyConsoleIndependentlyAudited": false,
+      "job": 124283629334,
+      "run": 41119888801,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "jobLogSha256": "0fc96058314de4b3a9a1245786446fcf1726a1dbb9d13b50559839c50e344b94",
+      "fullGuestResultVerified": true,
+      "allCapturesInspected": true
+    },
+    "native-amd": {
+      "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "runId": 41119888592,
+      "jobId": 124283628300,
+      "architecture": "x86_64",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "archiveSha256": "173fe33b28afa935f94e564f7b11ff24141566a226482af79cf2ee64efc60dea",
+      "nativeCasesCompleted": 33,
+      "officialArchiveDigestsVerified": 30,
+      "exactCompletedJobVerified": true,
+      "exactWorkflowRunVerified": true,
+      "caseInventoryAndDiscoveryVerified": true,
+      "expectedNegativeRegressionsVerified": true,
+      "steamgriddbPrivateArtwork": {
+        "id": 36,
+        "name": "SteamGridDB",
+        "version": "1.8.1",
+        "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          },
+          {
+            "method": "read_file_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "get_setting",
+            "result": false
+          },
+          {
+            "method": "set_setting",
+            "result": null
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "set_shortcut_icon_from_path",
+            "result": true
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": "icon_is_same_path"
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_path",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/777/private-icon.jpg"
+          },
+          {
+            "method": "download_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "set_shortcut_icon_from_url",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_url",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/888/private-download.jpg"
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          }
+        ],
+        "discovered": [
+          {
+            "name": "SteamGridDB",
+            "version": "1.8.1",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateArtwork": {
+          "settingsPersistedAcrossLoaderRestart": true,
+          "settingsSha256": "284e7567f60b0df8ed029ebbeeb425327048e0b4d6ff0a949907550cd6a7083a",
+          "artworkSha256": "10c748c65ed61863df4836499e79764b3506929f28a5e29065f8682cafaf8ea6",
+          "localFileRoundTrip": true,
+          "signedShortcutIdNormalized": true,
+          "shortcutSetSamePathClear": true,
+          "unselectedShortcutPreserved": true,
+          "cacheTempFilesReplaced": true,
+          "loopbackDownloads": 3,
+          "ownedHttpServerStopped": true,
+          "noProductionChanges": true,
+          "externalArtworkServiceVerified": false,
+          "steamContextMenuVerified": false,
+          "browserVerified": false,
+          "realSteamCef": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API1 discovery, private settings/restart, local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID normalization passed; Steam context menu, external service, browser and VR unverified"
+      },
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "exactHeadCheckoutVerified": true,
+      "checkoutCommit": "aa213458893ec7ac4293d5ec28c72a93cbaca41c",
+      "checkoutTree": "b8df1b7575ad3fd92bbcd399fb6aad3bc854ccb0",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "094614872a241954bc36203e6335d2770720dfd79e3aced6b490fd0dd2e895e9",
+      "job": 124283628300,
+      "run": 41119888592,
+      "workflowEvent": "pull_request",
+      "artifactId": 13007959945,
+      "githubArtifactDigestVerified": true
+    },
+    "native-arm": {
+      "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "runId": 41119888592,
+      "jobId": 124283627628,
+      "architecture": "aarch64",
+      "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+      "archiveSha256": "db761bc2b8a9b89bd6ec909d2c5bd8faf687396adcd7df31560124bf05e0299d",
+      "nativeCasesCompleted": 33,
+      "officialArchiveDigestsVerified": 30,
+      "exactCompletedJobVerified": true,
+      "exactWorkflowRunVerified": true,
+      "caseInventoryAndDiscoveryVerified": true,
+      "expectedNegativeRegressionsVerified": true,
+      "steamgriddbPrivateArtwork": {
+        "id": 36,
+        "name": "SteamGridDB",
+        "version": "1.8.1",
+        "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          },
+          {
+            "method": "read_file_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "get_setting",
+            "result": false
+          },
+          {
+            "method": "set_setting",
+            "result": null
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "set_shortcut_icon_from_path",
+            "result": true
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": "icon_is_same_path"
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_path",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/777/private-icon.jpg"
+          },
+          {
+            "method": "download_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "set_shortcut_icon_from_url",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_url",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/888/private-download.jpg"
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          }
+        ],
+        "discovered": [
+          {
+            "name": "SteamGridDB",
+            "version": "1.8.1",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateArtwork": {
+          "settingsPersistedAcrossLoaderRestart": true,
+          "settingsSha256": "284e7567f60b0df8ed029ebbeeb425327048e0b4d6ff0a949907550cd6a7083a",
+          "artworkSha256": "10c748c65ed61863df4836499e79764b3506929f28a5e29065f8682cafaf8ea6",
+          "localFileRoundTrip": true,
+          "signedShortcutIdNormalized": true,
+          "shortcutSetSamePathClear": true,
+          "unselectedShortcutPreserved": true,
+          "cacheTempFilesReplaced": true,
+          "loopbackDownloads": 3,
+          "ownedHttpServerStopped": true,
+          "noProductionChanges": true,
+          "externalArtworkServiceVerified": false,
+          "steamContextMenuVerified": false,
+          "browserVerified": false,
+          "realSteamCef": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API1 discovery, private settings/restart, local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID normalization passed; Steam context menu, external service, browser and VR unverified"
+      },
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "exactHeadCheckoutVerified": true,
+      "checkoutCommit": "aa213458893ec7ac4293d5ec28c72a93cbaca41c",
+      "checkoutTree": "b8df1b7575ad3fd92bbcd399fb6aad3bc854ccb0",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "2f00c84ad727e78cbf7ff3a30f1792891a686539303df3ffe55dab6c81451ef5",
+      "job": 124283627628,
+      "run": 41119888592,
+      "workflowEvent": "pull_request",
+      "artifactId": 13009730140,
+      "githubArtifactDigestVerified": true
+    },
+    "ownership-amd": {
+      "success": true,
+      "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "architecture": "x86_64",
+      "archiveSha256": "9f9622a9034ae9cad0cafd08dadc678364f67900581eb72a932cdfa1a80580ad",
+      "exactSourceFingerprintsVerified": 14,
+      "sourceSha256": {
+        "scripts/framey-test-syncthing-candidate.py": "d7f6fe692c949f51f4ddb82dff9e38410c0ac1125b725079bfdf004eec95ff99",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/decky-runtime/syncthing_candidate.py": "ed70a32ed72faf9d134b49f9370ed4cb6112ab28da98e8a5d8f69860b8c7981f",
+        "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+        "ui/vendor/syncthing-0.2.7/watchdog.patch": "4620596a1b2f19fec343d67b7706125e4e421eb59c6f3da631263314adee81e5",
+        "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+        "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+        "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+        "scripts/framey-test-syncthing-service.py": "a53cd621c0c93f5feaa2914404270ce928915b1feeb6e08205bbc07b4223c9e1",
+        "tests/decky-runtime/Containerfile.systemd": "b2d4bfd834c50baa25d97a746ea956ad05802fc63ee5eb7645c6dd980986b5b2",
+        "tests/decky-runtime/syncthing_service.py": "dfd92d0d2b66a675b952e0611369943e34d186a9a91ba7af92371e37cf1f5309",
+        "tests/decky-runtime/syncthing_service_root.py": "7860ab6124766191e0bc644ee70c798ce25af3781d690adade1722d1366b76d1",
+        "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+        "ui/frame_decky.py": "48a6e70d88d104e097e3267caf379107c1b9774c85f85a0c7c86443fb9e5389f"
+      },
+      "nativeOwnershipChecksVerified": true,
+      "actualRuntimeTwoWaySyncVerified": true,
+      "serviceLifecycleAssertions": 17,
+      "ownershipRefusals": 18,
+      "ownedDeckyStop": {
+        "mainPidBefore": 326,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 1.499
+      },
+      "flatpakPackageVerified": false,
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "checkoutCommit": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "checkoutTree": "b8df1b7575ad3fd92bbcd399fb6aad3bc854ccb0",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "3a7863cc5fdd7491c14199a8d9cf1c9d7b827ea63aed370e281750a5d99400c2",
+      "job": 124283628016,
+      "run": 41119888725,
+      "exactWorkflowRunVerified": true,
+      "workflowEvent": "pull_request",
+      "artifactId": 13008197371,
+      "githubArtifactDigestVerified": true,
+      "strictNewHostShutdownGateAccepted": true,
+      "serviceGuestConsoleResultVerified": true,
+      "completeRetainedConsoleWithoutShutdownErrors": true
+    },
+    "ownership-arm": {
+      "success": true,
+      "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "architecture": "aarch64",
+      "archiveSha256": "4e53e9fddf24529eb93bc3c92d6de084a620d5014a7cdcbfd44228a31e784054",
+      "exactSourceFingerprintsVerified": 14,
+      "sourceSha256": {
+        "scripts/framey-test-syncthing-candidate.py": "d7f6fe692c949f51f4ddb82dff9e38410c0ac1125b725079bfdf004eec95ff99",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/decky-runtime/syncthing_candidate.py": "ed70a32ed72faf9d134b49f9370ed4cb6112ab28da98e8a5d8f69860b8c7981f",
+        "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+        "ui/vendor/syncthing-0.2.7/watchdog.patch": "4620596a1b2f19fec343d67b7706125e4e421eb59c6f3da631263314adee81e5",
+        "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+        "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+        "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+        "scripts/framey-test-syncthing-service.py": "a53cd621c0c93f5feaa2914404270ce928915b1feeb6e08205bbc07b4223c9e1",
+        "tests/decky-runtime/Containerfile.systemd": "b2d4bfd834c50baa25d97a746ea956ad05802fc63ee5eb7645c6dd980986b5b2",
+        "tests/decky-runtime/syncthing_service.py": "dfd92d0d2b66a675b952e0611369943e34d186a9a91ba7af92371e37cf1f5309",
+        "tests/decky-runtime/syncthing_service_root.py": "7860ab6124766191e0bc644ee70c798ce25af3781d690adade1722d1366b76d1",
+        "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+        "ui/frame_decky.py": "48a6e70d88d104e097e3267caf379107c1b9774c85f85a0c7c86443fb9e5389f"
+      },
+      "nativeOwnershipChecksVerified": true,
+      "actualRuntimeTwoWaySyncVerified": true,
+      "serviceLifecycleAssertions": 17,
+      "ownershipRefusals": 18,
+      "ownedDeckyStop": {
+        "mainPidBefore": 326,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 8.959
+      },
+      "flatpakPackageVerified": false,
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "checkoutCommit": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "checkoutTree": "b8df1b7575ad3fd92bbcd399fb6aad3bc854ccb0",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "b9d12d70aa3217ebc094d33cf5866aa735523fb3d90314b76b7e8272c2db368e",
+      "job": 124283628433,
+      "run": 41119888725,
+      "exactWorkflowRunVerified": true,
+      "workflowEvent": "pull_request",
+      "artifactId": 13008083193,
+      "githubArtifactDigestVerified": true,
+      "strictNewHostShutdownGateAccepted": true,
+      "serviceGuestConsoleResultVerified": true,
+      "completeRetainedConsoleWithoutShutdownErrors": true
+    },
+    "e2e": {
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "checkoutCommit": "aa213458893ec7ac4293d5ec28c72a93cbaca41c",
+      "checkoutTree": "b8df1b7575ad3fd92bbcd399fb6aad3bc854ccb0",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "66ea715fff85c3ce0d748dc07ab2b68231753ea740653572640d4d4fa251bd7a",
+      "job": 124283628515,
+      "run": 41119888746,
+      "success": true,
+      "head": "f114892663dd546d73a28c55b96bacc880ab3418",
+      "actualE2ePassed": true,
+      "e2eSeconds": 234,
+      "includingBuildsSeconds": 302,
+      "workflowEvent": "pull_request",
+      "realFrameContacted": false
+    }
+  },
+  "recordedIn": "PR #494 documentation; does not ship PR #493 host gate",
+  "recordedAtUtc": "2026-10-30T21:06:01.566167+00:00",
+  "realFrameContacted": false,
+  "physicalControllerVerified": false
+}

@@ -1,0 +1,315 @@
+{
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "020736aed67c530976744546e9708a4a9e1ee3a6d7320949ba53a5ba99bfa45d",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "bc60cac4b2ec5dba40a97954729dd21421fbc83c3cca1859cef1c20a111b3141",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "30d795c8ab51b473691ecedf4dc71b66176ba1fcc417eb4ae62eda8dd701f784",
+    "tests/framey_official.py": "7483873a1db44b310b0fd1c7057b68d028b674e2a53693f0bbbf74317184f242",
+    "ui/frame_decky_store.py": "b105a6a9d8b84055a298ce904f9c21fc44416adb84f00f4112c156635be5c4d9",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "357bd5c472218c510dcdd579cb972706ec3ccc176e6177f3ed2548c8cc448128",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "cases": [
+    {
+      "id": 53,
+      "name": "Shotty",
+      "version": "0.1.0",
+      "sha256": "ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe",
+      "shim": "shotty-click-app-dir",
+      "calls": [
+        {
+          "method": "was_rescued",
+          "result": false
+        },
+        {
+          "method": "aggregate_all",
+          "result": 0
+        },
+        {
+          "method": "set_id_map_fronend",
+          "result": null
+        },
+        {
+          "method": "copy_screenshot",
+          "result": true
+        },
+        {
+          "method": "copy_screenshot",
+          "result": true
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "set_id_map_fronend",
+          "result": null
+        },
+        {
+          "method": "copy_screenshot",
+          "result": true
+        },
+        {
+          "method": "set_id_map_fronend",
+          "result": null
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "aggregate_all",
+          "result": 1
+        },
+        {
+          "method": "was_rescued",
+          "result": false
+        },
+        {
+          "method": "was_rescued",
+          "result": false
+        }
+      ],
+      "discovered": [
+        {
+          "name": "Shotty",
+          "version": "0.1.0",
+          "load_type": 0,
+          "disabled": false
+        }
+      ],
+      "independentState": {
+        "differentFilesystems": true,
+        "repeatCopy": true,
+        "sourceIndependent": true,
+        "titleConfined": true,
+        "symlinkRefused": true,
+        "conflictingOutputPreserved": true
+      },
+      "shottyLifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "childrenBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "348060297"
+              }
+            },
+            "exactChildrenRemaining": {},
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.214,
+            "forcedPluginKills": 0,
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Shotty (v0.1.0)\n[plugin][INFO]: Stopping response listener for Shotty (v0.1.0)\nCalling Loader unload function for Shotty (v0.1.0).\nAttempting to unload with plugin Shotty (v0.1.0)'s \"_unload\" function.\n\nUnloaded Shotty (v0.1.0)\n\n[plugin][INFO]: Plugin Shotty (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "206cd50718ab71c33befc89fa794a8a6e6ff6d7a4c7d44a1fe7613eafabe6153",
+            "cleanShutdownVerified": true,
+            "expectedRegression": false
+          },
+          {
+            "loaderPid": 23,
+            "childrenBefore": {
+              "24": {
+                "state": "S",
+                "parent": 23,
+                "start": "348060611"
+              }
+            },
+            "exactChildrenRemaining": {},
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.214,
+            "forcedPluginKills": 0,
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Shotty (v0.1.0)\n[plugin][INFO]: Stopping response listener for Shotty (v0.1.0)\nCalling Loader unload function for Shotty (v0.1.0).\nAttempting to unload with plugin Shotty (v0.1.0)'s \"_unload\" function.\n\nUnloaded Shotty (v0.1.0)\n\n[plugin][INFO]: Plugin Shotty (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "206cd50718ab71c33befc89fa794a8a6e6ff6d7a4c7d44a1fe7613eafabe6153",
+            "cleanShutdownVerified": true,
+            "expectedRegression": false
+          }
+        ],
+        "unrelatedSiblingPreserved": true,
+        "console": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: Shotty\n[loader][INFO]: Loaded Shotty (v0.1.0)\n[plugin][WARNING]: Plugin Shotty (v0.1.0) is using legacy method calls. This will be removed in a future release.\nLoading appid translations\nInitialized\nRescuer started\nCopied 0 files\nSet frontend id map\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 88, in copy_screenshot\n    write_image(image, path)\n    ~~~~~~~~~~~^^^^^^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 114, in write_image\n    if not replace: raise FileExistsError('A different screenshot already exists')\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileExistsError: A different screenshot already exists\nSet frontend id map\nSet frontend id map\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 87, in copy_screenshot\n    image = read_source(found[0])\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 77, in read_source\n    fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)\nOSError: [Errno 40] Too many levels of symbolic links: 'linked.jpg'\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 81, in copy_screenshot\n    checked_id(app_id)\n    ~~~~~~~~~~^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 14, in app_id\n    raise ValueError('Choose a numeric Steam screenshot app ID')\nValueError: Choose a numeric Steam screenshot app ID\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 81, in copy_screenshot\n    checked_id(app_id)\n    ~~~~~~~~~~^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 14, in app_id\n    raise ValueError('Choose a numeric Steam screenshot app ID')\nValueError: Choose a numeric Steam screenshot app ID\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 81, in copy_screenshot\n    checked_id(app_id)\n    ~~~~~~~~~~^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 14, in app_id\n    raise ValueError('Choose a numeric Steam screenshot app ID')\nValueError: Choose a numeric Steam screenshot app ID\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 81, in copy_screenshot\n    checked_id(app_id)\n    ~~~~~~~~~~^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 14, in app_id\n    raise ValueError('Choose a numeric Steam screenshot app ID')\nValueError: Choose a numeric Steam screenshot app ID\nCopied 1 files\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Shotty (v0.1.0)\n[plugin][INFO]: Stopping response listener for Shotty (v0.1.0)\nCalling Loader unload function for Shotty (v0.1.0).\nAttempting to unload with plugin Shotty (v0.1.0)'s \"_unload\" function.\n\nUnloaded Shotty (v0.1.0)\n\n[plugin][INFO]: Plugin Shotty (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: Shotty\n[loader][INFO]: Loaded Shotty (v0.1.0)\n[plugin][WARNING]: Plugin Shotty (v0.1.0) is using legacy method calls. This will be removed in a future release.\nLoading appid translations\nInitialized\nRescuer started\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Shotty (v0.1.0)\n[plugin][INFO]: Stopping response listener for Shotty (v0.1.0)\nCalling Loader unload function for Shotty (v0.1.0).\nAttempting to unload with plugin Shotty (v0.1.0)'s \"_unload\" function.\n\nUnloaded Shotty (v0.1.0)\n\n[plugin][INFO]: Plugin Shotty (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "9f11b46557fe03f31061fd2ab8494a0b608e70fb6ec85493318f392deede371e",
+        "cleanShutdownVerified": true,
+        "expectedRegression": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false,
+        "unchangedPublishedFiles": {
+          "LICENSE": "b4ee3ee7d5b0a7f551f739c5de65c6005b181d83281c1048626550ec5facdfc3",
+          "package.json": "91e0cca37cc9a208fc154439efefd6b63803e6432f8b7b7ef41273a26a690c2f",
+          "plugin.json": "efcc204f5ab1d40f4101a57ac625829e8e84650dc3885d949eaf282afc800f0e",
+          "README.md": "f57b810b85da6a1526ce912338435a70a4ef4e6cb996dbad7594c3e234584769",
+          "dist/index.js": "4d0632ce0ed66a5982d751851492617bcbba2be8aa803e3d569cc582f1d762db",
+          "appidmap.json": "9619caea6b13cb492acfd726b11e84a35b23b9ac012a5ac2893d4a42e218f9d6",
+          "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8"
+      },
+      "backendSha256": "3941e3364b5e0e4b15c83c0ff66688671744e04c6b0d4f21923c33fc540bda51",
+      "result": "discovery, backend import, empty aggregation, private screenshot cross-filesystem copy, repeat copy, path/symlink refusals, preserved conflicting output and historical aggregation passed; two parent-only clean loader stops and restart passed; no real Steam library or VR proof"
+    },
+    {
+      "id": 53,
+      "name": "Shotty",
+      "version": "0.1.0",
+      "sha256": "ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe",
+      "shim": "shotty-click-app-dir",
+      "calls": [
+        {
+          "method": "was_rescued",
+          "result": false
+        },
+        {
+          "method": "aggregate_all",
+          "result": 0
+        },
+        {
+          "method": "set_id_map_fronend",
+          "result": null
+        },
+        {
+          "method": "copy_screenshot",
+          "result": true
+        },
+        {
+          "method": "copy_screenshot",
+          "result": true
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "set_id_map_fronend",
+          "result": null
+        },
+        {
+          "method": "copy_screenshot",
+          "result": true
+        },
+        {
+          "method": "set_id_map_fronend",
+          "result": null
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "aggregate_all",
+          "result": 1
+        },
+        {
+          "method": "was_rescued",
+          "result": false
+        }
+      ],
+      "discovered": [
+        {
+          "name": "Shotty",
+          "version": "0.1.0",
+          "load_type": 0,
+          "disabled": false
+        }
+      ],
+      "independentState": {
+        "differentFilesystems": true,
+        "repeatCopy": true,
+        "sourceIndependent": true,
+        "titleConfined": true,
+        "symlinkRefused": true,
+        "conflictingOutputPreserved": true
+      },
+      "shottyLifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "childrenBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "348061044"
+              }
+            },
+            "exactChildrenRemaining": {},
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 5.224,
+            "forcedPluginKills": 1,
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Shotty (v0.1.0)\n[plugin][INFO]: Stopping response listener for Shotty (v0.1.0)\nCalling Loader unload function for Shotty (v0.1.0).\nAttempting to unload with plugin Shotty (v0.1.0)'s \"_unload\" function.\n\n[plugin][WARNING]: Plugin Shotty (v0.1.0) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Shotty (v0.1.0) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "ff966a6699b1893a40f6686f2b66a6fb85f92396fd5f4b25ac1912cf40e67ad5",
+            "cleanShutdownVerified": false,
+            "expectedRegression": true
+          }
+        ],
+        "unrelatedSiblingPreserved": true,
+        "console": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: Shotty\n[loader][INFO]: Loaded Shotty (v0.1.0)\n[plugin][WARNING]: Plugin Shotty (v0.1.0) is using legacy method calls. This will be removed in a future release.\nLoading appid translations\nInitialized\nRescuer started\nCopied 0 files\nSet frontend id map\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 85, in copy_screenshot\n    write_image(image, path)\n    ~~~~~~~~~~~^^^^^^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 114, in write_image\n    if not replace: raise FileExistsError('A different screenshot already exists')\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileExistsError: A different screenshot already exists\nSet frontend id map\nSet frontend id map\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 84, in copy_screenshot\n    image = read_source(found[0])\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 77, in read_source\n    fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)\nOSError: [Errno 40] Too many levels of symbolic links: 'linked.jpg'\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 78, in copy_screenshot\n    checked_id(app_id)\n    ~~~~~~~~~~^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 14, in app_id\n    raise ValueError('Choose a numeric Steam screenshot app ID')\nValueError: Choose a numeric Steam screenshot app ID\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 78, in copy_screenshot\n    checked_id(app_id)\n    ~~~~~~~~~~^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 14, in app_id\n    raise ValueError('Choose a numeric Steam screenshot app ID')\nValueError: Choose a numeric Steam screenshot app ID\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 78, in copy_screenshot\n    checked_id(app_id)\n    ~~~~~~~~~~^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 14, in app_id\n    raise ValueError('Choose a numeric Steam screenshot app ID')\nValueError: Choose a numeric Steam screenshot app ID\nScreenshot copy refused\nTraceback (most recent call last):\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/main.py\", line 78, in copy_screenshot\n    checked_id(app_id)\n    ~~~~~~~~~~^^^^^^^^\n  File \"/home/tester/.local/share/frame-control/decky/plugins/Shotty/py_modules/framey_shotty.py\", line 14, in app_id\n    raise ValueError('Choose a numeric Steam screenshot app ID')\nValueError: Choose a numeric Steam screenshot app ID\nCopied 1 files\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Shotty (v0.1.0)\n[plugin][INFO]: Stopping response listener for Shotty (v0.1.0)\nCalling Loader unload function for Shotty (v0.1.0).\nAttempting to unload with plugin Shotty (v0.1.0)'s \"_unload\" function.\n\n[plugin][WARNING]: Plugin Shotty (v0.1.0) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Shotty (v0.1.0) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "6ce40ac89c21463cb1a131a3d0689592c9c3271744ba9bb3338195097b780de4",
+        "cleanShutdownVerified": false,
+        "expectedRegression": true,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false,
+        "unchangedPublishedFiles": {
+          "LICENSE": "b4ee3ee7d5b0a7f551f739c5de65c6005b181d83281c1048626550ec5facdfc3",
+          "package.json": "91e0cca37cc9a208fc154439efefd6b63803e6432f8b7b7ef41273a26a690c2f",
+          "plugin.json": "efcc204f5ab1d40f4101a57ac625829e8e84650dc3885d949eaf282afc800f0e",
+          "README.md": "f57b810b85da6a1526ce912338435a70a4ef4e6cb996dbad7594c3e234584769",
+          "dist/index.js": "4d0632ce0ed66a5982d751851492617bcbba2be8aa803e3d569cc582f1d762db",
+          "appidmap.json": "9619caea6b13cb492acfd726b11e84a35b23b9ac012a5ac2893d4a42e218f9d6",
+          "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ipcAdapterSha256": null
+      },
+      "backendSha256": "5c62941c81887727b6f1ea2dbc0ba0c8c9e6153503ae3e3c234a4c4271d336de",
+      "expectedRegression": {
+        "success": false,
+        "phase": "plugin unload",
+        "previousManagedSourceRestored": true,
+        "forcedPluginKills": 1,
+        "qualifiedCompatibilityPass": false
+      },
+      "result": "discovery, backend import, empty aggregation, private screenshot cross-filesystem copy, repeat copy, path/symlink refusals, preserved conflicting output and historical aggregation passed; prior managed source requires forced plugin stop; expected negative only"
+    }
+  ]
+}

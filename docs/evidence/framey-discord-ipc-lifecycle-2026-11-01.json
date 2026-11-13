@@ -1,0 +1,133 @@
+{
+  "at": "2026-11-01T05:30:33.983479+00:00",
+  "sourceRevision": "18f39163d3a6dc41ab1eb2259e5ce6b139973cbf",
+  "officialId": 37,
+  "version": "1.5.0",
+  "zipSha256": "00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45",
+  "nativeAudit": {
+    "at": "2026-11-01T05:26:57.061365+00:00",
+    "passed": true,
+    "connections": 6,
+    "frames": 18,
+    "rpcCalls": 14,
+    "sourceHashes": 28,
+    "strictStops": [
+      0.236,
+      0.214
+    ],
+    "genericConsoleCleanShutdownVerified": false,
+    "genericFlagLimit": "Generic recorder intentionally never certifies plugin shutdown; two explicit strict stops independently verified",
+    "initialAuditCorrection": "Initial audit wrongly required every descendant to be reaped by probe; Decky reaps its own children. Corrected to exact identity disappearance, successful adopted exits and loader exit, with no native rerun.",
+    "realFrameContacted": false,
+    "realDiscordContacted": false,
+    "reportSha256": "7cf99059041cb17eec72e87dfed88a1723c05bb316f940f8bb04f449f3dbca77"
+  },
+  "sourceReview": {
+    "at": "2026-11-01T05:26:32.811748+00:00",
+    "sourceRevision": "18f39163d3a6dc41ab1eb2259e5ce6b139973cbf",
+    "base": "3d6145c640ffe1f9b51923335972ddd513ad0de2",
+    "changedFiles": [
+      "docs/evidence/framey-discord-ipc-lifecycle-2026-11-01.md",
+      "docs/framey-compatibility.md",
+      "scripts/framey-compatibility-doc.py",
+      "scripts/framey-test-decky-runtime.py",
+      "tests/decky-runtime/cases.json",
+      "tests/decky-runtime/check.py",
+      "tests/decky-runtime/discord_private.py",
+      "tests/fixtures/framey-official/37.zip",
+      "tests/fixtures/framey-official/README.md",
+      "tests/framey_official.py",
+      "tests/test_framey_decky_runtime.py",
+      "tests/test_framey_discord_lifecycle.py",
+      "ui/frame_decky_store.py",
+      "ui/framey-compatibility.json",
+      "ui/framey_discord_lifecycle.py"
+    ],
+    "unchangedMainFileCount": 1670,
+    "other115CatalogRowsPreserved": true,
+    "all28NativeInputHashesBound": true,
+    "realFrameContacted": false
+  },
+  "tests": {
+    "at": "2026-11-01T05:24:37.019083+00:00",
+    "sourceRevision": "18f39163d3a6dc41ab1eb2259e5ce6b139973cbf",
+    "runs": [
+      {
+        "name": "full-unit",
+        "sha256": "2e5d2ee7d0084530916d1c3b5a1e414c7cab9bdf8b7a9c70b3aac16f2f446606",
+        "tests": 1976,
+        "seconds": 258.621,
+        "skips": 15
+      },
+      {
+        "name": "site",
+        "sha256": "ad0c7132a2295fbaf06e1b2a9f641117b7f47b7c9b1602609c75a49a2bd8ded4",
+        "tests": 18,
+        "pass": 18,
+        "fail": 0,
+        "skipped": 0
+      }
+    ],
+    "realFrameContacted": false
+  },
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 402.734,
+    "catalogCount": 116,
+    "installedRemoved": 69,
+    "refusals": 47,
+    "postCleanup": {
+      "containers": [],
+      "volumes": [],
+      "networks": []
+    }
+  },
+  "rawPacketSha256": "eb376d9e4a3d43e5b5e1bf98089fd97cd1239ac8a9abd793ed132f1422eb9a78",
+  "realDiscordContacted": false,
+  "realFrameContacted": false,
+  "hostedArm64RuntimeVerified": false,
+  "releaseQualified": false,
+  "mainIntegration": {
+    "at": "2026-11-01T05:29:20.104186+00:00",
+    "integrationCommit": "c84be3f080abf1834c248bb6ab13950260b1c2c7",
+    "parents": [
+      "500a9ca70674cce858010e6dd3bfcb8e6de024af",
+      "149b6ce3995a6ca98106eef32085257e56d9dd58"
+    ],
+    "currentMain": "149b6ce3995a6ca98106eef32085257e56d9dd58",
+    "originalTestedSource": "18f39163d3a6dc41ab1eb2259e5ce6b139973cbf",
+    "changedSinceOriginalTestedSource": [
+      "docs/evidence/framey-timeout-main2b4d147-integration-2026-11-01-raw.json.gz",
+      "docs/evidence/framey-timeout-main2b4d147-integration-2026-11-01.json",
+      "docs/evidence/framey-timeout-main2b4d147-integration-2026-11-01.md",
+      "docs/evidence/framey-timeout-main3d6145c-integration-2026-11-01-raw.json.gz",
+      "docs/evidence/framey-timeout-main3d6145c-integration-2026-11-01.json",
+      "docs/evidence/framey-timeout-main3d6145c-integration-2026-11-01.md",
+      "docs/evidence/syncthing-package-probe-timeouts-2026-11-01-raw.json.gz",
+      "docs/evidence/syncthing-package-probe-timeouts-2026-11-01.json",
+      "docs/evidence/syncthing-package-probe-timeouts-2026-11-01.md",
+      "docs/evidence/syncthing-timeout-fixture-utf8-2026-11-01-raw.json.gz",
+      "docs/evidence/syncthing-timeout-fixture-utf8-2026-11-01.json",
+      "docs/evidence/syncthing-timeout-fixture-utf8-2026-11-01.md",
+      "tests/decky-runtime/syncthing_flatpak_package.py",
+      "tests/test_framey_discord_lifecycle.py",
+      "tests/test_syncthing_package_timeout.py"
+    ],
+    "all28NativeInputHashesUnchanged": true,
+    "allUiAndE2eInputsUnchanged": false,
+    "unitFixturePortabilityOnlyChange": true,
+    "timeoutTests": 3,
+    "runtimeCoverageTests": 3,
+    "realFrameContacted": false,
+    "allNonMetadataNativeAndE2eExecutionInputsUnchanged": true,
+    "postIntegrationMetadataChange": "Add two requiredShims names for ID 37; old copies get the existing Update/reinstall warning, partial status retained.",
+    "all116CatalogExecutionVersionsDigestsFlagsPoliciesUnchanged": true
+  },
+  "portabilityFollowUp": {
+    "python39Tests": 8,
+    "python312Tests": 8,
+    "productionAdapterUnchanged": true
+  },
+  "fullSuiteScope": "Full suite ran before the test-only ExitStack portability change; all eight focused tests then passed on Python 3.9 and 3.12. After merging main, its three added timeout diagnostic tests pass separately. Native inputs, all catalog execution pins and e2e execution code remain unchanged; final requiredShims metadata changes only the existing old-copy warning. Focused tests on both Python versions plus compatibility tests reran."
+}
