@@ -43,15 +43,32 @@ class HostError(RuntimeError):
 # key ("user@host: Permission denied (publickey,...)."): either way no command ran.
 SSH_LINK_FAILED = re.compile(r"^(?:ssh: connect to host |ssh: Could not resolve hostname |banner exchange: |"
                              r"kex_exchange_identification: |mux_client_\w+: |client_loop: |"
-                             r"Connection (?:closed|reset) by \S+ port \d+|Connection timed out during banner exchange|"
-                             r"Host key verification failed\.|No \S+ host key is known for |"
-                             r"[^\n@:]{1,64}@\S+: Permission denied \()",  # a Windows user name may have spaces
+                             r"Connection (?:closed|reset) by \S+ port \d+|Connection to \S+ closed by remote host\.|"
+                             r"close - IO is still pending on closed socket\.|"
+                             r"Connection timed out during banner exchange|Host key verification failed\.|"
+                             r"No \S+ host key is known for |[^\n@:]{1,64}@\S+: Permission denied \()",
+                             # a Windows user name may have spaces
                              re.M)
 
 
-def ssh_link_failed(returncode, stderr):
-    """Whether an ssh run failed to reach the headset: ssh's own exit code (255) and its own words."""
-    return returncode == 255 and bool(SSH_LINK_FAILED.search(stderr or ""))
+def ssh_link_failed(returncode, stderr, stdout=""):
+    """Whether ssh failed to reach the headset: exit 255 plus its own words, or no remote output.
+
+    A remote command may itself exit 255, so any stdout or unrecognised stderr keeps it unmarked.
+    A silent 255 is the mux/client failing before a remote command produced anything.
+    """
+    return returncode == 255 and (bool(SSH_LINK_FAILED.search(stderr or "")) or not (stderr or stdout))
+
+
+def ssh_exit_message(returncode):
+    """A readable fallback when ssh exits without saying why."""
+    # Keep the values seen in reports alongside the usual Windows status values;
+    # either way, don't show the person an opaque decimal process code.
+    if returncode in (3221226091, 0xC0000409):
+        return "ssh crashed on this computer"
+    if returncode in (3221225773, 0xC000013A):
+        return "ssh was cancelled on this computer"
+    return f"ssh exited {returncode}"
 
 
 def link_failure(error):

@@ -75,6 +75,31 @@ class LargeTransfer(unittest.TestCase):
                     server.transfer_local({"action": "copy-local", "path": path})
         push.assert_not_called()
 
+    def test_windows_copy_retries_one_dropped_scp_connection(self):
+        dropped = subprocess.CompletedProcess([], 1, "", "client_loop: send disconnect: Connection reset\n"
+                                                       "scp: Couldn't send packet: Broken pipe\n")
+        copied = subprocess.CompletedProcess([], 0, "", "")
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "file.bin"
+            source.write_bytes(b"payload")
+            with mock.patch.object(server.frame_host, "WINDOWS", True), \
+                 mock.patch.object(server, "LINK", None), \
+                 mock.patch.object(server.frame_host, "run_ssh", side_effect=[dropped, copied]) as run:
+                self.assertEqual(server.push_file(source), "Sent file.bin to ~/Downloads/")
+        self.assertEqual(run.call_count, 2)
+
+    def test_windows_copy_does_not_retry_a_remote_file_error(self):
+        denied = subprocess.CompletedProcess([], 1, "", "scp: dest open Downloads/file.bin: Permission denied\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "file.bin"
+            source.write_bytes(b"payload")
+            with mock.patch.object(server.frame_host, "WINDOWS", True), \
+                 mock.patch.object(server, "LINK", None), \
+                 mock.patch.object(server.frame_host, "run_ssh", return_value=denied) as run, \
+                 self.assertRaisesRegex(server.Failure, "Permission denied"):
+                server.push_file(source)
+        run.assert_called_once()
+
     def test_large_copy_gets_more_than_one_hour_without_loading_file(self):
         info = SimpleNamespace(st_size=27 * 1024 ** 3)
         result = subprocess.CompletedProcess([], 0, "", "")

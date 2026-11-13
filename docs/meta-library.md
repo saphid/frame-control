@@ -158,6 +158,16 @@ was cancelled while it was checked answers 409 and saves nothing;
 
 ## What an install does
 
+The Frame currently supports Android 11 (API 30). If Meta supplies a minimum
+API above 30, Frame Control refuses the install before downloading. Meta's
+metadata normally omits that value, so the first attempt may need the APK
+download to read its manifest. An incompatible APK is refused before game data
+downloads or headset changes. Frame Control remembers its minimum API for that
+exact binary in the current connected session, including library refreshes;
+the row explains the limit and hides install buttons. Another binary or a new
+connected session is checked afresh. This does not make newer Android apps
+compatible, and the Android requirement is not a setting you can change.
+
 1. Checks the game is in your library (by its Meta app id), and that there's
    room on this computer for the APK, a patched copy of it and the game data.
 2. Downloads the APK from Meta's download server, within the size Meta

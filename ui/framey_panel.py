@@ -26,7 +26,11 @@ def _receipt_digest(path):
         raise FileNotFoundError('Framey plugin store receipt unavailable')
     meta = json.loads(path.read_text())
     digest = meta.get('sha256') if isinstance(meta, dict) else None
-    if not isinstance(digest, str) or not RECEIPT.fullmatch(digest):
+    store_id = meta.get('storeId') if isinstance(meta, dict) else None
+    # JSON booleans and floats compare equal to integers in Python. They
+    # cannot claim the panel or module URLs belonging to an integer store ID.
+    if (type(store_id) is not int or store_id <= 0 or
+            not isinstance(digest, str) or not RECEIPT.fullmatch(digest)):
         raise FileNotFoundError('Framey plugin store receipt unavailable')
     return meta, digest
 
@@ -66,6 +70,8 @@ def _owned_dist(plugin_id, expected_receipt=None):
             if not entry.is_file() or entry.stat().st_size > 8*1024*1024:
                 raise FileNotFoundError('Framey plugin frontend unavailable')
             bundle = entry.read_bytes()
+            if not bundle:
+                raise FileNotFoundError('Framey plugin frontend is empty')
             legacy = re.match(rb'\s*\(function\s*\(', bundle) is not None
             if version is None and not legacy:
                 raise FileNotFoundError('This legacy frontend is not a supported Decky IIFE bundle')
@@ -145,6 +151,7 @@ label{display:grid;gap:6px;margin:10px 0}small{color:#b9c9d6}
 .framey-long-title{overflow-wrap:anywhere}.framey-muted{background:#1b3042}.framey-image{max-width:100%;object-fit:contain}
 .framey-focus:focus-visible{outline:4px solid #f8d370}
 .framey-dialog{position:fixed;inset:12px;margin:0;z-index:100;overflow:auto;box-shadow:0 0 0 24px #0d1925e6}
+.framey-destructive{background:#8b2635;border-color:#ffb1b8}.framey-destructive-note{color:#ffb1b8;font-weight:bold}
 .framey-dialog[hidden]{display:none}</style>
 <p id="framey-error" role="status"></p><div id="framey-toasts" aria-live="polite"></div><div id="framey-root"></div><div id="framey-modal"></div>
 <script id="framey-bundle" type="application/json"''' + module + wine_socket + syncthing_http + downloads + '''>''' + encoded + '''</script>

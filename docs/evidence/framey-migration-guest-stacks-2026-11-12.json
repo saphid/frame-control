@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "experiment": "Published Decky in an empty-plugin private systemd user-service fixture; observer feasibility only",
+  "architecture": "x86_64",
+  "started": "2026-11-12T14:44:54.105103+00:00",
+  "finished": "2026-11-12T14:48:32.375506+00:00",
+  "sourceBaseHead": "0ac7af2ef1504a5f0741ee5c48087532ee45a301",
+  "observerSourceModifiedFromBase": true,
+  "sourceSha256": {
+    "scripts/framey-test-syncthing-service.py": "33aa463ee9e10fdf2067987d3676b4071c7a212d3c632911e35d726cab6dd3ee",
+    "tests/decky-runtime/Containerfile.flatpak-vm": "447bf47a7f0c5f27fd90a825f23a676e1ce4fdff72ab42f115c0c92f9fd13060",
+    "tests/decky-runtime/syncthing_migration_stacks.py": "721b4c8dd0b89aa962144e7ad0c74ab24f8ac63adb36323ae488a3e81746fdc5",
+    "scripts/framey-test-syncthing-flatpak-package.py": "ae4bfbecd29d872629a7c92b227b80980ec8d75332ee8d25f2a6a1869ea4da2c"
+  },
+  "sampler": {
+    "url": "https://github.com/benfred/py-spy/releases/download/v0.4.3/py_spy-0.4.3-py2.py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl",
+    "wheelSha256": "8a4277225f470d394a85cca0cdd944bef87f0097b6f20150a6dd3ac2e92806b8",
+    "executableSha256": "a41205d4925beafd108e1ace85e66c0a1a7adbfcbebcd4441f07848b608886c0",
+    "architecture": "x86_64",
+    "version": "0.4.3",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "observerSha256": "721b4c8dd0b89aa962144e7ad0c74ab24f8ac63adb36323ae488a3e81746fdc5"
+  },
+  "bootstrapSha256": "c8322e8a80158ecc8c5686b2f5840ee481c33c4b2d86650649b6e855e8d4188f",
+  "userProbeSha256": "f3006e7feb419a57d58a292b77ff5e1abf8ca92f0834bc36d75da8f331b165ae",
+  "rootfsSha256": "b9a6bdc31e03aa97fa30ffab08c6b9f3516757b36594bcf61a8cdc4d3e84f3ec",
+  "kernelSha256": "a21f79197954256e75fd352692e63263face31601f671c14c9c9d8803785a6c3",
+  "initrdSha256": "e84f134b228a47f27514b5bd919052a0e50d809cac8ef341cf28d9fdd6f5d5c4",
+  "guestResultPacket": {
+    "bytes": 3536,
+    "sha256": "dad417bf57b6f9b71cc60fc36741cab8e03a63f50eb1f7d5964514bedf990483"
+  },
+  "raw": {
+    "path": "framey-migration-guest-stacks-2026-11-12.raw.json.gz",
+    "sha256": "16ab54ba9854176e1b088a4091d20cd3b64b5a1d5f069f5d6b41f0feff157210",
+    "uncompressedSha256": "e151bde9c1eee09b9ba3fbb70fa813b5374caec819be5267638e86b5c138b543"
+  },
+  "service": {
+    "unit": "frame-control-migration-decky-fixture.service",
+    "mainPid": 320,
+    "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service",
+    "activeState": "active",
+    "killMode": "mixed",
+    "timeoutStopUSec": "1min 30s",
+    "authEndpointReady": true
+  },
+  "stop": {
+    "returncode": 0,
+    "seconds": 4.954,
+    "properties": "MainPID=0\nResult=success\nExecMainCode=0\nExecMainStatus=0\nActiveState=inactive\n"
+  },
+  "observerJoined": true,
+  "pythonBaselineVerified": true,
+  "qemuReturncode": 0,
+  "ownedQemuReaped": true,
+  "bootArtifactsRetained": false,
+  "networkDevice": false,
+  "hostBusExposed": false,
+  "capabilitiesAdded": false,
+  "ptracePolicyChanged": false,
+  "realFrameContacted": false,
+  "actualMigrationExecuted": false,
+  "historicalArm64VmExecuted": false,
+  "historicalCauseEstablished": false,
+  "releaseHoldCleared": false,
+  "success": true
+}

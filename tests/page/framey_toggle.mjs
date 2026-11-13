@@ -11,7 +11,7 @@ assert.notEqual(official,bundle);
 const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 assert.notEqual(host,source);
-const React={Fragment:'fragment',Component:class {},
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:props||{},children}),
   createContext:()=>({}),useState:value=>[value,()=>{}],useEffect(){},
   useRef:value=>({current:value}),useMemo:fn=>fn(),useCallback:fn=>fn};

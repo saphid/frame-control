@@ -1,0 +1,49 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div>
+<div id="framey-toasts"></div><div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), container=document.getElementById('framey-root');
+  const root=ReactDOM.createRoot(container), deckyFrontendLib=DFL;
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  // Only the exact published overlay style/control runs, with synthetic states.
+  // No player, station lookup, media element, backend or plugin initializer runs.
+  __OFFICIAL_OVERLAY__
+  let playerStatus='PLAYING';
+  const control=()=>__OFFICIAL_SPINNER__;
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  const spinner=()=>container.querySelector('[role=status]');
+  try {
+    render(control());
+    assert(getComputedStyle(spinner()).display==='none','published playing state did not hide the spinner');
+    playerStatus='BUFFERING';render(control());
+    assert(getComputedStyle(spinner()).display==='block' && spinner().textContent==='Loading…',
+      'published buffering state did not show the loading message');
+    assert(spinner().style.position==='absolute' && spinner().style.top==='0px' && spinner().style.left==='0px' &&
+      spinner().style.width==='100%' && spinner().style.height==='100%','published overlay geometry lost');
+    playerStatus='PAUSED';render(control());
+    assert(getComputedStyle(spinner()).display==='none','published paused state retained the loading overlay');
+    render(React.createElement(DFL.Spinner,null,'Private progress'));
+    assert(getComputedStyle(spinner()).display==='block' && spinner().style.position==='' &&
+      spinner().textContent==='Private progress','removed styles or custom message were lost');
+    render(React.createElement(DFL.SteamSpinner,{style:{display:'none'}},React.createElement('em',null,'Alias progress')));
+    assert(getComputedStyle(spinner()).display==='none' && spinner().querySelector('em').textContent==='Alias progress',
+      'SteamSpinner alias lost supplied style or React children');
+    render(React.createElement(DFL.Spinner));
+    assert(getComputedStyle(spinner()).display==='block' && spinner().textContent==='Loading…','default spinner changed');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedPlayingHidden:true,
+      publishedBufferingVisible:true,publishedPausedHidden:true,overlayGeometryPreserved:true,
+      removedStylesCleared:true,steamSpinnerAliasPreserved:true,defaultAndCustomMessagesPreserved:true,
+      syntheticPlaybackStates:true,realPlaybackVerified:false,audioStarted:false,
+      realFrameContacted:false,controllerInputVerified:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

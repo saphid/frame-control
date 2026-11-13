@@ -1,0 +1,78 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'), root=ReactDOM.createRoot(container);
+  const deckyFrontendLib=DFL, TabCount='fixture-tab-count';
+  // Replay only the published Tabs expression. Views and arrays are synthetic;
+  // no plugin initializer, animation service, download or saved data is used.
+  const AnimationBrowserPage=()=>React.createElement('p',null,'Synthetic browse page');
+  const InstalledAnimationsPage=()=>React.createElement('p',null,'Synthetic installed page');
+  const AboutPage=()=>React.createElement('p',null,'Synthetic about page');
+  function PublishedTabs({repoResults,downloadedAnimations}) {
+    const [currentTabRoute,setCurrentTabRoute]=React.useState('AnimationBrowser');
+    return __OFFICIAL_TABS__;
+  }
+  const render=(browse,installed)=>ReactDOM.flushSync(()=>root.render(React.createElement(PublishedTabs,{
+    repoResults:Array(browse).fill(null),downloadedAnimations:Array(installed).fill(null)})));
+  const tabs=()=>[...container.querySelectorAll('[role="tab"]')];
+  const counts=()=>tabs().map(tab=>tab.querySelector('.fixture-tab-count')?.textContent??null);
+  const selected=()=>tabs().findIndex(tab=>tab.getAttribute('aria-selected')==='true');
+  const panel=()=>container.querySelector('[role="tabpanel"]').textContent;
+  const click=index=>ReactDOM.flushSync(()=>tabs()[index].click());
+  try {
+    render(2,0);
+    assert(JSON.stringify(counts())==='["2","0",null]','published counts, including zero, missing');
+    assert(tabs()[0].textContent==='Browse Animations2'&&tabs()[1].textContent==='Installed Animations0',
+      'published titles or addons lost');
+    assert(selected()===0&&panel()==='Synthetic browse page','initial published tab lost');
+    click(1);
+    assert(selected()===1&&panel()==='Synthetic installed page','published tab callback lost');
+    render(5,3);
+    assert(JSON.stringify(counts())==='["5","3",null]','addon counts did not follow updated arrays');
+    assert(selected()===1&&panel()==='Synthetic installed page','count refresh changed selection');
+    click(2);
+    assert(tabs()[2].textContent==='About Animation Changer'&&selected()===2&&panel()==='Synthetic about page',
+      'ordinary published tab changed');
+    render(0,0);
+    assert(JSON.stringify(counts())==='["0","0",null]','empty arrays lost zero counts');
+
+    const changes=[],addon=()=>React.createElement('strong',{title:'Synthetic addon'},'Badge');
+    const localTabs=[{id:'one',title:'One',content:'First'},
+      {id:'two',title:'Two',content:'Second',renderTabAddon:addon},
+      {id:'locked',title:'Locked',content:'Never',disabled:true,renderTabAddon:()=>0}];
+    const local=activeTab=>ReactDOM.flushSync(()=>root.render(React.createElement(DFL.Tabs,{
+      tabs:localTabs,activeTab,onShowTab:id=>changes.push(id)})));
+    local('one');
+    assert(tabs()[1].querySelector('strong')?.title==='Synthetic addon','addon markup lost');
+    assert(tabs()[2].disabled&&tabs()[2].textContent==='Locked0','disabled tab lost addon or state');
+    click(2);assert(changes.length===0&&selected()===0,'disabled addon tab changed selection');
+    click(1);
+    assert(JSON.stringify(changes)==='["two"]'&&selected()===0,'controlled callback or selection changed');
+    local('two');assert(selected()===1&&panel()==='Second','controlled tab update lost');
+    // Remount without a controlled selection to cover the ordinary local path.
+    ReactDOM.flushSync(()=>root.render(null));local(undefined);click(1);
+    assert(selected()===1&&panel()==='Second'&&JSON.stringify(changes)==='["two","two"]',
+      'uncontrolled tab selection or callback count changed');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedTabsExpression:true,publishedCountsUpdated:true,zeroCountsPreserved:true,
+      selectionPreserved:true,ordinaryTabPreserved:true,addonMarkupPreserved:true,
+      controlledAndUncontrolledCallbacksOnce:true,disabledTabInert:true,syntheticAnimationLists:true,
+      fullPluginInitialized:false,realBackendContacted:false,realFrameContacted:false,
+      wornVisibilityVerified:false,controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

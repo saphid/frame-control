@@ -1,0 +1,61 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div>
+<div id="framey-toasts"></div><div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), container=document.getElementById('framey-root');
+  const root=ReactDOM.createRoot(container), added=[],opened=[];let closed=0;
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const deckyFrontendLib={...DFL,showModal:element=>opened.push(element)};
+  // The published component sees only synthetic favorites and a synthetic URL.
+  // No plugin initializer, browser tab, real favorites or backend is involved.
+  const favoritesManager={pathToString:path=>path.join('> ')+'> ',
+    doesExist:path=>path.at(-1)==='Existing',addFolder:(name,path)=>added.push({name,path})};
+  const NewFavoriteModal=()=>null;
+  __OFFICIAL_COMPONENT__
+  const tabManager={getActiveTabUrlRequested:()=> 'https://example.invalid/fixture'};
+  const render=key=>ReactDOM.flushSync(()=>root.render(React.createElement(NewFavoriteFolderModal,{
+    key,tabManager,parentPath:['Synthetic favorites'],closeModal:()=>closed++})));
+  const action=()=>[...container.querySelectorAll('button')].find(button=>button.textContent==='Make folder within');
+  const type=value=>ReactDOM.flushSync(()=>{
+    const input=container.querySelector('input');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  try {
+    render('new');
+    assert(action(),'published inline action missing');
+    assert(action().disabled,'empty name must keep published action disabled');
+    action().click();assert(!added.length && !opened.length && !closed,'disabled inline action ran');
+    type('New group');
+    assert(!action().disabled && action().style.marginLeft==='25px','published action props lost');
+    assert(action().className==='DialogInput_CopyAction','published action class lost');
+    ReactDOM.flushSync(()=>action().click());
+    assert(added.length===1 && added[0].name==='New group' && added[0].path[0]==='Synthetic favorites',
+      'published callback lost the current draft or parent path');
+    assert(closed===1 && opened.length===1 && opened[0].type===NewFavoriteFolderModal,
+      'published close/reopen callback changed');
+    assert(opened[0].props.parentPath.join('/')==='Synthetic favorites/New group','nested draft path lost');
+    render('existing');type('Existing');
+    assert(container.textContent.includes('A folder with this name already exists'),'published duplicate description missing');
+    ReactDOM.flushSync(()=>action().click());
+    assert(added.length===1 && closed===2 && opened.length===2,'existing synthetic folder was added twice');
+    assert(opened[1].props.parentPath.at(-1)==='Existing','existing folder path lost');
+    ReactDOM.flushSync(()=>root.render(React.createElement(DFL.TextField,{label:'Ordinary field',defaultValue:'Kept'})));
+    assert(!container.querySelector('button') && container.querySelector('input').value==='Kept',
+      'ordinary text fields acquired inline actions');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedInlineAction:true,
+      disabledActionPreserved:true,draftAndParentPathPreserved:true,duplicateFolderGuard:true,
+      actionStylesPreserved:true,ordinaryFieldUnchanged:true,syntheticFavorites:true,
+      realFavoritesChanged:false,realFrameContacted:false,vrKeyboardVerified:false,controllerInputVerified:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

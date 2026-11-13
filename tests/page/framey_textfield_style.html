@@ -1,0 +1,60 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div>
+<div id="framey-toasts"></div><div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), container=document.getElementById('framey-root');
+  const root=ReactDOM.createRoot(container), edits=[];
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  // Replay only the published control with synthetic port state and a private
+  // change callback. No initializer, server, settings save or network runs.
+  const PortFixture=()=>{
+    const [port,setPort]=React.useState(1023);
+    const form={port},showPortError=port<1024 || port>65535;
+    const handleValueChange=key=>event=>{
+      edits.push({key,value:event.currentTarget.value});setPort(Number(event.currentTarget.value));
+    };
+    return __OFFICIAL_CONTROL__;
+  };
+  const redBorder=()=>[...container.querySelectorAll('*')].find(node=>{
+    const style=getComputedStyle(node);
+    return style.borderTopColor==='rgb(255, 0, 0)' && style.borderTopStyle==='solid' && style.borderTopWidth==='1px';
+  });
+  try {
+    ReactDOM.flushSync(()=>root.render(React.createElement(PortFixture)));
+    const cue=redBorder();assert(cue,'published invalid-port border was lost');
+    assert(cue.style.width==='160px' && cue.style.height==='40px' && cue.style.boxSizing==='border-box',
+      'published field dimensions were lost');
+    assert(container.textContent.includes('Must be between 1024 and 65535'),'published description was lost');
+    assert(container.querySelector('input').value==='1023','initial synthetic port changed');
+    ReactDOM.flushSync(()=>{
+      const input=container.querySelector('input');
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'2048');
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    assert(edits.length===1 && edits[0].key==='port' && edits[0].value==='2048','published event callback changed');
+    assert(!redBorder() && container.querySelector('input').value==='2048','obsolete validation border remained');
+    ReactDOM.flushSync(()=>root.render(React.createElement(DFL.TextField,{
+      key:'hidden',label:'Hidden fixture',value:'Hidden value',bShowClearAction:true,style:{display:'none'}})));
+    const hidden=container.querySelector('[style*="display: none"]');
+    assert(hidden && hidden.contains(container.querySelector('input')) && hidden.contains(container.querySelector('button')),
+      'hiding a field must also hide its built-in actions');
+    ReactDOM.flushSync(()=>root.render(React.createElement(DFL.TextField,{key:'ordinary',label:'Ordinary',defaultValue:'Preserved'})));
+    assert(!container.querySelector('[style]') && !container.querySelector('button'),'removed styles/actions survived');
+    assert(container.querySelector('input').value==='Preserved','ordinary uncontrolled value changed');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedPortValidationCue:true,
+      styleDimensionsPreserved:true,obsoleteBorderRemoved:true,originalChangeEventPreserved:true,
+      hiddenFieldIncludesActions:true,ordinaryFieldUnchanged:true,syntheticPortState:true,
+      realFileServerStarted:false,realSettingsSaved:false,realFrameContacted:false,
+      vrKeyboardVerified:false,controllerInputVerified:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
