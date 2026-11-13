@@ -2,6 +2,7 @@
 
 import hashlib
 import http.client
+import json
 import os
 from pathlib import Path
 import selectors
@@ -15,6 +16,116 @@ WINDOWS = (10, 30, 60)
 MAX_PIDS = 8
 DUMP_SECONDS = 2
 OUTPUT_LIMITS = (16384, 4096)
+
+# This helper has tester credentials and only reads the four properties used
+# by the root observer. Authenticate the tester session-bus connection before
+# migration starts, then reuse it for readiness-gated unit-property requests.
+# The fixed object path and explicit GetAll signature avoid a manager lookup.
+UNIT_QUERY = r'''
+import dbus, json, os, sys
+assert os.getuid() == os.geteuid() == os.getgid() == os.getegid() == 1100
+assert not os.getgroups()
+bus = dbus.SessionBus(private=True)
+print(json.dumps({'ready': True}), flush=True)
+for request in sys.stdin:
+    if request != 'query\n':
+        raise ValueError('Unexpected observer request')
+    try:
+        values = bus.call_blocking('org.freedesktop.systemd1',
+            '/org/freedesktop/systemd1/unit/frame_2dcontrol_2dmigration_2ddecky_2dfixture_2eservice',
+            'org.freedesktop.DBus.Properties', 'GetAll', 's', ('',), timeout=2)
+        budget = int(values['TimeoutStopUSec'])
+        reply = dict(MainPID=str(int(values['MainPID'])),
+                     ControlGroup=str(values['ControlGroup']), ActiveState=str(values['ActiveState']),
+                     TimeoutStopUSec='1min 30s' if budget == 90000000 else str(budget))
+    except dbus.DBusException as error:
+        reply = ({} if error.get_dbus_name() in ('org.freedesktop.systemd1.NoSuchUnit',
+                                                'org.freedesktop.DBus.Error.UnknownObject')
+                 else {'error': error.get_dbus_name()[:160]
+                       + '; connected=' + str(bus is not None and bus.get_is_connected())
+                       + '; authenticated=' + str(bus is not None and bus.get_is_authenticated())})
+    print(json.dumps(reply), flush=True)
+'''
+
+
+class UnitQuery:
+    """Own one bounded, read-only user-manager helper and reap it on exit."""
+
+    def __init__(self, user_command, *, executable='python3', helper=UNIT_QUERY):
+        self.command = user_command + [executable, '-u', '-c', helper]
+        self.process = None
+
+    def read(self, timeout):
+        deadline = time.monotonic() + timeout
+        data = bytearray()
+        with selectors.DefaultSelector() as selector:
+            selector.register(self.process.stdout, selectors.EVENT_READ)
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0 or not selector.select(remaining):
+                    raise TimeoutError('Migration unit query deadline exceeded')
+                chunk = os.read(self.process.stdout.fileno(), 4097 - len(data))
+                if not chunk:
+                    raise RuntimeError('Migration unit query helper exited')
+                data.extend(chunk)
+                if len(data) > 4096:
+                    raise ValueError('Oversized migration unit query reply')
+                if b'\n' in data:
+                    line, extra = data.split(b'\n', 1)
+                    if extra:
+                        raise ValueError('Unexpected extra unit query reply')
+                    result = json.loads(line)
+                    if not isinstance(result, dict):
+                        raise ValueError('Invalid migration unit query reply')
+                    return result
+
+    def start(self):
+        self.process = subprocess.Popen(self.command, stdin=subprocess.PIPE,
+                                        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        try:
+            # Authenticate the credential-dropped helper before the migration
+            # probe, keeping connection setup out of the property-call budget.
+            if self.read(15) != {'ready': True}:
+                raise ValueError('Migration unit query helper not ready')
+        except BaseException:
+            self.close()
+            raise
+
+    def query(self):
+        try:
+            if self.process is None or self.process.poll() is not None:
+                raise RuntimeError('Migration unit query helper unavailable')
+            self.process.stdin.write(b'query\n')
+            self.process.stdin.flush()
+            result = self.read(3)
+            if set(result) == {'error'}:
+                raise RuntimeError('Migration unit bus error: ' + str(result['error'])[:256])
+            required = {'MainPID', 'ControlGroup', 'ActiveState', 'TimeoutStopUSec'}
+            if result and (set(result) != required or
+                           any(not isinstance(value, str) for value in result.values())):
+                raise ValueError('Unexpected migration unit properties')
+            return result
+        except BaseException:
+            # Never consume a stale reply after a timed-out request.
+            self.close()
+            raise
+
+    def close(self):
+        if self.process is None:
+            return
+        try:
+            try:
+                self.process.stdin.close()
+            except BrokenPipeError:
+                pass
+            finally:
+                try:
+                    self.process.wait(timeout=1)
+                except subprocess.TimeoutExpired:
+                    self.process.kill()
+                    self.process.wait(timeout=1)
+        finally:
+            self.process.stdout.close()
 
 
 def identity(pid, group=GROUP, proc=Path('/proc')):
@@ -121,43 +232,50 @@ def sample_group(properties, sampler, *, proc=Path('/proc'),
 class Observer:
     """Run beside the real unprivileged probe; never stop or signal Decky."""
 
-    def __init__(self, sampler, metadata, user_command, *, query=None, capture=None):
+    def __init__(self, sampler, metadata, user_command, *, query=None, capture=None,
+                 cgroups=Path('/sys/fs/cgroup')):
         self.sampler = sampler
         self.user_command = user_command
+        self.transport = UnitQuery(user_command) if query is None else None
         self.query = query or self.properties
         self.capture = capture or (lambda properties: sample_group(
-            properties, sampler, cancelled=self.stop.is_set))
+            properties, sampler, cgroups=cgroups, cancelled=self.stop.is_set))
+        self.group = cgroups / GROUP.lstrip('/')
         self.stop = threading.Event()
         self.thread = None
         self.report = dict(sampler=metadata, unit=UNIT, snapshots=[],
                            errors=[], observationErrorCount=0, observationErrorDetails=[],
                            deactivationTimeBasis='first observed deactivating state',
-                           changesStopBudget=False, historicalCauseEstablished=False)
+                           changesStopBudget=False, historicalCauseEstablished=False,
+                           absentCgroupPolls=0, unitQueries=0)
         self.baseline = False
         self.deactivating_at = None
         self.captured_windows = set()
 
     def properties(self):
-        command = self.user_command + ['systemctl', '--user', 'show', UNIT,
-                                      '--property=MainPID', '--property=ControlGroup',
-                                      '--property=ActiveState', '--property=TimeoutStopUSec']
-        result = subprocess.run(command, capture_output=True, text=True, timeout=3)
-        if result.returncode:
-            return {}  # The migration unit does not exist before its fixture starts.
-        if len(result.stdout) > 4096:
-            raise ValueError('Oversized migration unit properties')
-        properties = dict(line.split('=', 1) for line in result.stdout.splitlines() if '=' in line)
-        # Type=exec becomes active before the published bootloader has started
-        # Python. HEAD waits for its actual HTTP server without reading a token.
-        if not self.baseline and properties.get('ActiveState') == 'active':
+        # Discovery cannot qualify a sample: actual unit properties and
+        # PID/UID/cgroup/start-tick checks still bind every accepted stack.
+        if not self.group.is_dir():
+            self.report['absentCgroupPolls'] += 1
+            return {}
+        if not self.baseline:
+            # Type=exec exposes the cgroup while the published bootloader is
+            # still starting Python. Wait for its HTTP server before sending
+            # the first property request; HEAD never reads the auth token.
             connection = http.client.HTTPConnection('127.0.0.1', 1337, timeout=0.5)
             try:
                 connection.request('HEAD', '/auth/token')
-                properties['PythonReady'] = connection.getresponse().status == 200
+                ready = connection.getresponse().status == 200
             except (OSError, http.client.HTTPException):
-                properties['PythonReady'] = False
+                ready = False
             finally:
                 connection.close()
+            if not ready:
+                return {}
+        self.report['unitQueries'] += 1
+        properties = self.transport.query()
+        if not self.baseline and properties.get('ActiveState') == 'active':
+            properties['PythonReady'] = True
         return properties
 
     def tick(self, properties, now):
@@ -194,11 +312,10 @@ class Observer:
 
     def run(self):
         self.report['observerStartedMonotonic'] = time.monotonic()
-        group = Path('/sys/fs/cgroup') / GROUP.lstrip('/')
 
         def present():
             try:
-                return group.is_dir()
+                return self.group.is_dir()
             except OSError:
                 return None  # An unreadable cgroup is not evidence of absence.
 
@@ -223,19 +340,30 @@ class Observer:
             self.stop.wait(0.2)
 
     def __enter__(self):
+        if self.transport is not None:
+            self.transport.start()
         self.thread = threading.Thread(target=self.run, name='migration-stack-observer')
-        self.thread.start()
+        try:
+            self.thread.start()
+        except BaseException:
+            if self.transport is not None:
+                self.transport.close()
+            raise
         return self
 
     def __exit__(self, *_):
         self.stop.set()
         self.thread.join(timeout=8)
+        if self.transport is not None:
+            self.transport.close()
+        self.report['queryHelperJoined'] = (self.transport is None or
+                                           self.transport.process.poll() is not None)
         self.report['observerJoined'] = not self.thread.is_alive()
         if self.thread.is_alive():
             raise RuntimeError('Migration stack observer did not stop')
 
 
-def guest_observer(metadata, user_command):
+def guest_observer(metadata):
     """Only the marked systemd guest root can install and launch the sampler."""
     if (os.getuid() != 0 or os.getpid() == 1
             or Path('/framey-owned-vm').read_text() != 'Frame Control Flatpak VM v1\n'
@@ -252,4 +380,8 @@ def guest_observer(metadata, user_command):
     with sampler.open('xb') as stream:
         stream.write(data)
     sampler.chmod(0o700)
-    return Observer(sampler, metadata, user_command)
+    # Drop credentials once for the persistent read-only user-manager helper.
+    query_user = ['setpriv', '--reuid=1100', '--regid=1100', '--clear-groups', '--',
+                  'env', 'XDG_RUNTIME_DIR=/run/user/1100',
+                  'DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1100/bus']
+    return Observer(sampler, metadata, query_user)

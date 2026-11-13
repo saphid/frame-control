@@ -1,0 +1,75 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<style>__PANEL_CSS__</style>
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('framey-modal');
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=element=>{let handle;ReactDOM.flushSync(()=>{handle=DFL.showModal(element);});return handle;};
+  const button=text=>[...container.querySelectorAll('button')].find(node=>node.textContent===text);
+  const tap=node=>ReactDOM.flushSync(()=>node.click());
+  const DFL=window.DFL;
+  let calls=0,finish,fail;
+  const PyCaller={clearDeals:()=>{calls++;return new Promise((resolve,reject)=>{finish=resolve;fail=reject;});}};
+  const published=()=>__OFFICIAL_CONFIRMATION__;
+  try {
+    const element=published(), handle=show(element);
+    const warning=container.querySelector('.framey-destructive-note');
+    assert(warning?.textContent==='Destructive action' && warning.getClientRects().length,
+      'published destructive warning is absent or hidden');
+    const clear=button('Clear'), cancel=button('Cancel');
+    assert(clear.classList.contains('framey-destructive'),'confirmation lost its destructive styling');
+    assert(!cancel.classList.contains('framey-destructive')&&!button('Close').classList.contains('framey-destructive'),
+      'cancellation was marked destructive');
+    assert(getComputedStyle(clear).backgroundColor!==getComputedStyle(cancel).backgroundColor,
+      'actual panel CSS gives warning and ordinary actions the same appearance');
+    assert(container.textContent.includes(element.props.strDescription),'published explanation disappeared');
+    tap(clear);await settle();
+    assert(calls===1 && clear.disabled && cancel.disabled && button('Close').disabled,
+      'pending destructive action did not retain busy guards');
+    tap(clear);tap(cancel);assert(calls===1,'busy action repeated');
+    fail(Error('Synthetic clear failure'));await settle();
+    assert(container.querySelector('[role="alert"]')?.textContent==='Synthetic clear failure',
+      'save failure was hidden by destructive warning');
+    assert(container.querySelector('.framey-destructive-note')&&!button('Clear').disabled,
+      'failed action lost its warning or retry');
+    tap(button('Clear'));finish();await settle();await handle.ClosedPromise;
+    assert(calls===2&&!container.querySelector('.framey-dialog'),'successful retry did not dismiss');
+
+    // Updating the same mounted confirmation removes and restores warning UI.
+    const updated=show(element);
+    for(const flag of [false,undefined,true]) {
+      ReactDOM.flushSync(()=>updated.Update(React.cloneElement(element,{bDestructiveWarning:flag})));
+      assert(!!container.querySelector('.framey-destructive-note')===!!flag,'warning did not follow current props');
+      assert(button('Clear').classList.contains('framey-destructive')===!!flag,'button style did not follow current props');
+    }
+    tap(button('Cancel'));await updated.ClosedPromise;
+    assert(calls===2,'cancel executed the destructive backend callback');
+    let middle=0;
+    const three=show(React.createElement(DFL.ConfirmModal,{strTitle:'Synthetic three-action dialog',
+      bDestructiveWarning:true,bOKDisabled:true,strMiddleButtonText:'Other',onMiddleButton:()=>middle++}));
+    assert(button('OK').disabled&&button('OK').classList.contains('framey-destructive'),
+      'disabled OK lost warning or disabled state');
+    assert(!button('Other').classList.contains('framey-destructive'),'middle action inherited OK warning');
+    tap(button('Other'));await three.ClosedPromise;assert(middle===1,'middle action changed');
+    await settle();assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedFreeLoaderConfirmation:true,actualPanelCSS:true,visibleTextWarning:true,
+      distinctConfirmStyling:true,asyncFailureAndRetry:true,cancelDoesNotClear:true,
+      warningUpdates:true,disabledAndMiddleActions:true,syntheticBackendCallbacks:true,
+      realFilesChanged:false,realFrameContacted:false,wornVisibilityVerified:false,
+      controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

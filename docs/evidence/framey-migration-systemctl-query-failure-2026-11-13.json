@@ -1,0 +1,79 @@
+{
+  "at": "2026-11-13T03:39:00.057518+00:00",
+  "success": false,
+  "architecture": "x86_64",
+  "sourceHead": "765b5b71587bda5267509e405c0e79add0b29ae1",
+  "observerSha256": "2286e743d19e2ddafdd07e89fc1ed331dec2f7a0d7f3127062eec88ecbe28002",
+  "rawArchiveSha256": "6fcd76c6c9e66371c2d17e8d67ad1415fc9b5ec82befcc8f1a6b4a64ff978294",
+  "queryTransport": "credential-dropped systemctl --user",
+  "queryDeadlineSeconds": 2,
+  "observationErrors": 133,
+  "firstError": {
+    "error": "TimeoutError: Migration unit query deadline exceeded",
+    "phase": "query",
+    "startedMonotonic": 464.715247812,
+    "elapsedSeconds": 2.633,
+    "cgroupPresentBefore": true,
+    "cgroupPresentAfter": true,
+    "baselineAttempted": false
+  },
+  "baselineCaptured": false,
+  "benchmark": [
+    {
+      "attempt": 0,
+      "transport": "runuser",
+      "seconds": 2.66,
+      "returncode": 0,
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=328\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "stderr": ""
+    },
+    {
+      "attempt": 0,
+      "transport": "setpriv-user-bus",
+      "seconds": 2.291,
+      "returncode": 0,
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=328\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "stderr": ""
+    },
+    {
+      "attempt": 1,
+      "transport": "runuser",
+      "seconds": 2.866,
+      "returncode": 0,
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=328\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "stderr": ""
+    },
+    {
+      "attempt": 1,
+      "transport": "setpriv-user-bus",
+      "seconds": 1.628,
+      "returncode": 0,
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=328\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "stderr": ""
+    },
+    {
+      "attempt": 2,
+      "transport": "runuser",
+      "seconds": 2.597,
+      "returncode": 0,
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=328\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "stderr": ""
+    },
+    {
+      "attempt": 2,
+      "transport": "setpriv-user-bus",
+      "seconds": 2.203,
+      "returncode": 0,
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=328\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "stderr": ""
+    }
+  ],
+  "ownedQemuReaped": true,
+  "bootArtifactsRetained": false,
+  "ownedContainerAndImageRemoved": true,
+  "actualMigrationExecuted": false,
+  "nativeArm64Executed": false,
+  "realFrameContacted": false,
+  "historicalCauseEstablished": false,
+  "releaseHoldCleared": false
+}
