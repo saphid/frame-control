@@ -143,6 +143,11 @@ case was tested with separate fake sources, not two real same-name screenshots.
 - **Only what's new.** It copies what you take after turning it on, so the
   shots and clips already on the headset don't all arrive at once. **Copy
   everything now** copies everything that isn't on this computer yet, once.
+- **Turning it off.** Disabling a switch stops new automatic work for that
+  kind. The current screenshot batch or clip can finish, but the next one
+  won't start. If both switches were off, turning one back on starts with
+  new captures. **Copy everything now** is a separate explicit request
+  and continues even if you turn the automatic switches off.
 - **Deleted stays deleted.** What it has copied is remembered, per headset, in
   `auto-sync.json` in Frame Control's data folder, so a file you delete here
   isn't copied again (**Copy everything now** would bring it back).

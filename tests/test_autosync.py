@@ -79,13 +79,13 @@ class AutoSyncTest(unittest.TestCase):
         self.free = [100 * GB]
         self.sync = self.make()
 
-    def make(self):
+    def make(self, path=None):
         f = self.frame
         return fa.AutoSync(f.list_shots, f.save_shots, f.list_clips, f.export_clip,
                            lambda: f.device, lambda: f.busy,
                            offline=lambda e: "The Frame isn't answering." if "timed out" in str(e) else None,
                            shots_folder=self.dir / "Pictures", clips_folder=self.dir / "Videos",
-                           path=self.dir / "auto-sync.json", clock=lambda: self.now[0],
+                           path=path or self.dir / "auto-sync.json", clock=lambda: self.now[0],
                            space=lambda folder: self.free[0])
 
     def test_off_by_default_and_does_nothing(self):
@@ -238,6 +238,102 @@ class AutoSyncTest(unittest.TestCase):
         sync = self.make()
         self.assertEqual(sync.tick(), fa.BUSY_WAIT)
         self.assertEqual(len(self.frame.exported), 1)
+
+    def test_disabling_during_listing_stops_the_old_pass_even_if_reenabled(self):
+        for kind, setting, item in (("shots", "screenshots", shot(1, NOW + 5)),
+                                    ("clips", "clips", clip(1, NOW + 5))):
+            for reenable, other_enabled in ((False, False), (True, False), (True, True)):
+                with self.subTest(kind=kind, reenable=reenable, other_enabled=other_enabled):
+                    self.frame = FakeFrame()
+                    self.now[0] = NOW
+                    sync = self.make(self.dir / f"listing-{kind}-{reenable}-{other_enabled}.json")
+                    other = "clips" if setting == "screenshots" else "screenshots"
+                    sync.update({"screenshots": False, "clips": False, other: other_enabled})
+                    sync.update({setting: True})
+                    setattr(self.frame, kind, [dict(item)])
+                    entered, release = threading.Event(), threading.Event()
+                    original = getattr(self.frame, "list_" + kind)
+
+                    def listing(device):
+                        result = original(device)
+                        entered.set()
+                        if not release.wait(5):
+                            raise RuntimeError("Listing was not released")
+                        return result
+
+                    setattr(sync, "list_" + kind, listing)
+                    worker = threading.Thread(target=sync.tick)
+                    worker.start()
+                    try:
+                        self.assertTrue(entered.wait(5))
+                        sync.update({setting: False})
+                        if reenable:
+                            self.now[0] += 1000
+                            sync.update({setting: True})
+                    finally:
+                        release.set()
+                        worker.join(5)
+                    self.assertFalse(worker.is_alive())
+                    self.assertEqual((self.frame.saved, self.frame.exported), ([], []))
+                    self.assertFalse(sync.state()["running"])
+                    if reenable:
+                        setattr(self.frame, kind, [dict(item, time=self.now[0] + 5)])
+                        sync.tick()
+                        copied = self.frame.saved if kind == "shots" else self.frame.exported
+                        self.assertEqual(len(copied), 1)
+
+    def test_disabling_allows_current_transfer_but_stops_the_next_one(self):
+        for kind, setting, items in (("shots", "screenshots", [shot(1, NOW + 5), shot(2, NOW + 6)]),
+                                     ("clips", "clips", [clip(1, NOW + 5), clip(2, NOW + 6)])):
+            with self.subTest(kind=kind):
+                self.frame = FakeFrame()
+                self.now[0] = NOW
+                sync = self.make(self.dir / f"transfer-{kind}.json")
+                sync.update({"screenshots": False, "clips": False})
+                sync.update({setting: True})
+                setattr(self.frame, kind, [dict(item) for item in items])
+                name = "save_shots" if kind == "shots" else "export_clip"
+                original = getattr(self.frame, name)
+                entered, release = threading.Event(), threading.Event()
+
+                def transfer(device, ids):
+                    original(device, ids)
+                    entered.set()
+                    if not release.wait(5):
+                        raise RuntimeError("Transfer was not released")
+
+                setattr(sync, name, transfer)
+                with mock.patch.object(fa, "BATCH", 1):
+                    worker = threading.Thread(target=sync.tick)
+                    worker.start()
+                    try:
+                        self.assertTrue(entered.wait(5))
+                        sync.update({setting: False})
+                    finally:
+                        release.set()
+                        worker.join(5)
+                self.assertFalse(worker.is_alive())
+                copied = self.frame.saved if kind == "shots" else self.frame.exported
+                self.assertEqual(len(copied), 1)
+                self.assertEqual(sync._synced("frame-a", kind), {items[0]["id"]})
+
+    def test_copy_everything_now_keeps_its_explicit_request_when_toggles_change(self):
+        self.sync.update({"screenshots": True, "clips": True})
+        self.frame.shots = [shot(1, NOW - 10), shot(2, NOW - 5)]
+        self.frame.clips = [clip(1, NOW - 10)]
+        save = self.sync.save_shots
+
+        def disable_after_copy(device, ids):
+            save(device, ids)
+            self.sync.update({"screenshots": False, "clips": False})
+
+        self.sync.save_shots = disable_after_copy
+        self.sync.copy_all()
+        with mock.patch.object(fa, "BATCH", 1):
+            self.assertEqual(self.sync.tick(), fa.INTERVAL)
+        self.assertEqual(len(self.frame.saved), 2)
+        self.assertEqual(len(self.frame.exported), 1)
+        self.assertFalse(self.sync.state()["pending"])
 
     def test_backs_off_while_unreachable(self):
         self.sync.update({"screenshots": True})
