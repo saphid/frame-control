@@ -80,6 +80,13 @@ They read again after either success or failure; the requested value is not a
 replacement for that read. A view closed while waiting sends no read, and two
 settings surfaces cannot send competing saves from this loaded frontend.
 The guard does not cancel a backend request or coordinate independent clients.
+If a read was already in flight when another sample view starts a save, its
+reply is discarded and a fresh read follows that save's settlement. This also
+applies when the save finishes before the old read replies, whether the save
+succeeds or rejects, and to the read-only quick action. Editing stays disabled
+until a read completes without an overlapping save. A retired view sends no
+replacement read. These cases use delayed synthetic replies through the built
+sample; live headset persistence remains unverified.
 
 **Reset example setting** opens a local `ConfirmModal`. **Keep setting** closes
 it without a backend call; **Reset** saves `false` through the same guarded
