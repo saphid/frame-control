@@ -444,6 +444,60 @@ class AutoSyncTest(unittest.TestCase):
             self.assertEqual(self.frame.calls.count("export_clip") - before, fa.TRIES)
             self.assertIn("bad source", self.sync.state()["error"] or "")
 
+    def test_manual_copy_retries_with_automatic_switches_off(self):
+        for kind in ("shots", "clips"):
+            with self.subTest(kind=kind):
+                self.frame = FakeFrame()
+                f = self.frame
+                sync = self.make(self.dir / f"manual-transient-{kind}.json")
+                f.shots, f.clips = [shot(1, NOW - 10)], [clip(1, NOW - 10)]
+                error_attr = "save_error" if kind == "shots" else "export_error"
+                copy_call = "save_shots" if kind == "shots" else "export_clip"
+                setattr(f, error_attr, RuntimeError("source not ready"))
+                sync.copy_all()
+                sync.tick()
+                self.assertTrue(sync.state()["pending"])
+                setattr(f, error_attr, None)
+                sync.tick()
+                self.assertEqual(f.calls.count(copy_call), 2)
+                self.assertEqual((len(f.saved), len(f.exported)), (1, 1))
+                self.assertIsNone(sync.state()["error"])
+                self.assertFalse(sync.state()["pending"])
+                self.assertFalse(sync.enabled())
+                f.calls.clear()
+                sync.tick()
+                self.assertEqual(f.calls, [])
+
+    def test_manual_copy_resume_retries_after_the_attempt_limit(self):
+        for kind in ("shots", "clips"):
+            with self.subTest(kind=kind):
+                self.frame = FakeFrame()
+                f = self.frame
+                sync = self.make(self.dir / f"manual-resume-{kind}.json")
+                f.shots, f.clips = [shot(1, NOW - 10)], [clip(1, NOW - 10)]
+                error_attr = "save_error" if kind == "shots" else "export_error"
+                copy_call = "save_shots" if kind == "shots" else "export_clip"
+                setattr(f, error_attr, RuntimeError("source not ready"))
+                sync.copy_all()
+                for _ in range(fa.TRIES + 2):
+                    sync.tick()
+                self.assertEqual(f.calls.count(copy_call), fa.TRIES)
+                self.assertTrue(sync.state()["pending"])
+                self.assertIn("Resume", sync.state()["error"])
+                setattr(f, error_attr, None)
+                sync.tick()  # Source recovery alone does not reset the retry limit.
+                self.assertEqual(f.calls.count(copy_call), fa.TRIES)
+                sync.resume()
+                sync.tick()
+                self.assertEqual(f.calls.count(copy_call), fa.TRIES + 1)
+                self.assertEqual((len(f.saved), len(f.exported)), (1, 1))
+                self.assertIsNone(sync.state()["error"])
+                self.assertFalse(sync.state()["pending"])
+                self.assertFalse(sync.enabled())
+                f.calls.clear()
+                sync.tick()
+                self.assertEqual(f.calls, [])
+
     def test_failed_item_saved_by_hand_clears_error(self):
         self.sync.update({"clips": True})
         self.frame.clips = [clip(1, NOW + 5)]
