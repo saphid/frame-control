@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-11-13T01:24:31.313948+00:00",
+  "priorWorkflowRun": 43335061722,
+  "priorArtifacts": [
+    {
+      "artifact": 13999591304,
+      "archiveSha256": "8c473511bc94e8a7aad9aba2b2cc580db76b2db3ec1d7a653dca41cc6d3e2521",
+      "head": "3fe1c0d383aa836a6b708e9e993fcd337de89789",
+      "architecture": "x86_64",
+      "observerErrors": [
+        "RuntimeError: Migration unit bus error: org.freedesktop.DBus.Error.NoReply",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable"
+      ],
+      "runningBaselineCaptured": false,
+      "retainedErrors": 8,
+      "totalObservationErrorsUnknown": true,
+      "absentCgroupPolls": 1239,
+      "unitQueries": 81,
+      "stopResult": "success",
+      "stopElapsedSeconds": 1.736,
+      "queryHelperJoined": true,
+      "observerJoined": true
+    },
+    {
+      "artifact": 13999623962,
+      "archiveSha256": "431a421b7bd615b13ca7e7784c3531a4ec50f402688398d45021ddfd72a73ea9",
+      "head": "3fe1c0d383aa836a6b708e9e993fcd337de89789",
+      "architecture": "aarch64",
+      "observerErrors": [
+        "RuntimeError: Migration unit bus error: org.freedesktop.DBus.Error.NoReply",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable",
+        "RuntimeError: Migration unit query helper unavailable"
+      ],
+      "runningBaselineCaptured": false,
+      "retainedErrors": 8,
+      "totalObservationErrorsUnknown": true,
+      "absentCgroupPolls": 5863,
+      "unitQueries": 243,
+      "stopResult": "success",
+      "stopElapsedSeconds": 10.464,
+      "queryHelperJoined": true,
+      "observerJoined": true
+    }
+  ],
+  "sourceSha256": {
+    "tests/decky-runtime/syncthing_migration_stacks.py": "77412f91a6d964560f362f36284f7f59ddb077495e6ca9d7725c94dff3d5dab0",
+    "tests/test_syncthing_flatpak_migration_stacks.py": "180a664d6b20fcb85449ad9624d813522d1179e2324d6d6b109a78b7d68f22df"
+  },
+  "validation": {
+    "kind": "local fault-injection and neighboring unit regressions",
+    "tests": 95,
+    "skips": 0,
+    "logSha256": "44c27d6edb7b1d739e462a7dd409dbcc75340be947f3690bb89b8212a61f9298",
+    "queryErrorsPreserved": true,
+    "errorDetailsLimitedTo": 8,
+    "totalFailuresCounted": true,
+    "cgroupReadFailureReportedAsUnknown": true
+  },
+  "changedObserverExecutedInNativeVm": false,
+  "historicalCauseEstablished": false,
+  "releaseHoldCleared": false,
+  "realFrameContacted": false
+}
