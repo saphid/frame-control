@@ -194,6 +194,35 @@ class MigrationStacks(unittest.TestCase):
         response.read.assert_not_called()
         connection.close.assert_called_once()
 
+    def test_bootloader_not_ready_does_not_open_the_unit_query_connection(self):
+        for failure in (False, True):
+            with self.subTest(connection_failure=failure):
+                connection = Mock()
+                response = Mock(status=503)
+                connection.getresponse.return_value = response
+                if failure:
+                    connection.request.side_effect = ConnectionRefusedError()
+                observer = self.observer.Observer(Path('/unused'), {}, [], cgroups=self.cgroups)
+                with patch.object(observer.transport, 'query') as query, patch.object(
+                        self.observer.http.client, 'HTTPConnection', return_value=connection):
+                    self.assertEqual(observer.properties(), {})
+                query.assert_not_called()
+                response.read.assert_not_called()
+                connection.close.assert_called_once()
+                self.assertEqual(observer.report['unitQueries'], 0)
+                self.assertEqual(observer.report['snapshots'], [])
+
+    def test_captured_baseline_keeps_shutdown_queries_independent_of_http_server(self):
+        observer = self.observer.Observer(Path('/unused'), {}, [], cgroups=self.cgroups)
+        observer.baseline = True
+        properties = dict(self.properties, ActiveState='deactivating')
+        with patch.object(observer.transport, 'query', return_value=properties) as query, patch.object(
+                self.observer.http.client, 'HTTPConnection') as connection:
+            self.assertEqual(observer.properties(), properties)
+        query.assert_called_once()
+        connection.assert_not_called()
+        self.assertEqual(observer.report['unitQueries'], 1)
+
     def test_absent_migration_cgroup_skips_bus_queries_and_http_readiness(self):
         observer = self.observer.Observer(Path('/unused'), {}, [], cgroups=self.folder/'absent')
         with patch.object(observer.transport, 'query') as query, patch.object(
