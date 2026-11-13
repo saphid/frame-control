@@ -1,0 +1,55 @@
+<pre id="result">Pending</pre>
+<script>
+(() => {
+  const result=document.getElementById('result');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const key='framey-plugin-cache-v1:14',saved={enabled:'false',empty:''};
+  const nativeGet=Storage.prototype.getItem,nativeSet=Storage.prototype.setItem;
+  const blockedRead=()=>{
+    let failure;
+    try{frameyCacheRead(14);}catch(error){failure=error;}
+    assert(failure?.message.includes('Could not read saved plugin settings'),'failed read masqueraded as empty cache');
+  };
+  try {
+    // Production parent code/native browser Storage with injected read/write
+    // failures. No plugin, iframe navigation, backend or Frame is loaded.
+    activeFrameyId=14;
+    frameyCacheSave(14,saved);
+    const disk=nativeGet.call(localStorage,key);
+    let denyRead=true,denyWrite=false;
+    Storage.prototype.getItem=function(name){
+      if(name===key&&denyRead)throw new DOMException('Fixture read denied','SecurityError');
+      return nativeGet.call(this,name);
+    };
+    Storage.prototype.setItem=function(name,value){
+      if(name===key&&denyWrite)throw new DOMException('Fixture write denied','QuotaExceededError');
+      return nativeSet.call(this,name,value);
+    };
+    blockedRead();
+    assert(nativeGet.call(localStorage,key)===disk,'failed read altered saved bytes');
+    assert(Object.keys(frameyCacheRead(15)).length===0,'unrelated first-use cache blocked');
+    denyRead=false;
+    assert(JSON.stringify(frameyCacheRead(14))===JSON.stringify(saved),'recovery did not return saved false/empty values');
+    for(const raw of ['broken JSON','null','[]','{"enabled":false}',JSON.stringify({enabled:'x'.repeat(65537)})]) {
+      nativeSet.call(localStorage,key,raw);blockedRead();
+      assert(nativeGet.call(localStorage,key)===raw,'damaged saved bytes were overwritten');
+    }
+    localStorage.removeItem(key);
+    assert(Object.keys(frameyCacheRead(14)).length===0,'absent cache is not valid first use');
+    frameyCacheSave(14,saved);
+    const latest={enabled:'true',empty:'',latest:'in-memory'};
+    denyWrite=true;frameyCacheSave(14,latest);denyRead=true;
+    assert(JSON.stringify(frameyCacheRead(14))===JSON.stringify(latest),'known in-memory snapshot lost after access denial');
+    assert(nativeGet.call(localStorage,key)===JSON.stringify(saved),'failed write changed disk');
+    denyRead=denyWrite=false;
+    document.getElementById('frameyCacheRetry').click();
+    assert(document.getElementById('frameyCacheWarning').hidden,'successful recovery retained failed-write warning');
+    assert(nativeGet.call(localStorage,key)===JSON.stringify(latest),'retry failed to persist known snapshot');
+    result.textContent=JSON.stringify({passed:true,realDOM:true,nativeBrowserStorage:true,
+      failedReadPreservedSavedBytes:true,invalidReadPreservedSavedBytes:true,absentCacheAccepted:true,
+      falseAndEmptyRecovered:true,otherPluginUnaffected:true,knownFallbackPreserved:true,retrySavedLatest:true,
+      syntheticFailures:true,realFrameContacted:false,wornVRVerified:false});
+  }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+  finally{Storage.prototype.getItem=nativeGet;Storage.prototype.setItem=nativeSet;}
+})();
+</script>

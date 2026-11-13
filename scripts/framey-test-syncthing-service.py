@@ -322,7 +322,7 @@ def main():
         'tests/decky-runtime/syncthing_service_root.py',
         'scripts/framey-test-syncthing-runtime.py',
         'scripts/framey-test-decky-runtime.py',
-        'ui/vendor/syncthing-0.2.7/main.py',
+        'ui/vendor/syncthing-0.2.7/main.py', 'ui/framey_decky_ipc.py',
         'ui/frame_decky.py',
         'ui/vendor/syncthing-0.2.7/watchdog.patch',
         'ui/vendor/syncthing-0.2.7/owned_unit.rs',
@@ -393,6 +393,7 @@ def main():
                 'syncthing': binary,
                 'official.zip': official,
                 'main.py': (ROOT / 'ui/vendor/syncthing-0.2.7/main.py').read_bytes(),
+                'framey_decky_ipc.py': (ROOT / 'ui/framey_decky_ipc.py').read_bytes(),
             }
             kernel = pack(folder / 'rootfs.tar', folder / 'initrd.gz', payloads)
             (folder / 'vmlinuz').write_bytes(kernel)

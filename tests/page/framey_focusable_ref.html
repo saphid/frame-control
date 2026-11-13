@@ -1,0 +1,83 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><button id="outside">Outside</button>
+<div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'), root=ReactDOM.createRoot(container);
+  const SP_REACT=React, outside=document.getElementById('outside');
+  // Replay the published control and its focus effect only. The icon, navigation
+  // callback and spacer state are synthetic; no SuggestMe initializer is run.
+  const FaArrowLeft=()=>React.createElement('span',null,'←');
+  let publishedRef, activated=0;
+  function PublishedBack({showTopSpacer=false}) {
+    const backButtonRef=SP_REACT.useRef(null), onBack=()=>activated++;
+    publishedRef=backButtonRef;
+    __OFFICIAL_EFFECT__
+    return __OFFICIAL_CONTROL__;
+  }
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  const key=(node,value)=>ReactDOM.flushSync(()=>node.dispatchEvent(
+    new KeyboardEvent('keydown',{key:value,bubbles:true,cancelable:true})));
+  try {
+    outside.focus();render(React.createElement(PublishedBack));
+    const back=container.querySelector('[role="button"]');
+    assert(publishedRef.current===back,'published Back ref did not receive the native control');
+    await new Promise(resolve=>setTimeout(resolve,150));
+    assert(document.activeElement===back,'published focus effect did not focus Back');
+    assert(back.style.borderColor==='white','published focus callback lost');
+    assert(back.textContent==='←Back'&&back.tabIndex===0,'published content or tab stop lost');
+    ReactDOM.flushSync(()=>back.click());key(back,'Enter');key(back,' ');
+    assert(activated===3,'ref forwarding changed native activation');
+    outside.focus();assert(back.style.borderColor==='transparent','published blur callback lost');
+    render(null);assert(publishedRef.current===null,'published ref not cleared on unmount');
+    // Its published opt-out must keep focus with the spacer instead.
+    render(React.createElement(PublishedBack,{showTopSpacer:true}));
+    await new Promise(resolve=>setTimeout(resolve,150));
+    assert(document.activeElement===outside,'published spacer opt-out stole focus');
+    render(null);assert(publishedRef.current===null,'opt-out ref not cleared');
+
+    const first=[],second=[];
+    const firstRef=node=>first.push(node),secondRef=node=>second.push(node);
+    const local=(ref,disabled=false)=>React.createElement(DFL.Focusable,{
+      ref,disabled,onActivate:()=>activated++,className:'local-focusable',style:{color:'red'},
+    },'Local');
+    render(local(firstRef));
+    const native=container.firstElementChild;
+    assert(first.length===1&&first[0]===native,'callback ref did not receive native control');
+    render(local(secondRef,true));
+    assert(first.length===2&&first[1]===null,'replaced callback ref did not detach');
+    assert(second.length===1&&second[0]===native,'replacement callback ref did not attach');
+    assert(native.tabIndex===-1&&native.getAttribute('aria-disabled')==='true','disabled state lost');
+    ReactDOM.flushSync(()=>native.click());key(native,'Enter');key(native,' ');
+    assert(activated===3,'disabled referenced control activated');
+    assert(native.className==='local-focusable'&&native.style.color==='red','forwarding lost native props');
+    assert(DFL.findModuleByExport(value=>value===DFL.Focusable)?.Focusable===DFL.Focusable,
+      'ref-enabled Focusable missing from local module lookup');
+    render(null);assert(second.length===2&&second[1]===null,'callback ref not cleared on unmount');
+    const passive=React.createRef();
+    render(React.createElement(DFL.Focusable,{ref:passive,tabIndex:0},'Passive container'));
+    assert(passive.current===container.firstElementChild,'non-actionable container ref lost');
+    passive.current.focus();assert(document.activeElement===passive.current,'container ref cannot focus');
+    render(null);assert(passive.current===null,'container ref not cleared');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedBackControl:true,publishedFocusEffect:true,nativeRef:true,focusAndBlurCallbacks:true,
+      spacerOptOutPreserved:true,callbackRefReplacement:true,unmountClearsRefs:true,
+      nativeActivationPreserved:true,disabledControlInert:true,localModuleLookupPreserved:true,
+      fullPluginInitialized:false,realBackendContacted:false,realFrameContacted:false,
+      wornVisibilityVerified:false,controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

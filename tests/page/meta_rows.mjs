@@ -22,18 +22,24 @@ const metaLib = { connected: true, results: new Map(), apps: [
   { id: "1", title: "The Climb", package: "com.crytek.climb", version: "666.0", version_code: 666, size: 30639455,
     data_files: 0, skipped_files: ["main.com.crytek.climb.obb"] },
   { id: "2", title: "Beat Saber", package: "com.beatgames.beatsaber", problem: "Meta's API said HTTP 500", skipped_files: [] },
+  { id: "3", title: "Job Simulator", package: "com.owlchemylabs.jobsimulator", min_sdk: 32, skipped_files: [],
+    incompatible: "Job Simulator needs Android API 32; Lepton is Android 11 (API 30). This version cannot run on the Frame, and this isn't a setting you can change." },
 ] };
 const render = new Function("$", "metaLib", "androidApps", "installing", "queued",
   grab("esc") + grab("questSize") + "const META_VERDICT = {};\n" + grab("renderMetaApps") + "renderMetaApps();");
 render(id => els[id], metaLib, [], new Set(["meta:1"]), new Set(["meta:1"]));
 const html = els.metaApps.innerHTML;
-if (els.metaCount.textContent !== "2 apps") fail("count: " + els.metaCount.textContent);
+if (els.metaCount.textContent !== "3 apps") fail("count: " + els.metaCount.textContent);
 const climb = html.split('class="item"')[1];
 if (!/<div class="s" title="[^"]*">29 MB · v666\.0 \(666\) · com\.crytek\.climb</.test(climb)) fail("size not first: " + climb);
 if (!/Not installed: 1 required data file \(main\.com\.crytek\.climb\.obb\)/.test(climb)) fail("skipped data not shown: " + climb);
 const saber = html.split('class="item"')[2];
 if (!/<div class="s v-no"[^>]*>Meta&#39;s API said HTTP 500</.test(saber)) fail("problem not on its own line: " + saber);
 if (/Not installed/.test(saber)) fail("warning without skipped files");
+const job = html.split('class="item"')[3];
+if (!/minimum API 32/.test(job) || !/Not compatible with the Frame: Job Simulator needs Android API 32/.test(job))
+  fail("incompatibility not shown: " + job);
+if (/data-meta-install="3"/.test(job)) fail("incompatible app can still be installed: " + job);
 // Waiting in the install queue: marked, and not offered again.
 if (!/<span class="tag">Queued<\/span>/.test(climb) || !/data-meta-install="1" disabled/.test(climb)) fail("queued not shown: " + climb);
 if (/Queued|disabled/.test(saber)) fail("queued on the wrong row: " + saber);

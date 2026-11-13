@@ -46,6 +46,7 @@ import frame_agent  # noqa: E402
 import frame_assistant  # noqa: E402
 import frame_android  # noqa: E402
 import frame_android_import  # noqa: E402
+import frame_nxnative  # noqa: E402
 import frame_backup  # noqa: E402
 from apk_sources import search as apk_search, SourceError  # noqa: E402
 from apk_sources import fdroid as apk_fdroid  # noqa: E402
@@ -273,7 +274,9 @@ UNREACHABLE = [
     (re.compile(r"REMOTE HOST IDENTIFICATION HAS CHANGED|Host key verification failed"),
      "The Frame's SSH identity has changed: after SteamOS was reinstalled or reset, or a different device "
      "answering at its address. Check the new key on the Devices tab before trusting it."),
-    (re.compile(r"kex_exchange_identification|Connection closed by .* port \d+|Connection reset by .* port \d+"),
+    (re.compile(r"kex_exchange_identification|Connection closed by .* port \d+|Connection reset by .* port \d+|"
+                r"Connection to \S+ closed by remote host|client_loop: send disconnect:|"
+                r"close - IO is still pending on closed socket"),
      "The connection to the Frame dropped. Try again."),
 ]
 
@@ -394,7 +397,15 @@ def start_job(label, work, progress=False, *, request_id=None, request=None):
                 return {"message": f"{label}…", "job": request_id}
         job = _new_job_locked(label, job_id=request_id,
                               **({'_request': request} if request_id is not None else {}))
-    busy_thread(_run_job, job, label, work, progress).start()
+    try:
+        busy_thread(_run_job, job, label, work, progress).start()
+    except Exception as error:
+        # The panel reserves its request ID before POSTing. Retain a terminal
+        # result for Check result instead of an unstarted job that runs forever.
+        with _jobs_lock:
+            _jobs[job].update(error=f'Could not start background job: {error}',
+                              done=True, time=time.time())
+        raise
     return {"message": f"{label}…", "job": job}
 
 
@@ -488,7 +499,56 @@ def ensure_master():
         LINK.ensure()
 
 
-def ssh(remote, *, stdin=None, timeout=30, text=True, route=None):
+def openssh_failure(tool, result, text=True):
+    """A failed ssh/scp result, preserving whether OpenSSH itself lost the link."""
+    def output(value):
+        return (value or "") if text else (value or b"").decode(errors="replace")
+
+    stderr, stdout = output(result.stderr), output(result.stdout)
+    fallback = (frame_host.ssh_exit_message(result.returncode) if tool == "ssh"
+                else f"{tool} exited {result.returncode}")
+    failure = Failure(strip_ansi(stderr or stdout).strip() or fallback)
+    failure.stdout = stdout
+    if frame_host.ssh_link_failed(result.returncode, strip_ansi(stderr), stdout):
+        frame_host.link_failure(failure)
+    return failure
+
+
+_WINDOWS_SSH_DROPPED = re.compile(r"^(?:client_loop: send disconnect:|"
+                                  r"close - IO is still pending on closed socket\.)", re.M)
+
+
+def _retryable_windows_ssh(result):
+    """Whether Windows OpenSSH lost the connection, rather than the remote command failing."""
+    if not frame_host.WINDOWS or result.returncode == 0:
+        return False
+    text = result.stderr or result.stdout or ""
+    if isinstance(text, bytes):
+        text = text.decode(errors="replace")
+    return bool(_WINDOWS_SSH_DROPPED.search(strip_ansi(text)))
+
+
+def _run_retryable_ssh(command, **kwargs):
+    """Retry one Windows connection drop. Only use for operations safe to restart.
+    command() builds the argv from the current route, so the retry follows a new address
+    the connector picked; it is never retried on a different headset."""
+    route_gen = LINK.gen if LINK else None
+    alias = FRAME
+    result = frame_host.run_ssh(command(), **kwargs)
+    if not _retryable_windows_ssh(result):
+        return result
+    if LINK:
+        error = result.stderr or result.stdout or "The connection dropped"
+        if isinstance(error, bytes):
+            error = error.decode(errors="replace")
+        LINK.lost(strip_ansi(error), route_gen)
+        ensure_master()
+    if FRAME != alias:
+        return result  # switched headsets meanwhile: the first failure stands
+    return frame_host.run_ssh(command(), **kwargs)
+
+
+def ssh(remote, *, stdin=None, timeout=30, text=True, route=None, retry=False):
     # Long-lived helper delivery/cleanup owns an immutable command prefix. It
     # must not reconnect through the currently selected headset after a switch.
     route_gen = LINK.gen if LINK and route is None else None
@@ -499,24 +559,23 @@ def ssh(remote, *, stdin=None, timeout=30, text=True, route=None):
         # Never let ssh inherit our stdin: under the app it's the pipe held open for
         # --exit-on-eof, and Windows' ssh.exe waits on it forever.
         feed = {"input": stdin} if stdin is not None else {"stdin": subprocess.DEVNULL}
-        r = frame_host.run_ssh([*(route if route is not None else [*SSH, FRAME]), remote], capture_output=True, **feed,
-                               text=text, errors="replace" if text else None, timeout=timeout)
+        run = dict(capture_output=True, **feed, text=text, errors="replace" if text else None, timeout=timeout)
+        if retry and route is None:
+            r = _run_retryable_ssh(lambda: [*SSH, FRAME, remote], **run)
+        else:
+            r = frame_host.run_ssh([*(route if route is not None else [*SSH, FRAME]), remote], **run)
     except subprocess.TimeoutExpired:
         raise frame_host.link_failure(Failure(f"Timed out talking to {alias}"))
     if r.returncode != 0:
         err = (r.stderr or r.stdout) if text else (r.stderr or r.stdout).decode(errors="replace")
         if r.returncode == 255 and repair_ssh_config(err):
-            return ssh(remote, stdin=stdin, timeout=timeout, text=text, route=route)
-        if r.returncode == 255 and LINK and route is None and unreachable(err):
-            LINK.lost(err, route_gen)  # ssh itself failed: the connector reconnects
-        failure = Failure(strip_ansi(err).strip() or f"ssh exited {r.returncode}")
-        failure.stdout = r.stdout if text else r.stdout.decode(errors="replace")
-        # ssh never reached the Frame (see frame_telemetry.diagnostic): judged on ssh's stderr only,
-        # never on the command's output.
+            return ssh(remote, stdin=stdin, timeout=timeout, text=text, route=route, retry=retry)
         stderr = (r.stderr if text else (r.stderr or b"").decode(errors="replace")) or ""
-        if frame_host.ssh_link_failed(r.returncode, strip_ansi(stderr)):
-            frame_host.link_failure(failure)
-        raise failure
+        stdout = (r.stdout if text else (r.stdout or b"").decode(errors="replace")) or ""
+        if r.returncode == 255 and LINK and route is None and (
+                unreachable(err) or frame_host.ssh_link_failed(r.returncode, strip_ansi(stderr), stdout)):
+            LINK.lost(err, route_gen)  # ssh itself failed: the connector reconnects
+        raise openssh_failure("ssh", r, text)
     return r.stdout
 
 
@@ -581,11 +640,18 @@ def decky(body):
 def decky_plugin(body):
     action = body.get('action')
     plugin_id = body.get('id')
-    if action not in ('install', 'update', 'remove') or type(plugin_id) is not int:
+    if action not in ('install', 'update', 'remove') or type(plugin_id) is not int or plugin_id <= 0:
         raise Failure('Choose an official store plugin and action', 400)
     if body.get('acknowledged') is not True:
         raise Failure('Confirm that store plugins run code as your Frame user', 400)
     reviewed_hash = body.get('sha256')
+    installed_hash = body.get('installedSha256')
+    if reviewed_hash is not None and (action == 'remove' or not isinstance(reviewed_hash, str)
+                                      or not frame_decky_store.SHA.fullmatch(reviewed_hash)):
+        raise Failure('Invalid reviewed store version', 400)
+    if installed_hash is not None and (action == 'install' or not isinstance(installed_hash, str)
+                                       or not frame_decky_store.SHA.fullmatch(installed_hash)):
+        raise Failure('Invalid reviewed installed version', 400)
     request_id = body.get('requestId')
     if request_id is not None and (not isinstance(request_id, str) or
                                    not re.fullmatch(r'[0-9a-f]{32}', request_id)):
@@ -593,8 +659,9 @@ def decky_plugin(body):
     device = LINK.active_device()['id'] if LINK else FRAME
     return start_job('Decky plugin ' + action,
                      lambda report: frame_decky_store.change(ssh, action, plugin_id, report,
-                                                            reviewed_hash=reviewed_hash), progress=True,
-                     request_id=request_id, request=(device, action, plugin_id, reviewed_hash))
+                                                            reviewed_hash=reviewed_hash,
+                                                            installed_hash=installed_hash), progress=True,
+                     request_id=request_id, request=(device, action, plugin_id, reviewed_hash, installed_hash))
 
 
 def framey_method_action(body):
@@ -717,10 +784,12 @@ def comfort(body):
     # send the sources only when that version isn't there yet.
     files = {name: (HERE / name).read_text() for name in COMFORT_FILES}
     version = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()[:16]
-    out = json.loads(ssh("python3 -", stdin=COMFORT_RUN % ({}, version, COMFORT_FILES, json.dumps(body)), timeout=65))
+    safe_retry = body.get("action") == "status"
+    out = json.loads(ssh("python3 -", stdin=COMFORT_RUN % ({}, version, COMFORT_FILES, json.dumps(body)),
+                         timeout=65, retry=safe_retry))
     if out == COMFORT_MISSING:
         out = json.loads(ssh("python3 -", stdin=COMFORT_RUN % (files, version, COMFORT_FILES, json.dumps(body)),
-                             timeout=65))
+                             timeout=65, retry=safe_retry))
     if out.get("error") and "active" not in out:
         raise Failure(out["error"], 409)
     return out
@@ -855,13 +924,13 @@ def save_shots(body):
             incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=SHOTS_DIR))
             try:
                 try:
-                    r = frame_host.run_ssh(["scp", "-p", *SSH[1:],
-                                            *(f"{FRAME}:{remote}" for remote, _ in group), str(incoming)],
+                    r = _run_retryable_ssh(lambda: ["scp", "-p", *SSH[1:],
+                                                    *(f"{FRAME}:{remote}" for remote, _ in group), str(incoming)],
                                            capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=300)
                 except subprocess.TimeoutExpired:
                     raise Failure("Copying screenshots timed out")
                 if r.returncode != 0:
-                    raise Failure(strip_ansi(r.stderr).strip() or f"scp exited {r.returncode}")
+                    raise openssh_failure("scp", r)
                 if any(not (incoming / local.name).is_file() for _, local in group):
                     raise Failure("Screenshot copy did not contain every requested file")
                 for _, local in group:
@@ -935,7 +1004,7 @@ def fetch_file(remote, local):
     except subprocess.TimeoutExpired:
         raise Failure(f"Copying {Path(remote).name} timed out")
     if r.returncode != 0:
-        raise Failure(strip_ansi(r.stderr or r.stdout).strip() or f"scp exited {r.returncode}")
+        raise openssh_failure("scp", r)
 
 
 def _record_channel(command, stderr):
@@ -1214,15 +1283,37 @@ def mods(body):
     return steam_frame(action, appid, timeout=MOD_TIMEOUT[action], script="frame_mods.py")
 
 
-def steam_search(query):
-    q = parse_qs(query)
+def steam_search(query, view="search"):
+    q = parse_qs(query, keep_blank_values=True)
     cc = (q.get("cc") or [""])[0].upper()
     if not re.fullmatch(r"[A-Z]{2}", cc):
         raise Failure("cc must be a two-letter country code", 400)
+    appid = (q.get("appid") or [""])[0]
+    if view == "details" and not APPID.fullmatch(appid):
+        raise Failure("bad appid", 400)
     try:
-        return {"results": frame_store.search((q.get("q") or [""])[0], cc)}
+        if view == "details":
+            return {"game": frame_store.details(int(appid), cc)}
+        if view == "browse":
+            return {"results": frame_store.browse(cc)}
+        start = (q.get("start") or ["0"])[0]
+        item_type = (q.get("type") or ["all"])[0]
+        sort = (q.get("sort") or ["relevance"])[0]
+        vr = (q.get("vr") or ["all"])[0]
+        price = (q.get("price") or ["any"])[0]
+        discount = (q.get("discount") or ["0"])[0]
+        tags = (q.get("tags") or [""])[0]
+        hidef2p = (q.get("hidef2p") or ["0"])[0]
+        if (not start.isascii() or not start.isdigit() or len(start) > 7 or int(start) > 1000000
+                or item_type not in frame_store.SEARCH_TYPES or sort not in frame_store.SEARCH_SORTS
+                or vr not in frame_store.SEARCH_VR or price not in frame_store.SEARCH_PRICES
+                or discount not in ("0", "1") or not frame_store.valid_search_tags(tags) or hidef2p not in ("0", "1")
+                or set(q) - {"q", "cc", "start", "type", "sort", "vr", "price", "discount", "tags", "hidef2p"}
+                or any(len(values) != 1 for values in q.values())):
+            raise Failure("Invalid Steam search options", 400)
+        return frame_store.search((q.get("q") or [""])[0], cc, int(start), item_type, sort, vr, price, discount == "1", tags, hidef2p == "1")
     except (OSError, ValueError, TypeError, AttributeError, http.client.HTTPException) as e:
-        raise Failure(f"Steam store search failed: {e}")
+        raise Failure(f"Steam store request failed: {e}")
 
 
 def set_volume(body):
@@ -2727,7 +2818,11 @@ class AdbTunnel:
         while pending:
             if self.proc.poll() is not None:
                 err = self.proc.stderr.read().decode(errors="replace").strip()
-                raise Failure(f"ADB tunnel failed: {err or 'ssh exited ' + str(self.proc.returncode)}")
+                message = err or frame_host.ssh_exit_message(self.proc.returncode)
+                failure = Failure(f"ADB tunnel failed: {message}")
+                if frame_host.ssh_link_failed(self.proc.returncode, err):
+                    frame_host.link_failure(failure)
+                raise failure
             if time.time() > deadline:
                 raise Failure("ADB tunnel didn't come up within 12s")
             for lp in list(pending):
@@ -3175,7 +3270,7 @@ def panels_action(body):
         remote = "python3 - --focus " + shlex.quote(key)
     else:
         raise Failure("Unknown panel action", 400)
-    result = json.loads(ssh(remote, stdin=script, timeout=45))
+    result = json.loads(ssh(remote, stdin=script, timeout=45, retry=action == "list"))
     if "error" in result:
         raise Failure(result["error"], 502)
     return result
@@ -3501,6 +3596,41 @@ def source_manage(body):
         raise Failure(str(e), 400)
 
 
+def nxnative_action(body):
+    """Private user game sources; prepared installs share the Android install queue."""
+    def text(key, optional=False, maximum=4096):
+        value = body.get(key, '')
+        if not isinstance(value, str) or len(value) > maximum or ('\x00' in value):
+            raise Failure('Invalid ' + key, 400)
+        value = value.strip()
+        if not value and not optional:
+            raise Failure('Choose a ' + key, 400)
+        return value
+
+    def call(fn, *args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except ValueError as exc:
+            raise Failure(str(exc), 400) from exc
+
+    action = body.get('action')
+    if action == 'add':
+        location, name = text('location'), text('name', optional=True, maximum=200)
+        return start_job('Add game source', lambda: call(frame_nxnative.add_source, location, name))
+    if action == 'refresh':
+        source = text('source', optional=True, maximum=128)
+        return start_job('Refresh game sources', lambda: call(frame_nxnative.refresh, source or None))
+    if action == 'remove':
+        result = call(frame_nxnative.remove_source, text('source', maximum=128))
+        return dict(result, message='Game source removed. Installed games were kept.')
+    if action == 'install':
+        source, entry = text('source', maximum=128), text('id', maximum=256)
+        ensure_master()
+        return queue_job('Install NxNative game',
+                         lambda report: call(frame_nxnative.install, source, entry, report=report), progress=True)
+    raise Failure('Unknown NxNative action', 400)
+
+
 def power_action(body):
     action = body.get('action')
     if LOCAL:
@@ -3540,6 +3670,7 @@ def transfer_local(body):
 
 
 POST = {
+    "/api/nxnative": nxnative_action,
     "/api/steam-pipewire": steam_pipewire_action,
     "/api/transfer": transfer_local,
     "/api/power": power_action,
@@ -3667,15 +3798,16 @@ def push_file(path, dest="Downloads/"):
     try:
         # Not on Windows: a Windows rsync (cwRsync, MSYS2) wouldn't take our POSIX -e quoting.
         if not frame_host.WINDOWS and shutil.which("rsync") and ssh("command -v rsync >/dev/null && echo yes || true").strip() == "yes":
-            cmd = ["rsync", "-a", "-e", shlex.join(SSH), str(path), f"{FRAME}:{shlex.quote(dest)}"]
+            tool, cmd = "rsync", lambda: ["rsync", "-a", "-e", shlex.join(SSH), str(path), f"{FRAME}:{shlex.quote(dest)}"]
         else:
             # Modern scp uses SFTP, so the remote path isn't parsed by a shell.
-            cmd = ["scp", *SSH[1:], "-r", str(path), f"{FRAME}:{dest}"]
-        r = frame_host.run_ssh(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=timeout)
+            tool, cmd = "scp", lambda: ["scp", *SSH[1:], "-r", str(path), f"{FRAME}:{dest}"]
+        r = _run_retryable_ssh(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True,
+                               errors="replace", timeout=timeout)
     except subprocess.TimeoutExpired:
         raise Failure(f"Copying {name} timed out")
     if r.returncode != 0:
-        raise Failure(strip_ansi(r.stderr or r.stdout).strip() or f"copy exited {r.returncode}")
+        raise openssh_failure(tool, r)
     return f"Sent {name} to ~/{dest}"
 
 
@@ -3813,8 +3945,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(frame_steamgriddb.settings())
             elif path == "/artwork-settings.js":
                 self.send_bytes((HERE / 'artwork-settings.js').read_bytes(), 'text/javascript; charset=utf-8')
+            elif path == "/steam-hls.js":
+                self.send_bytes((HERE / 'vendor/hls-1.6.13.light.min.js').read_bytes(), 'text/javascript; charset=utf-8')
             elif path == "/control-center.js":
                 self.send_bytes((HERE / 'control-center.js').read_bytes(), 'text/javascript; charset=utf-8')
+            elif path == "/nxnative.js":
+                self.send_bytes((HERE / 'nxnative.js').read_bytes(), 'text/javascript; charset=utf-8')
             elif path == "/control-center.css":
                 self.send_bytes((HERE / 'control-center.css').read_bytes(), 'text/css; charset=utf-8')
             elif path == "/assistant":
@@ -3874,6 +4010,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise Failure(str(e), 400)
             elif path == "/api/sources":
                 self.send_json({"sources": apk_search.sources()})
+            elif path == "/api/nxnative":
+                self.send_json(frame_nxnative.status())
             elif path == "/api/search":
                 self.send_json(source_search(url.query))
             elif path == "/api/apk-versions":
@@ -3952,6 +4090,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(steam_frame("owned"))
             elif path == "/api/steam/search":
                 self.send_json(steam_search(url.query))
+            elif path == "/api/steam/browse":
+                self.send_json(steam_search(url.query, "browse"))
+            elif path == "/api/steam/details":
+                self.send_json(steam_search(url.query, "details"))
             elif path == "/api/webinstall/job":
                 self.send_json(webinstall_job(url.query))
             elif path == "/api/shots":

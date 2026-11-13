@@ -1,0 +1,81 @@
+{
+  "at": "2026-11-01T06:58:41.369332+00:00",
+  "sourceRevision": "b6a489b4c55f2d7d8660877ef14c78a138ce4547",
+  "previousHead": "bd2a51ebef0d2b76c653d896d1a53be988da737b",
+  "baseMain": "89757d33f61124486404bc16e84b7d3697cf2c9f",
+  "prospectiveTreeMatches": true,
+  "onlyMainTabMasterRecoveryAndEvidenceAdded": true,
+  "allProductionInputsAndDiscordProbeUnchanged": true,
+  "priorMainPatchReverseApplies": true,
+  "native": {
+    "hostedArtifactId": null,
+    "localNative": true,
+    "architecture": "x86_64",
+    "sourceRevision": "b6a489b4c55f2d7d8660877ef14c78a138ce4547",
+    "at": "2026-11-01T06:58:23.251307+00:00",
+    "passed": true,
+    "connections": 6,
+    "frames": 18,
+    "rpcCalls": 14,
+    "sourceHashes": 29,
+    "strictStops": [
+      0.215,
+      0.214
+    ],
+    "genericConsoleCleanShutdownVerified": false,
+    "genericFlagLimit": "Generic recorder intentionally never certifies plugin shutdown; two explicit strict stops independently verified",
+    "initialAuditCorrection": "Initial audit wrongly required every descendant to be reaped by probe; Decky reaps its own children. Corrected to exact identity disappearance, successful adopted exits and loader exit, with no native rerun.",
+    "realFrameContacted": false,
+    "realDiscordContacted": false,
+    "reportSha256": "e6a4c5539028d45470bab7df5c1249a7d5bebd3af86d86626fa828c7cc43dfd3"
+  },
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "e313e4eba8026961b971b3fb2b678d38a4e19f629a290c6f5dc2ce3c046440c1",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "fb07a5b0f0a7b821ae84c23d50b52f347e0882b14c3c9b65fa243ae05d40a1dc",
+    "ui/framey_discord_lifecycle.py": "f75b372fa48d39968abe60921847a154b5c485c5b462dfa3855aae9dd3b8520c",
+    "tests/decky-runtime/discord_private.py": "e7abd8c6a8ad5b85167b7ee73fca254e1857952d771bc1ae4a9d103f8c8cfb8c",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+    "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/deck_shelves_private.py": "7601ff4ae19850dccf80ebc0f63ae7829af193367ac82d1357782e6c7e8f3b78",
+    "tests/decky-runtime/battery_private.py": "9ca0c40c87a70a47dba5ca6e98af9e5e06e4895804c93dc3e24da1a88f81ae0d",
+    "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
+    "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+    "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+    "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "d11cab4706100f182ccadaf3c905b39102414e016c6894f24519a9839117dddc",
+    "tests/framey_official.py": "6bbd5d4ae17fd4189d8b6cdc95168b949b69a3cc97127adcee8465d4e40a35f8",
+    "ui/frame_decky_store.py": "9af01c598cc3d27f03d366494d020503d96619f7689825a305b5fe5803e8d218",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/steamgriddb_private.py": "ae815dc7e5f0e178e95c93e0bbf3eca232f3f2eb6f35af6b1b618345e332240e",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "focused": {
+    "focused": {
+      "tests": 8,
+      "sha256": "bfeb5209f87efffaaf7a7a2fbf206e265df9bf385b9b05044389903de3fd42a1",
+      "text": "......Handshake failed {'cmd': 'DISPATCH', 'evt': 'ERROR'}\n\n..\n----------------------------------------------------------------------\nRan 8 tests in 1.875s\n\nOK\n"
+    },
+    "inventory": {
+      "tests": 3,
+      "sha256": "edaea244b13bb4717b5b983ad9b89832b6e95a6eedf4961aefae3124c6d3892e",
+      "text": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.050s\n\nOK\n"
+    }
+  },
+  "oldHostedChecksAndArtifactsQualifyOnlyOldHead": true,
+  "freshExactHeadHostedCiRequired": true,
+  "realFrameContacted": false,
+  "realDiscordContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false
+}

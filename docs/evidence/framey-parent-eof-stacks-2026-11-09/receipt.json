@@ -1,0 +1,73 @@
+{
+  "at": "2026-11-09T04:09:43.040656+00:00",
+  "sourceHead": "c80dda3374b9ffce22227337d669cb8432b6fc97",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "inputs": {
+    "wheel": "py_spy-0.4.3-py2.py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl",
+    "wheelSha256": "8a4277225f470d394a85cca0cdd944bef87f0097b6f20150a6dd3ac2e92806b8",
+    "url": "https://github.com/benfred/py-spy/releases/download/v0.4.3/py_spy-0.4.3-py2.py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl",
+    "samplerSha256": "a41205d4925beafd108e1ace85e66c0a1a7adbfcbebcd4441f07848b608886c0",
+    "originalProbeSha256": "2ea967e31b22931797a08cea8dc02680972443c5f3c0e348d068ce3c090a753a",
+    "subreaperProbeSha256": "f91acba4ba29872e8ba7054a4d69ab1c001535a1141af951ecbbb18957ea1d58",
+    "wrapperSha256": "c9f8fb3d99a5f36ed7813ef4ea020e931c0285363e8fcc8ed3a4c0a6431e7cf8",
+    "repositoryHead": "c80dda3374b9ffce22227337d669cb8432b6fc97"
+  },
+  "ownedParentPid": 35,
+  "ownedParentIdentity": {
+    "state": "R",
+    "parent": 33,
+    "start": "424804018"
+  },
+  "normalShutdownSeconds": 0.314,
+  "normalControlPassed": true,
+  "publishedBinaryParentHangReproduced": true,
+  "abruptParentTermSeconds": 8.0,
+  "requestTimedOut": true,
+  "parentListenerStackGroups": 65,
+  "parentListenerSamples": 229,
+  "samplerSummary": "py-spy> Stopped sampling because process exited\npy-spy> Wrote raw flamegraph data to '/tmp/owned-parent-eof-stacks.raw'. Samples: 773 Errors: 99\npy-spy> You can use the flamegraph.pl script from https://github.com/brendangregg/flamegraph to generate a SVG\n",
+  "allOwnedProcessesReaped": true,
+  "nonblockingSampling": true,
+  "addedCapabilities": false,
+  "probeSubreaperEnabled": true,
+  "failedInitialHarnessAttemptRetained": true,
+  "arm64StackCaptured": false,
+  "historicalArm64VmExecuted": false,
+  "historicalCauseEstablished": false,
+  "releaseHoldCleared": false,
+  "realFrameContacted": false,
+  "wornVRVerified": false,
+  "artifacts": {
+    "successful-sampling-report.json.gz": {
+      "compressedBytes": 18250,
+      "compressedSha256": "3289f15c99d2a3e8f2a2f2b754f57234084d68276669b658c29018ad99b78455",
+      "rawBytes": 442232,
+      "rawSha256": "7e4e97b9d646258c80d1e60f3ed9a068a0c73f4a03e39f74fdef96ae89c51178"
+    },
+    "failed-initial-sampling-report.json.gz": {
+      "compressedBytes": 20704,
+      "compressedSha256": "5be3234e50cc8e153b63b5e732ae15d97d6be86d08f8fbecda564dd03a633c5e",
+      "rawBytes": 579413,
+      "rawSha256": "8da6dcd67335b4e6b97dbd78e266395156bca2855ce7a63d03eb5cead39b97a0"
+    },
+    "stacks.raw.gz": {
+      "compressedBytes": 15589,
+      "compressedSha256": "61cba4a60b3ff5653879c9e53b04e08b1255a4386701c8c34251ed0b6896eb0a",
+      "rawBytes": 425182,
+      "rawSha256": "cd7f4f8740ffcde3f0cc768dd87d57ef3d055338b8be4db1a787c43276335081"
+    },
+    "probe.py.gz": {
+      "compressedBytes": 2852,
+      "compressedSha256": "376a8bf7964bcd0abcce83f1e8ce558fa928d8e2e3aca5da3bec71142e4cc450",
+      "rawBytes": 7507,
+      "rawSha256": "f91acba4ba29872e8ba7054a4d69ab1c001535a1141af951ecbbb18957ea1d58"
+    },
+    "sampler-wrapper.py.gz": {
+      "compressedBytes": 648,
+      "compressedSha256": "906ae175db0b63379a6de5116e3c98e17e4c359b108aa5d24766b359d05d8cc1",
+      "rawBytes": 1420,
+      "rawSha256": "c9f8fb3d99a5f36ed7813ef4ea020e931c0285363e8fcc8ed3a4c0a6431e7cf8"
+    }
+  }
+}
