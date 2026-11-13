@@ -1,0 +1,7 @@
+# v0.4.41 candidate: real Frame title smoke, 26 October 2026
+
+Source commit `c87e5c6` bumps the app and lockfile to 0.4.41 on top of main after PRs #289, #290, #292–#295. It includes the exact official ARM64 audio evidence from #293. The release tag and installers do not exist at this candidate stage.
+
+`scripts/frame-smoke.sh` acquired its unique owner in `/tmp/frame-test.lock` before any headset read. Locked preflight found SteamVR activity 3 (standby), proximity 6.25 and battery 99%. On Frame OS 0.5.6 build `20261022.6153909`, all **13/13** steps passed: existing reserved-title cleanup, devkit identity/status, install/launch/remove for ARM64, x86_64 and Windows test executables, and final cleanup. The command exited 0, which includes successfully releasing only its own lock. Its detailed result remains private under `tests/smoke/results/2026-10-26T043229Z-20261022.6153909.json` in the candidate checkout.
+
+No person wore the headset. This checks title management and process cleanup, not wearer-visible rendering, physical controllers, official plugin VR panels, audio output or installed desktop packages. After PR #294, a separate exact-main unworn Framey sample exercise passed live setting persistence, synthetic OpenVR input, stereo compositor change and cleanup; it did not prove rapid physical controller taps or native scroll. The [v0.4.40 publication evidence](v0440-release-2026-10-26.md) records the previous tagged installer gates. New v0.4.41 tagged installers and checksums must be verified before publication.

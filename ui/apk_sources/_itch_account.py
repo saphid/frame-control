@@ -287,21 +287,17 @@ def _number(value):
     return value if type(value) is int and value > 0 else None
 
 
-def is_android(upload):
-    """An upload marked for Android, or an .apk file. The marker's field name is not in the
-    public reference: itch.io's traits use p_<platform> (p_windows...), so p_android is assumed."""
-    traits = upload.get('traits') if isinstance(upload.get('traits'), list) else []
-    platforms = upload.get('platforms') if isinstance(upload.get('platforms'), dict) else {}
-    filename = str(upload.get('filename') or '').lower()
-    return 'p_android' in traits or upload.get('p_android') is True or 'android' in platforms \
-        or filename.endswith('.apk')
-
-
 def android_uploads(uploads):
-    """Installable Android uploads, best first: .apk files, then full games, then newest."""
+    """Direct APK uploads, full games before demos, then newest.
+
+    An Android platform marker does not make a ZIP/XAPK/APKS installable by
+    save_apk. Those files stay on the publisher's page rather than being
+    advertised as APK downloads.
+    """
     chosen = []
     for u in uploads if isinstance(uploads, list) else []:
-        if not isinstance(u, dict) or not _number(u.get('id')) or not is_android(u):
+        if not isinstance(u, dict) or not _number(u.get('id')) \
+                or not str(u.get('filename') or '').lower().endswith('.apk'):
             continue
         traits = u.get('traits') if isinstance(u.get('traits'), list) else []
         if u.get('type') not in (None, 'default') or u.get('preorder') is True or 'preorder' in traits:
@@ -310,8 +306,7 @@ def android_uploads(uploads):
             continue  # hosted on another site: not something itch.io can hand us
         chosen.append(u)
     chosen.sort(key=lambda u: str(u.get('updated_at') or u.get('created_at') or ''), reverse=True)
-    chosen.sort(key=lambda u: (not str(u.get('filename') or '').lower().endswith('.apk'),
-                               u.get('demo') is True or 'demo' in (u.get('traits') or [])))
+    chosen.sort(key=lambda u: u.get('demo') is True or 'demo' in (u.get('traits') or []))
     return chosen
 
 

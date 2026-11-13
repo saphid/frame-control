@@ -1,0 +1,629 @@
+{
+  "at": "2026-10-31T18:30:55.347259+00:00",
+  "main": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "pr525Head": "f445c71833b119aab35d0ac920859ca40c536ab1",
+  "pr526Head": "9aaaa004f7504725aff898ab198395d7389cf2f1",
+  "hostedChecksEach": 18,
+  "reviewFeedbackClear": true,
+  "artifactAuditSummaries": {
+    "525": {
+      "at": "2026-10-31T18:19:07.880978+00:00",
+      "head": "f445c71833b119aab35d0ac920859ca40c536ab1",
+      "artifactInventory": "inventory.json",
+      "uniqueSources": 149,
+      "verifiedHashBindings": 1363,
+      "packages": [
+        {
+          "artifact": 13053160645,
+          "architecture": "aarch64",
+          "headSha": "f445c71833b119aab35d0ac920859ca40c536ab1",
+          "sourceHashes": 26,
+          "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+          "realFrameContacted": false,
+          "browserHttp": false,
+          "productionParent": false
+        },
+        {
+          "artifact": 13053275265,
+          "architecture": "x86_64",
+          "headSha": "f445c71833b119aab35d0ac920859ca40c536ab1",
+          "sourceHashes": 26,
+          "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+          "realFrameContacted": false,
+          "browserHttp": false,
+          "productionParent": false
+        },
+        {
+          "artifact": 13051966192,
+          "architecture": "x86_64",
+          "headSha": "f445c71833b119aab35d0ac920859ca40c536ab1",
+          "sourceHashes": 127,
+          "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+          "realFrameContacted": false,
+          "browserHttp": true,
+          "productionParent": false,
+          "packetVerified": true,
+          "httpRequests": 13,
+          "browserStages": [
+            "running",
+            "stopped",
+            "restarted",
+            "stopped"
+          ],
+          "realSteamCef": false
+        },
+        {
+          "artifact": 13051597527,
+          "architecture": "x86_64",
+          "headSha": "f445c71833b119aab35d0ac920859ca40c536ab1",
+          "sourceHashes": 128,
+          "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+          "realFrameContacted": false,
+          "browserHttp": true,
+          "productionParent": true,
+          "packetVerified": true,
+          "httpRequests": 15,
+          "browserStages": [
+            "running",
+            "stopped",
+            "restarted",
+            "stopped"
+          ],
+          "realSteamCef": false,
+          "parentRequests": 65,
+          "maxParentRequestSeconds": 7.574,
+          "productionIframeUnchanged": true,
+          "parentErrors": []
+        }
+      ],
+      "native": [
+        {
+          "artifact": 13051544154,
+          "architecture": "x86_64",
+          "cases": 46,
+          "sourceHashes": 20,
+          "allDiscovered": true,
+          "expectedRegressionCases": 8,
+          "rpcCalls": 582,
+          "globalCleanShutdownClaim": false
+        },
+        {
+          "artifact": 13051251225,
+          "architecture": "aarch64",
+          "cases": 46,
+          "sourceHashes": 20,
+          "allDiscovered": true,
+          "expectedRegressionCases": 8,
+          "rpcCalls": 582,
+          "globalCleanShutdownClaim": false
+        }
+      ],
+      "watchdogs": [
+        {
+          "artifact": 13052417719,
+          "architecture": "x86_64",
+          "helperSha256": "318c0c58bce164d5e23528ae0da40f7d142005984ff64801b74a36b790e456b0",
+          "nativeOwnershipRuntimeSyncAndActualUserService": true,
+          "realFrameContacted": false
+        },
+        {
+          "artifact": 13051015876,
+          "architecture": "aarch64",
+          "helperSha256": "e11a0ae8bae387474d02e5bb9eaaeaebc077a961c84e75a7eaaa645ec2f651cf",
+          "nativeOwnershipRuntimeSyncAndActualUserService": true,
+          "realFrameContacted": false
+        }
+      ],
+      "productionParentPackage": "exact-head artifact verified; final current-main/CI/feedback gate still required",
+      "mergeQualified": false,
+      "releaseQualified": false,
+      "reviewAt": "2026-10-31T18:22:27.526801+00:00",
+      "reviewFeedbackClear": true,
+      "currentMain": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+      "currentMainCi": "pending; merge remains held"
+    },
+    "526": {
+      "at": "2026-10-31T18:21:27.989196+00:00",
+      "head": "9aaaa004f7504725aff898ab198395d7389cf2f1",
+      "artifactInventory": "inventory.json",
+      "uniqueSources": 149,
+      "verifiedHashBindings": 1363,
+      "packages": [
+        {
+          "artifact": 13053005029,
+          "architecture": "aarch64",
+          "headSha": "9aaaa004f7504725aff898ab198395d7389cf2f1",
+          "sourceHashes": 26,
+          "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+          "realFrameContacted": false,
+          "browserHttp": false,
+          "productionParent": false
+        },
+        {
+          "artifact": 13051332003,
+          "architecture": "x86_64",
+          "headSha": "9aaaa004f7504725aff898ab198395d7389cf2f1",
+          "sourceHashes": 26,
+          "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+          "realFrameContacted": false,
+          "browserHttp": false,
+          "productionParent": false
+        },
+        {
+          "artifact": 13051139559,
+          "architecture": "x86_64",
+          "headSha": "9aaaa004f7504725aff898ab198395d7389cf2f1",
+          "sourceHashes": 127,
+          "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+          "realFrameContacted": false,
+          "browserHttp": true,
+          "productionParent": false,
+          "packetVerified": true,
+          "httpRequests": 12,
+          "browserStages": [
+            "running",
+            "stopped",
+            "restarted",
+            "stopped"
+          ],
+          "realSteamCef": false
+        },
+        {
+          "artifact": 13051843796,
+          "architecture": "x86_64",
+          "headSha": "9aaaa004f7504725aff898ab198395d7389cf2f1",
+          "sourceHashes": 128,
+          "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+          "realFrameContacted": false,
+          "browserHttp": true,
+          "productionParent": true,
+          "packetVerified": true,
+          "httpRequests": 15,
+          "browserStages": [
+            "running",
+            "stopped",
+            "restarted",
+            "stopped"
+          ],
+          "realSteamCef": false,
+          "parentRequests": 64,
+          "maxParentRequestSeconds": 8.854,
+          "productionIframeUnchanged": true,
+          "parentErrors": []
+        }
+      ],
+      "native": [
+        {
+          "artifact": 13050054403,
+          "architecture": "x86_64",
+          "cases": 46,
+          "sourceHashes": 20,
+          "allDiscovered": true,
+          "expectedRegressionCases": 8,
+          "rpcCalls": 577,
+          "globalCleanShutdownClaim": false
+        },
+        {
+          "artifact": 13050871118,
+          "architecture": "aarch64",
+          "cases": 46,
+          "sourceHashes": 20,
+          "allDiscovered": true,
+          "expectedRegressionCases": 8,
+          "rpcCalls": 577,
+          "globalCleanShutdownClaim": false
+        }
+      ],
+      "watchdogs": [
+        {
+          "artifact": 13051967036,
+          "architecture": "x86_64",
+          "helperSha256": "318c0c58bce164d5e23528ae0da40f7d142005984ff64801b74a36b790e456b0",
+          "nativeOwnershipRuntimeSyncAndActualUserService": true,
+          "realFrameContacted": false
+        },
+        {
+          "artifact": 13051086860,
+          "architecture": "aarch64",
+          "helperSha256": "e11a0ae8bae387474d02e5bb9eaaeaebc077a961c84e75a7eaaa645ec2f651cf",
+          "nativeOwnershipRuntimeSyncAndActualUserService": true,
+          "realFrameContacted": false
+        }
+      ],
+      "productionParentPackage": "exact-head artifact verified; final current-main/CI/feedback gate still required",
+      "mergeQualified": false,
+      "releaseQualified": false,
+      "reviewAt": "2026-10-31T18:22:27.526801+00:00",
+      "reviewFeedbackClear": true,
+      "currentMain": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+      "currentMainCi": "pending; merge remains held"
+    }
+  },
+  "candidate": {
+    "at": "2026-10-31T18:19:57.410971+00:00",
+    "main": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+    "prHead": "f445c71833b119aab35d0ac920859ca40c536ab1",
+    "mergeBase": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+    "candidateCommit": "5eb123694058df466a726c95ce61f09bce043393",
+    "candidateTree": "72db8606932901729acd0951cceb0a72ccdfde7e",
+    "treeEntries": 1430,
+    "prPaths": [
+      "docs/evidence/framey-tabmaster-full-native-main-controls-2026-10-31-raw.json.gz",
+      "docs/evidence/framey-tabmaster-full-native-main-controls-2026-10-31.json",
+      "docs/evidence/framey-tabmaster-full-native-main-controls-2026-10-31.md",
+      "docs/evidence/framey-tabmaster-ipc-eof-2026-10-31-raw.json.gz",
+      "docs/evidence/framey-tabmaster-ipc-eof-2026-10-31.json",
+      "docs/evidence/framey-tabmaster-ipc-eof-2026-10-31.md",
+      "docs/evidence/framey-tabmaster-main-3c03e47-refresh-2026-10-31-raw.json.gz",
+      "docs/evidence/framey-tabmaster-main-3c03e47-refresh-2026-10-31.json",
+      "docs/evidence/framey-tabmaster-main-3c03e47-refresh-2026-10-31.md",
+      "docs/evidence/framey-tabmaster-main-dd41aed-refresh-2026-10-31-raw.json.gz",
+      "docs/evidence/framey-tabmaster-main-dd41aed-refresh-2026-10-31.json",
+      "docs/evidence/framey-tabmaster-main-dd41aed-refresh-2026-10-31.md",
+      "docs/evidence/framey-tabmaster-main4e1f664-refresh-2026-10-31-raw.json.gz",
+      "docs/evidence/framey-tabmaster-main4e1f664-refresh-2026-10-31.json",
+      "docs/evidence/framey-tabmaster-main4e1f664-refresh-2026-10-31.md",
+      "docs/framey-compatibility.md",
+      "scripts/framey-test-decky-runtime.py",
+      "tests/decky-runtime/cases.json",
+      "tests/decky-runtime/check.py",
+      "tests/decky-runtime/tabmaster_private.py",
+      "tests/e2e/test_framey.py",
+      "tests/test_frame_decky_store.py",
+      "tests/test_framey_compatibility.py",
+      "ui/frame_decky_store.py",
+      "ui/framey-compatibility.json"
+    ],
+    "newMainPaths": [
+      "docs/evidence/framey-vm-rootfs-timestamps-2026-10-31-raw.json.gz",
+      "docs/evidence/framey-vm-rootfs-timestamps-2026-10-31.json",
+      "docs/evidence/framey-vm-rootfs-timestamps-2026-10-31.md",
+      "scripts/framey-test-syncthing-service.py",
+      "tests/test_syncthing_rootfs_pack.py"
+    ],
+    "overlap": [],
+    "allEntriesExactlyMainPlusPrPaths": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "6b032c72d3b6b77003217de400552616aaa22660b147571de0e676e53be0a1d1",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "89e447c3f9381c435ba01ad7c4d03415222818f49441756eb6bd536f6f0588bf",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "6bce1b39a88704badb5db5902c3d7df93c9f6cecbec4f875d821f3d701deb53d",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "99fc27194d623a1cc35844019f25a9ce87a30f262b50ee50195210b94aec5798",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeFingerprintCount": 20,
+    "remoteHeadUnchanged": true,
+    "hostedCandidateCi": false,
+    "mergeQualified": false
+  },
+  "unitSite": {
+    "at": "2026-10-31T18:24:45.947941+00:00",
+    "candidate": {
+      "at": "2026-10-31T18:19:57.410971+00:00",
+      "main": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+      "prHead": "f445c71833b119aab35d0ac920859ca40c536ab1",
+      "mergeBase": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+      "candidateCommit": "5eb123694058df466a726c95ce61f09bce043393",
+      "candidateTree": "72db8606932901729acd0951cceb0a72ccdfde7e",
+      "treeEntries": 1430,
+      "prPaths": [
+        "docs/evidence/framey-tabmaster-full-native-main-controls-2026-10-31-raw.json.gz",
+        "docs/evidence/framey-tabmaster-full-native-main-controls-2026-10-31.json",
+        "docs/evidence/framey-tabmaster-full-native-main-controls-2026-10-31.md",
+        "docs/evidence/framey-tabmaster-ipc-eof-2026-10-31-raw.json.gz",
+        "docs/evidence/framey-tabmaster-ipc-eof-2026-10-31.json",
+        "docs/evidence/framey-tabmaster-ipc-eof-2026-10-31.md",
+        "docs/evidence/framey-tabmaster-main-3c03e47-refresh-2026-10-31-raw.json.gz",
+        "docs/evidence/framey-tabmaster-main-3c03e47-refresh-2026-10-31.json",
+        "docs/evidence/framey-tabmaster-main-3c03e47-refresh-2026-10-31.md",
+        "docs/evidence/framey-tabmaster-main-dd41aed-refresh-2026-10-31-raw.json.gz",
+        "docs/evidence/framey-tabmaster-main-dd41aed-refresh-2026-10-31.json",
+        "docs/evidence/framey-tabmaster-main-dd41aed-refresh-2026-10-31.md",
+        "docs/evidence/framey-tabmaster-main4e1f664-refresh-2026-10-31-raw.json.gz",
+        "docs/evidence/framey-tabmaster-main4e1f664-refresh-2026-10-31.json",
+        "docs/evidence/framey-tabmaster-main4e1f664-refresh-2026-10-31.md",
+        "docs/framey-compatibility.md",
+        "scripts/framey-test-decky-runtime.py",
+        "tests/decky-runtime/cases.json",
+        "tests/decky-runtime/check.py",
+        "tests/decky-runtime/tabmaster_private.py",
+        "tests/e2e/test_framey.py",
+        "tests/test_frame_decky_store.py",
+        "tests/test_framey_compatibility.py",
+        "ui/frame_decky_store.py",
+        "ui/framey-compatibility.json"
+      ],
+      "newMainPaths": [
+        "docs/evidence/framey-vm-rootfs-timestamps-2026-10-31-raw.json.gz",
+        "docs/evidence/framey-vm-rootfs-timestamps-2026-10-31.json",
+        "docs/evidence/framey-vm-rootfs-timestamps-2026-10-31.md",
+        "scripts/framey-test-syncthing-service.py",
+        "tests/test_syncthing_rootfs_pack.py"
+      ],
+      "overlap": [],
+      "allEntriesExactlyMainPlusPrPaths": true,
+      "nativeSourceFingerprints": {
+        "scripts/framey-test-decky-runtime.py": "6b032c72d3b6b77003217de400552616aaa22660b147571de0e676e53be0a1d1",
+        "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        "tests/decky-runtime/check.py": "89e447c3f9381c435ba01ad7c4d03415222818f49441756eb6bd536f6f0588bf",
+        "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+        "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+        "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+        "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+        "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+        "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/decky-runtime/cases.json": "6bce1b39a88704badb5db5902c3d7df93c9f6cecbec4f875d821f3d701deb53d",
+        "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+        "ui/frame_decky_store.py": "99fc27194d623a1cc35844019f25a9ce87a30f262b50ee50195210b94aec5798",
+        "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+        "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+        "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+        "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+        "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+        "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+        ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+      },
+      "nativeFingerprintCount": 20,
+      "remoteHeadUnchanged": true,
+      "hostedCandidateCi": false,
+      "mergeQualified": false
+    },
+    "runs": [
+      {
+        "label": "unit",
+        "argv": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-q"
+        ],
+        "exit": 0,
+        "elapsedSeconds": 249.996,
+        "tests": 1952,
+        "testSeconds": 248.981,
+        "skips": 16,
+        "logSha256": "05e31f2aa3391ec594e1c3e3f42aa15142543ab708928a0dbf0f13b8e41d9b8f"
+      },
+      {
+        "label": "site",
+        "argv": [
+          "node",
+          "--test",
+          "--test-reporter=tap",
+          "site/test/onboarding.test.mjs",
+          "site/test/feedback.test.mjs"
+        ],
+        "exit": 0,
+        "elapsedSeconds": 0.164,
+        "tests": 18,
+        "skips": 0,
+        "logSha256": "34029eb4b004e0cb1fb5f8d58df3f136b3b01da2fd11632bcff64646e05f055e"
+      }
+    ],
+    "passed": true,
+    "realFrameContacted": false,
+    "harnessNote": "Initial Node spec-format report showed 18 passing tests, but supplemental collector expected TAP and raised TypeError. Original site log retained; website rerun with explicit TAP passes. No product source or unit suite changed/rerun."
+  },
+  "fullE2e": {
+    "tests": 53,
+    "skips": 0,
+    "result": {
+      "catalogCount": 116,
+      "officialBackendsExecuted": false,
+      "sourceRevision": "5eb123694058df466a726c95ce61f09bce043393",
+      "project": "framey-tabmaster372-e2e-270461ac0df3",
+      "started": "2026-10-31T18:23:19.094213+00:00",
+      "finished": "2026-10-31T18:30:37.696818+00:00",
+      "testExit": 0,
+      "cleanupExit": 0,
+      "imageCleanupExits": [
+        0,
+        0
+      ],
+      "elapsedSeconds": 438.603,
+      "remainingOwnedResources": {
+        "containers": [],
+        "volumes": [],
+        "networks": []
+      },
+      "realFrameContacted": false,
+      "configurationSha256": "679b51aa6fc71cd194e5bbda061b758be23276dd1669a9283e27581fa040132c",
+      "argv": [
+        "docker",
+        "compose",
+        "-p",
+        "framey-tabmaster372-e2e-270461ac0df3",
+        "-f",
+        "/tmp/framey-tabmaster372-e2e-270461ac0df3.json",
+        "exec",
+        "-T",
+        "-w",
+        "/repo/tests/e2e",
+        "host",
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-v",
+        "-s",
+        "."
+      ],
+      "fixtureConfiguration": {
+        "name": "framey-tabmaster372-e2e-270461ac0df3",
+        "networks": {
+          "default": {
+            "name": "framey-tabmaster372-e2e-270461ac0df3_default",
+            "ipam": {}
+          }
+        },
+        "services": {
+          "fakeframe": {
+            "command": null,
+            "entrypoint": null,
+            "environment": {
+              "FAKEFRAME_PAIRING_MODE": "0"
+            },
+            "hostname": "frame",
+            "healthcheck": {
+              "test": [
+                "CMD",
+                "fakeframe-ctl",
+                "ping"
+              ],
+              "timeout": "10s",
+              "interval": "2s",
+              "retries": 60
+            },
+            "image": "framey-tabmaster372-e2e-270461ac0df3-frame",
+            "init": true,
+            "networks": {
+              "default": null
+            },
+            "pull_policy": "never",
+            "tmpfs": [
+              "/home/steamos/devkit-game:size=64m,mode=0755,exec"
+            ],
+            "volumes": [
+              {
+                "type": "volume",
+                "source": "keys",
+                "target": "/keys",
+                "volume": {}
+              },
+              {
+                "type": "volume",
+                "source": "power",
+                "target": "/sys/class/power_supply",
+                "volume": {}
+              },
+              {
+                "type": "volume",
+                "source": "power",
+                "target": "/var/lib/fakeframe/sys/power_supply",
+                "volume": {}
+              },
+              {
+                "type": "volume",
+                "source": "thermal",
+                "target": "/sys/class/thermal",
+                "volume": {}
+              },
+              {
+                "type": "volume",
+                "source": "thermal",
+                "target": "/var/lib/fakeframe/sys/thermal",
+                "volume": {}
+              }
+            ]
+          },
+          "host": {
+            "command": null,
+            "depends_on": {
+              "fakeframe": {
+                "condition": "service_healthy",
+                "required": true
+              }
+            },
+            "entrypoint": null,
+            "environment": {
+              "FAKEFRAME_CTL": "http://fakeframe:9999",
+              "FAKEFRAME_HOST": "fakeframe",
+              "FRAME_E2E": "1",
+              "FRAME_E2E_CONTAINER": "1",
+              "FRAMEY_AUDIT_CACHE": "/audit-cache",
+              "FRAMEY_AUDIT_OUTPUT": "/audit-output/pr525-candidate372-e2e-records.json"
+            },
+            "healthcheck": {
+              "test": [
+                "CMD",
+                "test",
+                "-f",
+                "/home/tester/.ready"
+              ],
+              "timeout": "5s",
+              "interval": "1s",
+              "retries": 120
+            },
+            "image": "framey-tabmaster372-e2e-270461ac0df3-host",
+            "init": true,
+            "networks": {
+              "default": null
+            },
+            "pull_policy": "never",
+            "volumes": [
+              {
+                "type": "bind",
+                "source": "/tmp/framey-tabmaster-candidate372-mppkd9qczt",
+                "target": "/repo",
+                "read_only": true,
+                "bind": {
+                  "create_host_path": true
+                }
+              },
+              {
+                "type": "volume",
+                "source": "keys",
+                "target": "/keys",
+                "read_only": true,
+                "volume": {}
+              },
+              {
+                "type": "bind",
+                "source": "/home/saphid/.local/state/frame-control/build-watch/catalog250/archives",
+                "target": "/audit-cache",
+                "read_only": true
+              },
+              {
+                "type": "bind",
+                "source": "/home/saphid/.local/state/frame-control/build-watch",
+                "target": "/audit-output",
+                "read_only": false
+              }
+            ]
+          }
+        },
+        "volumes": {
+          "keys": {
+            "name": "framey-tabmaster372-e2e-270461ac0df3_keys"
+          },
+          "power": {
+            "name": "framey-tabmaster372-e2e-270461ac0df3_power"
+          },
+          "thermal": {
+            "name": "framey-tabmaster372-e2e-270461ac0df3_thermal"
+          }
+        }
+      }
+    },
+    "catalogCount": 116,
+    "catalogOutcomes": {
+      "blocked": 47,
+      "installed-removed": 69
+    }
+  },
+  "currentMainCi": "pending at review; final exact main gate required",
+  "rawSha256": "2a8569a91b342496d477ed4408f071d8d52a7fc4e4778097592661a774e702ad",
+  "rawBytes": 319744,
+  "packageEvidenceRetention": "Complete package reports/packets/images remain in linked GitHub artifacts and local state, not embedded in this scoped native bundle. Original member/archive hashes and independent source/result audit are retained.",
+  "realFrameContacted": false
+}

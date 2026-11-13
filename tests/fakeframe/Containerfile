@@ -10,8 +10,13 @@ ARG BASE=archlinux:base
 FROM ${BASE}
 
 RUN (pacman-key --init && pacman-key --populate) >/dev/null 2>&1; \
-    pacman -Syu --noconfirm --needed openssh rsync python nodejs curl iproute2 procps-ng util-linux \
-    && pacman -Scc --noconfirm
+    attempts=0; \
+    until pacman -Syu --noconfirm --needed openssh rsync python nodejs curl iproute2 procps-ng util-linux; do \
+      attempts=$((attempts + 1)); \
+      [ "$attempts" -lt 5 ] || exit 1; \
+      sleep 2; \
+    done; \
+    pacman -Scc --noconfirm
 
 # The Frame's user is steamos (docs/ssh.md). Its password stands in for the
 # Developer Mode password.
@@ -36,7 +41,8 @@ RUN ln -sf ../usr/lib/os-release /etc/os-release \
     && cp /usr/bin/sleep /usr/local/lib/fakeframe/bin/vrserver \
     && cp /usr/bin/sleep /usr/local/lib/fakeframe/bin/plasmashell \
     && chmod 1777 /var/lib/fakeframe /var/log/fakeframe \
-    && chown -R steamos:steamos /home/steamos
+    && chown -R steamos:steamos /home/steamos \
+    && chmod 755 /home/steamos
 
 EXPOSE 22 32000 9999
 CMD ["python3", "/usr/local/lib/fakeframe/init.py"]

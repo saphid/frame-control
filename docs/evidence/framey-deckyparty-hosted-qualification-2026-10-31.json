@@ -1,0 +1,70 @@
+{
+  "at": "2026-10-31T19:07:51.397039+00:00",
+  "head": "1d4f64984aece0cc0b221dd41da28b2013000ddd",
+  "currentMain": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+  "hostedChecks": 18,
+  "artifacts": 8,
+  "uniqueSources": 149,
+  "verifiedHashBindings": 1363,
+  "allGitHubArchiveDigestsAndHeadsVerified": true,
+  "nativeArchitectures": [
+    "x86_64",
+    "aarch64"
+  ],
+  "casesEach": 46,
+  "deckypartyRpcsEach": [
+    15,
+    8
+  ],
+  "nativeSummary": {
+    "x86_64": {
+      "repairedReloadSeconds": [
+        0.363,
+        0.362,
+        0.363
+      ],
+      "negativeReloadSeconds": 5.274,
+      "finalStopSeconds": [
+        0.214,
+        0.164
+      ],
+      "ownedInstallRemoveVerified": true
+    },
+    "aarch64": {
+      "repairedReloadSeconds": [
+        0.363,
+        0.363,
+        0.363
+      ],
+      "negativeReloadSeconds": 5.277,
+      "finalStopSeconds": [
+        0.214,
+        0.164
+      ],
+      "ownedInstallRemoveVerified": true
+    }
+  },
+  "timerRpcsEach": [
+    31,
+    10,
+    18
+  ],
+  "hostedE2e": {
+    "tests": 53,
+    "skips": 1,
+    "testSeconds": 238.041,
+    "skip": "optional full catalog cache not mounted"
+  },
+  "allFourPackageModesVerified": true,
+  "packageBrowserScope": "Package/Syncthing controls, not DeckyParty file-manager UI",
+  "feedbackClearAtReview": true,
+  "sourcePreservesUnrelatedMainBehavior": true,
+  "mainCi": "running at review",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "realFrameContacted": false,
+  "compatibility": "partial",
+  "rawSha256": "fc278d36a5a203270378d7d752163f725b802ab7b5acb55c34a52aa641e8152b",
+  "rawBytes": 176220,
+  "rawRetention": "Native reports/source audits/logs/inventory/verifiers retained; complete package reports/packets/images remain linked hosted artifacts and local state."
+}

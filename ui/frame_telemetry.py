@@ -65,6 +65,11 @@ REPEAT_WINDOW = 600  # the same diagnostic error is sent at most once in this ma
 # (frame_host.link_failure). The message alone isn't evidence: a download's "Connection reset by
 # peer", or a file name with ssh's words in it, keeps the usual window.
 EXPECTED_CATEGORIES = ('frame_unreachable', 'frame_not_set_up', 'frame_auth')
+# Expected outcomes still belong in fixed-category usage analytics, but not in error tracking.
+NON_EXCEPTION_CATEGORIES = frozenset(('apk_needs_newer_android', 'cancelled', 'desktop_closed', 'rdp_client_missing'))
+# tool_missing is one of them only when the error names the local tool: a bare "[WinError 2]"
+# can just as well be a file missing from Frame Control itself, which is a bug worth seeing.
+NAMED_TOOL_MISSING = re.compile(r"No such file or directory: '(?:ssh|scp|rsync|adb)(?:\.exe)?'")
 DEFAULT_HOST = 'https://us.i.posthog.com'
 
 LEVELS = ('usage', 'compat', 'diagnostics')
@@ -240,27 +245,29 @@ def _scrub_url(u):
     return f'{parts.scheme}://{host}/…' if host else '<url>'
 
 
-def scrub(text, limit=2000):
+def scrub(text, limit=2000, *, _sub=re.sub):
     """Text with URLs, home folders, user names, addresses, hosts, ids and keys replaced."""
+    # The internal substitution hook lets the connection log retain source ranges through
+    # this exact pipeline. Ordinary callers keep the same substitutions and output limit.
     if text is None:
         return None
-    t = URL_RE.sub(lambda m: _scrub_url(m.group(0)), str(text))  # first, before anything splits a URL
+    t = _sub(URL_RE, lambda m: _scrub_url(m.group(0)), str(text))  # first, before anything splits a URL
     home = str(Path.home())
     if len(home) > 3:
-        t = t.replace(home, '~')
+        t = _sub(re.escape(home), '~', t)
     # A home folder's whole name ("C:\Users\Jane Doe", "/Users/O'Brien"), up to the next separator.
-    t = re.sub(r'''(?i)(/Users/|/home/|[A-Za-z]:[\\/]+Users[\\/]+)[^\\/\n"]+''', r'\1<user>', t)
+    t = _sub(r'''(?i)(/Users/|/home/|[A-Za-z]:[\\/]+Users[\\/]+)[^\\/\n"]+''', r'\1<user>', t)
     # ssh's "user@host: ..." and "user@host's password:", the whole field: the user even with
     # spaces or a DOMAIN\ prefix, the host even a full domain name. Before the email rule, which
     # would otherwise take only the last word of the user.
-    t = re.sub(r'''(?m)(?:^|(?<=: )|(?<=\| ))[^@\n:|"<]{1,64}@[\w.\[\]%:<>-]+?(?=:(?:\s|$)|'s\s)''',
+    t = _sub(r'''(?m)(?:^|(?<=: )|(?<=\| ))[^@\n:|"<]{1,64}@[\w.\[\]%:<>-]+?(?=:(?:\s|$)|'s\s)''',
                '<user>@<host>', t)
     for pattern, repl in SCRUBS:
-        t = pattern.sub(repl, t)
-    t = re.sub(r'(?<![\w.+\\<-])[\w.+\\-]+@(?=[A-Za-z\[<])', '<user>@', t)  # any other word@host
-    t = IPV6_RE.sub(_ipv6, t)
+        t = _sub(pattern, repl, t)
+    t = _sub(r'(?<![\w.+\\<-])[\w.+\\-]+@(?=[A-Za-z\[<])', '<user>@', t)  # any other word@host
+    t = _sub(IPV6_RE, _ipv6, t)
     for name in _user_names():
-        t = re.sub(r'\b%s\b' % re.escape(name), '<user>', t)
+        t = _sub(r'\b%s\b' % re.escape(name), '<user>', t)
     return t[:limit]
 
 
@@ -276,7 +283,9 @@ CATEGORIES = [
     ('apk_wrong_abi', re.compile(r'no arm64-v8a build')),
     ('layer_missing', re.compile(r'OpenXR compatibility layer')),
     ('apk_repack_failed', re.compile(r'could not prepare the APK for the Frame')),
+    ('rdp_client_missing', re.compile(r'No RDP client found: install Remmina or FreeRDP')),
     ('tool_missing', re.compile(r"\[WinError 2\]|No such file or directory: '(?:ssh|scp|rsync|adb)")),
+    ('desktop_closed', re.compile(r'plasmashell is not running')),
     ('apk_unreadable', re.compile(r'(?i)not a zip|bad apk|AndroidManifest|ApkError|unexpected package name|'
                                   r'not a readable APK|not an APK|APK manifest|in the APK (?:uses a compression|is )')),
     ('cant_run_on_frame', re.compile(r"can't run on the Frame")),
@@ -300,16 +309,19 @@ CATEGORIES = [
     # Anything ssh says about its own connection: "ssh: connect to host … port 22: <reason>" (Windows
     # says "Unknown error"), a dropped shared connection (mux_client_…, client_loop), and Windows'
     # "banner exchange: Connection to UNKNOWN port -1" (its ssh can't name a peer whose connect
-    # failed late). Not a bare "ssh exited 255": a command on the Frame can exit 255 too.
-    ('frame_unreachable', re.compile(r'(?i)timed out|Connection (?:refused|reset|closed)|No route to host|'
+    # failed late). A silent exit 255 is marked where ssh ran, not classified from these words.
+    ('frame_unreachable', re.compile(r'(?i)timed out|Connection (?:refused|reset|closed)|'
+                                     r'Connection to \S+ closed by remote host|No route to host|'
                                      r'Network is unreachable|Host is down|asleep|kex_exchange|banner exchange|'
-                                     r'ssh: connect to host |mux_client_|client_loop: ')),
+                                     r'ssh: connect to host |mux_client_|client_loop: |'
+                                     r'close - IO is still pending on closed socket')),
+    ('ssh_crashed', re.compile(r'ssh (?:exited 3221226091|crashed on this computer)')),
     ('frame_disk_full', re.compile(r'(?i)No space left|disk full|ENOSPC')),
     # rsync or scp failed for another reason ("connection unexpectedly closed", or no words at all).
     ('copy_failed', re.compile(r'\Acopying .+ to the Frame failed: ')),
     ('download_failed', re.compile(r'(?i)HTTP (?:Error )?\d{3}|URLError|download|certificate verify failed')),
     ('flatpak', re.compile(r'(?i)flatpak|flathub')),
-    ('cancelled', re.compile(r'(?i)cancel')),
+    ('cancelled', re.compile(r'(?i)cancel|ssh exited 3221225773')),
     ('lepton', re.compile(r'(?i)lepton|podman|instance')),
 ]
 
@@ -329,6 +341,8 @@ def categorize(message):
         m = pattern.search(text)
         if m:
             return name, (m.group(0) if name == 'android_installer' else None)
+    if link_failed(message):
+        return 'frame_unreachable', None
     return 'other', None
 
 
@@ -470,8 +484,11 @@ def diagnostic(where, error, tb=None):
     """An error for the opt-in diagnostics level: scrubbed text, and a traceback if there is one."""
     if not enabled('diagnostics'):
         return
-    message = scrub(error)
     category = categorize(error)[0]
+    if category in NON_EXCEPTION_CATEGORIES or (category == 'tool_missing'
+                                                 and NAMED_TOOL_MISSING.search(str(error or ''))):
+        return
+    message = scrub(error)
     now = time.time()
     with _lock:
         if category in EXPECTED_CATEGORIES and link_failed(error):

@@ -1,0 +1,32 @@
+# The Frame simulator: the e2e fake Frame (tests/fakeframe/Containerfile, built
+# as fakeframe-frame) plus stand-ins for the parts a person or agent wants to
+# see while testing by hand: SteamVR's vrcmd and screenshot API, the headset
+# view device and a proximity sensor. Rendering is a test pattern, not SteamVR.
+# scripts/frame-sim.sh builds both images; see docs/testing.md.
+ARG FRAME_IMAGE=fakeframe-frame
+
+# Valve's libopenvr_api.so stand-in (openvr/fake_openvr.c), built for the host's
+# architecture: the simulator runs natively, like the fake Frame.
+FROM ${FRAME_IMAGE} AS openvr
+RUN pacman -Syu --noconfirm --needed gcc >/dev/null
+COPY openvr/fake_openvr.c /src/
+RUN gcc -O2 -Wall -Werror -shared -fPIC -o /src/libopenvr_api.so /src/fake_openvr.c
+
+FROM ${FRAME_IMAGE}
+# ffmpeg is on the Frame (frame_clips.py uses SteamOS's n7.0); the font is for the
+# scene's text; qemu-user runs arm64 titles on an x86-64 computer (sim/rootfs/.../launcher).
+RUN attempts=0; \
+    extra=$([ "$(uname -m)" = x86_64 ] && echo qemu-user); \
+    until pacman -Syu --noconfirm --needed ffmpeg ttf-dejavu $extra; do \
+      attempts=$((attempts + 1)); \
+      [ "$attempts" -lt 5 ] || exit 1; \
+      sleep 2; \
+    done; \
+    pacman -Scc --noconfirm
+COPY rootfs/ /
+COPY --from=openvr /src/libopenvr_api.so /opt/steamvr/bin/linuxarm64/libopenvr_api.so
+RUN chmod 755 /usr/local/bin/ffmpeg /usr/local/bin/frame-sim-ctl /opt/steamvr/bin/linuxarm64/vrcmd \
+      /usr/local/lib/fakeframe/sim/sim-init /usr/local/lib/fakeframe/sim/scene.py \
+      /usr/local/lib/fakeframe/launcher \
+    && mkdir -p /etc/fakeframe /var/lib/fakeframe/sim /var/lib/fakeframe-sim
+CMD ["python3", "/usr/local/lib/fakeframe/sim/sim-init"]

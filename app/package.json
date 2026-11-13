@@ -1,7 +1,7 @@
 {
   "name": "frame-control",
   "productName": "Frame Control",
-  "version": "0.4.7",
+  "version": "0.4.62",
   "description": "Desktop app for managing a Valve Steam Frame over SSH",
   "private": true,
   "main": "main.js",
@@ -9,10 +9,11 @@
   "scripts": {
     "start": "env -u ELECTRON_RUN_AS_NODE electron .",
     "icon": "env -u ELECTRON_RUN_AS_NODE electron build/make-icon.js",
-    "dist": "sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac arm64 && electron-builder --mac --arm64 --publish never",
-    "dist:dir": "sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac arm64 && electron-builder --mac --arm64 --dir",
+    "dist": "FRAME_MAC_ARCH=arm64 sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac arm64 && electron-builder --mac --arm64 --publish never",
+    "dist:dir": "FRAME_MAC_ARCH=arm64 sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac arm64 && electron-builder --mac --arm64 --dir",
     "dist:linux": "node build/fetch-deps.js linux x64 arm64 && electron-builder --linux --x64 --arm64 --publish never",
-    "dist:win": "node build/fetch-deps.js win x64 && electron-builder --win --x64 --publish never"
+    "dist:win": "node build/fetch-deps.js win x64 && electron-builder --win --x64 --publish never",
+    "dist:mac:x64": "FRAME_MAC_ARCH=x86_64 sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac x64 && electron-builder --mac --x64 --publish never"
   },
   "devDependencies": {
     "electron": "^44.4.5",
@@ -36,9 +37,12 @@
     },
     "files": [
       "main.js",
+      "obs-source.js",
       "preload.js",
       "install-link.js",
       "updater.js",
+      "preferences.js",
+      "login-item.js",
       "meta-signin.js",
       "package.json",
       "build/icon.png"
@@ -52,8 +56,30 @@
           "*.html",
           "*.js",
           "*.css",
-          "telemetry.json"
+          "vendor/hls-1.6.13.light.min.js",
+          "vendor/hls-LICENSE",
+          "vendor/react-18.3.1.min.js",
+          "vendor/REACT-LICENSE.txt",
+          "vendor/react-dom-18.3.1.min.js",
+          "vendor/REACT-DOM-LICENSE.txt",
+          "telemetry.json",
+          "framey-compatibility.json"
         ]
+      },
+      {
+        "from": "../ui/vendor/deckyfileserver-1.2.0",
+        "to": "ui/vendor/deckyfileserver-1.2.0",
+        "filter": ["*.gz", "*.txt", "README.md"]
+      },
+      {
+        "from": "../ui/vendor/localsend-0.4.5",
+        "to": "ui/vendor/localsend-0.4.5",
+        "filter": ["*.gz", "*.txt", "README.md"]
+      },
+      {
+        "from": "../ui/vendor/psutil-7.2.2",
+        "to": "ui/vendor/psutil-7.2.2",
+        "filter": ["*.whl", "LICENSE.txt", "README.md"]
       },
       {
         "from": "../ui/apk_sources",
@@ -67,7 +93,12 @@
         "from": "../scripts",
         "to": "scripts",
         "filter": [
-          "*.sh"
+          "*.sh",
+          "obs-headset-source.py",
+          "frame_power_sample.py",
+          "frame_power_report.py",
+          "build-framey-fileserver.py",
+          "build-framey-localsend.py"
         ]
       },
       {
@@ -78,6 +109,16 @@
           "*.py",
           "*.js"
         ]
+      },
+      {
+        "from": "../frame/nxnative",
+        "to": "frame/nxnative",
+        "filter": ["*.py", "*.patch", "README.md", "LICENSE.nxnative", "profiles/**/*.tsv", "profiles/**/*.h", "profiles/**/*.md"]
+      },
+      {
+        "from": "../frame/love",
+        "to": "frame/love",
+        "filter": ["*.py", "*.java", "README.md", "LICENSE.SDL.txt"]
       },
       {
         "from": "../frame/openxr-compat",
@@ -197,7 +238,16 @@
         "zip"
       ],
       "icon": "build/icon.png",
-      "artifactName": "Frame-Control-win-${arch}.${ext}"
+      "artifactName": "Frame-Control-win-${arch}.${ext}",
+      "extraResources": [
+        {
+          "from": "build/desktop/${os}-${arch}",
+          "to": "desktop/bundle",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,

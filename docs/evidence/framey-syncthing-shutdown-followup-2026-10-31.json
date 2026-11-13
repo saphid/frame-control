@@ -1,0 +1,38 @@
+{
+  "at": "2026-10-31T04:45:46.446906+00:00",
+  "failedPr": 503,
+  "head": "d8aac9de3e796fb9ff7a6c0a68e67f5bf6b24ab3",
+  "main": "8ebe9acda1cb1174120f07fb42b39afcc1ed8c9c",
+  "job": 124443207697,
+  "run": 41169177514,
+  "artifact": 13030467264,
+  "artifactSha256": "4b68d250c2de68a7828d17085a45f5e8936eefc5a2b8c6c0a2bfa0b97f494b10",
+  "jobLogSha256": "fa266920c15e994d3735666577b10deaf586d393856dcd3fc32a40ba3dfd96ea",
+  "exactHeadCheckoutVerified": true,
+  "failure": "Actual raw-peer runtime probe: owned helper remained in /proc after loader shutdown. Loader log retains CancelledError during shutdown_plugins.",
+  "buildHelperSha256": "bef65e425ff895dd40e932fdae424376988e6abed17a9527e4eda383002a578d",
+  "candidateSourceSha256": {
+    "scripts/framey-test-syncthing-candidate.py": "d7f6fe692c949f51f4ddb82dff9e38410c0ac1125b725079bfdf004eec95ff99",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/syncthing_candidate.py": "ed70a32ed72faf9d134b49f9370ed4cb6112ab28da98e8a5d8f69860b8c7981f",
+    "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+    "ui/vendor/syncthing-0.2.7/watchdog.patch": "4620596a1b2f19fec343d67b7706125e4e421eb59c6f3da631263314adee81e5",
+    "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+  },
+  "runtimeSourceSha256": {
+    "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+    "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+    "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+    "ui/vendor/syncthing-0.2.7/watchdog.patch": "4620596a1b2f19fec343d67b7706125e4e421eb59c6f3da631263314adee81e5",
+    "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+  },
+  "allListedSourcesByteIdenticalToMain": true,
+  "candidateProbePassedBeforeRuntimeFailure": true,
+  "artifactDoesNotContainRuntimeResultOrFullLoaderConsole": true,
+  "helperStatusAtFailureNotRetained": true,
+  "preciseShutdownCauseUnproven": true,
+  "existingRelatedFixPr": 508,
+  "disposition": "Do not rerun unchanged failed head or weaken shutdown assertions. Qualify existing parent-lifetime fix on current main before refreshing dependent PR503. No duplicate fix PR.",
+  "installerEnabled": false,
+  "realFrameContacted": false
+}

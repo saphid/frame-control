@@ -93,7 +93,7 @@ Paste this where the download is, with your manifest's URL in `MANIFEST`:
 <script>
 (() => {
   const MANIFEST = "https://example.com/mygame/frame-control.json";
-  const GET_APP = "https://github.com/saphid/steam-frame/releases/latest";
+  const GET_APP = "https://github.com/saphid/frame-control/releases/latest";
   const button = document.getElementById("frame-control-install");
   button.href = "frame-control://install?manifest=" + encodeURIComponent(MANIFEST);
   button.addEventListener("click", () => {

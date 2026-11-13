@@ -1,0 +1,92 @@
+name: Syncthing candidate browser
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/framey-test-syncthing-browser.py'
+      - 'ui/vendor/syncthing-0.2.7/frontend.patch'
+      - 'ui/framey-host.js'
+      - 'ui/framey_panel.py'
+      - 'ui/vendor/react*.js'
+      - '.github/workflows/syncthing-browser.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/framey-test-syncthing-browser.py'
+      - 'ui/vendor/syncthing-0.2.7/frontend.patch'
+      - 'ui/framey-host.js'
+      - 'ui/framey_panel.py'
+      - 'ui/vendor/react*.js'
+      - '.github/workflows/syncthing-browser.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  candidate-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Fetch exact published frontend archive
+        run: |
+          curl --fail --location --max-time 60 --max-filesize 52428800 \
+            --output "$RUNNER_TEMP/syncthing.zip" \
+            https://cdn.tzatzikiweeb.moe/file/steam-deck-homebrew/versions/27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4.zip
+      - name: Reproduce published setup failure and exercise the candidate
+        run: |
+          browser="$(command -v google-chrome)"
+          test -n "$browser"
+          mkdir "$RUNNER_TEMP/syncthing-browser"
+          rc=0
+          python3 scripts/framey-test-syncthing-browser.py --archive "$RUNNER_TEMP/syncthing.zip" \
+            --browser "$browser" --output "$RUNNER_TEMP/syncthing-browser/original" || rc=$?
+          test "$rc" -eq 1
+          python3 - "$RUNNER_TEMP/syncthing-browser/original/result.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          assert r['passed'] is False and r['welcome'] is False
+          assert r['sourceUnchanged'] is True and r['browserReaped'] is True
+          assert r['calls'] and all(c['method']=='framey_http_fetch' for c in r['calls'])
+          assert 'Loading' in r['text'] and r['realBackend'] is False
+          PY
+          python3 scripts/framey-test-syncthing-browser.py --archive "$RUNNER_TEMP/syncthing.zip" \
+            --browser "$browser" --output "$RUNNER_TEMP/syncthing-browser/fresh" --candidate --wizard
+          python3 scripts/framey-test-syncthing-browser.py --archive "$RUNNER_TEMP/syncthing.zip" \
+            --browser "$browser" --output "$RUNNER_TEMP/syncthing-browser/migrating" --candidate --migrating
+          python3 scripts/framey-test-syncthing-browser.py --archive "$RUNNER_TEMP/syncthing.zip" \
+            --browser "$browser" --output "$RUNNER_TEMP/syncthing-browser/configured" --candidate --configured
+          python3 scripts/framey-test-syncthing-browser.py --archive "$RUNNER_TEMP/syncthing.zip" \
+            --browser "$browser" --output "$RUNNER_TEMP/syncthing-browser/finish-navigation" --candidate --wizard --finish-navigation
+          python3 scripts/framey-test-syncthing-browser.py --archive "$RUNNER_TEMP/syncthing.zip" \
+            --browser "$browser" --output "$RUNNER_TEMP/syncthing-browser/manual-port" --candidate --wizard --manual-port --finish-navigation
+      - name: Bind browser evidence to exact head
+        if: always()
+        env:
+          AUDIT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,subprocess
+          from pathlib import Path
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert head==os.environ['AUDIT_HEAD']
+          names=['scripts/framey-test-syncthing-browser.py','ui/vendor/syncthing-0.2.7/frontend.patch',
+                 'ui/framey-host.js','ui/framey_panel.py','.github/workflows/syncthing-browser.yml']
+          report={'headSha':head,'sourceSha256':{n:hashlib.sha256(Path(n).read_bytes()).hexdigest() for n in names}}
+          Path(os.environ['RUNNER_TEMP'],'syncthing-browser-exact-head.json').write_text(json.dumps(report,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: syncthing-browser-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            ${{ runner.temp }}/syncthing-browser
+            ${{ runner.temp }}/syncthing-browser-exact-head.json
+          if-no-files-found: error

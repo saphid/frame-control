@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Stub for qdbus6: records Klipper setClipboardContents calls, the way
 Frame Control sends text to the headset desktop's clipboard (server.PASTE,
-verified 2026-09-25)."""
+verified 2026-09-25), and answers getClipboardContents with the last one
+(server.COPY). Printing the string and a newline is how qdbus prints a
+returned QString; getClipboardContents itself is a guess, not seen on a headset."""
 import os
 import sys
 
@@ -15,5 +17,10 @@ if args[:3] == ['org.kde.klipper', '/klipper', 'org.kde.klipper.klipper.setClipb
         sys.exit('Could not connect to D-Bus server')
     with fs.update() as s:
         s['clipboard'].append(args[3])
+elif args == ['org.kde.klipper', '/klipper', 'org.kde.klipper.klipper.getClipboardContents']:
+    if not os.environ.get('DBUS_SESSION_BUS_ADDRESS'):
+        sys.exit('Could not connect to D-Bus server')
+    clips = fs.read()['clipboard']
+    sys.stdout.buffer.write((clips[-1] if clips else '').encode() + b'\n')
 else:
     sys.exit(f'qdbus6 stub: unsupported {args}')

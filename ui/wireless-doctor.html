@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Linux Wireless Adapter doctor · Frame Control</title>
+<style>
+:root{color-scheme:dark;--bg:#101820;--card:#1b2838;--text:#e4edf5;--sub:#acbccb;--line:#3a5065;--blue:#66c0f4;--warn:#f0c67a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,sans-serif}main{max-width:960px;margin:auto;padding:32px 24px 64px}a{color:var(--blue)}h1{font-size:30px;line-height:1.2;margin:20px 0 12px}h2{font-size:19px;margin:0 0 10px}p{margin:8px 0 16px}.sub{color:var(--sub)}.badge{display:inline-block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin-bottom:8px}section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px;margin:18px 0}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}button,select{font:inherit;min-height:44px;border:1px solid var(--line);border-radius:5px;padding:9px 14px;background:#263f54;color:var(--text)}button{cursor:pointer}button.primary{background:#205b81;border-color:var(--blue)}button:disabled{opacity:.5;cursor:default}select{max-width:100%;width:100%}label{display:block;margin:16px 0 6px}pre{font:13px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:#111d29;padding:14px;border-radius:5px}.status{font-size:12px;font-weight:700;text-transform:uppercase;margin-right:10px;color:var(--blue)}.warning .status{color:var(--warn)}.unknown .status{color:var(--sub)}#message{min-height:24px}summary{cursor:pointer;min-height:40px;overflow-wrap:anywhere}:focus-visible{outline:2px solid var(--blue);outline-offset:4px}[hidden]{display:none!important}@media(max-width:540px){main{padding:20px 16px}h1{font-size:25px}section{padding:16px}.row button{flex:1}}
+</style>
+</head>
+<body><main>
+<a id="back" href="/#devices">← Devices &amp; connection</a>
+<header><h1>Linux Wireless Adapter doctor</h1><span class="badge">This PC · Read-only · On demand</span>
+<p>Find what Linux can see before choosing a fix. This doctor reads local USB, driver, radio and network manager evidence. It does not connect to the Frame or change your system.</p></header>
+<section aria-labelledby="chooseTitle"><h2 id="chooseTitle">1. Find the adapter</h2>
+<p class="sub">The Steam Frame adapter’s hardware ID is unverified here. Nothing is selected automatically. All USB devices are listed so you can select one even when no wireless interface appears.</p>
+<button id="inventory" class="primary">Read PC device inventory</button>
+<div id="selection" hidden><label for="device">Select the device you want to check</label><select id="device"><option value="">Choose an observed device…</option></select>
+<p class="sub">Compare the list before and after reconnecting the adapter when safe. A USB name or ID alone does not confirm that it is Valve’s adapter.</p>
+<button id="diagnose" class="primary" disabled>Check selected device</button></div>
+<p id="message" role="status" aria-live="polite">No checks have run.</p></section>
+<div id="results" aria-live="polite"></div>
+<section id="reportSection" hidden aria-labelledby="reportTitle"><h2 id="reportTitle">Local evidence report</h2>
+<p class="sub">Review before sharing. The report includes observed USB IDs and product labels, interface names, driver names and local permission metadata. It excludes Wi-Fi names, MAC/IP addresses, USB serial numbers, credentials and raw command output.</p>
+<div class="row"><button id="download">Save JSON report</button><button id="copy">Copy JSON report</button></div>
+<details><summary>Review JSON</summary><pre id="json"></pre></details></section>
+<p class="sub">No repairs, root prompts, driver installs, security changes or network configuration changes. A clean report does not prove Steam streaming support or resolve the Ubuntu/Kubuntu 26.04 complaint.</p>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const key = new URLSearchParams(location.search).get('key') || '1';
+$('back').href = '/?key=' + encodeURIComponent(key) + '#devices';
+let report = null;
+const make = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
+function render(data) {
+  report = data;
+  $('json').textContent = JSON.stringify(data, null, 2);
+  $('reportSection').hidden = false;
+  $('results').replaceChildren();
+  for (const c of data.checks) {
+    const box = document.createElement('section'); box.className = c.status;
+    const title = make('h2', c.title); const status = make('span', c.status + ' · '); status.className = 'status'; title.prepend(status);
+    box.append(title, make('p', c.suggestion));
+    if (c.evidence.length) { const d = document.createElement('details'); d.append(make('summary', 'Show evidence'), make('pre', c.evidence.join('\n'))); box.append(d); }
+    $('results').append(box);
+  }
+}
+async function run(device) {
+  $('inventory').disabled = $('diagnose').disabled = $('device').disabled = true;
+  $('message').textContent = device ? 'Reading selected device evidence…' : 'Reading PC inventory…';
+  // Clear previous results first: a removed device or failed read must not leave a healthy old report.
+  report = null; $('results').replaceChildren(); $('reportSection').hidden = true;
+  try {
+    const response = await fetch('/api/wireless-doctor' + (device ? '?device=' + encodeURIComponent(device) : ''), {headers:{'X-Frame-UI':key}});
+    const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Could not read local evidence');
+    render(data);
+    const select = $('device'); select.replaceChildren(make('option', 'Choose an observed device…')); select.firstChild.value = '';
+    for (const d of [...data.interfaces, ...data.usb]) {
+      const text = d.name ? `${d.id} · driver ${d.driver || 'unknown'} · ${d.usb || 'USB not correlated'}` : `${d.id} · ${d.vid || '?'}:${d.pid || '?'} · ${d.product || 'unnamed USB device'}`;
+      const option = make('option', text); option.value = d.id; select.append(option);
+    }
+    select.value = device || ''; $('selection').hidden = !data.supported || select.options.length < 2;
+    $('message').textContent = !data.supported ? 'Available only on a Linux PC.' : device ? 'Checks finished. Review evidence and limits below.' : 'Inventory read. Select the intended device to continue.';
+  } catch (e) { $('message').textContent = e.message; }
+  finally { $('inventory').disabled = $('device').disabled = false; $('diagnose').disabled = !$('device').value; }
+}
+$('inventory').onclick = () => run();
+$('device').onchange = () => {
+  report = null; $('results').replaceChildren(); $('reportSection').hidden = true;
+  $('diagnose').disabled = !$('device').value;
+  $('message').textContent = $('device').value ? 'Selection changed. Check this device for fresh evidence.' : 'Choose the intended device.';
+};
+$('diagnose').onclick = () => run($('device').value);
+$('download').onclick = () => {
+  if (!report) return;
+  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2) + '\n'], {type:'application/json'}));
+  const a = make('a', ''); a.href = url; a.download = 'linux-wireless-doctor.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+$('copy').onclick = async () => {
+  if (!report) return;
+  try { await navigator.clipboard.writeText(JSON.stringify(report, null, 2)); $('message').textContent = 'Report copied. Review it before sharing.'; }
+  catch { $('message').textContent = 'Clipboard unavailable. Use Save JSON report or select the JSON below.'; }
+};
+</script></body></html>

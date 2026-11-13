@@ -1,7 +1,7 @@
 """My itch.io purchases: the account key, owned games and their Android downloads.
 
 Offline: a fake HTTPS layer under urllib's real opener (so redirects and header
-handling are the real ones) serves the recorded JSON in fixtures/itch_account.
+handling are the real ones) serves the hand-made JSON in fixtures/itch_account.
 """
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import contextlib, email.message, http.client, io, ipaddress, json, os, socket, sys, tempfile, threading, time
@@ -303,22 +303,47 @@ class ItchPurchases(unittest.TestCase):
         self.assertTrue(search.obtainable({'id': itch.OWNED, 'owned': True}, entry))
         self.assertTrue(search.obtainable({'id': 'fdroid'}, {'free': True}))
 
+    def test_owned_unknown_vr_does_not_bypass_category_or_phone_filters(self):
+        entry = {'source': itch.OWNED, 'id': '1', 'name': 'Dolphin emulator',
+                 'summary': '', 'owned': True, 'vr': None}
+        self.assertEqual(search.group([entry], vr=True, category='games'), [])
+        self.assertEqual(len(search.group([entry], vr=True, category='emulators')), 1)
+        phone = dict(entry, name='Phone keyboard')
+        self.assertEqual(search.group([phone], vr=True), [])
+        self.assertEqual(len(search.group([phone], vr=True, phone=True)), 1)
+
     def test_android_upload_selection(self):
         uploads = json.loads((FIX / 'uploads.json').read_text())['uploads']
-        # .apk files before other Android files, full games before demos, newest first; never
-        # soundtracks, externally hosted files or other platforms.
-        self.assertEqual([u['id'] for u in account.android_uploads(uploads)], [503, 502, 504, 505])
-        self.assertTrue(account.is_android({'filename': 'Game.APK'}))
-        self.assertTrue(account.is_android({'filename': 'game.zip', 'p_android': True}))
-        self.assertTrue(account.is_android({'filename': 'game.zip', 'platforms': {'android': 'all'}}))
-        self.assertFalse(account.is_android({'filename': 'game.zip', 'traits': ['p_windows']}))
+        # Direct APK files only, full games before demos, newest first; never
+        # archives, soundtracks, externally hosted files or other platforms.
+        self.assertEqual([u['id'] for u in account.android_uploads(uploads)], [503, 502, 504])
+        self.assertEqual(account.android_uploads([{'id': 1, 'filename': 'Game.APK'}]),
+                         [{'id': 1, 'filename': 'Game.APK'}])
         self.assertEqual(account.android_uploads({'not': 'a list'}), [])
+
+    def test_android_archives_are_page_only_and_never_downloaded(self):
+        self.connect()
+        uploads = [{'id': 505, 'filename': 'android-build.zip', 'traits': ['p_android']},
+                   {'id': 506, 'filename': 'game.apks', 'platforms': {'android': 'all'}},
+                   {'id': 507, 'filename': 'game.xapk', 'p_android': True}]
+        self.web.route('api.itch.io/games/341190/uploads', {'uploads': uploads})
+        entry = search.details(itch.OWNED, '341190')
+        self.assertFalse(entry['downloadable'])
+        self.assertEqual(entry['versions'], [])
+        self.assertEqual(entry['page'], 'https://maker.itch.io/orbit-garden')
+        self.assertIn('APK format', entry['download_note'])
+        with self.assertRaisesRegex(SourceError, 'APK format'):
+            itch.download(self.owned_source(), '341190')
+        with self.assertRaisesRegex(SourceError, 'developer page'):
+            search.install(itch.OWNED, '341190')
+        self.assertFalse(any('/download' in urllib.parse.urlsplit(url).path for url, _ in self.web.calls))
+        self.assertEqual(self.connected, [])  # no storage request or installer path
 
     def test_details_offer_the_android_uploads(self):
         self.connect()
         entry = itch.details(self.owned_source(), '341190')
         self.assertTrue(entry['downloadable'])
-        self.assertEqual([v['upload_id'] for v in entry['versions']], [503, 502, 504, 505])
+        self.assertEqual([v['upload_id'] for v in entry['versions']], [503, 502, 504])
         self.assertEqual((entry['version'], entry['size'], entry['updated']), ('Quest 1.2', 115343360, '2026-04-03'))
         self.assertTrue(entry['versions'][2]['demo'])
         url = self.web.urls('api.itch.io/games/341190/uploads')[0]

@@ -1,0 +1,644 @@
+{
+  "at": "2026-10-31T15:52:29.182970+00:00",
+  "sourceRevision": "4b9d5b22a29026683c031d2a2fc0298c6b839c76",
+  "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+  "priorHead": "d7b56564459cbaf23e13746f6991c7c8900e7b59",
+  "sourceAudit": {
+    "at": "2026-10-31T15:47:58.104284+00:00",
+    "sourceRevision": "4b9d5b22a29026683c031d2a2fc0298c6b839c76",
+    "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+    "priorHead": "d7b56564459cbaf23e13746f6991c7c8900e7b59",
+    "normalMerge": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorSteambackBodyPreserved": true,
+    "all37RuntimeDispatchOccurrencesVerified": true,
+    "mainOtherInstallerBranchesPreserved": true,
+    "onlyPriorSteambackInstallerBranchAdded": true,
+    "allMainApplyScriptDispatchesPreserved": true,
+    "freeLoaderRuntimeAndFixtureMatchMain": true,
+    "other115CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleInventoryUnchanged": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "014f403faba02d9f5f9ca1d7215a87dc35212ed88df7b74692cf3900205431ad",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "570760993040c8b2a66eea30cdf0664534255d79808f568da482925de434a49c",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/steamback_private.py": "1285b8d126870aaf23b1898fce2b1c27329ebd29a63659fa2866d4e4c2ada4f3",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "4796cedd3918ca753e9da50e63faef8ae6c8042e14bbbf9de120edac96160444",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "533f3d798bbec4e07c55aad8c21a5aea1f279092020586a9fa4932903223f9f7",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeInputCount": 18
+  },
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "014f403faba02d9f5f9ca1d7215a87dc35212ed88df7b74692cf3900205431ad",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "570760993040c8b2a66eea30cdf0664534255d79808f568da482925de434a49c",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/steamback_private.py": "1285b8d126870aaf23b1898fce2b1c27329ebd29a63659fa2866d4e4c2ada4f3",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "4796cedd3918ca753e9da50e63faef8ae6c8042e14bbbf9de120edac96160444",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "533f3d798bbec4e07c55aad8c21a5aea1f279092020586a9fa4932903223f9f7",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "all18NativeInputsVerified": true,
+  "installedSource": {
+    "archiveSha256": "ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3",
+    "backendSha256": "4aab5d758aceca5889427a74f4ac0edd535e018ce9a403a9abd23c2e3b8882a0",
+    "originalBackendSha256": "3a61cae9e9fdfae1cf69eb73fdd8a15d47c10858f6d78fec4c0e10e5bb52abfb",
+    "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "preservedArchiveMembers": {
+      "LICENSE": "b9937ea3457e02c2389c348077c47c90bbebdb56b78b7d51dbf7e393499135a4",
+      "main.py": "3a61cae9e9fdfae1cf69eb73fdd8a15d47c10858f6d78fec4c0e10e5bb52abfb",
+      "package.json": "77c058dcab5f24e41b72ec3f05c0362f702b49e37a36d837ea5a844f7c2356a5",
+      "plugin.json": "90b6b04ce5fad80a87bec9ba52ef100055f98467984dadf216396cad70b5c054",
+      "README.md": "20a2622c602d39010869cb555b48ce595c2b43810f39890d7411422c43c01d33",
+      "dist/index.js": "2430a24b42557db25dd55eaebfc9e4ec3daf3040f7def8c8429495075edf0f28",
+      "bin/upload-release.sh": "105912528709fb6ab22e062c57b67138bd1e469c80a4b0742d4253e3f9f733a5",
+      "bin/run.sh": "c964a819723c5ec7ecaf5a5fdc3d74f0009e8c13da6b791d3b1c122e46fbfa47",
+      "bin/test-release.sh": "ae7ffeb7615160857f530bb8c146315a252dd127617c25cd0cd0ff367a7e99db",
+      "bin/regen-docs.sh": "cef6c7fa4e78838d6084d5a4c4f97ce36b26e82e2c36d228b914090c57bc7fde",
+      "py_modules/steamback/test.py": "bb31645415ac9f63d9981bc3b4ceae954faa328985c37ee467f82e9f1725429a",
+      "py_modules/steamback/__init__.py": "b8aee91a976acc24e41a786e2c8819ac51ab1ce9a798c43bdd0e97070c710317",
+      "py_modules/steamback/util.py": "f6b265b6e106e5721b67759dea47fa6c579d0a7aaa67a7498306d7b5d1f0aa44",
+      "py_modules/steamback/gui.py": "03d44ad0e7139a81fe135ca4d8e22f71a6010a0fdbba31aa66c4c39565dc82f1",
+      "py_modules/steamback/data/icons8-refresh-96.png": "a614f2531d9deb28f59c44cc84b41c12cade252c3822ff1c22c2639a953cd76c",
+      "py_modules/steamback/__main__.py": "b4489218f621d5bc5f05148ca10e4c252ff1bb046fb7256e443ebaac794f95bb",
+      "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "py_modules/.gitignore": "0acaff1a38c1f04a077aa9dbfbe5e1750c863993c101532ba75270bfe90632ef"
+    },
+    "archiveMemberCountIncludingDuplicates": 26,
+    "receipt": {
+      "storeId": 46,
+      "sha256": "ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3",
+      "version": "1.0.0-1",
+      "compatShims": [
+        "steamback-ipc-eof"
+      ]
+    },
+    "ownedRemovalVerified": true
+  },
+  "nativeCases": [
+    {
+      "negative": false,
+      "rpcs": 11,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "351245214"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "351245246"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "351245246"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "351245260"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.239,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793461702.6894515"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steamback (v1.0.0-1)\n[plugin][INFO]: Stopping response listener for Steamback (v1.0.0-1)\nCalling Loader unload function for Steamback (v1.0.0-1).\nAttempting to unload with plugin Steamback (v1.0.0-1)'s \"_unload\" function.\n\nSteamback exiting!\nUnloaded Steamback (v1.0.0-1)\n\nStopping event loop\n[plugin][INFO]: Plugin Steamback (v1.0.0-1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "ef9529bea31f266bd7ed355a0e00cc97c744002fad8f4bb3b30abe97fb249100",
+          "cleanShutdownVerified": true
+        },
+        {
+          "loaderPid": 23,
+          "descendantsBefore": {
+            "24": {
+              "state": "S",
+              "parent": 23,
+              "start": "351245542"
+            },
+            "33": {
+              "state": "S",
+              "parent": 24,
+              "start": "351245591"
+            },
+            "34": {
+              "state": "S",
+              "parent": 24,
+              "start": "351245591"
+            },
+            "35": {
+              "state": "S",
+              "parent": 34,
+              "start": "351245606"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 33,
+              "returncode": 0
+            },
+            {
+              "pid": 34,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.214,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steamback (v1.0.0-1)\n[plugin][INFO]: Stopping response listener for Steamback (v1.0.0-1)\nCalling Loader unload function for Steamback (v1.0.0-1).\nAttempting to unload with plugin Steamback (v1.0.0-1)'s \"_unload\" function.\n\nSteamback exiting!\nUnloaded Steamback (v1.0.0-1)\n\nStopping event loop\n[plugin][INFO]: Plugin Steamback (v1.0.0-1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "ef9529bea31f266bd7ed355a0e00cc97c744002fad8f4bb3b30abe97fb249100",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "saveSnapshots": [
+        {
+          "before": {
+            "runtime": {
+              "saves2/save_777_1793461704860/save.dat": {
+                "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                "base64": "b2xk"
+              },
+              "saves2/save_777_1793461704860.json": {
+                "sha256": "a434bc61b9c69b5a0293ac2490ae40a1f927e0fa6ac1755c51bdb252f2e91a4c",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzA0ODYwLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjE3MDQ4NjAiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+              },
+              "saves2/undo_777_1793461704865/save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              },
+              "saves2/undo_777_1793461704865.json": {
+                "sha256": "83b3c2cae6c5742c8f09353fe7f834340974a319bc74e65a720d68e0e7d80932",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzA0ODY1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjE3MDQ4NjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+              }
+            },
+            "remote": {
+              "save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              }
+            }
+          },
+          "after": {
+            "runtime": {
+              "saves2/save_777_1793461704860/save.dat": {
+                "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                "base64": "b2xk"
+              },
+              "saves2/save_777_1793461704860.json": {
+                "sha256": "a434bc61b9c69b5a0293ac2490ae40a1f927e0fa6ac1755c51bdb252f2e91a4c",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzA0ODYwLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjE3MDQ4NjAiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+              },
+              "saves2/undo_777_1793461704865/save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              },
+              "saves2/undo_777_1793461704865.json": {
+                "sha256": "83b3c2cae6c5742c8f09353fe7f834340974a319bc74e65a720d68e0e7d80932",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzA0ODY1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjE3MDQ4NjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+              }
+            },
+            "remote": {
+              "save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              }
+            }
+          }
+        },
+        {
+          "before": {
+            "runtime": {
+              "saves2/save_777_1793461704860/save.dat": {
+                "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                "base64": "b2xk"
+              },
+              "saves2/save_777_1793461704860.json": {
+                "sha256": "a434bc61b9c69b5a0293ac2490ae40a1f927e0fa6ac1755c51bdb252f2e91a4c",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzA0ODYwLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjE3MDQ4NjAiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+              },
+              "saves2/undo_777_1793461704865/save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              },
+              "saves2/undo_777_1793461704865.json": {
+                "sha256": "83b3c2cae6c5742c8f09353fe7f834340974a319bc74e65a720d68e0e7d80932",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzA0ODY1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjE3MDQ4NjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+              }
+            },
+            "remote": {
+              "save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              }
+            }
+          },
+          "after": {
+            "runtime": {
+              "saves2/save_777_1793461704860/save.dat": {
+                "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                "base64": "b2xk"
+              },
+              "saves2/save_777_1793461704860.json": {
+                "sha256": "a434bc61b9c69b5a0293ac2490ae40a1f927e0fa6ac1755c51bdb252f2e91a4c",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzA0ODYwLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjE3MDQ4NjAiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+              },
+              "saves2/undo_777_1793461704865/save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              },
+              "saves2/undo_777_1793461704865.json": {
+                "sha256": "83b3c2cae6c5742c8f09353fe7f834340974a319bc74e65a720d68e0e7d80932",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzA0ODY1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjE3MDQ4NjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+              }
+            },
+            "remote": {
+              "save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              }
+            }
+          }
+        }
+      ],
+      "consoleSha256": "8d3b8655d9b66c18c38071381fe0c7c60d0d28c2dee5944b255894b90abe99b9"
+    },
+    {
+      "negative": true,
+      "rpcs": 9,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "351246009"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "351246056"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "351246056"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "351246071"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 5.245,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793461710.7840917"
+          ],
+          "forcedPluginKills": 1,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steamback (v1.0.0-1)\n[plugin][INFO]: Stopping response listener for Steamback (v1.0.0-1)\n[plugin][WARNING]: Plugin Steamback (v1.0.0-1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Steamback (v1.0.0-1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "33cc133e2af63910dccf2e0a26fffdd3fdc7d619d144b1708d8a0c2daee66e69",
+          "cleanShutdownVerified": false
+        }
+      ],
+      "saveSnapshots": [
+        {
+          "before": {
+            "runtime": {
+              "saves2/save_777_1793461712968/save.dat": {
+                "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                "base64": "b2xk"
+              },
+              "saves2/save_777_1793461712968.json": {
+                "sha256": "224d17ea15e8a3c6cf49e9243762971959d02f81e9af16c96c1ea818cbbe3ad2",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzEyOTY4LAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjE3MTI5NjgiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+              },
+              "saves2/undo_777_1793461712972/save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              },
+              "saves2/undo_777_1793461712972.json": {
+                "sha256": "52f34d32359be76964bac4761be762e92a5708137131af0f27e0bfc497480b9f",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzEyOTcyLAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjE3MTI5NzIiLAogImlzX3VuZG8iOiB0cnVlCn0="
+              }
+            },
+            "remote": {
+              "save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              }
+            }
+          },
+          "after": {
+            "runtime": {
+              "saves2/save_777_1793461712968/save.dat": {
+                "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                "base64": "b2xk"
+              },
+              "saves2/save_777_1793461712968.json": {
+                "sha256": "224d17ea15e8a3c6cf49e9243762971959d02f81e9af16c96c1ea818cbbe3ad2",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzEyOTY4LAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjE3MTI5NjgiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+              },
+              "saves2/undo_777_1793461712972/save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              },
+              "saves2/undo_777_1793461712972.json": {
+                "sha256": "52f34d32359be76964bac4761be762e92a5708137131af0f27e0bfc497480b9f",
+                "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDYxNzEyOTcyLAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjE3MTI5NzIiLAogImlzX3VuZG8iOiB0cnVlCn0="
+              }
+            },
+            "remote": {
+              "save.dat": {
+                "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                "base64": "bmV3"
+              }
+            }
+          }
+        }
+      ],
+      "consoleSha256": "ba83130c8a19a6de06f45ebe04757c1bc68ecb607e5cddbd4d5de628a8a51378"
+    }
+  ],
+  "controlsAudit": {
+    "at": "2026-10-31T15:49:55.475076+00:00",
+    "sourceRevision": "4b9d5b22a29026683c031d2a2fc0298c6b839c76",
+    "architecture": "x86_64",
+    "freeLoader": [
+      {
+        "originalBackend": false,
+        "rpcs": 11,
+        "cleanShutdownVerified": true,
+        "stopSeconds": [
+          0.214,
+          0.225
+        ],
+        "forcedKills": 0,
+        "privateSnapshotsDecoded": true
+      },
+      {
+        "originalBackend": true,
+        "rpcs": 7,
+        "cleanShutdownVerified": false,
+        "stopSeconds": [
+          5.244
+        ],
+        "forcedKills": 1,
+        "privateSnapshotsDecoded": true
+      }
+    ],
+    "deckSettings": [
+      {
+        "negative": false,
+        "rpcs": 6,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351251890"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351251925"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351251925"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351251936"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.214,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793461769.4803"
+            ],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 24,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "351252204"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "351252236"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "351252236"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "351252247"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.235,
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          }
+        ]
+      },
+      {
+        "negative": true,
+        "rpcs": 3,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351252576"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351252615"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351252615"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351252626"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 5.226,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793461776.3762586"
+            ],
+            "forcedPluginKills": 1,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\n[plugin][WARNING]: Plugin Deck Settings (v1.2.6) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "716d3502c825fdeebc3c6181a4f5146aae1dd72d6e171247f8851796710f03f6",
+            "cleanShutdownVerified": false
+          }
+        ]
+      }
+    ],
+    "deckSettingsTlsPreserved": true,
+    "freeLoaderPrivateDataPreserved": true,
+    "allScopedConsolesHashed": true,
+    "realFrameContacted": false
+  },
+  "fullServerTests": 1951,
+  "fullServerSkips": 16,
+  "fullServerSeconds": 253.161,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerOwnedCleanupVerified": true,
+  "other36RuntimeBodiesPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "all116StatusInstallPoliciesPreserved": true,
+  "allOtherInstallerBranchesAndPayloadDispatchesPreserved": true,
+  "sharedIpcAdapterAndOfficialInventoryUnchanged": true,
+  "fullNativeMatrixRanLocally": false,
+  "fullE2eRanLocally": false,
+  "fullNativeMatrixExpected": {
+    "probes": 45,
+    "archivePins": 34,
+    "sourceFingerprints": 18
+  },
+  "globalCleanShutdownVerified": false,
+  "historicalRedRerun": false,
+  "historicalArmFailureCauseEstablished": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Only three focused native cases ran locally on AMD64; fresh final-head CI/full e2e/native AMD64+ARM64/ownership/PC/packages/current-main/feedback gates remain required.",
+    "Controlled owned Unix-peer disconnect reproduces one failure path; the peer history of earlier ARM64 failures is unknown.",
+    "Historical strict red was not rerun. Current repaired/original controls retain their private save snapshots and expected negative forced stop.",
+    "Scoped lifecycle results do not establish globally clean runtime. Published syntax warnings remain in retained logs.",
+    "No automatic game triggers, real Steam saves, browser, Steam CEF, managed Frame, wearer/controller, tagged installer or release proof.",
+    "Native process cleanup is independently checked; container/image cleanup is source-bound. Installer owned resource absence is independently checked."
+  ],
+  "rawJsonSha256": "bd53c0945323caaff58538a19c84d32ce33d18138081c3e62cb90ff09d3ae606",
+  "rawGzipSha256": "fd31d387ca94cc7e923192f702d84b7f35fa5527930633ee69fd64168cea7acd"
+}

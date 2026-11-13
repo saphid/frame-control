@@ -73,7 +73,11 @@ discover_devkit() {
 pick_host() {
   local candidates=()
   [[ -n "$host_arg" ]] && candidates+=("$host_arg")
-  [[ -z "$host_arg" ]] && candidates+=("$FRAME_ALIAS.local" "$FRAME_ALIAS")
+  if [[ -z "$host_arg" ]]; then
+    local saved=$(ssh -G "$FRAME_ALIAS" 2>/dev/null | awk '$1 == "hostname" {print $2; exit}')
+    [[ -n "$saved" && "$saved" != "$FRAME_ALIAS" && "$saved" =~ $HOST_RE ]] && candidates+=("$saved")
+    candidates+=("$FRAME_ALIAS.local" "$FRAME_ALIAS")
+  fi
   local h
   for h in "${candidates[@]}"; do
     if reachable "$h"; then
@@ -224,6 +228,7 @@ pair_with_devkit() {
 print "==> Looking for the Steam Frame"
 if ! HOST=$(pick_host); then
   print -u2 "Could not reach the Frame on port 22 or $DEVKIT_PORT."
+  print -u2 "SteamOS 0.5.6 stopped publishing .local names; use its IP from Quick Settings."
   print -u2 "Check: Developer Mode on + user password set; same Wi-Fi; no client isolation."
   print -u2 "Then re-run with the IP from Quick Settings: scripts/connect.sh 192.168.x.y"
   exit 1

@@ -4,6 +4,12 @@ Runs on your computer through the `frame` SSH alias (or FRAME_ALIAS), with
 Frame Control's own modules, and records what happened with the headset's
 BUILD_ID in tests/smoke/results/<time>-<BUILD_ID>.json (git-ignored):
 
+Before any status read or title change, it atomically owns /tmp/frame-test.lock
+on the Frame and checks SteamVR standby, proximity and battery read-only. A
+busy lock, awake headset, missing or active-range proximity reading, or battery
+below 20% stops the run. Only this run's lock is released, including after
+test failures.
+
 - properties.json from Valve's devkit service names the login user;
 - status (ui/frame_status.py) reads the build, battery and storage;
 - three tiny titles (tests/smoke/tiny_programs.py: ARM64 and x86-64 static
@@ -13,20 +19,25 @@ BUILD_ID in tests/smoke/results/<time>-<BUILD_ID>.json (git-ignored):
   (someone has to open Settings > Developer > Pair new host and approve it in
   the headset), checked, and taken out of authorized_keys again.
 
-Everything it installs is removed again, also when a step fails: the titles
-(named fc_smoke_*, and leftovers of an interrupted run first), their Steam
+Everything it installs is removed again, also when a step fails: the reserved
+fc_smoke_{arm64,x86_64,exe} titles (and legacy leftovers first), their Steam
 shortcuts, the paired key, and ~/devkit-utils if it wasn't there before (if it
 was, it stays, synced to this checkout as Frame Control always does). A
-cleanup that fails is a failed step.
+cleanup that fails is a failed step. Test-owned processes are stopped and
+rechecked around deletion; shared Proton services are never stopped by name.
 
 Usage: python3 tests/smoke/frame_smoke.py [--pair]     (or scripts/frame-smoke.sh)
 Env:   FRAME_ALIAS (default frame), FRAME_SMOKE_RESULTS (default tests/smoke/results)
-Exit status: 0 all passed, 1 a step failed, 2 the headset isn't reachable.
+Exit status: 0 every step passed, 1 a step failed or was skipped, 2 the
+headset isn't reachable. A skipped launch is not a release smoke pass.
 """
 import argparse
 import json
+import math
 import os
 import platform
+import re
+import secrets
 import shlex
 import subprocess
 import sys
@@ -45,11 +56,99 @@ import frame_android  # noqa: E402
 import frame_connect  # noqa: E402
 import frame_titles  # noqa: E402
 import tiny_programs  # noqa: E402
+import stop_processes  # noqa: E402
 
 RESULTS = Path(os.environ.get('FRAME_SMOKE_RESULTS') or HERE / 'results')
 PREFIX = 'fc_smoke_'
-# Earlier runs named titles fc-smoke*, which Steam refused to register but left on disk.
-OLD_PREFIX = 'fc-smoke'
+LOCK = '/tmp/frame-test.lock'
+FAKEFRAME_MARK = '/usr/local/lib/fakeframe/fakeframe_state.py'   # only on a fake Frame
+
+
+def source_revision():
+    """Record which checkout produced the smoke result for release review."""
+    try:
+        head = subprocess.run(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'],
+                              capture_output=True, text=True, timeout=10, check=True).stdout.strip()
+        status = subprocess.run(['git', '-C', str(ROOT), 'status', '--porcelain'],
+                                capture_output=True, text=True, timeout=10, check=True).stdout
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return {'commit': None, 'clean': False}
+    if not isinstance(head, str) or not re.fullmatch(r'[0-9a-f]{40}', head):
+        return {'commit': None, 'clean': False}
+    return {'commit': head, 'clean': not bool(status.strip())}
+
+
+def remote(command, *, input=None):
+    """Use a bounded SSH call for shared-lock operations."""
+    return subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', ALIAS, command],
+                          input=input, capture_output=True, text=True, timeout=20)
+
+
+def acquire_lock(token):
+    """Atomically reserve the Frame before reading its state or changing titles."""
+    command = (f'mkdir {LOCK} && {{ printf %s {shlex.quote(token)} > {LOCK}/owner || '
+               f'{{ rmdir {LOCK}; exit 1; }}; }}')
+    return remote(command).returncode == 0
+
+
+def release_lock(token):
+    """Never remove a lock if its owner changed."""
+    command = (f'test "$(cat {LOCK}/owner)" = {shlex.quote(token)} && '
+               f'rm {LOCK}/owner && rmdir {LOCK}')
+    return remote(command).returncode == 0
+
+
+PREFLIGHT = r'''
+import json, pathlib, subprocess
+r = subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd', '--stats'],
+                   capture_output=True, text=True, timeout=8)
+try:
+    rows = json.loads(r.stdout) if r.returncode == 0 else None
+    levels = ([row.get('activity_level') for row in rows
+               if isinstance(row, dict) and row.get('operation') == 'status']
+              if isinstance(rows, list) else [])
+    activity = levels[0] if len(levels) == 1 and type(levels[0]) is int else None
+except (ValueError, TypeError): activity = None
+proximity = []
+for path in pathlib.Path('/sys/bus/iio/devices').glob('iio:device*/in_proximity_raw'):
+    try: proximity.append(float(path.read_text().strip()))
+    except (OSError, ValueError): pass
+battery = []
+for path in pathlib.Path('/sys/class/power_supply').glob('*/capacity'):
+    try:
+        if (path.parent/'type').read_text().strip() == 'Battery':
+            battery.append(int(path.read_text().strip()))
+    except (OSError, ValueError): pass
+print(json.dumps({'activity': activity, 'proximity': proximity, 'battery': battery}))
+'''
+
+
+def preflight():
+    result = remote('python3 -', input=PREFLIGHT)
+    if result.returncode:
+        raise RuntimeError('Locked SteamVR and battery preflight failed: ' + result.stderr.strip())
+    state = json.loads(result.stdout)
+    if state.get('activity') != 3:
+        raise RuntimeError('Frame is awake or SteamVR activity is unknown; active session untouched')
+    proximity = state.get('proximity')
+    if (not isinstance(proximity, list) or not proximity or
+            any(not isinstance(value, (int, float)) or isinstance(value, bool) or
+                not math.isfinite(value) or value < 0 or value > 10
+                for value in proximity)):
+        raise RuntimeError('Frame proximity is active or unknown; active session untouched')
+    battery = state.get('battery')
+    if (not isinstance(battery, list) or not battery or
+            any(type(value) is not int or value < 20 or value > 100
+                for value in battery)):
+        raise RuntimeError('Frame battery is unavailable or below the smoke threshold')
+    return state
+
+
+def stop_titles(ids):
+    """Run the same bounded, PID-safe helper used by the local process tests."""
+    return json.loads(frame_android.ssh(
+        'python3 - ' + ' '.join(shlex.quote(gid) for gid in sorted(ids)),
+        input=(HERE / 'stop_processes.py').read_text(), timeout=20))
 
 
 class Smoke:
@@ -58,19 +157,30 @@ class Smoke:
         self.installed = set()
 
     def step(self, name, fn, *args):
-        """Run one step; record ok/failed, its detail and how long it took."""
+        """Run one step; record passed/skipped/failed and how long it took."""
         t0 = time.monotonic()
         rec = {'step': name}
         try:
             detail = fn(*args)
             rec.update(ok=True, detail=detail)
+        except Skipped as e:
+            rec.update(ok=False, skipped=True, reason=str(e), detail=e.detail)
         except Exception as e:  # a failed step is a result, not the end of the run
             rec.update(ok=False, error=f'{type(e).__name__}: {e}', trace=traceback.format_exc(limit=3))
         rec['seconds'] = round(time.monotonic() - t0, 1)
         self.steps.append(rec)
-        print(f"  {'ok  ' if rec['ok'] else 'FAIL'} {name} ({rec['seconds']} s)"
-              + ('' if rec['ok'] else f": {rec['error']}"), flush=True)
+        label = 'ok  ' if rec['ok'] else 'SKIP' if rec.get('skipped') else 'FAIL'
+        message = '' if rec['ok'] else f": {rec.get('reason') or rec['error']}"
+        print(f"  {label} {name} ({rec['seconds']} s){message}", flush=True)
         return rec
+
+
+class Skipped(Exception):
+    """A prerequisite was unavailable; preserve its evidence without claiming a launch."""
+
+    def __init__(self, reason, detail):
+        super().__init__(reason)
+        self.detail = detail
 
 
 def ssh(cmd, timeout=60):
@@ -125,19 +235,28 @@ def steam_log_lines(*patterns):
     return out.strip().splitlines()
 
 
-# What a launch must show, per kind. The x86-64 runtime isn't installed on the
-# Frame, so Steam acknowledges that launch and logs "... is not installed"
-# instead (docs/sideloading.md, 2026-09-26): recorded, not a failure.
-EXPECTED = {'arm64': ('running',), 'x86_64': ('running', 'runtime missing'), 'exe': ('running', 'started')}
+def missing_x86_runtime_lines(appid):
+    """Only the Steam runtime error for this smoke title's shortcut counts."""
+    marker = f'for appID {appid}, but is not installed'
+    return [line for line in steam_log_lines(marker) if 'Tool 4183110 ' in line and marker in line]
+
+
+# What a launch must show, per kind. Static x86-64 titles should use the
+# title-local FEX launcher. If Steam still reports its x86 runtime missing,
+# record a skip and fail the release gate rather than claiming a launch pass.
+EXPECTED = {'arm64': ('running',), 'x86_64': ('running',), 'exe': ('running', 'started')}
 
 
 def title_cycle(smoke, kind, folder):
     path = tiny_programs.write(folder, kind)
     gid = PREFIX + kind                 # named outright: the file names would share one id
+    shortcut = None
 
     def install():
+        nonlocal shortcut
         smoke.installed.add(gid)
         meta = frame_titles.install(path, name=gid)
+        shortcut = meta.get('shortcut')
         listed = {t['id']: t for t in frame_titles.list_titles()}
         if gid not in listed:
             raise AssertionError(f'{gid} is not in the title list after installing')
@@ -145,9 +264,10 @@ def title_cycle(smoke, kind, folder):
 
     def launch():
         mine = (f'devkit-game/{gid}', f'"{gid}"')
-        # The missing-runtime line names Steam's app id, which we don't know, so
-        # any new one counts; nothing else is launching during the test.
-        seen, seen_missing = len(steam_log_lines(*mine)), len(steam_log_lines('but is not installed'))
+        if kind == 'x86_64' and (not isinstance(shortcut, int) or shortcut <= 0):
+            raise AssertionError('installed x86_64 title has no Steam shortcut app ID')
+        seen = len(steam_log_lines(*mine))
+        seen_missing = len(missing_x86_runtime_lines(shortcut)) if kind == 'x86_64' else 0
         frame_titles.launch(gid)       # raises unless Steam confirmed it
         outcome, procs, new = 'no evidence', [], []
         deadline = time.monotonic() + 12
@@ -155,31 +275,36 @@ def title_cycle(smoke, kind, folder):
             # [d]: the pattern mustn't match the shell running pgrep, whose command line holds it.
             procs = ssh(f"pgrep -af -- '[d]evkit-game/{gid}/' || true").strip().splitlines()
             new = steam_log_lines(*mine)[seen:]
-            missing = steam_log_lines('but is not installed')[seen_missing:]
+            missing = missing_x86_runtime_lines(shortcut)[seen_missing:] if kind == 'x86_64' else []
             if procs:
                 outcome = 'running'
             elif missing:
                 outcome, new = 'runtime missing', new + missing
             elif any('started devkit game' in line or 'chdir' in line for line in new):
                 outcome = 'started'
-            if outcome in EXPECTED[kind]:   # else keep looking: the log can come before the process
+            if outcome in EXPECTED[kind] or (kind == 'x86_64' and outcome == 'runtime missing'):
                 break
             time.sleep(0.5)
         detail = {'outcome': outcome, 'processes': procs, 'steam_log': new[-12:]}
+        if kind == 'x86_64' and outcome == 'runtime missing':
+            raise Skipped('Steam Linux Runtime 4 is not installed; x86_64 title did not launch', detail)
         if outcome not in EXPECTED[kind]:
             raise AssertionError(f"Steam acknowledged the launch, but {outcome} (expected "
                                  f"{' or '.join(EXPECTED[kind])}): {json.dumps(detail)[:400]}")
         return detail
 
     def remove():
+        stopped = stop_titles({gid})
         frame_titles.remove(gid)
+        # A wrapper could have launched a child just as deletion completed.
+        after = stop_titles({gid})
         left = ssh(f'ls -d ~/devkit-game/{gid} ~/devkit-game/{gid}-*.json 2>/dev/null || true').strip()
         if left:
             raise AssertionError(f'left behind: {left}')
         if gid in {t['id'] for t in frame_titles.list_titles()}:
             raise AssertionError(f'{gid} is still listed')
         smoke.installed.discard(gid)
-        return {'removed': gid}
+        return {'removed': gid, 'process_cleanup': [stopped, after]}
 
     if smoke.step(f'{kind}: install', install)['ok']:
         smoke.step(f'{kind}: launch', launch)
@@ -187,23 +312,29 @@ def title_cycle(smoke, kind, folder):
 
 
 def cleanup(smoke):
-    """Remove this run's titles and any fc_smoke_* an interrupted run left: the folder,
-    its json files, and (through steamos-delete) Steam's shortcut. Raises if anything stays."""
+    """Stop reserved smoke processes and remove their titles and shortcuts.
+
+    Legacy fc-smoke-* IDs are included; arbitrary similarly named titles are
+    never removed. Raises if any owned process, file or shortcut stays.
+    """
     problems = []
-    try:
-        ids = {t['id'] for t in frame_titles.list_titles() if t['id'].startswith((PREFIX, OLD_PREFIX))}
-    except frame_android.FrameError as e:
-        ids = set()
-        problems.append(f'could not list titles: {e}')
-    ids |= smoke.installed
+    # Directory listings and this run's install tracker cannot reveal orphan
+    # metadata or shortcuts. Always sweep the exact, reserved IDs; never let
+    # arbitrary entries in smoke.installed expand the deletion boundary.
+    ids = stop_processes.IDS
+    # Scan every reserved ID, even when a prior run removed its folder and
+    # shortcut but left Proton running. Stop before removing any more files.
+    stopped = stop_titles(stop_processes.IDS)
     gone = set()
     for gid in sorted(ids):
         try:
+            metadata = ' '.join(f'~/devkit-game/{gid}-{k}.json'
+                                for k in ('argv', 'env', 'settings', 'framecontrol'))
             if ssh(f'test -d ~/devkit-game/{gid} && echo yes || true').strip() == 'yes':
                 frame_titles.remove(gid)
             # Also when remove() stopped part-way, or only the json files are left.
-            ssh(f"rm -f {' '.join(f'~/devkit-game/{gid}-{k}.json' for k in ('argv', 'env', 'settings', 'framecontrol'))}")
-            if ssh(f'ls -d ~/devkit-game/{gid} ~/devkit-game/{gid}-*.json 2>/dev/null || true').strip():
+            ssh(f'rm -f {metadata}')
+            if ssh(f'ls -d ~/devkit-game/{gid} {metadata} 2>/dev/null || true').strip():
                 problems.append(f'{gid} is still on the Frame')
             else:
                 gone.add(gid)
@@ -214,8 +345,11 @@ def cleanup(smoke):
         # It logs a failed sync and exits 0, so read its log; a second run lists
         # what Steam still has registered, which must not include ours.
         try:
-            first = ssh('python3 ~/devkit-utils/steamos-delete 2>&1', timeout=120)
-            second = ssh('python3 ~/devkit-utils/steamos-delete 2>&1', timeout=120)
+            # A shortcut-only leftover (or a first run) may have no utilities.
+            frame_titles.ensure_utils()
+            command = frame_titles.devkit_script('delete') + ' 2>&1'
+            first = ssh(command, timeout=120)
+            second = ssh(command, timeout=120)
             for out in (first, second):
                 if 'sync of devkit games failed' in out:
                     raise AssertionError(out.strip().splitlines()[-1])
@@ -226,9 +360,10 @@ def cleanup(smoke):
                     smoke.installed.discard(gid)
         except (frame_android.FrameError, AssertionError) as e:
             problems.append(f"syncing Steam's shortcuts: {e}")
+    after = stop_titles(stop_processes.IDS)
     if problems:
         raise AssertionError('; '.join(problems))
-    return {'removed': sorted(ids)}
+    return {'removed': sorted(ids), 'process_cleanup': [stopped, after]}
 
 
 # Runs on the Frame: drop the lines holding one key from authorized_keys, writing a
@@ -288,34 +423,32 @@ def pair(folder):
         print(f'    removed the smoke key from authorized_keys ({dropped} line(s))', flush=True)
 
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument('--pair', action='store_true', help='also pair through the devkit service (needs you in the headset)')
-    args = ap.parse_args()
-
-    r = subprocess.run(['ssh', '-o', 'ConnectTimeout=5', '-o', 'BatchMode=yes', ALIAS, 'true'],
-                       capture_output=True, text=True)
-    if r.returncode != 0:
-        print(f'{ALIAS} is not reachable over SSH: {r.stderr.strip()}', file=sys.stderr)
-        return 2
-
+def run_smoke(args, before):
+    """Run only after the shared lock and read-only preflight succeeded."""
     smoke = Smoke()
     started = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     release = os_release()
     build = release['BUILD_ID'] or 'unknown'
     print(f'==> Frame smoke test on {ALIAS}: SteamOS {release["VERSION_ID"]} ({release["VARIANT_ID"]}), build {build}')
+    # The fake Frame and the Frame simulator (tests/fakeframe) carry the real BUILD_ID;
+    # this marks their results so the release gate never takes one for the headset's.
+    simulated = ssh(f'test -e {FAKEFRAME_MARK} && echo yes || true').strip() == 'yes'
+    if simulated:
+        print('    (a fake Frame: these results are not evidence about the headset)', flush=True)
     # Frame Control copies Valve's devkit tools to ~/devkit-utils on the first install
     # (as Valve's client does). If they weren't there before, they go again at the end.
     had_utils = ssh('test -d ~/devkit-utils && echo yes || true').strip() == 'yes'
-    smoke.step('cleanup: leftovers from earlier runs', cleanup, smoke)
+    ready = smoke.step('cleanup: leftovers from earlier runs', cleanup, smoke)['ok']
     folder = tempfile.mkdtemp(prefix='frame-smoke-')
     try:
-        smoke.step('devkit service: properties.json', properties)
-        smoke.step('status', status, build)
-        for kind in ('arm64', 'x86_64', 'exe'):
-            title_cycle(smoke, kind, folder)
-        if args.pair:
-            smoke.step('devkit pairing (throwaway key)', pair, folder)
+        # Do not overwrite a leftover title when safe process cleanup failed.
+        if ready:
+            smoke.step('devkit service: properties.json', properties)
+            smoke.step('status', status, build)
+            for kind in ('arm64', 'x86_64', 'exe'):
+                title_cycle(smoke, kind, folder)
+            if args.pair:
+                smoke.step('devkit pairing (throwaway key)', pair, folder)
     finally:
         smoke.step('cleanup: everything this run installed', cleanup, smoke)
         if not had_utils:
@@ -323,13 +456,59 @@ def main():
                        'rm -rf ~/devkit-utils ~/.devkit-utils.frame-control && echo removed')
         subprocess.run(['rm', '-rf', folder])
     passed = sum(s['ok'] for s in smoke.steps)
+    skipped = sum(s.get('skipped', False) for s in smoke.steps)
+    failed = len(smoke.steps) - passed - skipped
     RESULTS.mkdir(exist_ok=True)
     out = RESULTS / f"{started.replace(':', '')}-{build}.json"
-    out.write_text(json.dumps({'started': started, 'alias': ALIAS, 'os_release': release, 'paired': args.pair,
-                               'passed': passed, 'failed': len(smoke.steps) - passed,
+    out.write_text(json.dumps({'started': started, 'alias': ALIAS, 'simulated': simulated,
+                               'source': source_revision(),
+                               'preflight': before,
+                               'os_release': release, 'paired': args.pair,
+                               'passed': passed, 'skipped': skipped, 'failed': failed,
+                               'lock_released': False,
                                'devkit_utils_there_before': had_utils, 'steps': smoke.steps}, indent=1))
-    print(f'==> {passed}/{len(smoke.steps)} steps passed on build {build}; results in {out}')
-    return 0 if passed == len(smoke.steps) else 1
+    print(f'==> {passed} passed, {skipped} skipped, {failed} failed on build {build}; results in {out}')
+    return (0 if failed == 0 and skipped == 0 else 1), out
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument('--pair', action='store_true', help='also pair through the devkit service (needs you in the headset)')
+    args = ap.parse_args()
+    token = 'frame-smoke-' + secrets.token_hex(10)
+    try:
+        locked = acquire_lock(token)
+    except (OSError, subprocess.TimeoutExpired):
+        locked = False
+    if not locked:
+        print('Shared Frame lock busy or unreachable; no headset status read or smoke run.', file=sys.stderr)
+        return 2
+    result, output = 1, None
+    try:
+        try:
+            before = preflight()
+            print('Locked read-only preflight: ' + json.dumps(before), flush=True)
+            result, output = run_smoke(args, before)
+        except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as failure:
+            print(str(failure), file=sys.stderr)
+            result = 2
+    finally:
+        try:
+            released = release_lock(token)
+        except (OSError, subprocess.TimeoutExpired):
+            released = False
+        if not released:
+            print('ERROR: could not release owned Frame lock.', file=sys.stderr)
+            result = 1
+        elif output is not None:
+            try:
+                saved = json.loads(output.read_text())
+                saved['lock_released'] = True
+                output.write_text(json.dumps(saved, indent=1))
+            except (OSError, ValueError) as failure:
+                print(f'ERROR: could not record Frame lock release: {failure}', file=sys.stderr)
+                result = 1
+    return result
 
 
 if __name__ == '__main__':

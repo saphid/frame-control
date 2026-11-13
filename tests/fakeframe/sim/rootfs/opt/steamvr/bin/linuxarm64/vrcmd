@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""Stub for SteamVR's vrcmd, for the Frame simulator: the three uses Frame Control has.
+
+  --stats              [{"operation": "status", "activity_level": N}], read by
+                       frame_status.activity_level and frame_smoke.py's preflight
+  --overlays           "---- OVERLAYS ----" and one line per dashboard panel, in the
+                       form ui/frame_panels.py parses (verified there on SteamVR 2.18.1,
+                       BUILD_ID 20260925.6191901); the panels themselves are made up
+  --showdashboard KEY  shows that panel
+
+The level follows `frame-sim-ctl worn on|off`. With `frame-sim-ctl vr off` every
+command fails, as vrcmd does when vrserver isn't running (message is a guess).
+"""
+import json
+import sys
+
+sys.path.insert(0, '/usr/local/lib/fakeframe/sim')
+import simstate as ss  # noqa: E402
+
+args = sys.argv[1:]
+ss.fs.log('vrcmd', args=args)
+state = ss.read()
+if not state['vr']:
+    sys.exit('VR_Init failed: VRInitError_Init_NoServerForBackgroundApp')
+if args == ['--stats']:
+    print(json.dumps([{'operation': 'status', 'activity_level': ss.ACTIVITY[state['worn']]}]))
+elif args == ['--overlays']:
+    print('---- OVERLAYS ----')
+    for o in state['overlays']:
+        shown = 'visible' if o['visible'] else 'not_visible'
+        print(f"'{o['key']}' -- '{o['title']}', {shown} VROverlayType_Dashboard_Main")
+elif len(args) == 2 and args[0] == '--showdashboard':
+    with ss.update() as s:
+        if not any(o['key'] == args[1] for o in s['overlays']):
+            sys.exit(f'No overlay {args[1]}')
+        for o in s['overlays']:
+            o['visible'] = o['key'] == args[1]
+else:
+    sys.exit(f'vrcmd stub: unsupported {args}')

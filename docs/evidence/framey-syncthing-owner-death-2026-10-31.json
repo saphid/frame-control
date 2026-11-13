@@ -1,0 +1,195 @@
+{
+  "date": "2026-10-31",
+  "baseCommit": "08bd8473b18c3d246a9c96d5e7a17ff4acaa3733",
+  "originalFailure": {
+    "pr": 501,
+    "head": "fd3b66162fadb2e7a442fd0ee220de445a1f68c1",
+    "job": "https://github.com/saphid/frame-control/actions/runs/41158034008/job/124409075172",
+    "reproductionHelperMatchesCi": true,
+    "reproductionExitCode": 1,
+    "reproductionConsole": "Traceback (most recent call last):\n  File \"<checkout>/scripts/framey-test-syncthing-candidate.py\", line 96, in <module>\n    main()\n  File \"<checkout>/scripts/framey-test-syncthing-candidate.py\", line 78, in main\n    raise RuntimeError('Native candidate failed:\\n'+result.stdout+'\\n'+result.stderr)\nRuntimeError: Native candidate failed:\n\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-syncthing\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[plugin][WARNING]: Plugin Syncthing (v0.2.7) is using legacy method calls. This will be removed in a future release.\nLoaded.\n[plugin][INFO]: Shutting down Syncthing (v0.2.7)\n[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)\nCalling Loader unload function for Syncthing (v0.2.7).\nAttempting to unload with plugin Syncthing (v0.2.7)'s \"_unload\" function.\n\nUnloaded Syncthing (v0.2.7)\n\n[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in 0.1s\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('Syncthing', '0.2.7', 0, True, 15000)}\nLoaded.\n[plugin][INFO]: Shutting down Syncthing (v0.2.7)\n[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)\nCalling Loader unload function for Syncthing (v0.2.7).\nAttempting to unload with plugin Syncthing (v0.2.7)'s \"_unload\" function.\n\nUnloaded Syncthing (v0.2.7)\n\n[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in 0.1s\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('Syncthing', '0.2.7', 0, True, 15000)}\nLoaded.\n[plugin][INFO]: Shutting down Syncthing (v0.2.7)\n[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)\nCalling Loader unload function for Syncthing (v0.2.7).\nAttempting to unload with plugin Syncthing (v0.2.7)'s \"_unload\" function.\n\nUnloaded Syncthing (v0.2.7)\n\n[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in 0.1s\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('Syncthing', '0.2.7', 0, True, 15000)}\nLoaded.\n[plugin][INFO]: Shutting down Syncthing (v0.2.7)\n[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)\n[plugin][WARNING]: Plugin Syncthing (v0.2.7) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in 5.1s\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('Syncthing', '0.2.7', 0, True, 15000)}\nLoaded.\nWatchdog ownership unavailable: lock acquisition failed because the operation would block\n\nTraceback (most recent call last):\n  File \"/repo/tests/decky-runtime/syncthing_candidate.py\", line 260, in <module>\n    main()\n    ~~~~^^\n  File \"/repo/tests/decky-runtime/syncthing_candidate.py\", line 219, in main\n    new = until_ready(lambda: (pid if (pid := current_pid()) != old else None),\n                      'reload after forced plugin termination')\n  File \"/repo/tests/decky-runtime/check.py\", line 61, in until_ready\n    raise RuntimeError(f'{description} not ready: {last}')\nRuntimeError: reload after forced plugin termination not ready: None\n\n",
+    "scope": "same binary reproduces orphaned ownership after intentionally stalled plugin is killed by published Decky; why original CI unload stalled remains unproven",
+    "rawReproductionConsoleSha256": "23f43274b2d53c93b0f3dc918b1bdb2c46441a08a5fb610e9dcb6d02ef7cce1b",
+    "localCheckoutPrefixRedacted": true
+  },
+  "baselineBuild": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "patchSha256": "4620596a1b2f19fec343d67b7706125e4e421eb59c6f3da631263314adee81e5",
+    "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+    "pythonSha256": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+    "builderImage": "sha256:93ce27a88655056a51dbdd8f5f2d7ddc071c7b0070fb288a37b5a285fc83971e",
+    "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "builds": [
+      {
+        "architecture": "x86_64",
+        "elfMachine": 62,
+        "bytes": 13377600,
+        "sha256": "bef65e425ff895dd40e932fdae424376988e6abed17a9527e4eda383002a578d",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "x86_64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false,
+        "serviceFileTestsExecuted": true
+      }
+    ],
+    "installerEnabled": false,
+    "runtimeVerified": false
+  },
+  "fixedBuild": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "patchSha256": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+    "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+    "pythonSha256": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+    "builderImage": "sha256:93ce27a88655056a51dbdd8f5f2d7ddc071c7b0070fb288a37b5a285fc83971e",
+    "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "builds": [
+      {
+        "architecture": "x86_64",
+        "elfMachine": 62,
+        "bytes": 13376904,
+        "sha256": "318c0c58bce164d5e23528ae0da40f7d142005984ff64801b74a36b790e456b0",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "x86_64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false,
+        "serviceFileTestsExecuted": true
+      }
+    ],
+    "installerEnabled": false,
+    "runtimeVerified": false
+  },
+  "nativeCandidate": {
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "pythonSha256": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+    "helperSha256": "318c0c58bce164d5e23528ae0da40f7d142005984ff64801b74a36b790e456b0",
+    "installerEnabled": false,
+    "independentState": {
+      "listenerConflictBeforeSettingsOrService": true,
+      "invalidOrMismatchedParentBeforeOwnershipOrSettings": true,
+      "foreignServiceFilesPreservedBeforeDBus": true,
+      "reservedManagedNameRefusedAsExternal": true,
+      "ownedRestartReaped": true,
+      "foreignPidIgnored": true,
+      "duplicateOwnershipRefused": true,
+      "activeReloadCount": 3,
+      "unrelatedProcessPreserved": true,
+      "privateSocketMode": true,
+      "privateHttpProxy": true,
+      "privateFixtureAuthErrorPreserved": true,
+      "privateSocketCleanupOnReload": true,
+      "forcedPluginTerminationReleasesHelper": true,
+      "forcedReloadPreservesUnrelatedProcess": true,
+      "forcedOwnerTempCleanedByFixture": true,
+      "publishedDeckyForcedTerminationLogVerified": true,
+      "loaderExitStoppedOwnedWatchdog": true
+    },
+    "serviceManagerVerified": false,
+    "forcedReloadConsole": "[plugin][INFO]: Shutting down Syncthing (v0.2.7)\n[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)\n[plugin][WARNING]: Plugin Syncthing (v0.2.7) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in 5.1s\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('Syncthing', '0.2.7', 0, True, 15000)}\nLoaded.\n",
+    "result": "published Decky discovery, disabled defaults, native listener/ownership conflicts, owned restart, three normal reloads, forced plugin termination/reload and private-socket HTTP transport passed; the upstream HTTP fixture is synthetic; service control, actual Syncthing, sync, Frame and VR unverified",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "architecture": "x86_64",
+    "image": "sha256:e088ee673c6656cbfe533c5dd0a960a38f3c9d3120926ca8bf69ab623f5e8fca",
+    "providedImage": true,
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-candidate.py": "cebe1625a15b58c6797790d5c207c4496dfb42fb3ea2aa3ce908e1477122bd1e",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/syncthing_candidate.py": "a2048cc5ce16bca5a4d1b8efe833a9d6ba62c2ef88d6d70df88c8616fa1f4d63",
+      "ui/vendor/syncthing-0.2.7/main.py": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+    }
+  },
+  "privatePeers": {
+    "runtime": "v2.1.7",
+    "binarySha256": "f5c12679f2bad1b5eff619ba7b04ead1a457e439a1e55dc640d4d8995d7f4dbd",
+    "helperSha256": "318c0c58bce164d5e23528ae0da40f7d142005984ff64801b74a36b790e456b0",
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "independentState": {
+      "twoWaySync": true,
+      "runtimeRestartPreservedFiles": true,
+      "realRestProxy": true,
+      "realApiKeyErrorPreserved": true,
+      "completionPercent": 100,
+      "deckyShutdownStoppedOwnedHelper": true,
+      "allOwnedProcessesReaped": true
+    },
+    "markerBytes": 3239,
+    "markerSha256": "39fd6ed70748fda5b97fd6b75eeebe1ed9e1a077662c40fd813624420989320e",
+    "reverseBytes": 1677,
+    "reverseSha256": "ebc4a5eb1748124f2cb2ab2f419ae3eea04e5d6c5eee94de06661729f35e5fc7",
+    "realDeckyRpcProxy": {
+      "/rest/system/status": 200,
+      "/rest/system/version": 200,
+      "/rest/config/options": 200,
+      "/rest/config/devices": 200,
+      "/rest/stats/device": 200,
+      "/rest/config/folders": 200,
+      "/rest/stats/folder": 200,
+      "/rest/db/status?folder=framey-private": 200,
+      "/rest/system/connections": 200
+    },
+    "apiKeyErrorStatus": 403,
+    "installerEnabled": false,
+    "syncthingStopBudgetSeconds": 25,
+    "serviceManagerVerified": false,
+    "systemdBus": "absent; service setup stays disabled",
+    "realFrameContacted": false,
+    "runtimeStopElapsedUpperBoundsSeconds": [
+      10.082,
+      10.082
+    ],
+    "architecture": "x86_64",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "runtimeArchiveSha256": "2edc416e7ed136b7c858ed5f3f02a3b8316589605e54c380228ceea7acbf0142",
+    "runtimeArchiveUrl": "https://github.com/syncthing/syncthing/releases/download/v2.1.7/syncthing-linux-amd64-v2.1.7.tar.gz",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+      "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+      "ui/vendor/syncthing-0.2.7/main.py": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+    }
+  },
+  "sourceFingerprintsAndBothRuntimeHelperBytesIndependentlyVerified": true,
+  "realFrameContacted": false,
+  "nativeArm64Verified": false,
+  "systemdVmRerun": false,
+  "signedFlatpakRerun": false,
+  "installerEnabled": false,
+  "compatibilityRatingsChanged": false,
+  "temporaryDirectoryLimit": "Kernel guard kills the helper; fixture removes the killed Python owner\u2019s private socket directory. No automatic filesystem cleanup after SIGKILL is claimed.",
+  "localTests": {
+    "fullUnit": {
+      "tests": 1912,
+      "skipped": 16,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 257.262
+    },
+    "focusedOwnership": {
+      "tests": 19,
+      "skipped": 0,
+      "success": true
+    },
+    "pythonCompiles": true,
+    "diffWhitespaceClean": true
+  }
+}

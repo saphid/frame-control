@@ -1,0 +1,47 @@
+{
+  "at": "2026-11-01T03:07:51.775576+00:00",
+  "pr": 519,
+  "testedSource": "b0f85cf88e21576b80b232dc68b8e140eddd0a54",
+  "integratedMain": "4558a36f58f84840d835f4fc281f12541f15ea94",
+  "priorPublishedHead": "bdcffb6f64534dc06d3db3e5eb17349fde1139aa",
+  "normalMergeParents": [
+    "bdcffb6f64534dc06d3db3e5eb17349fde1139aa",
+    "4558a36f58f84840d835f4fc281f12541f15ea94"
+  ],
+  "conflictsResolved": 3,
+  "invalidatedLocalMergeNotPushedOrAncestor": true,
+  "nativeSourceInputs": 25,
+  "serverTests": 1965,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeCases": 9,
+  "independentAudits": 4,
+  "batteryRpcCounts": [
+    37,
+    35
+  ],
+  "independentPrivateSqliteSnapshotsVerified": true,
+  "otherNativeScopes": [
+    "SteamGridDB",
+    "RadiYo",
+    "Prefix Manager"
+  ],
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 403.281,
+  "catalogPins": 116,
+  "ownedCleanupAndPreexistingSimulatorImagesVerified": true,
+  "compatibility": "partial",
+  "store130Version": "1.0.1",
+  "github102LookupStatus": "unverified",
+  "historicalFailedPackageStillFailed": true,
+  "historicalCollisionOwnerOrSocketStateProven": false,
+  "actualSteamCef": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "freshHostedGatesRequired": true,
+  "rawSha256": "4d3244ded33f7315ea3223c2f317ea6b7b538bcc6b6f80a62c93996b9b49adc0",
+  "rawBytes": 81008
+}

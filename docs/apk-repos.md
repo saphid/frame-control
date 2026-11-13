@@ -155,10 +155,11 @@ How it works, using the documented
   `traits` don't include `p_android` are left out; one entry per game, with the
   newest key.
 - Opening a game asks `GET /games/<game_id>/uploads?download_key_id=<key id>`
-  for its files. Android uploads are those marked `p_android` (in `traits`, or
-  as a `p_android`/`platforms.android` flag) or named `.apk`. `.apk` files come
-  first, then full games before demos, newest first. Soundtracks, pre-orders and
-  externally hosted files are skipped.
+  for its files. Only direct `.apk` uploads are offered for installation,
+  full games before demos, newest first. Soundtracks, pre-orders and
+  externally hosted files are skipped. Android-marked `.zip`, `.xapk` and
+  `.apks` files are not APK downloads; when there is no direct APK, the app
+  explains the limitation and links to the creator's page instead.
 - Installing asks `GET /uploads/<upload_id>/download?download_key_id=<key id>`.
   The answer accepted is a redirect to itch.io's storage host, a JSON body
   with a `url` field naming it, or the file itself. Frame Control follows the
@@ -199,15 +200,15 @@ refusal is reported as a download error, not as a rate limit.
 
 ### What is verified and what isn't
 
-Not tested against a live itch.io account at all: everything below was tested
-with recorded and hand-made responses (`tests/test_itch_purchases.py`) only.
+Not tested against a live itch.io account at all: the account flows below were
+tested with hand-made responses (`tests/test_itch_purchases.py`) only.
 
 | Part | Status |
 |---|---|
 | Bearer key, `GET /profile`, `/profile/owned-keys` paging and its fields, the `errors` array | Documented in the public reference (checked 2026-10-13) |
 | `GET /games/<id>/uploads` and `download_key_id` | Not in the public reference; paths and parameter from itch.io's app client, [go-itchio](https://github.com/itchio/go-itchio) |
 | Upload fields (`filename`, `display_name`, `size`, `storage`, `type`, `traits`, `updated_at`, `demo`, `preorder`) | Assumed from go-itchio and the API's snake_case convention |
-| The `p_android` trait, on games and uploads | Assumed from itch.io's `p_windows`/`p_linux`/`p_osx` naming |
+| The `p_android` trait on games | Assumed from itch.io's `p_windows`/`p_linux`/`p_osx` naming; upload selection requires an `.apk` filename |
 | What `/uploads/<id>/download` returns | Unknown: go-itchio only builds the URL and hands it to a downloader, so a redirect, a JSON `url` and the file are all accepted |
 | Whether that endpoint accepts the key as a Bearer header | Unknown: go-itchio puts it in the query string, which Frame Control refuses to do |
 | itch.io's storage host names and addresses | Unknown; any public HTTPS host is allowed |

@@ -131,6 +131,9 @@ def _owned_details(source, entry_id):
     entry = dict(entry, versions=versions, downloadable=bool(versions))
     if versions:
         entry.update({k: versions[0][k] for k in ('version', 'size', 'updated')})
+    else:
+        entry['download_note'] = ('This game has no Android download in APK format. '
+                                  'Open its itch.io page for other files.')
     return entry
 
 
@@ -150,5 +153,5 @@ def download(source, entry_id, version_code=None):
         raise SourceError('itch.io does not publish Android version codes; download the latest upload')
     entry = _owned_details(source, entry_id)
     if not entry['versions']:
-        raise SourceError('This game has no Android download on itch.io')
+        raise SourceError(entry['download_note'])
     return _itch_account.download(entry['versions'][0]['upload_id'], entry['download_key_id'])

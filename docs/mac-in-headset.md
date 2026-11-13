@@ -4,9 +4,23 @@ Frame Control can show any Mac window, or a whole Mac screen, as its own panel
 in the Steam Frame. You place each panel anywhere in the room with the SteamVR
 dashboard. The laser clicks and drags, the thumbstick scrolls, and you type on
 the Mac's own keyboard. Find it under **Tools → Mac in the headset** (macOS
-only).
+only). On Windows there's an experimental port,
+[PC in the headset](pc-in-headset.md).
+
+On a **whole Mac display** panel, click **Switch Mac app (⌘Tab)** to send one
+Command-Tab chord to the Mac. The button is absent from single-window panels;
+those already keep their own source. It requires the same Mac Accessibility
+permission as other viewer keyboard input. The chord and button have automated
+checks, but a worn-headset click has not been verified.
 
 The confidence labels are the same as in [ssh.md](ssh.md).
+
+Small fractional wheel movements accumulate until they make a whole pixel,
+so smooth thumbstick events do not disappear when the Mac converts them to
+integer scroll values. Each axis accumulates independently; losing viewer
+focus or reconnecting discards the leftover fraction. Automated checks cover
+the viewer's wheel messages and native-agent receipt on macOS. Real
+thumbstick scrolling speed and feel still need a worn-headset check.
 
 ## Why this design
 

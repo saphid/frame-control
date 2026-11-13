@@ -5,6 +5,7 @@ Everything here runs on your computer, not the Frame. Python stdlib only.
 CLI (used by the Electron app, so terminal handling lives in one place):
   python3 ui/frame_host.py terminal -- CMD [ARG...]   # open CMD in a terminal window
 """
+import base64
 import hashlib
 import io
 import os
@@ -42,15 +43,32 @@ class HostError(RuntimeError):
 # key ("user@host: Permission denied (publickey,...)."): either way no command ran.
 SSH_LINK_FAILED = re.compile(r"^(?:ssh: connect to host |ssh: Could not resolve hostname |banner exchange: |"
                              r"kex_exchange_identification: |mux_client_\w+: |client_loop: |"
-                             r"Connection (?:closed|reset) by \S+ port \d+|Connection timed out during banner exchange|"
-                             r"Host key verification failed\.|No \S+ host key is known for |"
-                             r"[^\n@:]{1,64}@\S+: Permission denied \()",  # a Windows user name may have spaces
+                             r"Connection (?:closed|reset) by \S+ port \d+|Connection to \S+ closed by remote host\.|"
+                             r"close - IO is still pending on closed socket\.|"
+                             r"Connection timed out during banner exchange|Host key verification failed\.|"
+                             r"No \S+ host key is known for |[^\n@:]{1,64}@\S+: Permission denied \()",
+                             # a Windows user name may have spaces
                              re.M)
 
 
-def ssh_link_failed(returncode, stderr):
-    """Whether an ssh run failed to reach the headset: ssh's own exit code (255) and its own words."""
-    return returncode == 255 and bool(SSH_LINK_FAILED.search(stderr or ""))
+def ssh_link_failed(returncode, stderr, stdout=""):
+    """Whether ssh failed to reach the headset: exit 255 plus its own words, or no remote output.
+
+    A remote command may itself exit 255, so any stdout or unrecognised stderr keeps it unmarked.
+    A silent 255 is the mux/client failing before a remote command produced anything.
+    """
+    return returncode == 255 and (bool(SSH_LINK_FAILED.search(stderr or "")) or not (stderr or stdout))
+
+
+def ssh_exit_message(returncode):
+    """A readable fallback when ssh exits without saying why."""
+    # Keep the values seen in reports alongside the usual Windows status values;
+    # either way, don't show the person an opaque decimal process code.
+    if returncode in (3221226091, 0xC0000409):
+        return "ssh crashed on this computer"
+    if returncode in (3221225773, 0xC000013A):
+        return "ssh was cancelled on this computer"
+    return f"ssh exited {returncode}"
 
 
 def link_failure(error):
@@ -62,6 +80,10 @@ def link_failure(error):
 
 class Unreachable(HostError):
     """The Frame, or a service on it, didn't answer: the person's to sort out, not a fault here."""
+
+
+class MissingRdpClient(HostError):
+    """Remote desktop needs a client installed on this computer."""
 
 
 def run_ssh(argv, **kwargs):
@@ -308,6 +330,38 @@ def clipboard_text():
     raise HostError("Can't read the clipboard")
 
 
+def set_clipboard_text(text):
+    """Put TEXT on this computer's clipboard."""
+    data = text.encode("utf-8")
+    env = None
+    if MAC:
+        # pbcopy reads stdin in the locale's encoding, and the app may start with none (MacRoman).
+        cmds, env = [["pbcopy"]], {**os.environ, "LC_CTYPE": "UTF-8"}
+    elif WINDOWS:
+        # Base64 on stdin, so no console code page touches the text. clip.exe takes UTF-16 with a BOM.
+        script = ("Set-Clipboard -Value ([Text.Encoding]::UTF8.GetString("
+                  "[Convert]::FromBase64String([Console]::In.ReadToEnd())))")
+        cmds = [["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script], ["clip.exe"]]
+    else:
+        cmds = [["wl-copy"], ["xclip", "-selection", "clipboard", "-in"], ["xsel", "--clipboard", "--input"]]
+    for cmd in cmds:
+        if not shutil.which(cmd[0]):
+            continue
+        feed = (base64.b64encode(data) if cmd[0] == "powershell.exe"
+                else b"\xff\xfe" + text.encode("utf-16-le") if cmd[0] == "clip.exe" else data)
+        # wl-copy and xclip stay behind to serve the clipboard: give them no pipes to hold open.
+        try:
+            r = subprocess.run(cmd, input=feed, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                               env=env, timeout=10)
+        except subprocess.TimeoutExpired:
+            continue
+        if r.returncode == 0:
+            return
+    if LINUX:
+        raise HostError("Can't set the clipboard: install wl-clipboard (Wayland) or xclip (X11)")
+    raise HostError("Can't set the clipboard")
+
+
 # What Windows' OpenSSH says when it refuses ~/.ssh/config (or a key) for its ACL.
 BAD_PERMISSIONS = "Bad owner or permissions on "
 
@@ -439,7 +493,7 @@ def open_rdp(alias, host=None):
         if which(name):
             _spawn([name, f"/v:{host}", f"/u:{RDP_USER}", "/dynamic-resolution"])
             return f"Opened FreeRDP to {host}: {RDP_LOGIN}"
-    raise HostError("No RDP client found: install Remmina or FreeRDP")
+    raise MissingRdpClient("No RDP client found: install Remmina or FreeRDP")
 
 
 def main(argv):

@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-30T22:43:46.770296+00:00",
+  "baseRevision": "445df0a6d1247dde2f40c156c4586381be9cd91d",
+  "observedFailure": {
+    "head": "793de22b9ae9091aa6a993c3b2cffc4053c7e23c",
+    "run": 41136819192,
+    "job": 124341200691,
+    "artifact": 13016278825,
+    "artifactSha256": "ce774bd758a90878c8df694752a7d23c8edce3c0269e48a04a9f81de2771cc86",
+    "actualCheckoutAndArtifactVerified": true,
+    "exactSourceHashesVerified": 126,
+    "error": "Public fetch failed for https://dl.flathub.org/repo/objects/0b/310309a24d21b0f16c6afa3e6b9a601c26a1184163363588e39767a4e476b2.dirtree: <urlopen error [Errno 101] Network is unreachable>",
+    "signaturesReached": false,
+    "runtimeReached": false
+  },
+  "sourceSha256": {
+    "scripts/framey-fetch-syncthing-flatpak.py": "08bc1e36598efacfc22417ce451956983fd7d7d8929f5cd09e575069dfe3a8a8",
+    "tests/test_syncthing_flatpak_fetch.py": "b91dc96ec345acdb416ae42d1d2f842504954edf565eb4488df4c65fe6d79945"
+  },
+  "validation": {
+    "interpreter": "Python 3.12.3",
+    "giAvailable": true,
+    "reproductionTests": 8,
+    "originalExpectedFailures": 1,
+    "originalExpectedErrors": 1,
+    "originalLogSha256": "c5013df7dcd5efa6e894330b5f8da18c0681326195074b50ab197900331ca503",
+    "fixedFlatpakTestsPassed": 49,
+    "fixedFlatpakTestsSkipped": 0,
+    "fixedLogSha256": "691fe739e3bd108238844f19f9c4d558940154eaafcb723f4d9c0034de7685cd",
+    "retryThenOriginalBytes": true,
+    "requestTimeoutSeconds": 45,
+    "maximumAttempts": 3,
+    "retryDelaySeconds": [
+      1,
+      2
+    ],
+    "persistentUnreachableStillFails": true,
+    "permissionCertificate404AndOversizeFailuresRetained": true
+  },
+  "limits": {
+    "actualNetworkRecoveryVerified": false,
+    "freshExactHeadCiRequired": true,
+    "signedPackageRuntimeReplayedForThisChange": false,
+    "originalFailedCiStillAuthoritative": true,
+    "signatureAndPayloadVerificationUnchanged": true,
+    "realFrameContacted": false,
+    "realSteamCefVerified": false,
+    "physicalControllerVerified": false,
+    "releasePublished": false
+  }
+}

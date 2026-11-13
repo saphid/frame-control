@@ -101,6 +101,14 @@ Stills and the theatre surround are re-sent after waking. Five minutes
 without an accepted frame is reported as an error. Headset-view captures
 taken during standby show a flat dark frame, not our screen.
 
+**Optional surround:** if SteamVR refuses the theatre dark surround at startup
+or on a retry after standby, playback continues without it and the player log
+records `Theatre surround unavailable`. Screen errors still fail playback.
+On exit, the player attempts to destroy every owned overlay and calls OpenVR
+shutdown even if an overlay's teardown raises an exception. Refusal and
+teardown errors are covered by fake-OpenVR tests; a real surround refusal has
+not been induced safely. See the [current hardening checks](evidence/media-surround-2026-10-24.md).
+
 ![Media panel in Frame Control while a photo plays on the Frame](img/media-ui-panel.png)
 
 **Verified failed route:** GStreamer 1.24.2's `playbin` selected

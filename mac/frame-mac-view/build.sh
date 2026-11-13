@@ -1,11 +1,13 @@
 #!/bin/sh
-# Builds the Mac streaming agent into mac/bin/frame-mac-view (arm64, macOS 14+).
+# Builds the Mac streaming agent into mac/bin/frame-mac-view (arm64 or x86_64, macOS 14+).
 # Frame Control runs it for "Mac in the headset"; the Electron app bundles it.
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 out=${1:-$here/../bin/frame-mac-view}
+arch=${FRAME_MAC_ARCH:-$(uname -m)}
+case "$arch" in arm64|x86_64) ;; *) echo "unsupported Mac architecture: $arch" >&2; exit 1 ;; esac
 mkdir -p "$(dirname "$out")"
-xcrun swiftc -O -swift-version 5 -target arm64-apple-macos14.0 \
+xcrun swiftc -O -swift-version 5 -target "$arch-apple-macos14.0" \
   -import-objc-header "$here/Sources/CGVirtualDisplay.h" \
   -o "$out" "$here"/Sources/*.swift
 echo "built $out"

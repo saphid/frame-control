@@ -1,0 +1,418 @@
+{
+  "checkedAtUtc": "2026-10-26T00:12:47.296778+00:00",
+  "method": "Local Chromium actual Framey headset page and opaque official plugin iframe; production method/event bridge relayed by SSH to real ARM64 Decky 3.3.0 in a private removable user service. Test relay restricts RPC methods and timer durations. Backend code is unmodified, no fake plugin replies. Only file paths to private install and outer status/data APIs differ. Not worn VR.",
+  "decky": {
+    "version": "v3.3.0",
+    "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+  },
+  "hostSourceSha256": {
+    "framey-host.js": "3bad52546c0b78c20e6479c91899f1f3864b74687c6fce37e776abededfb5f1c",
+    "framey-events.js": "89046f4c89bdab0f578b910170a044d5ada540db0f7b71d6a370c68b4b008c3f",
+    "framey_panel.py": "8ca4b3ba5f0d51c51bb3601f9ccd24c4af397fbf8f63c383a3042e1ae3f7b39b",
+    "headset.html": "ebaf1711639a929ec7287c01dbbbe8eb08f000b852fdc877f31c9d99e5fe69fc"
+  },
+  "before": {
+    "battery": [
+      100
+    ],
+    "decky": "inactive",
+    "panel": "inactive"
+  },
+  "after": {
+    "battery": [
+      100
+    ],
+    "decky": "inactive",
+    "panel": "inactive"
+  },
+  "powerSettingsChanged": false,
+  "plugins": [
+    {
+      "id": 19,
+      "name": "Notebook",
+      "version": "0.1.5",
+      "sha256": "c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c",
+      "calls": [
+        {
+          "id": 19,
+          "method": "listPages",
+          "args": [
+            {
+              "appid": 0
+            }
+          ],
+          "result": {
+            "result": {
+              "result": [],
+              "success": true
+            }
+          }
+        },
+        {
+          "id": 19,
+          "method": "loadLastSelectedPage",
+          "args": [
+            {
+              "appid": 0
+            }
+          ],
+          "result": {
+            "result": {
+              "result": 0,
+              "success": true
+            }
+          }
+        },
+        {
+          "id": 19,
+          "method": "loadPage",
+          "args": [
+            {
+              "appid": 0,
+              "page": 0
+            }
+          ],
+          "result": {
+            "result": {
+              "result": {
+                "page": 0,
+                "timestamp": 0,
+                "empty": true,
+                "data": ""
+              },
+              "success": true
+            }
+          }
+        },
+        {
+          "id": 19,
+          "method": "savePage",
+          "args": [
+            {
+              "appid": 0,
+              "page": 0,
+              "data": "[{\"drawMode\":true,\"strokeColor\":\"white\",\"strokeWidth\":4,\"paths\":[{\"x\":583.3984375,\"y\":155.997802734375}]}]"
+            }
+          ],
+          "result": {
+            "result": {
+              "result": {
+                "timestamp": 1792973680303
+              },
+              "success": true
+            }
+          }
+        },
+        {
+          "id": 19,
+          "method": "listPages",
+          "args": [
+            {
+              "appid": 0
+            }
+          ],
+          "result": {
+            "result": {
+              "result": [
+                {
+                  "page": 0,
+                  "timestamp": 1792973680303,
+                  "empty": false
+                }
+              ],
+              "success": true
+            }
+          }
+        },
+        {
+          "id": 19,
+          "method": "loadLastSelectedPage",
+          "args": [
+            {
+              "appid": 0
+            }
+          ],
+          "result": {
+            "result": {
+              "result": 0,
+              "success": true
+            }
+          }
+        },
+        {
+          "id": 19,
+          "method": "loadPage",
+          "args": [
+            {
+              "appid": 0,
+              "page": 0
+            }
+          ],
+          "result": {
+            "result": {
+              "result": {
+                "page": 0,
+                "timestamp": 1792973680303,
+                "empty": false,
+                "data": "[{\"drawMode\":true,\"strokeColor\":\"white\",\"strokeWidth\":4,\"paths\":[{\"x\":583.3984375,\"y\":155.997802734375}]}]"
+              },
+              "success": true
+            }
+          }
+        }
+      ],
+      "events": [],
+      "checks": {
+        "pointerStrokeSaved": true,
+        "sameStrokeLoadedAfterBackendRestart": true,
+        "defaultAppId": 0,
+        "existingNotesTouched": false
+      }
+    },
+    {
+      "id": 96,
+      "name": "Simple Timer",
+      "version": "1.0.0",
+      "sha256": "973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312",
+      "calls": [
+        {
+          "id": 96,
+          "method": "load_remaining_seconds",
+          "args": [],
+          "result": {
+            "result": null
+          }
+        },
+        {
+          "id": 96,
+          "method": "load_subtle_mode",
+          "args": [],
+          "result": {
+            "result": null
+          }
+        },
+        {
+          "id": 96,
+          "method": "load_recents",
+          "args": [],
+          "result": {
+            "result": null
+          }
+        },
+        {
+          "id": 96,
+          "method": "start_timer",
+          "args": [
+            300
+          ],
+          "result": {
+            "result": null
+          }
+        },
+        {
+          "id": 96,
+          "method": "cancel_timer",
+          "args": [],
+          "result": {
+            "result": null
+          }
+        },
+        {
+          "id": 96,
+          "method": "start_timer",
+          "args": [
+            5
+          ],
+          "result": {
+            "result": null
+          }
+        },
+        {
+          "id": 96,
+          "method": "load_remaining_seconds",
+          "args": [],
+          "result": {
+            "result": null
+          }
+        },
+        {
+          "id": 96,
+          "method": "load_recents",
+          "args": [],
+          "result": {
+            "result": null
+          }
+        },
+        {
+          "id": 96,
+          "method": "load_subtle_mode",
+          "args": [],
+          "result": {
+            "result": null
+          }
+        }
+      ],
+      "events": [
+        {
+          "sequence": 1,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            0
+          ]
+        },
+        {
+          "sequence": 2,
+          "event": "simple_timer_subtle",
+          "args": [
+            true
+          ]
+        },
+        {
+          "sequence": 3,
+          "event": "simple_timer_refresh_recents",
+          "args": [
+            []
+          ]
+        },
+        {
+          "sequence": 4,
+          "event": "simple_timer_refresh_recents",
+          "args": [
+            [
+              300
+            ]
+          ]
+        },
+        {
+          "sequence": 5,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            300
+          ]
+        },
+        {
+          "sequence": 6,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            294.9945251941681
+          ]
+        },
+        {
+          "sequence": 7,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            289.99201130867004
+          ]
+        },
+        {
+          "sequence": 8,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            284.9877219200134
+          ]
+        },
+        {
+          "sequence": 9,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            0
+          ]
+        },
+        {
+          "sequence": 10,
+          "event": "simple_timer_refresh_recents",
+          "args": [
+            [
+              5,
+              300
+            ]
+          ]
+        },
+        {
+          "sequence": 11,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            5
+          ]
+        },
+        {
+          "sequence": 12,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            -0.005679607391357422
+          ]
+        },
+        {
+          "sequence": 13,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            0
+          ]
+        },
+        {
+          "sequence": 14,
+          "event": "simple_timer_event",
+          "args": [
+            "Your session has ended!",
+            true
+          ]
+        },
+        {
+          "sequence": 1,
+          "event": "simple_timer_seconds_updated",
+          "args": [
+            0
+          ]
+        },
+        {
+          "sequence": 2,
+          "event": "simple_timer_refresh_recents",
+          "args": [
+            [
+              5,
+              300
+            ]
+          ]
+        },
+        {
+          "sequence": 3,
+          "event": "simple_timer_subtle",
+          "args": [
+            true
+          ]
+        }
+      ],
+      "checks": {
+        "uiStart300Seconds": true,
+        "uiCancel": true,
+        "shortTimer5Seconds": true,
+        "completionToastVisible": true,
+        "recentTimersAndSubtleModeSurvivedRestart": true,
+        "subscriptionsAfterPanelClose": 0
+      },
+      "upstreamError": "Simple Timer 1.0.0 _main after restarting with an expired timer raises AttributeError: 'Plugin' object has no attribute 'timer_task' (main.py:94,129). Frontend read requests still load recent timers and subtle mode."
+    }
+  ],
+  "cleanup": {
+    "baseAbsent": true,
+    "unitAbsent": true,
+    "serviceActive": false,
+    "independentlyRechecked": true,
+    "lockReleased": true
+  },
+  "regressions": {
+    "unitTests": 1606,
+    "unitSkips": 16,
+    "browserPlugins": 116,
+    "browserReady": 96,
+    "browserFailed": 20,
+    "fakeFrameInstalled": 60,
+    "fakeFrameRejected": 56
+  },
+  "limitations": [
+    "Timer sound asset and suspend action unsupported; no suspend/power action run.",
+    "Closing a Framey panel removes its event channel; it is not a global background notification service.",
+    "Notebook default notebook only (appid 0): no per-game auto-selection or background artwork.",
+    "No worn VR, physical controller, keyboard, or optical check."
+  ]
+}

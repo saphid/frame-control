@@ -97,6 +97,12 @@ The app rereads the gateway every 5 seconds and Tailscale's state every
 
 ## The connection, stage by stage
 
+When a connection fails, the header pill keeps its compact offline state and
+retry countdown; its tooltip and connection dialog contain the full reason.
+Devices shows a short reason in the headset row (with the full reason in its
+tooltip) and a wrapping recovery explanation in the selected headset's details.
+**Use this headset** also selects that headset's details.
+
 The connector runs in the server (`frame_link.Link`) and moves through:
 
 1. **Checking this computer's network**: gateway, Wi-Fi, this computer's IP, Tailscale.

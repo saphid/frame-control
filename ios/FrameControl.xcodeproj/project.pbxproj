@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C1234567890ABCDEF0123456 /* NativeSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1234567890ABCDEF0123456 /* NativeSessionTests.swift */; };
+		A1234567890ABCDEF0123456 /* NativeSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1234567890ABCDEF0123456 /* NativeSessionState.swift */; };
 		0DEE50BD563B1D8C328C4C0A /* HeadsetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC7BA8014DBC302D08FD397 /* HeadsetServer.swift */; };
 		12B21D3319BAF5AE79948560 /* FrameLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16644E7FDA7ADD5B232EB700 /* FrameLink.swift */; };
 		1A07EC692B0FF723907EA77B /* WebShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6C4E6C28315CA8729FCAAEA /* WebShell.swift */; };
@@ -35,6 +37,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D1234567890ABCDEF0123456 /* NativeSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSessionTests.swift; sourceTree = "<group>"; };
+		B1234567890ABCDEF0123456 /* NativeSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSessionState.swift; sourceTree = "<group>"; };
 		16644E7FDA7ADD5B232EB700 /* FrameLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameLink.swift; sourceTree = "<group>"; };
 		1740B691F9C25E5FB6F9EFC3 /* FrameControlTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameControlTests.swift; sourceTree = "<group>"; };
 		237D9AF04EEA257AB382F60E /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
@@ -100,6 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				8A11F3431826A26B247C0695 /* AppModel.swift */,
+				B1234567890ABCDEF0123456 /* NativeSessionState.swift */,
 				93C8E0D7C3F4F628941B3D5A /* FrameControlApp.swift */,
 				BF0FCA7117DA3ABA449B4EE0 /* InstallLink.swift */,
 			);
@@ -111,6 +116,7 @@
 			children = (
 				E81218B75FEEE47B8D8BAE20 /* ComfortNotificationTests.swift */,
 				1740B691F9C25E5FB6F9EFC3 /* FrameControlTests.swift */,
+				D1234567890ABCDEF0123456 /* NativeSessionTests.swift */,
 			);
 			path = FrameControlTests;
 			sourceTree = "<group>";
@@ -260,6 +266,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F94D0252F8CC5854314B84B2 /* AppModel.swift in Sources */,
+				A1234567890ABCDEF0123456 /* NativeSessionState.swift in Sources */,
 				78427FC66780623F31E7501E /* FrameControlApp.swift in Sources */,
 				E6898C714A92D3979F73B6E1 /* FrameFinder.swift in Sources */,
 				12B21D3319BAF5AE79948560 /* FrameLink.swift in Sources */,
@@ -279,6 +286,7 @@
 			files = (
 				A0C5B00E257230A38DBD9E54 /* ComfortNotificationTests.swift in Sources */,
 				DC043FB74BE2D23F3A5826BF /* FrameControlTests.swift in Sources */,
+				C1234567890ABCDEF0123456 /* NativeSessionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

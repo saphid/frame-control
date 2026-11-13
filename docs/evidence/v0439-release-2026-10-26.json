@@ -1,0 +1,212 @@
+{
+  "tag": "v0.4.39",
+  "tagCommit": "fd0b0a946f11d92fd1cc480cd9d1a83be795bf71",
+  "releaseUrl": "https://github.com/saphid/frame-control/releases/tag/v0.4.39",
+  "releaseId": 423799494,
+  "releaseWorkflow": {
+    "runId": 40258561639,
+    "conclusion": "success",
+    "jobsPassed": 6
+  },
+  "publishedLatest": true,
+  "assets": [
+    {
+      "name": "Frame-Control-linux-amd64.deb",
+      "size": 131444552,
+      "digest": "sha256:9ca74551fe47ea244f500e1b4119c02307d185d1acea6287a02a5f6c055c674e"
+    },
+    {
+      "name": "Frame-Control-linux-arm64.AppImage",
+      "size": 156170292,
+      "digest": "sha256:66bd8f644f6a0b06f1e46ff635c5b50e53d3f2a9c6736f12b737ee0ad1667335"
+    },
+    {
+      "name": "Frame-Control-linux-arm64.deb",
+      "size": 118529048,
+      "digest": "sha256:f6b476a2f3163028d0862a13d0c8890760bdc8fe52c1006f106d9e540de32a6a"
+    },
+    {
+      "name": "Frame-Control-linux-x86_64.AppImage",
+      "size": 164587947,
+      "digest": "sha256:240023c89bea049f0864da75f83ec235c138375c4fd1c4612953a4c5863610ca"
+    },
+    {
+      "name": "Frame-Control-mac-arm64.dmg",
+      "size": 162169626,
+      "digest": "sha256:c0243317555975b1a5588640ec6fe71db5014788858ff00dd45914b77c1fe99a"
+    },
+    {
+      "name": "Frame-Control-mac-arm64.zip",
+      "size": 162054585,
+      "digest": "sha256:08191f80d6c78ac8576e2e2fe7937f5c1689ebed780528e63b6fb41b3c90d823"
+    },
+    {
+      "name": "Frame-Control-mac-x64.dmg",
+      "size": 169230398,
+      "digest": "sha256:f47b5a188b5090f97a72467394d4fa65ccc73fe3169a6276e2a32cab5c8019d8"
+    },
+    {
+      "name": "Frame-Control-mac-x64.zip",
+      "size": 169141014,
+      "digest": "sha256:bafc1aec0c11c1fae097dbe1e4b585ebc13a0f8eaf1b249717c14d78811e08d7"
+    },
+    {
+      "name": "Frame-Control-Setup-x64.exe",
+      "size": 136500288,
+      "digest": "sha256:44a9f4c072b8c10ec81b060484764af10607763c69d55ecdad6bd0b103b7207e"
+    },
+    {
+      "name": "Frame-Control-win-x64.zip",
+      "size": 183446427,
+      "digest": "sha256:14f3dae327f054431ecb7ed204144dc529e04a03b35b646925bd9812dc54c504"
+    }
+  ],
+  "sha256sumsDigest": "sha256:59cff0ab59e2a681656c0b15b3445ca0baa0546d03196f8c4ae58eae8785db25",
+  "updateJsonDigest": "sha256:afef87fa3869be3acf06dfaa4831a97b29ce9c5d275940a2202bc958c62f4d67",
+  "publisherDryRun": {
+    "passed": true,
+    "installerDigests": 10,
+    "digestAndChecksumChecks": 11,
+    "completeNotesCharacters": 3837
+  },
+  "downloadedAppImage": {
+    "name": "Frame-Control-linux-x86_64.AppImage",
+    "sha256": "240023c89bea049f0864da75f83ec235c138375c4fd1c4612953a4c5863610ca",
+    "isolatedXvfbHttpStatus": 200,
+    "serverStopped": true,
+    "serverHeaderPrefix": "FrameControl/1"
+  },
+  "downloadedIntelMacZip": {
+    "name": "Frame-Control-mac-x64.zip",
+    "sha256": "bafc1aec0c11c1fae097dbe1e4b585ebc13a0f8eaf1b249717c14d78811e08d7",
+    "machOCpu": "x86_64",
+    "inspected": [
+      "app executable",
+      "bundled Python 3.12",
+      "Electron helper"
+    ],
+    "physicalRuntime": "unverified"
+  },
+  "realFrameSmoke": {
+    "sourceTag": "v0.4.39",
+    "started": "2026-10-26T02:20:45Z",
+    "buildId": "20261022.6153909",
+    "preflight": {
+      "activity": 3,
+      "proximity": [
+        6.3125
+      ],
+      "battery": [
+        100
+      ]
+    },
+    "passed": 13,
+    "failed": 0,
+    "steps": [
+      {
+        "name": "cleanup: leftovers from earlier runs",
+        "passed": true,
+        "seconds": 8.2
+      },
+      {
+        "name": "devkit service: properties.json",
+        "passed": true,
+        "seconds": 0.0
+      },
+      {
+        "name": "status",
+        "passed": true,
+        "seconds": 0.6
+      },
+      {
+        "name": "arm64: install",
+        "passed": true,
+        "seconds": 8.0
+      },
+      {
+        "name": "arm64: launch",
+        "passed": true,
+        "seconds": 3.5
+      },
+      {
+        "name": "arm64: remove",
+        "passed": true,
+        "seconds": 6.8
+      },
+      {
+        "name": "x86_64: install",
+        "passed": true,
+        "seconds": 7.9
+      },
+      {
+        "name": "x86_64: launch",
+        "passed": true,
+        "seconds": 3.5
+      },
+      {
+        "name": "x86_64: remove",
+        "passed": true,
+        "seconds": 6.6
+      },
+      {
+        "name": "exe: install",
+        "passed": true,
+        "seconds": 8.0
+      },
+      {
+        "name": "exe: launch",
+        "passed": true,
+        "seconds": 3.4
+      },
+      {
+        "name": "exe: remove",
+        "passed": true,
+        "seconds": 6.5
+      },
+      {
+        "name": "cleanup: everything this run installed",
+        "passed": true,
+        "seconds": 8.1
+      }
+    ],
+    "ownedLockReleased": true
+  },
+  "postReleasePr282": {
+    "headCommit": "ce6e8f807f44b614e5bbd5c5a5a6a2093236d917",
+    "mergedCommit": "67b9151513bc9fb550f5dfb2d2eec925df390ab3",
+    "exactHeadCiPassed": 11,
+    "unwornVrExercise": {
+      "passed": true,
+      "beforeActivity": 3,
+      "beforeBattery": [
+        99
+      ],
+      "afterBattery": [
+        99
+      ],
+      "overlayVisible": true,
+      "compositorChanged": true,
+      "stereoCaptureSha256": "c7edc11877aca35dd3aebe480feee93253d04825fe9bd75d02136bb7e3510b97",
+      "mirrorCaptureSha256": "8e5932fb0046b218a1781a6b06cfaa6e3c13dc7874799e287066ed6e43640cd4",
+      "syntheticPointerInputPassed": true,
+      "liveSettingReopened": true,
+      "nativeScrollMoved": false,
+      "powerRecoveryRemoved": true,
+      "ownedLockReleased": true,
+      "cleanupErrors": [],
+      "physicalControllerVerified": false,
+      "wornVisualVerified": false,
+      "officialPluginsInVrVerified": false
+    },
+    "realFrameSmoke": {
+      "passed": 13,
+      "failed": 0,
+      "beforeActivity": 3,
+      "battery": [
+        99
+      ],
+      "buildId": "20261022.6153909",
+      "ownedLockReleased": true
+    }
+  }
+}

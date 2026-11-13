@@ -1,0 +1,140 @@
+{
+  "checkedAtUtc": "2026-10-26T08:14:37.777131+00:00",
+  "plugin": {
+    "id": 84,
+    "name": "Junk-Store",
+    "version": "1.1.13",
+    "sha256": "f7ad2a0103c85bf308929b2e96ec9aeeb0d76bcc6ae97eb1e4b5f31ffba0cbb1"
+  },
+  "projection": {
+    "field": "local_per_client_data.installed",
+    "wire": "optional ninth scalar: boolean or null",
+    "unknown": "null creates an empty detached metadata object; installed stays undefined",
+    "privateFieldsCopied": false,
+    "oldEightScalarRows": "accepted; running updates preserve existing library metadata",
+    "liveObservation": false
+  },
+  "realFrame": {
+    "os": "Frame OS 0.5.6",
+    "arch": "aarch64",
+    "uid": 1000,
+    "decky": {
+      "version": "v3.3.0",
+      "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+    },
+    "transport": "trusted SSH through lxso2",
+    "sharedLock": true,
+    "runtime": "private bounded removable user service; not enabled",
+    "library": {
+      "apps": 1106,
+      "games": 895,
+      "installedTrue": 41,
+      "installedFalse": 0,
+      "installedUnknown": 1065
+    },
+    "protonRuntimeInstalledFields": "undefined for both EasyAntiCheat and BattlEye; no false value invented",
+    "legendaryInstalled": false,
+    "allowedMethods": [
+      "execute_action",
+      "get_websocket_port"
+    ],
+    "staticActions": [
+      "MainMenu/GetContent",
+      "init/InitActions"
+    ],
+    "noMutationActions": true
+  },
+  "localBrowser": {
+    "host": "actual headset.html/framey-host.js, vendored React, opaque iframe",
+    "backend": "exact official ARM64 plugin through production receipt-bound bridge",
+    "library": "production receipt-bound snapshot from real Frame CEF",
+    "outerStatusInstallCheck": "fixture responses",
+    "passed": [
+      "main menu",
+      "About content and tab list",
+      "Dependencies tab controls render; no buttons invoked",
+      "Back to main menu",
+      "close/reopen and About again"
+    ],
+    "limits": [
+      "optional localhost websocket blocked by test relay CSP",
+      "RSS calls denied",
+      "running-context relay returns fixture/unavailable data; no lifetime claims",
+      "outer extension/status fixture is incomplete; unrelated outer status/extension errors excluded from plugin claim",
+      "deployed headset HTTP endpoint unverified",
+      "worn VR unverified"
+    ]
+  },
+  "cleanup": {
+    "initialSshStop": "timed out while test unit deactivating",
+    "recovery": "SIGKILL to exact owned unit only after matching lock owner; private files removed",
+    "result": {
+      "baseAbsent": true,
+      "unitAbsent": true,
+      "archiveAbsent": true,
+      "state": "MainPID=0\nLoadState=not-found\nActiveState=inactive\n",
+      "normal": {
+        "frame-control-decky.service": "inactive",
+        "frame-control-headset.service": "inactive"
+      },
+      "battery": [
+        99
+      ]
+    },
+    "freshLockedAudit": {
+      "services": 1,
+      "allArtifactsAbsent": true,
+      "allUnloadedInactivePidZero": true
+    },
+    "lockReleased": true,
+    "batteryBeforeAfter": [
+      [
+        99
+      ],
+      [
+        99
+      ]
+    ],
+    "powerSettingChanged": false,
+    "localRelayAndBrowserClosed": true
+  },
+  "verification": {
+    "python": {
+      "run": 1628,
+      "skipped": 16,
+      "failures": 0
+    },
+    "panelFocused": {
+      "run": 22,
+      "failures": 0
+    },
+    "nodeContracts": [
+      "framey_actions.mjs",
+      "framey_running.mjs"
+    ],
+    "siteTestFiles": {
+      "passed": 2,
+      "failures": 0
+    },
+    "fakeFrame": {
+      "blocked": 56,
+      "installed-removed": 60
+    },
+    "officialStore": {
+      "plugins": 116,
+      "errors": 0,
+      "identitySetUnchanged": true,
+      "checkedAtUtc": "2026-10-26T08:21:01.653768+00:00"
+    }
+  },
+  "status": "partial",
+  "unverified": [
+    "dependency/runtime installation",
+    "login",
+    "game listing/download/launch",
+    "RSS",
+    "optional websocket operations",
+    "Steam shortcut mutation",
+    "worn VR"
+  ]
+}

@@ -1,0 +1,65 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div><div id="framey-modal"></div>
+<div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const click=node=>ReactDOM.flushSync(()=>node.click());
+  const key=(node,value)=>ReactDOM.flushSync(()=>node.dispatchEvent(new KeyboardEvent('keydown',{key:value,bubbles:true,cancelable:true})));
+  try {
+    for(const mode of ['label','focusable','action']){
+      const first=React.createRef(),second=React.createRef();let changes=0,activations=0;
+      const row=(ref,extra={})=>React.createElement(DFL.Field,{ref,label:'Example setting',description:'Local description',
+        icon:React.createElement('span',{'data-icon':'kept'},'Icon'),className:'field-ref',
+        style:{display:'block',width:260},focusable:mode==='focusable',
+        ...(mode==='action'?{onActivate:()=>activations++}:{}),...extra},
+        mode==='label'?React.createElement('input',{type:'checkbox',onChange:()=>changes++}):'Local child');
+      render(row(first));const node=container.firstElementChild;
+      assert(first.current===node,'Field ref did not receive its native '+mode+' wrapper');
+      assert(node.tagName===(mode==='label'?'LABEL':'DIV'),'Field ref changed wrapper semantics');
+      assert(node.getBoundingClientRect().width===260&&node.className==='field-ref'&&
+        node.querySelector('[data-icon="kept"]')&&node.textContent.includes('Local description'),
+        'Field ref lost native layout or content');
+      if(mode==='label'){
+        const input=node.querySelector('input');assert(node.control===input,'native label association lost');
+        click(node.querySelector('strong'));assert(input.checked&&changes===1,'label activation did not toggle child once');
+        assert(!node.hasAttribute('tabindex'),'ordinary label acquired a tab stop');
+      }else{
+        first.current.focus();assert(document.activeElement===node&&node.tabIndex===0,'row ref cannot focus native wrapper');
+        click(node);key(node,'Enter');key(node,' ');
+        assert(activations===(mode==='action'?3:0),'Field action changed through native ref');
+      }
+      render(row(second));assert(first.current===null&&second.current===node,'object ref replacement failed');
+      const seen=[],callback=value=>seen.push(value);
+      render(row(callback));assert(second.current===null&&seen.length===1&&seen[0]===node,'callback ref replacement failed');
+      render(row(callback,{className:'updated-field',style:{display:'block',width:280}}));
+      assert(seen.length===1&&node.className==='updated-field'&&node.getBoundingClientRect().width===280,
+        'ordinary redraw replaced wrapper or ref');
+      if(mode!=='label'){
+        render(row(callback,{disabled:true}));click(node);key(node,'Enter');
+        assert(node.tabIndex===-1&&activations===(mode==='action'?3:0),'disabled action or tab stop changed');
+      }
+      assert(DFL.findModuleByExport(value=>value===DFL.Field)?.Field===DFL.Field,'Field missing from local module lookup');
+      render(null);assert(seen.length===2&&seen[1]===null&&!node.isConnected,'unmount did not detach callback ref');
+    }
+    const seen=[],callback=value=>seen.push(value);
+    render(React.createElement(DFL.Field,{ref:callback,label:'Setting'}));const label=seen[0];
+    render(React.createElement(DFL.Field,{ref:callback,label:'Action',onActivate:()=>{}}));const action=container.firstElementChild;
+    assert(seen.length===3&&seen[1]===null&&seen[2]===action&&action.tagName==='DIV'&&!label.isConnected,
+      'changing wrapper mode did not retire and replace native ref');
+    render(null);assert(seen.length===4&&seen[3]===null,'replacement wrapper did not detach');
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      syntheticFieldProps:true,nativeLabelAndDivRefs:true,labelAssociationAndChildCallback:true,
+      nativeLayoutMeasurement:true,actionAndFocusableRows:true,disabledActivationSuppressed:true,
+      objectAndCallbackReplacement:true,stableNodeOnRedraw:true,wrapperModeReplacement:true,
+      unmountClearsRefs:true,localModuleLookup:true,realPluginUsageVerified:false,
+      realBackendContacted:false,realFrameContacted:false,wornVisibilityVerified:false,
+      controllerInputVerified:false,vrKeyboardVerified:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

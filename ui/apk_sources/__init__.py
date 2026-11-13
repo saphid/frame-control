@@ -27,6 +27,7 @@ Entry dict (missing facts are None, never guessed)
  'version': '1.2', 'version_code': 12, 'min_sdk': 24, 'abis': ['arm64-v8a'],
  'vr': True/False/None, 'size': bytes, 'free': True, 'license': 'GPL-3.0' or None,
  'updated': 'YYYY-MM-DD', 'downloadable': bool,   # False = open page only
+ 'download_note': str,  # optional explanation when the creator's page is required
  'versions': [ {version, version_code, min_sdk, size, updated}, ... ]}  # details() only
 
 Rules

@@ -1,0 +1,64 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"><button id="opener">Open fixture</button></div>
+<div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const result=document.getElementById('result'),container=document.getElementById('framey-modal');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=element=>{let handle;ReactDOM.flushSync(()=>{handle=DFL.showModal(element);});return handle;};
+  const click=node=>ReactDOM.flushSync(()=>node.click());
+  const opener=document.getElementById('opener');
+  const trans_string=(_key,fallback)=>fallback;
+  // Inert icons; only the pinned dialog component runs. Its external-link
+  // callbacks are never invoked. No navigation, backend or payments run.
+  const SiPatreon=()=>React.createElement('span',null,'P');
+  const SiKofi=()=>React.createElement('span',null,'K');
+  __OFFICIAL_COMPONENT__
+  try {
+    opener.focus();
+    let handle=show(React.createElement(BeggingModal));await settle();
+    const footer=container.querySelector('footer');
+    assert(footer,'published footer did not mount');
+    const row=footer.firstElementChild,buttons=row.querySelectorAll('button');
+    assert(buttons.length===3,'published action children are missing');
+    assert(buttons[0].textContent==='Close'&&buttons[0].style.height==='100%','published Close action changed');
+    assert(getComputedStyle(row).display==='flex'&&getComputedStyle(row).flexWrap==='wrap','footer does not wrap at narrow widths');
+    click(buttons[0]);await handle.ClosedPromise;await settle();
+    assert(!container.children.length&&document.activeElement===opener,'published Close failed to dismiss/restore focus');
+
+    // Declared alignment/spacing options lay out native children; callbacks
+    // and disabled behavior belong to those children, not the wrapper.
+    let actions=0;
+    const content=(alignItems,spacing)=>React.createElement(DFL.ControlsList,{alignItems,spacing},
+      React.createElement('button',{type:'button',onClick:()=>actions++},'Local action'),
+      React.createElement('button',{type:'button',disabled:true,onClick:()=>actions++},'Disabled action'));
+    handle=show(content('center','extra'));await settle();
+    let group=container.querySelector('[role=dialog]').lastElementChild;
+    assert(getComputedStyle(group).justifyContent==='center'&&getComputedStyle(group).gap==='16px','center/extra layout lost');
+    click(group.children[0]);click(group.children[1]);
+    assert(actions===1,'wrapper changed child callbacks/disabled state');
+    ReactDOM.flushSync(()=>handle.Update(content('right','standard')));await settle();
+    group=container.querySelector('[role=dialog]').lastElementChild;
+    assert(getComputedStyle(group).justifyContent==='flex-end'&&getComputedStyle(group).gap==='8px','right/standard layout lost');
+    ReactDOM.flushSync(()=>handle.Update(content('left','standard')));await settle();
+    group=container.querySelector('[role=dialog]').lastElementChild;
+    assert(getComputedStyle(group).justifyContent==='flex-start','left layout lost');
+    ReactDOM.flushSync(()=>handle.Close());await handle.ClosedPromise;await settle();
+    assert(document.activeElement===opener,'closing layout fixture lost focus');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedFooter:true,
+      publishedClose:true,focusRestored:true,nativeChildCallbacks:true,disabledChild:true,
+      alignmentAndSpacing:true,wrapEnabled:true,externalLinksInvoked:false,
+      realFrameContacted:false,realBackendContacted:false,controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
