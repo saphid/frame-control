@@ -42,7 +42,9 @@ for request in sys.stdin:
     except dbus.DBusException as error:
         reply = ({} if error.get_dbus_name() in ('org.freedesktop.systemd1.NoSuchUnit',
                                                 'org.freedesktop.DBus.Error.UnknownObject')
-                 else {'error': error.get_dbus_name()[:256]})
+                 else {'error': error.get_dbus_name()[:160]
+                       + '; connected=' + str(bus.get_is_connected())
+                       + '; authenticated=' + str(bus.get_is_authenticated())})
     print(json.dumps(reply), flush=True)
 '''
 
