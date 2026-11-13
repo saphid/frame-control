@@ -311,6 +311,46 @@ class MigrationStacks(unittest.TestCase):
         query.process.wait.assert_called_once_with(timeout=1)
         query.process.stdout.close.assert_called_once()
 
+    def test_query_failures_retain_timing_and_cgroup_context_without_sampling(self):
+        query = Mock(side_effect=[RuntimeError('NoReply'), RuntimeError('helper unavailable')])
+        capture = Mock()
+        observer = self.observer.Observer(Path('/unused'), {}, [], query=query, capture=capture)
+        observer.stop = Mock()
+        observer.stop.is_set.side_effect = [False, False, True]
+        with patch.object(self.observer.time, 'monotonic', side_effect=[100, 101, 103, 104, 107]), \
+                patch.object(Path, 'is_dir', side_effect=[True, False, False, PermissionError()]):
+            observer.run()
+        self.assertEqual(observer.report['observerStartedMonotonic'], 100)
+        self.assertEqual(observer.report['observationErrorCount'], 2)
+        self.assertEqual(observer.report['errors'], [
+            'RuntimeError: NoReply', 'RuntimeError: helper unavailable'])
+        self.assertEqual(observer.report['observationErrorDetails'], [
+            dict(error='RuntimeError: NoReply', phase='query', startedMonotonic=101,
+                 elapsedSeconds=2, cgroupPresentBefore=True, cgroupPresentAfter=False,
+                 baselineAttempted=False),
+            dict(error='RuntimeError: helper unavailable', phase='query', startedMonotonic=104,
+                 elapsedSeconds=3, cgroupPresentBefore=False, cgroupPresentAfter=None,
+                 baselineAttempted=False)])
+        capture.assert_not_called()
+        self.assertEqual(observer.report['snapshots'], [])
+        self.assertFalse(observer.report['changesStopBudget'])
+        self.assertFalse(observer.report['historicalCauseEstablished'])
+
+    def test_error_details_are_capped_but_total_failures_remain_counted(self):
+        observer = self.observer.Observer(Path('/unused'), {}, [],
+                                          query=Mock(side_effect=RuntimeError('NoReply')))
+        observer.baseline = True
+        observer.stop = Mock()
+        observer.stop.is_set.side_effect = [False] * 11 + [True]
+        with patch.object(Path, 'is_dir', return_value=True):
+            observer.run()
+        self.assertEqual(observer.report['observationErrorCount'], 11)
+        self.assertEqual(len(observer.report['errors']), 8)
+        self.assertEqual(len(observer.report['observationErrorDetails']), 8)
+        self.assertTrue(all(record['baselineAttempted'] for record in
+                            observer.report['observationErrorDetails']))
+        self.assertEqual(observer.report['snapshots'], [])
+
     def test_valid_fixture_proof_is_not_a_historical_cause_claim(self):
         report = self.report()
         self.package.verify_migration_stacks(report, report['sampler'])
