@@ -113,7 +113,7 @@ unmount(view);unmount(peer);
 view=mount();reply(calls.at(-1),undefined,true);await tick();view.tree=render(view);
 button(view.tree,'Reset example setting').props.onClick();
 const modal=roots.get(elements.get('framey-modal'));assert.equal(modal.tree.length,1);
-const staleOK=modal.tree[0].children[1].props.onOK;count=calls.length;
+const staleOK=modal.tree[0].children[1].children[0].props.onOK;count=calls.length;
 unmount(view);await tick();assert.equal(modal.tree,null,'retired settings must close their reset dialog');
 await staleOK();assert.equal(calls.length,count,'retired Reset must not save');
 
