@@ -211,7 +211,9 @@ class AutoSync:
             self._s.update(checked=self.clock(), waiting=waiting)
             if done:
                 self._s["error"] = self._errors[0] if self._errors else None
-                if want_all:
+                # A manual request also waits for clips Steam is still writing,
+                # even when both automatic switches are off.
+                if want_all and not waiting:
                     self._all = False
             self._save()
         return INTERVAL if done else BUSY_WAIT

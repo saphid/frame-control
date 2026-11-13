@@ -138,6 +138,38 @@ class AutoSyncTest(unittest.TestCase):
         self.sync.tick()
         self.assertEqual(self.frame.calls, [])  # off again afterwards
 
+    def test_copy_everything_waits_for_clips_to_finish_with_auto_switches_off(self):
+        for idle in (None, fa.SETTLE - 1):
+            with self.subTest(idle=idle):
+                self.frame = FakeFrame()
+                (self.dir / "auto-sync.json").unlink(missing_ok=True)
+                self.sync = self.make()
+                first = clip(1, NOW - 3600)
+                pending = clip(2, NOW - 60, idle=idle)
+                self.frame.shots = [shot(1, NOW - 3600)]
+                self.frame.clips = [first, pending]
+                self.sync.copy_all()
+
+                for _ in range(2):
+                    self.assertEqual(self.sync.tick(), fa.INTERVAL)
+                    state = self.sync.state()
+                    self.assertFalse(state["screenshots"] or state["clips"])
+                    self.assertTrue(state["pending"])
+                    self.assertEqual(state["waiting"], 1)
+                    self.assertEqual(self.frame.saved,
+                                     [("frame-a", [self.frame.shots[0]["id"]])])
+                    self.assertEqual(self.frame.exported, [("frame-a", first["id"])])
+
+                pending["idle"] = fa.SETTLE
+                self.assertEqual(self.sync.tick(), fa.INTERVAL)
+                self.assertEqual(self.frame.exported,
+                                 [("frame-a", first["id"]), ("frame-a", pending["id"])])
+                self.assertFalse(self.sync.state()["pending"])
+                self.assertEqual(self.sync.state()["waiting"], 0)
+                self.frame.calls.clear()
+                self.sync.tick()
+                self.assertEqual(self.frame.calls, [])
+
     def test_not_copied_again_after_deleting_it_here(self):
         self.sync.update({"screenshots": True, "clips": True})
         self.frame.shots = [shot(1, NOW + 5)]

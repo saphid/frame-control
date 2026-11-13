@@ -149,7 +149,9 @@ case was tested with separate fake sources, not two real same-name screenshots.
 - **Saved clips only.** Steam's background recording is a rolling buffer, not
   something you chose to keep, so it isn't copied; export it by hand. A clip
   Steam wrote to in the last 30 seconds is still being saved and waits for the
-  next look.
+  next look. **Copy everything now** keeps checking these pending clips until
+  they settle, even when both automatic switches are off. Copies already saved
+  on this computer are skipped while it waits.
 - **It gives way.** It waits while an install, an export, a recording or
   anything else is running on the headset, and stops between files if one
   starts. While a copy is running, switching headsets waits for it, as it does
