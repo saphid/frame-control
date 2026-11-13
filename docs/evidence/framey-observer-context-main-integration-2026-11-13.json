@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-13T02:02:43.024793+00:00",
+  "integratedMain": "775ea057646daf9ef0f48d6c01c18d58613fa339",
+  "tests": 91,
+  "skips": 0,
+  "passed": true,
+  "sourceCommit": "40940e9601e5a925cad09d48d260be42b044f7e3",
+  "sourceSha256": {
+    "tests/decky-runtime/syncthing_migration_stacks.py": "77412f91a6d964560f362f36284f7f59ddb077495e6ca9d7725c94dff3d5dab0",
+    "tests/test_syncthing_flatpak_migration_stacks.py": "180a664d6b20fcb85449ad9624d813522d1179e2324d6d6b109a78b7d68f22df"
+  },
+  "logSha256": "d320845c00aa8072ac30bcc914470178141f2084f64005a4a24c0a37d0a955ad",
+  "nativeActualMigrationVerified": false,
+  "historicalCauseEstablished": false,
+  "releaseHoldCleared": false,
+  "realFrameContacted": false
+}
