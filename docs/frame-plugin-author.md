@@ -42,6 +42,13 @@ remain unavailable. Wearer-visible use is not yet verified.
 The [settings sample](../examples/framey-settings/README.md) shows an official
 Decky JSX build, backend persistence, a toggle and a local toast. Framey offers
 only official-store-owned plugins in its VR panel.
+Do not copy `.frame-control-store.json` into another plugin folder. Framey's
+panel and module readers require a unique valid ownership receipt for the
+requested store ID, matching the backend call guard. If two folders claim it,
+neither frontend can load, even if one copy is missing its frontend or both
+receipts have the same digest. Admission does not repair or delete either copy.
+This check is covered with disposable local plugin folders, not a live headset
+installation.
 For persistent backend settings, use Decky's `decky.DECKY_PLUGIN_SETTINGS_DIR` rather
 than assuming an environment variable or Steam Deck home path. Validate stored
 types when reading, write through a temporary file before replacing the old

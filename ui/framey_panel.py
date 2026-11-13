@@ -35,73 +35,84 @@ def _receipt_digest(path):
     return meta, digest
 
 
-def _owned_dist(plugin_id, expected_receipt=None):
-    """Locate a compatible store-owned frontend without following linked paths."""
+def _owned_folder(plugin_id):
+    """Resolve one ownership receipt before reading any frontend bytes."""
     if type(plugin_id) is not int or plugin_id <= 0 or not PLUGINS.is_dir() or PLUGINS.is_symlink():
         raise FileNotFoundError('Framey plugin unavailable')
+    found = None
     for folder in PLUGINS.iterdir():
         if folder.is_symlink() or not folder.is_dir():
             continue
-        receipt = folder/'.frame-control-store.json'
-        manifest = folder/'plugin.json'
-        dist = folder/'dist'
-        entry = dist/'index.js'
-        if any(p.is_symlink() for p in (manifest, dist, entry)):
-            continue
         try:
-            meta, digest = _receipt_digest(receipt)
+            meta, digest = _receipt_digest(folder/'.frame-control-store.json')
         except (OSError, ValueError, UnicodeError):
             continue
-        if meta.get('storeId') != plugin_id:
+        if meta['storeId'] != plugin_id:
             continue
-        try:
-            if expected_receipt is not None and digest != expected_receipt:
-                raise FileNotFoundError('Framey plugin changed; reopen its panel')
-            if not manifest.is_file() or manifest.stat().st_size > 16_384:
-                raise FileNotFoundError('Framey plugin manifest unavailable')
-            data = json.loads(manifest.read_text())
-            if not isinstance(data, dict):
-                raise FileNotFoundError('Framey plugin manifest unavailable')
-            flags = data.get('flags', [])
-            version = data.get('api_version')
-            if ((version is not None and (type(version) is not int or version not in (1, 2))) or
-                    not isinstance(flags, list) or any(x in flags for x in ('root', '_root'))):
-                raise FileNotFoundError('This Decky frontend has an unsupported API or needs root')
-            if not entry.is_file() or entry.stat().st_size > 8*1024*1024:
-                raise FileNotFoundError('Framey plugin frontend unavailable')
-            bundle = entry.read_bytes()
-            if not bundle:
-                raise FileNotFoundError('Framey plugin frontend is empty')
-            legacy = re.match(rb'\s*\(function\s*\(', bundle) is not None
-            if version is None and not legacy:
-                raise FileNotFoundError('This legacy frontend is not a supported Decky IIFE bundle')
-            if version == 1 and not legacy:
-                marker = b'__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit'
-                supported = marker in bundle
-                if not supported and b'./chunks/' in bundle:
-                    chunks = dist/'chunks'
-                    if chunks.is_symlink() or not chunks.is_dir():
-                        raise FileNotFoundError('Framey plugin chunks unavailable')
-                    files = list(chunks.iterdir())
-                    if len(files) > 128:
-                        raise FileNotFoundError('Framey plugin has too many chunks')
-                    for chunk in files:
-                        if chunk.suffix != '.js':
-                            continue
-                        if chunk.is_symlink() or not chunk.is_file() or chunk.stat().st_size > 8*1024*1024:
-                            raise FileNotFoundError('Framey plugin chunk unavailable')
-                        if marker in chunk.read_bytes():
-                            supported = True
-                if not supported:
-                    raise FileNotFoundError('This API v1 frontend does not use the supported Decky API bridge')
-            if _receipt_digest(receipt) != (meta, digest):
-                raise FileNotFoundError('Framey plugin changed; reopen its panel')
-            return dist, bundle, digest
-        except FileNotFoundError:
-            raise
-        except (OSError, ValueError):
-            raise FileNotFoundError('Framey plugin files are invalid')
-    raise FileNotFoundError('Plugin is not managed by the Frame Control Decky store')
+        if found is not None:
+            raise FileNotFoundError('Framey plugin ownership is ambiguous; multiple folders claim this store ID')
+        found = folder, meta, digest
+    if found is None:
+        raise FileNotFoundError('Plugin is not managed by the Frame Control Decky store')
+    return found
+
+
+def _owned_dist(plugin_id, expected_receipt=None):
+    """Locate a compatible store-owned frontend without following linked paths."""
+    folder, meta, digest = _owned_folder(plugin_id)
+    receipt = folder/'.frame-control-store.json'
+    manifest = folder/'plugin.json'
+    dist = folder/'dist'
+    entry = dist/'index.js'
+    if any(p.is_symlink() for p in (manifest, dist, entry)):
+        raise FileNotFoundError('Framey plugin files are linked')
+    try:
+        if expected_receipt is not None and digest != expected_receipt:
+            raise FileNotFoundError('Framey plugin changed; reopen its panel')
+        if not manifest.is_file() or manifest.stat().st_size > 16_384:
+            raise FileNotFoundError('Framey plugin manifest unavailable')
+        data = json.loads(manifest.read_text())
+        if not isinstance(data, dict):
+            raise FileNotFoundError('Framey plugin manifest unavailable')
+        flags = data.get('flags', [])
+        version = data.get('api_version')
+        if ((version is not None and (type(version) is not int or version not in (1, 2))) or
+                not isinstance(flags, list) or any(x in flags for x in ('root', '_root'))):
+            raise FileNotFoundError('This Decky frontend has an unsupported API or needs root')
+        if not entry.is_file() or entry.stat().st_size > 8*1024*1024:
+            raise FileNotFoundError('Framey plugin frontend unavailable')
+        bundle = entry.read_bytes()
+        if not bundle:
+            raise FileNotFoundError('Framey plugin frontend is empty')
+        legacy = re.match(rb'\s*\(function\s*\(', bundle) is not None
+        if version is None and not legacy:
+            raise FileNotFoundError('This legacy frontend is not a supported Decky IIFE bundle')
+        if version == 1 and not legacy:
+            marker = b'__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit'
+            supported = marker in bundle
+            if not supported and b'./chunks/' in bundle:
+                chunks = dist/'chunks'
+                if chunks.is_symlink() or not chunks.is_dir():
+                    raise FileNotFoundError('Framey plugin chunks unavailable')
+                files = list(chunks.iterdir())
+                if len(files) > 128:
+                    raise FileNotFoundError('Framey plugin has too many chunks')
+                for chunk in files:
+                    if chunk.suffix != '.js':
+                        continue
+                    if chunk.is_symlink() or not chunk.is_file() or chunk.stat().st_size > 8*1024*1024:
+                        raise FileNotFoundError('Framey plugin chunk unavailable')
+                    if marker in chunk.read_bytes():
+                        supported = True
+            if not supported:
+                raise FileNotFoundError('This API v1 frontend does not use the supported Decky API bridge')
+        if _receipt_digest(receipt) != (meta, digest):
+            raise FileNotFoundError('Framey plugin changed; reopen its panel')
+        return dist, bundle, digest
+    except FileNotFoundError:
+        raise
+    except (OSError, ValueError):
+        raise FileNotFoundError('Framey plugin files are invalid')
 
 
 def local_bundle(plugin_id):
