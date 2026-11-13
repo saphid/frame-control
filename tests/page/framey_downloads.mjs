@@ -75,7 +75,7 @@ window.SteamClient.Downloads={};await assert.rejects(run(),/unavailable/);
 // The iframe exposes only the fixed batch facade, with no arbitrary Steam method.
 const host=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
 const start=host.indexOf("  if (document.getElementById('framey-bundle')?.dataset?.downloads");
-const block=host.slice(start,host.indexOf('  DFL.DialogButton.render',start));
+const block=host.slice(start,host.indexOf('  const toaster',start));
 const requests=[],messages=[],events=[],timers=new Map();let id=0;
 const error={textContent:''},hostWindow={SteamClient:{}};
 const h=vm.createContext({window:hostWindow,error,cacheSession:'test',
