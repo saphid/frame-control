@@ -1,23 +1,29 @@
 {
-  "at": "2026-11-13T10:22:33.956770+00:00",
-  "base": "8a2cb7242237035cf0a573239606a42347780243",
-  "baseSourceSha256": "b673961bdf52277695dc0626a8c84b4d06351636f7ae479cc4f3ea72f3a28b31",
+  "at": "2026-11-13T12:09:44.344109+00:00",
+  "base": "8c785d43d2f076b7301ef54fc2c449b1ee4a644a",
+  "baseSourceSha256": "276f4bef0e0d65d1ee1f8bfbd8ddf31523e1df655239be2105dd083a192b0a44",
   "sourceSha256": {
-    "ui/frame_autosync.py": "1d6a478956f07735c443d292839bb0479e226c949f908275851fc308dc8b71eb",
-    "tests/test_autosync.py": "3d5ece28f3f5089f3134f076e1e78ad59124ebf3ffb66ec07876d57944efd473",
-    "docs/recording.md": "c9c6a213b24d453ed5b2c318439d8848565c08ae8c202314d613f0ba5fac6dd3"
+    "ui/frame_autosync.py": "b65e4db67ef583c88bc4cd4ecf2e2ef1fdc7cb3cfa34e735c2c178620658e381",
+    "tests/test_autosync.py": "45de080acd976f12cc4e81b86567741b1a9e8ee7c20b5c02aea9c900c33b5fbb",
+    "docs/recording.md": "943f41ab4383bc8cb74108eede862060dac534fe8061d5fbc74578cab00ddf11"
   },
   "baseControl": {
     "tests": 1,
     "failingSubcases": 2,
     "failures": "Manual request cleared before the unsettled clip could be retried",
-    "logSha256": "c256272889a336bcd81ed15a1e6c4fe72fea44de7c99641a2a286bd11a0cac34"
+    "logSha256": "057f066017f0ff975873177968b36f973c493f9b638fba135a756ea37dff6d33"
   },
   "candidate": {
-    "tests": 34,
+    "tests": 78,
+    "autosyncTests": 37,
+    "modules": [
+      "test_autosync",
+      "test_framey_panel",
+      "test_framey_view_recovery_browser"
+    ],
     "skips": 0,
     "passed": true,
-    "logSha256": "09ca3f95fc78f20e2f413d43f82b0b26420c2b2dae6b84d95b85f82626dcb681"
+    "logSha256": "193527df62c56b1b2b7b6d900dd70f651018b9ae2812db46944e1b0986ea27e0"
   },
   "regression": "test_copy_everything_waits_for_clips_to_finish_with_auto_switches_off",
   "unknownAndRecentIdleCovered": true,
@@ -28,5 +34,26 @@
   "realFrameContacted": false,
   "realFilesTransferred": false,
   "mobileBackgroundSyncVerified": false,
-  "releaseQualified": false
+  "releaseQualified": false,
+  "previousVerification": {
+    "base": "8a2cb7242237035cf0a573239606a42347780243",
+    "sourceSha256": {
+      "ui/frame_autosync.py": "1d6a478956f07735c443d292839bb0479e226c949f908275851fc308dc8b71eb",
+      "tests/test_autosync.py": "3d5ece28f3f5089f3134f076e1e78ad59124ebf3ffb66ec07876d57944efd473",
+      "docs/recording.md": "c9c6a213b24d453ed5b2c318439d8848565c08ae8c202314d613f0ba5fac6dd3"
+    },
+    "baseControl": {
+      "tests": 1,
+      "failingSubcases": 2,
+      "failures": "Manual request cleared before the unsettled clip could be retried",
+      "logSha256": "057f066017f0ff975873177968b36f973c493f9b638fba135a756ea37dff6d33"
+    },
+    "candidate": {
+      "tests": 34,
+      "skips": 0,
+      "passed": true,
+      "logSha256": "09ca3f95fc78f20e2f413d43f82b0b26420c2b2dae6b84d95b85f82626dcb681"
+    }
+  },
+  "automaticSwitchRevisionGuardAlsoCovered": true
 }
