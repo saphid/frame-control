@@ -1,0 +1,123 @@
+[
+  {
+    "duration_s": 21.033333333333335,
+    "video_frames": 631,
+    "marker_pixel_xy": [
+      50,
+      0
+    ],
+    "marker_levels": [
+      0.0,
+      255.0
+    ],
+    "visual_markers_s": [
+      4.9,
+      9.9,
+      14.9,
+      19.9
+    ],
+    "audio_onsets_s": [
+      4.42,
+      9.42,
+      14.42,
+      19.42
+    ],
+    "audio_minus_video_ms": [
+      -480.00000000000045,
+      -480.00000000000045,
+      -480.00000000000045,
+      -479.9999999999969
+    ],
+    "offset_median_ms": -480.00000000000045,
+    "offset_min_max_ms": [
+      -480.00000000000045,
+      -479.9999999999969
+    ],
+    "peak_dbfs": -13.202757835388184,
+    "clipped_samples": 0,
+    "tone_frequency_hz": 996.09375,
+    "harmonics_to_fundamental_db": -83.94567523863627,
+    "rms_peak": 0.15256504714488983,
+    "offset_ms": 0,
+    "recording": "2026-10-25 06-31-15.mkv"
+  },
+  {
+    "duration_s": 21.066666666666666,
+    "video_frames": 632,
+    "marker_pixel_xy": [
+      50,
+      0
+    ],
+    "marker_levels": [
+      0.0,
+      255.0
+    ],
+    "visual_markers_s": [
+      10.6,
+      15.6,
+      20.6
+    ],
+    "audio_onsets_s": [
+      5.62,
+      10.53,
+      15.53,
+      20.53
+    ],
+    "audio_minus_video_ms": [
+      -70.00000000000028,
+      -70.00000000000028,
+      -70.00000000000028
+    ],
+    "offset_median_ms": -70.00000000000028,
+    "offset_min_max_ms": [
+      -70.00000000000028,
+      -70.00000000000028
+    ],
+    "peak_dbfs": -13.215741157531738,
+    "clipped_samples": 0,
+    "tone_frequency_hz": 996.09375,
+    "harmonics_to_fundamental_db": -83.99685616364809,
+    "rms_peak": 0.15322808921337128,
+    "offset_ms": 400,
+    "recording": "2026-10-25 06-31-46.mkv"
+  },
+  {
+    "duration_s": 21.0,
+    "video_frames": 630,
+    "marker_pixel_xy": [
+      50,
+      0
+    ],
+    "marker_levels": [
+      0.0,
+      255.0
+    ],
+    "visual_markers_s": [
+      7.6,
+      12.6,
+      17.6
+    ],
+    "audio_onsets_s": [
+      7.6,
+      12.6,
+      17.6
+    ],
+    "audio_minus_video_ms": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "offset_median_ms": 0.0,
+    "offset_min_max_ms": [
+      0.0,
+      0.0
+    ],
+    "peak_dbfs": -13.219660758972168,
+    "clipped_samples": 0,
+    "tone_frequency_hz": 996.09375,
+    "harmonics_to_fundamental_db": -83.85259564406981,
+    "rms_peak": 0.15266509354114532,
+    "offset_ms": 480,
+    "recording": "2026-10-25 06-32-18.mkv"
+  }
+]

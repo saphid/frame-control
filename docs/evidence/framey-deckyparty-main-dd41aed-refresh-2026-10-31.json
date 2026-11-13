@@ -1,0 +1,528 @@
+{
+  "at": "2026-10-31T13:59:38.408901+00:00",
+  "sourceRevision": "f53070412069a95879d8e1842ab5c0850372dea4",
+  "baseMain": "dd41aede875d7a6b7abac68520784824b96103e9",
+  "priorHead": "a05881e798c4c63e4d60d719768a371afccddb90",
+  "sourceAudit": {
+    "at": "2026-10-31T13:56:10.578347+00:00",
+    "sourceRevision": "f53070412069a95879d8e1842ab5c0850372dea4",
+    "baseMain": "dd41aede875d7a6b7abac68520784824b96103e9",
+    "priorHead": "a05881e798c4c63e4d60d719768a371afccddb90",
+    "normalMerge": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorDeckypartyBodyPreserved": true,
+    "freeLoaderRuntimeBodyMatchesMain": true,
+    "other115CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleAndInventoryUnchanged": true
+  },
+  "nativeArchitecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "acefc5687195b9f93d9f92bff4d4d468aa2898571b1f35c813184e7240354b83",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "c5120cf73c98338f6b261ba871e15446b34a8e6623e811f62c3c14f80e9908e5",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "e329d8c9e8560dd9d812039a18f4132315900fe65037f3dc81003ef47547d3d3",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "528b724082152a63f11d5b8f2bf2d93d244ee5c1d0bdc0965f4d4808a1f36e66",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "nativeSourceFingerprints": 17,
+  "archiveSha256": "193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf",
+  "backendSha256": "ace5c277fc010ebc102ba731c479a478e11aa004f763755c8e5b298a4a2c0734",
+  "adapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "unmodifiedArchiveFiles": {
+    "LICENSE": "d9bbb2eef9907fb42eac3cc7ad90d33608dac47e1cf618ac0088c8123be5fbf1",
+    "package.json": "a06f1f1fe71cd7d088a26b038dc1e79541177d37fdb62c037dc85e8c8c6fd656",
+    "plugin.json": "2d52baaf95ecc0828f97809278b56296d2e5174f2bbfc205bade21c47632164f",
+    "README.md": "d2122fcdd8dc3c6ba169f3c81623e47a0ef73a99b8a7d39aa374c5f826943756",
+    "dist/index.js": "72295c05f3ce33c5b544d12b653dfe2c8aa833b95a79c8ca152b35b202059a62",
+    "bin/copyparty-sfx.py": "e88f0327739c85dcd382048244942c668669cc2dd92db64e1aebf425981f7310"
+  },
+  "deckypartyRpcCounts": [
+    15,
+    8
+  ],
+  "repairedReloadSeconds": [
+    0.367,
+    0.365,
+    0.366
+  ],
+  "previousForcedReloadSeconds": 5.279,
+  "originalUnloadHookAndOwnedCleanupVerified": true,
+  "freeLoaderInstalledSource": {
+    "archiveSha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+    "managedBackendSha256": "1be5c28420161c97207cc52e2f32cd5a1c9a47758f9cf3963aaa36aa7e706d45",
+    "originalBackendSha256": "2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364",
+    "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "receipt": {
+      "storeId": 63,
+      "sha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+      "version": "1.6.0",
+      "compatShims": [
+        "free-loader-ipc-eof"
+      ]
+    },
+    "archiveMembers": 19
+  },
+  "freeLoaderRpcCounts": [
+    11,
+    7
+  ],
+  "freeLoaderCases": [
+    {
+      "caseIndex": 0,
+      "rpcs": 11,
+      "cleanShutdownVerified": true,
+      "expectedNegative": false,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "350572531"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "350572571"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "350572571"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "350572582"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.214,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793454975.9339228"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\nCalling Loader unload function for Free Loader (v1.6.0).\nAttempting to unload with plugin Free Loader (v1.6.0)'s \"_unload\" function.\n\nUnloading Free Loader\nUnloaded Free Loader (v1.6.0)\n\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a79c31079f11c0e2e5bac3ff79a807043e23e618752d085dbf02b11b17a03720",
+          "cleanShutdownVerified": true
+        },
+        {
+          "loaderPid": 23,
+          "descendantsBefore": {
+            "24": {
+              "state": "S",
+              "parent": 23,
+              "start": "350572854"
+            },
+            "33": {
+              "state": "S",
+              "parent": 24,
+              "start": "350572889"
+            },
+            "34": {
+              "state": "S",
+              "parent": 24,
+              "start": "350572889"
+            },
+            "35": {
+              "state": "S",
+              "parent": 34,
+              "start": "350572903"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 33,
+              "returncode": 0
+            },
+            {
+              "pid": 34,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.259,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\nCalling Loader unload function for Free Loader (v1.6.0).\nAttempting to unload with plugin Free Loader (v1.6.0)'s \"_unload\" function.\n\nUnloading Free Loader\nUnloaded Free Loader (v1.6.0)\n\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a79c31079f11c0e2e5bac3ff79a807043e23e618752d085dbf02b11b17a03720",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "diskReadbacks": [
+        {
+          "before": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          },
+          "after": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "before": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": false\n    }\n}",
+              "sha256": "135174cec8912531fb14c949ea91829394f6b5ed4104f02f0064e755d454a139",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": false
+                }
+              }
+            }
+          },
+          "after": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": false\n    }\n}",
+              "sha256": "135174cec8912531fb14c949ea91829394f6b5ed4104f02f0064e755d454a139",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": false
+                }
+              }
+            }
+          }
+        }
+      ],
+      "consoleSha256": "5f1991991e494c242267ec0fa855904faaff1764e16483a9bad2e26f1580f894",
+      "jsonDecodeDiagnosticCount": 0
+    },
+    {
+      "caseIndex": 1,
+      "rpcs": 7,
+      "cleanShutdownVerified": false,
+      "expectedNegative": true,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "350573322"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "350573361"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "350573361"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "350573373"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 5.225,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793454983.8375776"
+          ],
+          "forcedPluginKills": 1,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\n[plugin][WARNING]: Plugin Free Loader (v1.6.0) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "e828dbb632a87eb0b7b8133e31b4009667630a1409eb4d3204cca09d08d40fa9",
+          "cleanShutdownVerified": false
+        }
+      ],
+      "diskReadbacks": [
+        {
+          "before": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          },
+          "after": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          }
+        }
+      ],
+      "consoleSha256": "f947b3880c9940ff2498f4226c45adf4ade429eec454a3b3a004f1604d5dcd21",
+      "jsonDecodeDiagnosticCount": 0
+    }
+  ],
+  "freeLoaderCleanRepairedStopsAndOriginalForcedKillVerified": true,
+  "tabmasterRpcCounts": [
+    47,
+    48
+  ],
+  "tabmasterRestorePositiveAndPublishedSourceNegativeVerified": true,
+  "tabmasterExpectedJsonDiagnosticRetained": true,
+  "fullUnitTests": 1947,
+  "fullUnitSeconds": 254.127,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerSkips": 0,
+  "installerOwnedCleanupVerified": true,
+  "fullNativeMatrixExpected": {
+    "probes": 44,
+    "archivePins": 34,
+    "sourceFingerprints": 17
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "globalCleanPluginShutdownVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local native AMD64 only; fresh exact-head hosted CI/e2e, native AMD64/ARM64, ownership, PC, every triggered package mode and exact-main gates remain required.",
+    "Native containers/images are cleaned by the frozen runner; explicit native process cleanup is checked in the reports. The installer has an independent Docker-resource absence check.",
+    "The installer test covers 37 pins without executing official backends. It is not the full e2e or 116-plugin suite.",
+    "DeckyParty retains offline IP discovery errors; TabMaster retains its expected malformed-JSON diagnostic. This is not globally clean/error-free runtime proof.",
+    "No LAN/HTTPS, browser/panel, Steam CEF, real Frame, wearer/controller or release proof."
+  ],
+  "rawJsonSha256": "6e4e920f95628ae6d28bb55524c308c1749e5ec71d7b68a3429d1e1ecca55196",
+  "rawGzipSha256": "ad61af72501a50434d0d1607210fff38a8bfba56d68ce75e91eae074b681838a"
+}

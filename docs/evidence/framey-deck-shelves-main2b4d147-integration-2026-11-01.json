@@ -1,0 +1,64 @@
+{
+  "at": "2026-11-01T04:14:02.225802+00:00",
+  "pr": 528,
+  "testedSource": "3e4b3f10c0b92bed58dfb3ffd2a712ba0446ae80",
+  "integratedMain": "2b4d1474ec71573ab91845b46e21f773284bebad",
+  "priorPublishedHead": "41930bac738da3ef8e7fe749779a82ca4bf166f2",
+  "normalMergeParents": [
+    "41930bac738da3ef8e7fe749779a82ca4bf166f2",
+    "2b4d1474ec71573ab91845b46e21f773284bebad"
+  ],
+  "conflictsResolved": 3,
+  "all26NativeSourceInputsVerified": true,
+  "serverTests": 1971,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "websiteSkips": 0,
+  "localNativeArchitecture": "x86_64",
+  "localNativeCases": 11,
+  "localNativePluginIds": [
+    135,
+    46,
+    36,
+    24,
+    130
+  ],
+  "independentNativeAudits": 5,
+  "auditAdapterCorrectionRetained": true,
+  "deckShelvesRpcs": [
+    4,
+    3
+  ],
+  "steambackRpcs": [
+    11,
+    9
+  ],
+  "steamGridDbRpcs": [
+    14,
+    12
+  ],
+  "radiYoRpcs": [
+    9,
+    7
+  ],
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 408.349,
+  "all116CatalogPinsAndOutcomesVerified": true,
+  "ownedCleanupVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "store130Version": "1.0.1",
+  "github102LookupStatus": "unverified",
+  "freshExactPublicationHostedGatesRequired": true,
+  "actualSteamCef": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "ac46f16d19ba533c6d880526236cd7f2aee655a0992a8ab1429f33853430417c",
+  "rawBytes": 76947
+}

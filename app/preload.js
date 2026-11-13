@@ -1,5 +1,5 @@
-// Lets the page read this computer's clipboard through Electron, so sending it
-// to the Frame needs no pbpaste, PowerShell, xclip or wl-clipboard. Also tells
+// Lets the page read and write this computer's clipboard through Electron, so sending
+// it to the Frame, and copying the Frame's back, needs no pbpaste, PowerShell, xclip or wl-clipboard. Also tells
 // the page where a dropped file or folder lives, so a folder can be sideloaded
 // as a title without zipping it (the local server reads it from there).
 // It can put a screenshot on the clipboard as an image, open Set Up Connection when
@@ -11,11 +11,25 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("frameApp", {
+  preferences: {
+    read: () => ipcRenderer.invoke("preferences:read"),
+    write: (key, value) => ipcRenderer.invoke("preferences:write", key, value),
+  },
   notify: (message, request) => ipcRenderer.invoke("comfort:notify", message, request),
   readClipboard: () => ipcRenderer.invoke("clipboard:read"),
+  writeClipboard: (text) => ipcRenderer.invoke("clipboard:write", text),
   writeImage: (bytes) => ipcRenderer.invoke("clipboard:writeImage", bytes),
   setUpConnection: () => ipcRenderer.invoke("connection:setup"),
   restartServer: () => ipcRenderer.invoke("server:restart"),  // the "couldn't start" page's Try Again
+  obs: {
+    status: () => ipcRenderer.invoke("obs:status"),
+    start: (port) => ipcRenderer.invoke("obs:start", port),
+    stop: () => ipcRenderer.invoke("obs:stop"),
+    onState: (cb) => {
+      ipcRenderer.removeAllListeners("obs:state");
+      ipcRenderer.on("obs:state", (_e, state) => cb(state));
+    },
+  },
   // The Frame menu's headset switcher: the page tells it the headsets, and hears picks.
   devicesChanged: (list) => ipcRenderer.send("devices:changed", list),
   onUseDevice: (cb) => {

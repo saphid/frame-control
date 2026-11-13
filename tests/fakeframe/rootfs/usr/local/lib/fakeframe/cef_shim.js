@@ -25,6 +25,31 @@ function newShortcutId(steam) {
 }
 
 function build(steam) {
+  // Synthetic Decky API for Framey's CDP bridge test. This does not model the
+  // real loader or prove frontend visibility on a headset.
+  const deckyBackend = {async call(route, plugin, method, ...args) {
+    if (!['loader/call_plugin_method','loader/call_legacy_plugin_method'].includes(route) || plugin !== 'Sample Panel')
+      throw Error('unexpected Decky plugin route');
+    const settings = (steam.decky_settings ||= {});
+    const owned = (settings[plugin] ||= {});
+    if (route === 'loader/call_legacy_plugin_method') {
+      const kwargs = args[0];
+      if (method === 'get_setting')
+        return {success:true, result:Object.hasOwn(owned, kwargs.key) ? owned[kwargs.key] : kwargs.default};
+      if (method === 'set_setting') {
+        owned[kwargs.key] = kwargs.value;
+        return {success:true, result:true};
+      }
+      return {success:false, result:'method unavailable in fake Decky backend'};
+    }
+    if (method === 'get_setting')
+      return Object.hasOwn(owned, args[0]) ? owned[args[0]] : args[1];
+    if (method === 'set_setting') {
+      owned[args[0]] = args[1];
+      return true;
+    }
+    throw Error('method unavailable in fake Decky backend');
+  }};
   const findShortcut = id => steam.shortcuts.find(s => s.appid === Number(id));
   const gameOverview = a => ({
     appid: a.appid, display_name: a.display_name, sort_as: a.display_name, app_type: a.app_type ?? 1,
@@ -66,6 +91,7 @@ function build(steam) {
     value,
   });
   return {
+    window: {DeckyBackend: deckyBackend}, DeckyBackend: deckyBackend,
     ...require('./canvas_stub').surface(),
     collectionStore: {
       GetUserCollectionsByName(name) { return steam.collections.filter(c => c.name === name).map(collection); },
@@ -78,6 +104,12 @@ function build(steam) {
         const s = findShortcut(id);
         return s ? { strShortcutExe: s.exe, strShortcutStartDir: s.start_dir, bShortcutIsVR: !!s.vr } : null;
       },
+    },
+    // Guess: the running list as Steam's client code and plugin loaders read it
+    // (SteamUIStore.RunningApps of app overviews); not seen on the Frame. fakesteam
+    // passes the ids of launches that haven't exited.
+    SteamUIStore: {
+      get RunningApps() { return (steam.running || []).map(id => allApps().find(a => a.appid === id) || { appid: id }); },
     },
     appStore: {
       get allApps() { return allApps(); },
@@ -109,7 +141,8 @@ function build(steam) {
           if (s?.artwork) delete s.artwork[type];
         },
         // Container fallback in frame_android.stop performs the simulated stop.
-        TerminateApp(gameid) { steam.last_terminate = gameid; },
+        // fakesteam ends pid-less launches for the ids in `terminated`.
+        TerminateApp(gameid) { steam.last_terminate = gameid; (steam.terminated ||= []).push(String(gameid)); },
         RemoveShortcut(id) {
           steam.shortcuts = steam.shortcuts.filter(s => s.appid !== Number(id));
           delete steam.compat_tools[String(id)];

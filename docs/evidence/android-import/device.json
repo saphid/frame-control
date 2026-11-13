@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-20T03:53:25Z",
+  "build_id": "20260925.6191901",
+  "app": "F-Droid Basic 2.0.2 (org.fdroid.basic, version code 2000052)",
+  "input": "One real APK plus synthetic main and patch OBBs named with older version code 2000050",
+  "sibling_discovery": true,
+  "automatic_import": "passed",
+  "closed_after_import": true,
+  "independent_readback": [
+    "5023b41e7ac80f8b26a868db1f66884976bf864fab81a070ad37539f3481b352  /sdcard/Android/obb/org.fdroid.basic/main.2000050.org.fdroid.basic.obb",
+    "aecbed7433e81aaeef40942069d03ad23130f09d93b7e78bbe224865a9573157  /sdcard/Android/obb/org.fdroid.basic/patch.2000050.org.fdroid.basic.obb"
+  ],
+  "cleanup": {
+    "test_install_removed": true,
+    "running_instances_before": {},
+    "running_instances_after": {},
+    "battery_before": [
+      "100",
+      "Full",
+      "Charging"
+    ],
+    "battery_after": [
+      "99",
+      "Discharging",
+      "Charging"
+    ],
+    "shared_lock_released": true
+  },
+  "limits": [
+    "No headset rendering or gameplay assertion; headset unworn.",
+    "Synthetic expansion files verify transport and persistence, not Resident Evil 4 compatibility.",
+    "A game that exits before its Lepton instance can accept data was not tested."
+  ]
+}

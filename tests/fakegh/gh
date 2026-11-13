@@ -3,20 +3,29 @@
 tests/test_release_workflow.py. Serves the releases in $FAKEGH_RELEASES (a JSON list,
 drafts included) and the tags in $FAKEGH_TAGS (space-separated); an upload's body is
 written to $FAKEGH_UPLOAD. Every call is appended to $FAKEGH_LOG as a JSON line.
-Anything else fails, so the script under test can't fall back to `gh release ...`
-(GraphQL) unnoticed. POST .../releases (release.yml's draft step) answers as release
+Anything else fails; `gh release upload` works only when a release-workflow test
+explicitly sets FAKEGH_ALLOW_RELEASE_UPLOAD=1. POST .../releases (release.yml's draft step) answers as release
 $FAKEGH_NEW_ID (default 9001) without adding it to the listing, like GitHub's list
 lagging a fresh draft. With jq installed, --jq filters a response the way gh does
 (raw strings, compact JSON)."""
 import json
+import hashlib
 import os
 import shutil
 import subprocess
 import sys
+from urllib.parse import parse_qs
 
 args = sys.argv[1:]
 with open(os.environ["FAKEGH_LOG"], "a") as f:
     f.write(json.dumps(args) + "\n")
+if args[:2] == ["release", "upload"] and os.environ.get("FAKEGH_ALLOW_RELEASE_UPLOAD") == "1":
+    releases = json.load(open(os.environ["FAKEGH_RELEASES"]))
+    if os.environ.get("FAKEGH_UPLOAD_ERROR"):
+        sys.exit(os.environ["FAKEGH_UPLOAD_ERROR"])
+    if not any(r.get("tag_name") == args[2] for r in releases):
+        sys.exit("release not found")
+    sys.exit(0)
 if not args or args[0] != "api":
     sys.exit("fakegh: only `gh api` is supported: %r" % args)
 
@@ -42,6 +51,22 @@ while i < len(args):
 
 releases = json.load(open(os.environ["FAKEGH_RELEASES"]))
 repo = "repos/saphid/frame-control/"
+gate = json.load(open(os.environ["FAKEGH_GATES"])) if os.environ.get("FAKEGH_GATES") else {}
+commit = gate.get("tag_commit", "a" * 40)
+tag_object = "b" * 40
+main_jobs = ("checks", "e2e", "ios", "wireless-windows",
+             "server-tests (ubuntu-latest, 3.13)", "server-tests (macos-latest, 3.12)",
+             "server-tests (windows-latest, 3.12)")
+release_jobs = ("draft", "checksums",
+                "build (windows-latest, dist:win, app/dist/*.exe app/dist/*.zip)",
+                "build (ubuntu-latest, dist:linux, app/dist/*.AppImage app/dist/*.deb)",
+                "build (macos-15-intel, dist:mac:x64, app/dist/*.dmg app/dist/*.zip)",
+                "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)")
+decky_jobs = ("decky-runtime (ubuntu-latest)", "decky-runtime (ubuntu-24.04-arm)")
+ownership_jobs = ("owned-watchdog (ubuntu-latest)", "owned-watchdog (ubuntu-24.04-arm)")
+signed_jobs = ("signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
+               "signed-package (ubuntu-latest, browser HTTP)",
+               "signed-package (ubuntu-latest, production parent HTTP)")
 
 
 def answer(response, fallback):
@@ -60,7 +85,87 @@ if method == "GET" and endpoint.startswith(repo + "git/ref/tags/"):
     tag = endpoint.rsplit("/", 1)[1]
     if tag not in os.environ.get("FAKEGH_TAGS", "").split():
         sys.exit("gh: Not Found (HTTP 404)")
-    print(json.dumps({"ref": "refs/tags/" + tag}))
+    print(json.dumps({"ref": "refs/tags/" + tag,
+                      "object": {"type": "tag", "sha": tag_object}}))
+elif method == "GET" and endpoint == repo + "git/tags/" + tag_object:
+    print(json.dumps({"object": {"type": "commit", "sha": commit}}))
+elif method == "GET" and endpoint.startswith(repo + "actions/workflows/"):
+    path, _, query = endpoint.partition("?")
+    workflow = path.split("/")[5]
+    branch = parse_qs(query).get("branch", [""])[0]
+    is_main = workflow != "release.yml"
+    run_id = {"checks.yml": 501, "release.yml": 502, "decky-runtime.yml": 503,
+              "syncthing-flatpak-package.yml": 504, "syncthing-candidate.yml": 505}[workflow]
+    run = {"id": run_id, "head_sha": gate.get("main_sha" if is_main else "release_sha", commit),
+           "head_branch": branch, "event": "push", "run_attempt": gate.get("release_attempts", 1) if run_id == 502 else 1,
+           "status": gate.get("decky_status" if run_id == 503 else ("main_status" if is_main else "release_status"), "completed"),
+           "conclusion": gate.get("decky_conclusion" if run_id == 503 else ("main_conclusion" if is_main else "release_conclusion"), "success"),
+           "html_url": "https://github.com/saphid/frame-control/actions/runs/%s" % run_id}
+    runs = [run]
+    if run_id in (501, 503):
+        kind = 'main' if run_id == 501 else 'decky'
+        if gate.get('prior_' + kind + '_run'):
+            prior_id = 497 if kind == 'main' else 498
+            runs.append(dict(run, id=prior_id, run_attempt=1,
+                             status=gate.get('prior_' + kind + '_status', 'completed'),
+                             conclusion=gate.get('prior_' + kind + '_conclusion', 'success'),
+                             html_url='https://github.com/saphid/frame-control/actions/runs/%s' % prior_id))
+    if run_id == 504:
+        run.update(head_sha=gate.get("signed_sha", commit),
+                   head_branch=gate.get("signed_branch", branch),
+                   event=gate.get("signed_event", "workflow_dispatch"),
+                   status=gate.get("signed_status", "completed"),
+                   conclusion=gate.get("signed_conclusion", "success"),
+                   run_attempt=gate.get("signed_attempts", 1))
+        if gate.get("signed_missing"):
+            runs = []
+        elif gate.get("prior_signed_run_conclusion"):
+            runs.append(dict(run, id=499, run_attempt=1,
+                             conclusion=gate["prior_signed_run_conclusion"]))
+    if run_id == 505:
+        run.update(head_sha=gate.get("ownership_sha", commit),
+                   head_branch=gate.get("ownership_branch", branch),
+                   event=gate.get("ownership_event", "workflow_dispatch"),
+                   status=gate.get("ownership_status", "completed"),
+                   conclusion=gate.get("ownership_conclusion", "success"),
+                   run_attempt=gate.get("ownership_attempts", 1))
+        if gate.get("ownership_missing"):
+            runs = []
+        elif gate.get("prior_ownership_run_conclusion"):
+            runs.append(dict(run, id=496, run_attempt=1,
+                             conclusion=gate["prior_ownership_run_conclusion"]))
+    if run_id == 502 and gate.get("prior_release_run_bad_job"):
+        runs.append(dict(run, id=500, run_attempt=1, status="completed",
+                         conclusion=gate.get("prior_release_run_conclusion", "failure"),
+                         html_url="https://github.com/saphid/frame-control/actions/runs/500"))
+    if run_id == 502 and gate.get("release_run_list_incomplete"):
+        print(json.dumps({"total_count": len(runs) + 1, "workflow_runs": runs}))
+    else:
+        print(json.dumps({"total_count": len(runs), "workflow_runs": runs}))
+elif method == "GET" and endpoint.startswith(repo + "actions/runs/"):
+    parts = endpoint[len(repo + "actions/runs/"):].split("/")
+    run_id = parts[0]
+    attempt = int(parts[2])
+    names = {"497": main_jobs, "498": decky_jobs,
+             "500": release_jobs, "501": main_jobs, "502": release_jobs,
+             "503": decky_jobs, "504": signed_jobs, "499": signed_jobs,
+             "505": ownership_jobs, "496": ownership_jobs}[run_id]
+    names = [name for name in names if name != gate.get("omit_job")]
+    jobs = [{"name": name, "status": "completed",
+             "conclusion": (gate.get("ownership_prior_bad_conclusion", "failure")
+                            if run_id == "505" and attempt == 1 and name == gate.get("ownership_prior_bad_job")
+                            else gate.get("prior_runtime_bad_conclusion", "failure")
+                            if run_id in ("497", "498") and name == gate.get("prior_runtime_bad_job")
+                            else gate.get("prior_release_run_bad_conclusion", "cancelled")
+                            if run_id == "500" and name == gate.get("prior_release_run_bad_job")
+                            else gate.get("signed_prior_bad_conclusion", "failure")
+                            if run_id == "504" and attempt == 1 and name == gate.get("signed_prior_bad_job")
+                            else gate.get("prior_bad_job_conclusion", "failure")
+                            if run_id == "502" and attempt == 1 and name == gate.get("prior_bad_job")
+                            else gate.get("bad_job_conclusion", "success") if name == gate.get("bad_job")
+                            else "success")}
+            for name in names]
+    print(json.dumps({"total_count": len(jobs), "jobs": jobs}))
 elif method == "GET" and endpoint.startswith(repo + "releases?"):
     # The fallback is what --jq '.[]' prints.
     answer(releases, "\n".join(json.dumps(r) for r in releases))
@@ -72,14 +177,27 @@ elif method == "POST" and endpoint == repo + "releases":
     answer(new, json.dumps(new))
 elif method == "DELETE" and endpoint.startswith(repo + "releases/assets/"):
     pass
+elif method == "GET" and endpoint == repo + "releases/assets/901":
+    data = open(os.environ["FAKEGH_UPLOAD"], "rb").read()
+    if os.environ.get("FAKEGH_CORRUPT_MANIFEST_READBACK") == "1":
+        data += b" "
+    sys.stdout.buffer.write(data)
 elif method == "POST" and endpoint.startswith("https://uploads.github.com/" + repo + "releases/"):
-    with open(inp) as src, open(os.environ["FAKEGH_UPLOAD"], "w") as dst:
-        dst.write(src.read())
-    print("{}")
+    data = open(inp, "rb").read()
+    with open(os.environ["FAKEGH_UPLOAD"], "wb") as dst:
+        dst.write(data)
+    print(json.dumps({"id": 901, "name": "update.json", "size": len(data),
+                      "digest": "sha256:" + hashlib.sha256(data).hexdigest()}))
 elif method == "PATCH" and endpoint.startswith(repo + "releases/"):
     rid = endpoint[len(repo + "releases/"):]
     if not rid.isdigit():  # what GitHub said to v0.4.2's PATCH of releases/ (an empty id)
         sys.exit("gh: Not Found (HTTP 404)")
+    if os.environ.get("FAKEGH_ALLOW_RELEASE_UPLOAD") == "1":
+        for item in releases:
+            if str(item["id"]) == rid:
+                item.update(fields)
+        with open(os.environ["FAKEGH_RELEASES"], "w") as f:
+            json.dump(releases, f)
     page = "https://github.com/saphid/frame-control/releases/tag/%s" % fields.get("tag_name")
     answer({"id": int(rid), "tag_name": fields.get("tag_name"), "html_url": page},
            "published %s at %s" % (fields.get("tag_name"), page))

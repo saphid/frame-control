@@ -1,0 +1,134 @@
+{
+  "atUtc": "2026-10-30T04:33:48.771157+00:00",
+  "scope": "Uninstalled ownership candidate; Syncthing remains broken/blocked. No real Frame contacted.",
+  "original": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "publishedArchiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "pythonSourceMatchesPublished": true,
+    "helperSha256": "64841dc46b07385297d630b5274596b943df0c6d8c3dd27fd74391b370577ab4",
+    "elfMachine": 62,
+    "mockedResetObservation": [
+      "/usr/bin/pkill",
+      "syncthing"
+    ],
+    "findings": [
+      {
+        "path": "main.py",
+        "finding": "Discarded detached watchdog Popen handle; no unload method; reset_all_processes runs name-wide pkill/killall and can affect unrelated Syncthing processes."
+      },
+      {
+        "path": "backend/decky-syncthing-watchdog/src/main.rs",
+        "finding": "Native watchdog binds fixed loopback port 58384 and persists beyond plugin unload; PID-file identity uses executable-name substring."
+      },
+      {
+        "path": "backend/decky-syncthing-watchdog/src/watch_gamescope.rs",
+        "finding": "Automatic session lifecycle watches /usr/bin/gamescope-session, not SteamVR."
+      },
+      {
+        "path": "dist/index.js",
+        "finding": "Published frontend fetches fixed http://127.0.0.1:58384 watchdog routes; Framey needs a receipt-bound fixed-origin bridge before those controls can reach the headset helper."
+      },
+      {
+        "path": "backend/decky-syncthing-watchdog/src/service.rs",
+        "finding": "Actual controls use user/system systemd over DBus; a settings-only or fake-systemctl fixture would not establish working synchronization."
+      },
+      {
+        "path": "backend/decky-syncthing-watchdog/src/main.rs",
+        "finding": "Startup initializes the configured systemd service before binding the fixed listener; a listener conflict can therefore occur after service side effects. Owned startup must fail safely without attaching to or terminating an unrelated listener."
+      }
+    ]
+  },
+  "candidateBuild": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "patchSha256": "b7c72b01a148c0c8b11b49fa5dbb7091077a474537b5a3c89c0c0c7819dc2ae1",
+    "pythonSha256": "1b0321c0bc7e12411d8720e4d5bf970e44aa0cb95eeab10930ff390405f97e2e",
+    "builderImage": "sha256:49b48c81f541784e8e40ea095ae1883159a2ea7b3df40606283612480810b0fa",
+    "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "builds": [
+      {
+        "architecture": "x86_64",
+        "elfMachine": 62,
+        "bytes": 12827888,
+        "sha256": "d2f46c983597b048decfbb5c3b1785a1dc533fd2fac8113fd49c8f7e1b7e055e",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "x86_64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false
+      },
+      {
+        "architecture": "aarch64",
+        "elfMachine": 183,
+        "bytes": 11856816,
+        "sha256": "de516185e63f08dff40d9e7c1f76fff2bed2800eab149abcc8d802acb384b950",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "aarch64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false
+      }
+    ],
+    "installerEnabled": false,
+    "runtimeVerified": false
+  },
+  "nativeX86": {
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "pythonSha256": "1b0321c0bc7e12411d8720e4d5bf970e44aa0cb95eeab10930ff390405f97e2e",
+    "helperSha256": "d2f46c983597b048decfbb5c3b1785a1dc533fd2fac8113fd49c8f7e1b7e055e",
+    "installerEnabled": false,
+    "independentState": {
+      "listenerConflictBeforeSettingsOrService": true,
+      "ownedRestartReaped": true,
+      "foreignPidIgnored": true,
+      "duplicateOwnershipRefused": true,
+      "activeReloadCount": 3,
+      "unrelatedProcessPreserved": true,
+      "loaderExitStoppedOwnedWatchdog": true
+    },
+    "result": "published Decky discovery, disabled defaults, native listener/ownership conflicts, owned restart and three reloads passed; service control, HTTP bridge, sync, Frame and VR unverified",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "architecture": "x86_64",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-candidate.py": "0d642faac1e46da34e844a4519bff99f21d4640b3bb1d8221ee35a0a8f5daff2",
+      "tests/decky-runtime/syncthing_candidate.py": "7db5f025a47558dba8319d62c33753354b217afeebf04b18d61407b5f784ac9a",
+      "ui/vendor/syncthing-0.2.7/main.py": "1b0321c0bc7e12411d8720e4d5bf970e44aa0cb95eeab10930ff390405f97e2e",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "b7c72b01a148c0c8b11b49fa5dbb7091077a474537b5a3c89c0c0c7819dc2ae1"
+    }
+  },
+  "unitTests": {
+    "run": 1784,
+    "skipped": 16,
+    "failures": 0,
+    "durationSeconds": 212.107,
+    "linuxOwnershipContracts": 8,
+    "python39OwnershipContracts": 8
+  },
+  "unchangedClassification": "broken",
+  "installerEnabled": false,
+  "unverified": [
+    "native ARM64 execution",
+    "receipt-bound HTTP bridge",
+    "actual Syncthing/systemd DBus service behavior",
+    "managed service path validation",
+    "synchronization",
+    "managed install/update/remove",
+    "browser controls",
+    "real Frame",
+    "worn rendering",
+    "physical controllers"
+  ]
+}

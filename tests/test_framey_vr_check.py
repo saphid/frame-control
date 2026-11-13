@@ -1,0 +1,132 @@
+"""Safety gates for unattended device work; no headset or OpenVR loaded."""
+import importlib.util
+import contextlib
+import io
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+PATH = Path(__file__).resolve().parents[1]/'scripts/framey-vr-check.py'
+spec = importlib.util.spec_from_file_location('framey_vr_check', PATH)
+check = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(check)
+
+
+class Safety(unittest.TestCase):
+    def test_status_row_can_follow_metrics_and_ambiguous_status_fails_closed(self):
+        self.assertEqual(check.steamvr_activity([
+            {'operation':'performance','frame_presents':12},
+            {'operation':'status','activity_level':3}]), 3)
+        self.assertEqual(check.steamvr_activity([
+            {'operation':'performance','frame_presents':12},
+            {'operation':'status','activity_level':1}]), 1)
+        self.assertIsNone(check.steamvr_activity([
+            {'operation':'status','activity_level':3},
+            {'operation':'status','activity_level':1}]))
+        self.assertIsNone(check.steamvr_activity([{'activity_level':3}]))
+
+    def test_overlay_wait_is_bounded_and_stops_when_visible(self):
+        from unittest.mock import Mock
+        remote = Mock()
+        remote.python.side_effect = [{'state':{'visible':False}},
+                                     {'state':{'visible':False}},
+                                     {'state':{'visible':True}}]
+        with patch.object(check.time, 'sleep') as sleep:
+            self.assertTrue(check.wait_overlay(remote)['state']['visible'])
+        self.assertEqual(remote.python.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+
+        remote.python.reset_mock(side_effect=True)
+        remote.python.return_value = {'state':{'visible':False}}
+        with patch.object(check.time, 'sleep') as sleep:
+            self.assertFalse(check.wait_overlay(remote, attempts=3)['state']['visible'])
+        self.assertEqual(remote.python.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+
+    def test_foreign_lock_prevents_sensor_reads_and_cleanup(self):
+        with tempfile.TemporaryDirectory() as folder, patch.object(check, 'Remote') as factory:
+            remote = factory.return_value
+            remote.side_effect = RuntimeError('File exists')
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(check.main(['--exercise','--output',folder]), 1)
+            remote.python.assert_not_called()
+            self.assertEqual(remote.call_count, 1)
+            self.assertIn('mkdir /tmp/frame-test.lock', remote.call_args.args[0])
+            self.assertFalse(json.loads((Path(folder)/'result.json').read_text())['passed'])
+
+    def test_low_battery_never_wakes_or_installs_and_releases_lock(self):
+        state = {'battery':[19], 'pause':'power.pauseCompositorOnStandby=true',
+                 'timeout':'power.turnOffScreensTimeout=17.000000','dashboardVisible':False}
+        with tempfile.TemporaryDirectory() as folder, patch.object(check, 'Remote') as factory, \
+                patch.object(check.frame_decky, 'change') as install:
+            remote = factory.return_value
+            remote.python.return_value = state
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(check.main(['--exercise','--output',folder]), 1)
+            install.assert_not_called()
+            self.assertEqual(remote.call_count, 2)
+            self.assertIn('rmdir /tmp/frame-test.lock', remote.call_args.args[0])
+            self.assertFalse(any('--handlewakeup' in c.args[0] for c in remote.call_args_list))
+
+    def test_power_restore_after_partial_setter_failure(self):
+        state = {'battery':[99], 'pause':'power.pauseCompositorOnStandby=true',
+                 'timeout':'power.turnOffScreensTimeout=17.000000','dashboardVisible':False,
+                 'stats':[{'operation':'status','activity_level':3}], 'proximity':[6.25]}
+        with tempfile.TemporaryDirectory() as folder, patch.object(check, 'Remote') as factory:
+            remote = factory.return_value
+            remote.python.return_value = state
+            def run(cmd, **_):
+                if '--set-settings-float power.turnOffScreensTimeout 120' in cmd:
+                    raise RuntimeError('setter failed')
+                return ''
+            remote.side_effect = run
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(check.main(['--wake','--output',folder]), 1)
+            commands = [c.args[0] for c in remote.call_args_list]
+            self.assertTrue(any('--set-settings-bool power.pauseCompositorOnStandby 1' in c for c in commands))
+            self.assertTrue(any('--set-settings-float power.turnOffScreensTimeout 17.000000' in c for c in commands))
+            self.assertIn('rmdir /tmp/frame-test.lock', commands[-1])
+
+    def test_awake_or_unknown_activity_refuses_wake_and_install(self):
+        for stats in ([{'operation':'status','activity_level':1}],
+                      [{'operation':'performance'}, {'operation':'status','activity_level':2}],
+                      [], None):
+            state = {'battery':[99], 'pause':'power.pauseCompositorOnStandby=true',
+                     'timeout':'power.turnOffScreensTimeout=17.000000',
+                     'dashboardVisible':False, 'stats':stats, 'proximity':[0.0]}
+            for mode in ('--wake', '--exercise'):
+                with self.subTest(stats=stats, mode=mode), \
+                     tempfile.TemporaryDirectory() as folder, \
+                     patch.object(check, 'Remote') as factory, \
+                     patch.object(check.frame_decky, 'change') as install:
+                    remote = factory.return_value
+                    remote.python.return_value = state
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        self.assertEqual(check.main([mode,'--output',folder]), 1)
+                    install.assert_not_called()
+                    commands = [c.args[0] for c in remote.call_args_list]
+                    self.assertEqual(len(commands), 2)
+                    self.assertIn('mkdir /tmp/frame-test.lock', commands[0])
+                    self.assertIn('rmdir /tmp/frame-test.lock', commands[-1])
+                    report = json.loads((Path(folder)/'result.json').read_text())
+                    self.assertIn('active session untouched', report['error'])
+
+    def test_exact_linux_event_abi_and_debug_profile(self):
+        import ctypes
+        overlay_spec = importlib.util.spec_from_file_location('framey_openvr', PATH.with_name('framey_openvr.py'))
+        overlay = importlib.util.module_from_spec(overlay_spec); overlay_spec.loader.exec_module(overlay)
+        self.assertEqual(ctypes.sizeof(overlay.Event), 60)
+        self.assertEqual(overlay.Event.data.offset, 12)
+        self.assertEqual(ctypes.sizeof(overlay.Scroll), 16)
+        with self.assertRaises(ValueError):
+            object.__new__(overlay.Overlay).post_scroll(0, -3, 308)
+        original = check.frame_headset.bundle()
+        patched = check.debug_bundle(original, '/tmp/owned-profile')
+        import tarfile
+        with tarfile.open(fileobj=io.BytesIO(patched),mode='r:gz') as archive:
+            source=archive.extractfile('ui/frame_headset_runtime.py').read().decode()
+        self.assertIn("'--remote-debugging-port=0'", source)
+        self.assertIn("'/tmp/owned-profile'", source)
+        self.assertNotIn("str(BASE / 'profile')", source)

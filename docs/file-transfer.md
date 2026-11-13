@@ -3,6 +3,21 @@
 The confidence labels are the same as in [ssh.md](ssh.md). Everything here
 depends on SSH working through the `frame` alias from `scripts/connect.sh`.
 
+## Send to Frame in Frame Control
+
+In the **desktop app**, **Tools → Send to Frame** copies a selected local file
+directly over SSH to `~/Downloads/` on the Frame. This includes files larger
+than 8 GiB, such as a file on a mounted USB drive, provided the app can read
+the file and the Frame has room for it. The app requires a nonempty regular
+file with a visible name. This direct-copy route shipped in v0.4.53
+([PR #377](https://github.com/saphid/frame-control/pull/377)).
+
+In a **browser**, Send to Frame uploads through the local server and has an
+8 GiB limit. Use the desktop app or `scripts/push.sh` for a larger file. The
+direct-copy route has offline tests with a mocked 27 GiB file size; a physical
+26.5 GB transfer from external media to a Frame has **not** been verified.
+See the [current support matrix](current-support-matrix.md) for the test limit.
+
 ## Options
 
 | Option | Command | Confidence | Notes |
@@ -14,6 +29,10 @@ depends on SSH working through the `frame` alias from `scripts/connect.sh`.
 | Syncthing | A Syncthing Flatpak on the Frame (`./scripts/install-apps.sh <flathub-app-id>`), app on the Mac | Guess (which Syncthing Flatpak, and whether it has an aarch64 build, not checked) | Good for an ongoing shared folder. |
 | KDE Connect | KDE Connect on both | Guess | There's a macOS build of KDE Connect, but whether it's present or installable on the Frame wasn't confirmed. It would give you clipboard sync, file send, and remote input. Worth checking on-device. |
 | microSD | Physical card | Confirmed that the slot exists ([Wikipedia](https://en.wikipedia.org/wiki/Steam_Frame)) | Offline fallback. |
+
+Screenshots and Steam clips have their own buttons on **Tools → Capture &
+Live**, and **Settings → Copy to this computer** copies new ones here
+automatically: see [recording.md](recording.md#copying-new-ones-automatically).
 
 ## Clipboard
 
@@ -36,3 +55,34 @@ desktop has to be running in the headset. It's text only, and pastes over about
 
 A simpler fallback: `ssh frame 'cat > ~/clip.txt'` < file, then open it in the
 headset.
+
+### In Frame Control
+
+**Tools → Type on the headset** (also on Home, and press `T` anywhere) has the
+clipboard next to the keyboard and trackpad, both ways:
+
+- **Send text** or **Send this computer's clipboard** puts text on the headset's
+  clipboard, as above.
+- **Copy the headset's clipboard** brings it back: copy something in a desktop
+  app on the Frame, then press it, and paste on your computer. It calls
+  Klipper's `getClipboardContents` on the same D-Bus bus, and sends the text
+  back as base64, so accents, emoji and line breaks arrive unchanged. The
+  desktop app and the iPhone app put it on their own clipboard. With the server
+  in a browser, the server sets the clipboard of the computer it runs on:
+  `pbcopy` on macOS, PowerShell's `Set-Clipboard` (or `clip.exe`) on Windows,
+  `wl-copy`, `xclip` or `xsel` on Linux.
+
+It's text only, and copying back takes up to 1 MB; a bigger clipboard is
+refused with a message, so send big things as a file. An empty clipboard, or
+one holding an image, says so. Neither the server nor its log ever records what
+was on the clipboard.
+
+**Verified on a Frame, 2026-10-24:** SteamOS 0.5.6, build
+`20261015.6141207`. With a temporary nested desktop open, Frame Control sent
+a 47-character test marker to Klipper, then **Copy the headset's clipboard**
+read it through `getClipboardContents` and set a Linux PC's X11 clipboard.
+Reading that PC clipboard returned the exact marker. The prior headset
+clipboard was restored and the test desktop was closed. The PC side used a
+temporary X display on lxso2; macOS and Windows clipboard backends, a user's
+copy action in a headset app, and image/size error cases remain untested on a
+real headset. The fake Frame (`tests/fakeframe`) covers the protocol cases.

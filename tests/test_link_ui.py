@@ -56,18 +56,20 @@ class LinkUI(unittest.TestCase):
         r = subprocess.run(["node", "-e", script], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
 
-    def test_the_pill_leads_with_the_reason(self):
-        # The header pill cut off "Offline: checking the headset's identity failed · retry in…":
-        # the reason comes first, in a few words, and only the countdown gets cut.
+    def test_the_pill_keeps_the_failure_detail_in_its_tooltip(self):
+        # The connection redesign keeps the state and retry countdown in the pill,
+        # with the full failure explanation in its tooltip and details dialog.
         self.run_page(r'''
   link.s = changed;
   renderPill();
-  assert.match($('conn').innerHTML, /<b>Office Frame<\/b><span>SSH identity changed · retry in 12 s<\/span>/);
-  assert.equal($('conn').title, 'Office Frame is offline: SSH identity changed · retry in 12 s. Click for details.');
+  assert.match($('conn').innerHTML, /<b>Office Frame<\/b><span>Offline<span class="via"> · retrying in 12 s<\/span>/);
+  assert.ok($('conn').title.includes(changed.error.message));
+  assert.ok(!$('conn').title.includes('..'), $('conn').title);
   // Without a short reason: the stage that failed.
   link.s = {...changed, retry_at: null, error: {stage: 'identity', message: 'Something.'}};
   renderPill();
-  assert.match($('conn').innerHTML, /<span>Checking the headset&#39;s identity failed<\/span>/);
+  assert.match($('conn').innerHTML, /<span>Offline<\/span>/);
+  assert.ok($('conn').title.includes('Something.'));
 ''')
 
     def test_the_banner_never_doubles_a_full_stop(self):
@@ -119,7 +121,9 @@ class LinkUI(unittest.TestCase):
 class HeaderLayout(unittest.TestCase):
     def test_the_devices_tab_explanation_wraps(self):
         # It was cut to one line with no way to read the rest.
-        self.assertIn(".dev-problem .s { white-space: normal; }", PAGE)
+        # More specific than the later .item .s rule: the old equal-specificity
+        # rule passed this test while the browser still clipped the explanation.
+        self.assertIn(".item.dev-problem .s { white-space: normal; overflow-wrap: anywhere; }", PAGE)
         self.assertEqual(len(re.findall(r'<div class="item dev-problem" role="alert">', PAGE)), 2)
 
     def test_the_header_buttons_dont_give_way(self):

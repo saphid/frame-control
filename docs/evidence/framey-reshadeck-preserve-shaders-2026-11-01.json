@@ -1,0 +1,289 @@
+{
+  "at": "2026-11-01T07:14:56.206392+00:00",
+  "implementation": "3028be8877f6837fdc1442bc98f8bf6171634f32",
+  "fixtureRevision": "08332cf2d927ba189c3255b91a62c71068b03d7e",
+  "baseMain": "89757d33f61124486404bc16e84b7d3697cf2c9f",
+  "archive": {
+    "id": 75,
+    "version": "0.2.0",
+    "sha256": "f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281",
+    "backendSha256": "ff5b902a09892638b2a7f3ff784fe57211f7ab7ad1a63ffa0bdfa9e3c47cdb56"
+  },
+  "focusedTests": 9,
+  "inventoryTests": 3,
+  "compatibilityTests": 25,
+  "siteTests": 18,
+  "fullUnit": {
+    "sourceRevision": "3028be8877f6837fdc1442bc98f8bf6171634f32",
+    "tests": 1984,
+    "seconds": 254.333,
+    "platformOrOptionalSkips": 15,
+    "fixtureOnlyNormalizationAfterRun": true
+  },
+  "symlinkFixture": {
+    "at": "2026-11-01T07:10:17.630808+00:00",
+    "baseline": "3028be8877f6837fdc1442bc98f8bf6171634f32",
+    "file": "tests/test_framey_reshadeck.py",
+    "realFrameContacted": false,
+    "symlinkTemporaryRootExercised": true,
+    "productionGuardUnchanged": true,
+    "ownedTemporaryFilesRemoved": true,
+    "outcomes": [
+      {
+        "mode": "original",
+        "tests": 9,
+        "failures": 0,
+        "errors": 7,
+        "skips": 0,
+        "success": false,
+        "sourceSha256": "69c20972321b1a31694730d138a2371142b77a3fee7eaf7a1f84dad71ec45167"
+      },
+      {
+        "mode": "repaired",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "success": true,
+        "sourceSha256": "829f9729f9df42c869db3ef987b084ece90d95a264c68ec128f82ca043865f20"
+      }
+    ]
+  },
+  "native": {
+    "at": "2026-11-01T07:06:34.809842+00:00",
+    "baseMain": "89757d33f61124486404bc16e84b7d3697cf2c9f",
+    "wholeInstallerAndApplyAstPreservedOutsideExact75": true,
+    "wholeCheckerAstPreservedOutsideTwoReshadeckBranches": true,
+    "runnerOnlyAddsTwoSourceInputs": true,
+    "all34PriorCasesPreserved": true,
+    "other115CatalogRowsEqual": true,
+    "all116PinsFlagsClassificationsPoliciesPreserved": true,
+    "otherMainFilesByteIdentical": 1720,
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "ad3b3f08f74db22bf653034e21f8b9949b0e4ac7bc85d2a26b683146418d2225",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "c73fd2e08c275350121e4c1558566743358623af050aa51583274d4d4d36b099",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/deck_shelves_private.py": "7601ff4ae19850dccf80ebc0f63ae7829af193367ac82d1357782e6c7e8f3b78",
+      "tests/decky-runtime/battery_private.py": "9ca0c40c87a70a47dba5ca6e98af9e5e06e4895804c93dc3e24da1a88f81ae0d",
+      "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
+      "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+      "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+      "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+      "tests/decky-runtime/reshadeck_private.py": "94bf1b762a6a0f9448a8e02c1fe6fd9be552557df61ee1a7083b7d8626bf8ee2",
+      "ui/framey_reshadeck.py": "5640fdf1d8bf9fd1df9e3e0637aca48fa8793c299ea2788bbaa70921d0b3f689",
+      "tests/decky-runtime/Containerfile": "7adfd6f0a3dae7c424f4d1c3dc971f4c4837c5c31f1a1d2ffa2701503e650832",
+      "tests/decky-runtime/cases.json": "729df83d9be3e9428e5fb8365ba81da805b7d596b3c02a5739faad0679c1d0ee",
+      "tests/framey_official.py": "b84d197a0161bad2780b732c4628759cbfc26cf1f83862c7193ad08f00546d42",
+      "ui/frame_decky_store.py": "c7d83a00a129bf50e4814bf5c04e0459c3ac09898405ef462ca99ae7cd9be18e",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/steamgriddb_private.py": "ae815dc7e5f0e178e95c93e0bbf3eca232f3f2eb6f35af6b1b618345e332240e",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeRpc": 15,
+    "privateX11PropertyReadbacks": 13,
+    "cleanStops": [
+      0.1953025721013546,
+      0.2144026542082429
+    ],
+    "sharedMarkersAndSiblingPreserved": true,
+    "actualGamescopeRenderingVerified": false,
+    "arm64Verified": false,
+    "realFrameContacted": false,
+    "mergeQualified": false,
+    "releaseQualified": false
+  },
+  "all29NativeInputsMatchFixtureRevision": true,
+  "e2e": {
+    "at": "2026-11-01T07:07:09.239827+00:00",
+    "previousImages": {
+      "fakeframe-frame:latest": "sha256:679f30d953ef03039568b79ecb95ee542e65c8a3fee30300fd68bb84c0238bba",
+      "fakeframe-host:latest": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+    },
+    "frameSimulatorId": "cfcf8a78103af20a9dc46192c893dedd5606107b3d3f6c8bef804db0dace3729",
+    "realFrameContacted": false,
+    "sourceRevision": "3028be8877f6837fdc1442bc98f8bf6171634f32",
+    "testExit": 0,
+    "remainingOwnedTempFiles": [],
+    "restoredImages": {
+      "fakeframe-frame:latest": "sha256:679f30d953ef03039568b79ecb95ee542e65c8a3fee30300fd68bb84c0238bba",
+      "fakeframe-host:latest": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+    },
+    "remainingOwnedResources": {
+      "containers": "",
+      "volumes": "",
+      "networks": ""
+    },
+    "frameSimulatorUnchanged": true,
+    "simulatorStartedAt": "2026-10-30T08:17:01.714646486Z",
+    "simulatorRestartCount": 0,
+    "seconds": 446.821,
+    "tests": 53,
+    "testSeconds": 405.496,
+    "skips": 0,
+    "catalogCount": 116,
+    "outcomes": {
+      "blocked": 47,
+      "installed-removed": 69
+    },
+    "officialBackendsExecuted": false,
+    "fixtureOnlyNormalizationAfterRun": true
+  },
+  "firstNativeFailure": {
+    "fixtureError": "Xvfb reset root properties after last short-lived xprop client disconnected",
+    "repair": "Keep private authenticated Xvfb with -noreset; retain -nolisten tcp and no host display access",
+    "productFailureCountedAsPass": false
+  },
+  "baseMainQualification": {
+    "at": "2026-11-01T07:09:02.301279+00:00",
+    "head": "89757d33f61124486404bc16e84b7d3697cf2c9f",
+    "baseMain": "9b2f3c2634a61767ebc52099f595229b2515d96f",
+    "all9ChecksAndWorkflowRunsSuccess": true,
+    "sourceScopeOnlyTestAndEvidence": true,
+    "native": [
+      {
+        "artifact": 13074351502,
+        "architecture": "x86_64",
+        "cases": 53,
+        "rpc": 708,
+        "inputs": 27,
+        "reportSha256": "1e552164e0313c212c8948b6a778fae2e327f793c739b70a951511baba3f83fe",
+        "focusedTabMaster": [
+          {
+            "rpc": 47,
+            "forcedStops": [
+              0,
+              0
+            ],
+            "cleanStops": [
+              true,
+              true
+            ],
+            "settingsPreserved": true,
+            "ownedIdentitiesReaped": true,
+            "restoredManagedSourceVerified": false
+          },
+          {
+            "rpc": 48,
+            "forcedStops": [
+              0,
+              0
+            ],
+            "cleanStops": [
+              true,
+              true
+            ],
+            "settingsPreserved": true,
+            "ownedIdentitiesReaped": true,
+            "restoredManagedSourceVerified": false
+          },
+          {
+            "rpc": 47,
+            "forcedStops": [
+              1,
+              0
+            ],
+            "cleanStops": [
+              false,
+              true
+            ],
+            "settingsPreserved": true,
+            "ownedIdentitiesReaped": true,
+            "restoredManagedSourceVerified": true
+          }
+        ]
+      },
+      {
+        "artifact": 13073617431,
+        "architecture": "aarch64",
+        "cases": 53,
+        "rpc": 708,
+        "inputs": 27,
+        "reportSha256": "cd4b0959af629ef1c040734a15a317dbf273fbebb457eb8f56bf40bb9bc682a5",
+        "focusedTabMaster": [
+          {
+            "rpc": 47,
+            "forcedStops": [
+              0,
+              0
+            ],
+            "cleanStops": [
+              true,
+              true
+            ],
+            "settingsPreserved": true,
+            "ownedIdentitiesReaped": true,
+            "restoredManagedSourceVerified": false
+          },
+          {
+            "rpc": 48,
+            "forcedStops": [
+              0,
+              0
+            ],
+            "cleanStops": [
+              true,
+              true
+            ],
+            "settingsPreserved": true,
+            "ownedIdentitiesReaped": true,
+            "restoredManagedSourceVerified": false
+          },
+          {
+            "rpc": 47,
+            "forcedStops": [
+              1,
+              0
+            ],
+            "cleanStops": [
+              false,
+              true
+            ],
+            "settingsPreserved": true,
+            "ownedIdentitiesReaped": true,
+            "restoredManagedSourceVerified": true
+          }
+        ]
+      }
+    ],
+    "all53ProducerRecordsRetained": true,
+    "all53CasesIndependentlyBehaviorAudited": false,
+    "e2e": {
+      "artifact": 13074670901,
+      "tests": 53,
+      "skips": 0,
+      "seconds": 350.805,
+      "pins": 116,
+      "installRemove": 69,
+      "refusals": 47,
+      "allOutcomesMatchBaseline": true,
+      "officialBackendsExecuted": false,
+      "hostedResourceAbsenceIndependentlyObserved": false,
+      "socketResourceWarningsRemain": true
+    },
+    "mainGreenRequired": true,
+    "realFrameContacted": false,
+    "mergeQualified": false,
+    "releaseQualified": false
+  },
+  "fullHostedCiVerified": false,
+  "arm64Verified": false,
+  "officialUiVerified": false,
+  "shaderRenderingVerified": false,
+  "actualFrameDependenciesVerified": false,
+  "physicalControllerVerified": false,
+  "realFrameContacted": false,
+  "schedulesChanged": false,
+  "mergeQualified": false,
+  "releaseQualified": false
+}

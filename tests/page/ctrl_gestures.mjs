@@ -23,7 +23,7 @@ function page({ mode = "abs", rect = { left: 0, top: 0, width: 640, height: 360 
   const sent = [];
   const canvas = { width: 1280, height: 720, getBoundingClientRect: () => rect };
   const env = {
-    ctrl, $: () => canvas, ctrlMode: () => mode, ctrlShow: () => {}, toast: () => {},
+    devGen: 0, ctrl, $: () => canvas, ctrlMode: () => mode, ctrlShow: () => {}, toast: () => {},
     ctrlTarget: () => (mode !== "abs" ? { ok: true } : target.panel ? { ok: true, panel: target.panel } : { why: "gone" }),
     api: api || (async (path, body) => { sent.push(...body.events); return { state: "ready", sent: true }; }),
     requestAnimationFrame: cb => { setTimeout(cb, 0); return 1; },

@@ -1,7 +1,7 @@
 // Frame Control as a desktop app (macOS, Windows, Linux): starts ui/server.py on
 // a free loopback port and shows it in a native window. The server does all the
 // work over the `frame` SSH alias; this file only hosts it.
-const { app, BrowserWindow, Menu, Notification, clipboard, dialog, ipcMain, nativeImage, session, shell } = require("electron");
+const { app, BrowserWindow, Menu, Notification, Tray, clipboard, dialog, ipcMain, nativeImage, session, shell } = require("electron");
 const { execFile, spawn } = require("child_process");
 const { promisify } = require("util");
 const fs = require("fs");
@@ -11,6 +11,8 @@ const os = require("os");
 const path = require("path");
 const { SCHEME, parseInstallLink, linkFromArgv } = require("./install-link");
 const updater = require("./updater");
+const { preferenceStore } = require("./preferences");
+const { createLoginItem } = require("./login-item");
 const { createMetaSignIn } = require("./meta-signin");
 
 const run = promisify(execFile);
@@ -28,10 +30,13 @@ const LOG_DIR = IS_MAC ? path.join(os.homedir(), "Library", "Logs", "Frame Contr
 const LOG = path.join(LOG_DIR, "server.log");
 const BG = "#0d1117";
 const FRAME = process.env.FRAME_ALIAS || "frame";
+const preferences = preferenceStore(path.join(app.getPath("userData"), "client-preferences.json"));
+const loginItem = createLoginItem({ electronApp: app });
 
 let server = null;
 let url = null;
 let win = null;
+let tray = null;
 let quitting = false;
 let python = null;
 
@@ -280,6 +285,14 @@ ipcMain.handle("server:restart", (e) => {
   if (win && e.sender === win.webContents && e.senderFrame && e.senderFrame.url.startsWith("data:")) restartServer();
 });
 ipcMain.handle("clipboard:read", (e) => fromUi(e) ? clipboard.readText() : "");
+// Text from the headset's clipboard onto this computer's.
+ipcMain.handle("clipboard:write", (e, text) => {
+  if (!fromUi(e) || typeof text !== "string") return false;
+  clipboard.writeText(text);
+  return true;
+});
+ipcMain.handle("preferences:read", (e) => fromUi(e) ? preferences.read() : {});
+ipcMain.handle("preferences:write", (e, key, value) => fromUi(e) ? preferences.write(key, value) : false);
 // A PNG or JPEG (a screenshot) onto the clipboard as an image.
 ipcMain.handle("clipboard:writeImage", (e, bytes) => {
   if (!fromUi(e) || !(bytes instanceof Uint8Array)) return false;
@@ -294,6 +307,33 @@ ipcMain.handle("update:get", (e) => fromUi(e) ? publicUpdate() : null);
 ipcMain.handle("update:check", (e) => fromUi(e) ? checkForUpdate({ manual: true }).then(publicUpdate) : null);
 ipcMain.handle("update:install", (e) => { if (fromUi(e)) installUpdate(); });
 
+// The OBS source is local to this computer. Closing the Python relay's control
+// pipe lets it stop SSH on every platform, including Windows where SIGTERM
+// terminates Python without running its cleanup block.
+const OBS_SCRIPT = path.join(SCRIPTS, "obs-headset-source.py");
+const { createObsSource } = require("./obs-source");
+const obsSource = createObsSource({
+  spawn,
+  // Keep the button hidden until native Windows/Frame streaming is verified.
+  supported: !IS_WIN,
+  prepare: async alias => {
+    if (!fs.existsSync(OBS_SCRIPT)) throw new Error("The OBS helper is missing; reinstall Frame Control.");
+    const env = { ...process.env, PATH: await loginPath() };
+    const executable = python || await findPython(env);
+    if (!executable) throw new Error(PYTHON_HELP);
+    if (quitting || alias !== activeAlias()) throw new Error("The selected headset changed; try again.");
+    return { executable, args: [...PY_FLAGS, OBS_SCRIPT], env };
+  },
+  onState: state => {
+    if (win && !win.isDestroyed()) win.webContents.send("obs:state", state);
+  },
+});
+const publicObs = () => obsSource.status();
+const stopObs = () => obsSource.stop();
+ipcMain.handle("obs:status", e => fromUi(e) ? publicObs() : null);
+ipcMain.handle("obs:start", (e, port) => fromUi(e) ? obsSource.start(activeAlias(), port) : null);
+ipcMain.handle("obs:stop", e => fromUi(e) ? stopObs() : null);
+
 // The page reports the headsets it knows (the server's Devices tab), so the Frame
 // menu can switch between them. Only plain names and ids go into the menu.
 const ALIAS_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -304,6 +344,7 @@ ipcMain.on("devices:changed", (e, list) => {
     .map(d => ({ id: d.id.slice(0, 80), name: String(d.name || d.alias).slice(0, 60), alias: d.alias, active: !!d.active }));
   if (JSON.stringify(next) === JSON.stringify(devices)) return;
   devices = next;
+  if (obsSource.status().alias && obsSource.status().alias !== activeAlias()) stopObs();
   buildMenu();
 });
 const activeAlias = () => (devices.find(d => d.active) || {}).alias || FRAME;
@@ -506,7 +547,60 @@ function registerScheme() {
   }
 }
 
-function createWindow() {
+function showWindow() {
+  if (!win) return createWindow(true);
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+}
+
+function ensureTray() {
+  if (tray) return true;
+  try {
+    const icon = nativeImage.createFromPath(path.join(__dirname, "build", "icon.png"));
+    if (icon.isEmpty()) return false;
+    tray = new Tray(icon);
+    // Some Linux desktops accept the Tray object but expose no status icon.
+    // Keep a visible login window rather than hiding the only way back in.
+    if (process.platform === "linux") {
+      const bounds = tray.getBounds();
+      if (!bounds.width || !bounds.height) { tray.destroy(); tray = null; return false; }
+    }
+    tray.setToolTip("Frame Control");
+    tray.on("click", showWindow);
+    updateTrayMenu();
+    return true;
+  } catch {
+    if (tray) { try { tray.destroy(); } catch {} tray = null; }
+    return false;
+  }
+}
+
+function updateTrayMenu() {
+  if (!tray) return;
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: "Open Frame Control", click: showWindow },
+    { label: "Open at Login", type: "checkbox", checked: loginItem.enabled(), click: toggleLoginItem },
+    { type: "separator" },
+    { label: "Quit Frame Control", click: () => app.quit() },
+  ]));
+}
+
+function toggleLoginItem() {
+  try {
+    const on = loginItem.set(!loginItem.enabled());
+    if (on) ensureTray();
+    else if (tray) { tray.destroy(); tray = null; }
+    buildMenu();
+    updateTrayMenu();
+  } catch (err) {
+    dialog.showErrorBox("Open at Login", String(err.message || err));
+    buildMenu();
+    updateTrayMenu();
+  }
+}
+
+function createWindow(showOnReady = !process.argv.includes("--hidden") || !tray) {
   win = new BrowserWindow({
     width: 1400, height: 950, minWidth: 760, minHeight: 560,
     title: "Frame Control", backgroundColor: BG, show: false,
@@ -515,7 +609,10 @@ function createWindow() {
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false,
                       preload: path.join(__dirname, "preload.js") },
   });
-  win.once("ready-to-show", () => win.show());
+  win.once("ready-to-show", () => { if (showOnReady) win.show(); });
+  win.on("close", (event) => {
+    if (!quitting && tray && loginItem.enabled()) { event.preventDefault(); win.hide(); }
+  });
   if (CHROME_CSS) win.webContents.on("did-finish-load", () => win.webContents.insertCSS(CHROME_CSS));
   // External links open in the default browser; the app never navigates away.
   win.webContents.setWindowOpenHandler(({ url: target }) => {
@@ -569,6 +666,8 @@ function buildMenu() {
       label: "Frame",
       submenu: [
         { label: "Set Up Connection…", click: () => setUpConnection() },
+        { label: "Open at Login", type: "checkbox", checked: loginItem.enabled(),
+          enabled: app.isPackaged, click: toggleLoginItem },
         { label: IS_MAC ? "Open SSH in Terminal" : "Open SSH in a Terminal", click: openSsh },
         { type: "separator" },
         ...(devices.length > 1 ? [{
@@ -620,7 +719,7 @@ if (!app.requestSingleInstanceLock()) {
   app.on("open-url", (e, link) => { e.preventDefault(); openInstallLink(link); });
   // Windows and Linux start a second instance with the link as an argument.
   app.on("second-instance", (_e, argv) => {
-    if (win) { if (win.isMinimized()) win.restore(); win.focus(); }
+    if (!argv.includes("--hidden")) showWindow();
     const link = linkFromArgv(argv);
     if (link) openInstallLink(link);
   });
@@ -628,12 +727,41 @@ if (!app.requestSingleInstanceLock()) {
   if (firstLink) openInstallLink(firstLink);
   app.whenReady().then(() => {
     registerScheme();
+    if (loginItem.enabled()) ensureTray();
     buildMenu();
     createWindow();
     scheduleUpdateChecks();
   });
-  app.on("activate", () => { if (!win) createWindow(); });
+  app.on("activate", showWindow);
   app.on("window-all-closed", () => app.quit());
-  app.on("before-quit", () => { quitting = true; stopServer(); });
-  process.on("exit", stopServer);
+  let obsQuitWaiting = false;
+  let obsQuitReady = false;
+  app.on("before-quit", (event) => {
+    quitting = true;
+    stopServer();
+    if (!obsSource.child || obsQuitReady) { stopObs(); return; }
+    event.preventDefault();
+    if (obsQuitWaiting) return;
+    obsQuitWaiting = true;
+    const child = obsSource.child;
+    let timer;
+    child.once("close", () => {
+      clearTimeout(timer);
+      obsQuitReady = true;
+      app.quit();
+    });
+    stopObs();
+    timer = setTimeout(() => {
+      if (child.exitCode === null) {
+        if (IS_WIN) {
+          // Only the helper and its SSH child: never enumerate unrelated SSH jobs.
+          spawn("taskkill", ["/PID", String(child.pid), "/T", "/F"],
+                { stdio: "ignore", windowsHide: true, detached: true }).unref();
+        } else child.kill("SIGKILL");
+      }
+      obsQuitReady = true;
+      app.quit();
+    }, 8000);
+  });
+  process.on("exit", () => { stopObs(); stopServer(); });
 }

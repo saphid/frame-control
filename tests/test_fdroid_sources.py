@@ -81,7 +81,7 @@ class Repositories(unittest.TestCase):
             state.clear()
             self.addCleanup(state.clear)
 
-    def fetch(self, url, path, maximum):
+    def fetch(self, url, path, maximum, auth=None):
         name = url.rsplit('/', 1)[-1]
         if self.v1 and name == 'entry.jar':
             raise urllib.error.HTTPError(url, 404, 'missing', None, None)
@@ -311,7 +311,7 @@ class Repositories(unittest.TestCase):
         source = self.add()
         other = dict(source, id='other-repo')
         started, release = threading.Event(), threading.Event()
-        def fetch(url, path, maximum):
+        def fetch(url, path, maximum, auth=None):
             if threading.current_thread().name == 'slow':
                 started.set()
                 release.wait(5)
@@ -355,7 +355,7 @@ class Repositories(unittest.TestCase):
         self.files['entry.jar'], _ = entry_jar(50)
         source = fdroid.add_repo(URL)
         jars = {'older': entry_jar(100)[0], 'newer': entry_jar(200)[0]}
-        def fetch(url, path, maximum):
+        def fetch(url, path, maximum, auth=None):
             name = threading.current_thread().name
             if name in jars and url.endswith('entry.jar'):
                 Path(path).write_bytes(jars[name])
@@ -401,7 +401,7 @@ class Repositories(unittest.TestCase):
         source = dict(id='overlap', name='Overlap', url=URL, fingerprint=None)
         self.v1 = True
         inner = []
-        def fetch(url, path, maximum):
+        def fetch(url, path, maximum, auth=None):
             if url.endswith('index-v1.jar') and not inner:
                 inner.append(1)  # the v1 load passed its fallback check; a v2 load finishes now
                 self.v1 = False
@@ -471,7 +471,7 @@ class Repositories(unittest.TestCase):
         source = self.add()
         self.expire(source)
         release = threading.Event()
-        def slow(url, path, maximum):
+        def slow(url, path, maximum, auth=None):
             release.wait(5)
             self.fetch(url, path, maximum)
         self.fetch_mock.side_effect = slow
@@ -528,7 +528,7 @@ class Repositories(unittest.TestCase):
         self.expire(source)
         before = self.fetch_mock.call_count
         release = __import__('threading').Event()
-        def slow(url, path, maximum):
+        def slow(url, path, maximum, auth=None):
             release.wait(5)
             self.fetch(url, path, maximum)
         self.fetch_mock.side_effect = slow

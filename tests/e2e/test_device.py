@@ -45,6 +45,13 @@ class Device(harness.FrameTestCase):
         self.assertRegex(out['message'], r'^copied via Klipper \(\d+ chars\)$')
         self.assertEqual(state()['clipboard'], [text])
 
+    def test_clipboard_comes_back_from_klipper(self):
+        text = 'from the headset: 世界 🎧\n\nwith trailing newlines\n\n'
+        ok('POST', '/api/clipboard', {'text': text})
+        out = ok('POST', '/api/clipboard', {'read': True})
+        self.assertEqual(out['text'], text)
+        self.assertRegex(out['message'], r"^Copied \d+ characters from the headset's clipboard$")
+
     def test_flatpak_install_and_remove(self):
         # Installs run as background jobs (server.start_job); uninstall answers at once.
         job = finished(ok('POST', '/api/flatpak', {'id': 'org.videolan.VLC', 'action': 'install'}))

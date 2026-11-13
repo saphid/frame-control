@@ -1,0 +1,117 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), container=document.getElementById('fixture');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const root=ReactDOM.createRoot(container);
+  const application={appId:424242,name:'Private fixture'};
+  let availableTools=[],assignedToolName='private-proton',assignedToolDisplayName='Synthetic assigned Proton';
+  let compatibilityMappingsStale=false,loads=0,release;
+  const selections=[];
+  // Only the exact pinned dropdown element/renderer runs. Tool choices and
+  // selection results are synthetic; no plugin initializer, helper or Steam
+  // compatibility-tool discovery/assignment runs.
+  const dropdownOptions=()=>availableTools;
+  const openToolMenu=(app,showMenu)=>{assert(app===application,'application changed');loads++;release=showMenu;};
+  const selectCompatTool=(app,option)=>{assert(app===application,'application changed');selections.push(option);};
+  const published=()=>__OFFICIAL_CONTROL__;
+  const render=()=>ReactDOM.flushSync(()=>root.render(published()));
+  const value=()=>container.querySelector('span[title]');
+  const button=()=>container.querySelector('button');
+  const select=()=>container.querySelector('select');
+  const checkValue=text=>{
+    assert(value()?.textContent===text,'current assigned tool missing or stale');
+    assert(value().getAttribute('aria-label')==='Compatibility tool for Private fixture: '+text,'published accessible label lost');
+    assert(value().style.textOverflow==='ellipsis','published renderer styles lost');
+  };
+  try {
+    render();checkValue('Synthetic assigned Proton');
+    assert(!select()&&loads===0&&selections.length===0,'rendering current value performed a tool read/write');
+    ReactDOM.flushSync(()=>button().click());
+    assert(loads===1&&!select(),'loading gate was bypassed');
+    checkValue('Synthetic assigned Proton');
+    assignedToolDisplayName='Synthetic newer assignment';render();
+    checkValue('Synthetic newer assignment');
+    availableTools=[{data:'private-proton',label:'Private choice'},{data:'',label:'Steam default'}];
+    ReactDOM.flushSync(()=>{root.render(published());release();});
+    assert(select()&&select().value==='0','ready choices missing or wrong selection');
+    checkValue('Synthetic newer assignment');
+    ReactDOM.flushSync(()=>{
+      select().value='1';select().dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    assert(selections.length===1&&selections[0]===availableTools[1],'published selection lost original option identity');
+    assignedToolName='';assignedToolDisplayName='Steam default';render();checkValue('Steam default');
+    assert(select().value==='1','empty-string option failed to remain selected');
+    compatibilityMappingsStale=true;render();
+    assert(button().disabled&&select().disabled,'disabled control became actionable');
+    checkValue('Steam default');
+    button().click();assert(loads===1,'disabled loader ran');
+
+    // Decky's DropdownOption type permits groups within groups. Replay the
+    // published control with synthetic nested choices, not live tool data.
+    compatibilityMappingsStale=false;
+    const first={data:0,label:'First'},deep={data:'deep',label:'Deep choice'},
+      fallback={data:'',label:'Steam default'},last={data:'last',label:'Last'};
+    availableTools=[{label:'Outer',options:[first,
+      {label:'Inner',options:[deep,{label:'Deepest',options:[fallback]}]},last]},
+      {label:'Empty',options:[]},{data:'plain',label:'Ungrouped'}];
+    assignedToolName='deep';assignedToolDisplayName='Nested assignment';render();
+    assert(select().selectedOptions[0]?.textContent==='Deep choice','nested selected option is missing');
+    checkValue('Nested assignment');
+    assert([...select().options].map(option=>option.textContent).join('|')===
+      'First|Deep choice|Steam default|Last|Ungrouped','nested leaves lost or group became selectable');
+    assert([...select().querySelectorAll('optgroup')].map(group=>group.label).join('|')===
+      'Outer|Outer › Inner|Outer › Inner › Deepest|Outer','nested group paths or source order lost');
+    const choose=text=>ReactDOM.flushSync(()=>{
+      select().value=[...select().options].find(option=>option.textContent===text).value;
+      select().dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    choose('Steam default');assert(selections.at(-1)===fallback,'nested empty-string leaf lost identity');
+    choose('First');assert(selections.at(-1)===first,'nested zero-valued leaf lost identity');
+    choose('Last');assert(selections.at(-1)===last,'resumed outer group lost identity');
+    assignedToolName='';assignedToolDisplayName='Steam default';render();
+    assert(select().selectedOptions[0]?.textContent==='Steam default','nested empty-string value lost selection');
+    // Reopening still gates the select until showMenu; nested data must not
+    // bypass deferred loading or leave the old selection map behind.
+    ReactDOM.flushSync(()=>button().click());assert(!select()&&loads===2,'nested reload bypassed gate');
+    availableTools=[{label:'Replacement',options:[{label:'Inner',options:[deep,first]}]}];
+    assignedToolName=0;assignedToolDisplayName='First';
+    ReactDOM.flushSync(()=>{root.render(published());release();});
+    assert(select().selectedOptions[0]?.textContent==='First','updated nested option ordering was stale');
+    choose('Deep choice');assert(selections.at(-1)===deep,'updated nested callback lost identity');
+    compatibilityMappingsStale=true;render();
+    assert(select().disabled&&button().disabled,'nested choices ignored disabled state');
+    const selectionCount=selections.length;
+    choose('Deep choice');button().click();
+    assert(selections.length===selectionCount&&loads===2,'disabled nested control called the plugin');
+
+    // The selected-value renderer receives the original leaf label, never a
+    // group header, including an undefined-valued leaf and unknown selection.
+    let renderedLabel;
+    const leafLabel=React.createElement('strong',null,'Original leaf label');
+    const undefinedLeaf={label:leafLabel,data:undefined};
+    const localOptions=[{label:'Group',options:[{label:'Subgroup',options:[undefinedLeaf]}]}];
+    const local=selectedOption=>ReactDOM.flushSync(()=>root.render(React.createElement(DFL.Dropdown,{
+      label:'Nested local choices',rgOptions:localOptions,selectedOption,
+      strDefaultLabel:'No selection',renderButtonValue:label=>{renderedLabel=label;return label;}})));
+    local(undefined);assert(renderedLabel===leafLabel,'nested renderer did not receive original leaf label');
+    local('unknown');assert(renderedLabel==='No selection','group header was mistaken for selected leaf');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedControl:true,
+      currentValueBeforeAndDuringLoad:true,currentValueUpdates:true,rendererStyleAndLabel:true,
+      loadingGatePreserved:true,originalOptionSelected:true,emptyStringSelection:true,
+      disabledValueRetained:true,nestedLeavesReachable:true,nestedGroupPaths:true,
+      nestedCallbacksKeepIdentity:true,nestedSelectionAndReload:true,groupHeadersNeverSelected:true,
+      originalNestedLabelPreserved:true,syntheticTools:true,realFrameContacted:false,realToolAssignment:false});
+  }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

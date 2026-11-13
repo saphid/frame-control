@@ -1,0 +1,152 @@
+{
+  "init_error": 0,
+  "interface": "IVROverlay_028",
+  "panels": [
+    {
+      "key": "valve.steam.desktopgame.0",
+      "find_rc": 0,
+      "rendering_pid": 297037,
+      "rendering_comm": "gamescope-wl",
+      "visible": false,
+      "active_dashboard": false,
+      "width_m": {
+        "rc": 0,
+        "value": 2.6700000762939453
+      },
+      "curvature": {
+        "rc": 0,
+        "value": 0.0
+      },
+      "transform_type": {
+        "rc": 0,
+        "value": 5
+      },
+      "absolute": {
+        "rc": 18,
+        "origin_or_device": null,
+        "matrix": null
+      },
+      "tracked_device_relative": {
+        "rc": 18,
+        "origin_or_device": null,
+        "matrix": null
+      },
+      "coordinate_transforms": [
+        {
+          "tracking_origin": 0,
+          "coordinates": [
+            0.5,
+            0.5
+          ],
+          "rc": 23,
+          "matrix": null
+        },
+        {
+          "tracking_origin": 1,
+          "coordinates": [
+            0.5,
+            0.5
+          ],
+          "rc": 0,
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ]
+        },
+        {
+          "tracking_origin": 2,
+          "coordinates": [
+            0.5,
+            0.5
+          ],
+          "rc": 23,
+          "matrix": null
+        }
+      ]
+    },
+    {
+      "key": "valve.steam.gamepadui.main",
+      "find_rc": 0,
+      "rendering_pid": 297037,
+      "rendering_comm": "gamescope-wl",
+      "visible": false,
+      "active_dashboard": false,
+      "width_m": {
+        "rc": 0,
+        "value": 2.6670000553131104
+      },
+      "curvature": {
+        "rc": 0,
+        "value": 0.0
+      },
+      "transform_type": {
+        "rc": 0,
+        "value": 5
+      },
+      "absolute": {
+        "rc": 18,
+        "origin_or_device": null,
+        "matrix": null
+      },
+      "tracked_device_relative": {
+        "rc": 18,
+        "origin_or_device": null,
+        "matrix": null
+      },
+      "coordinate_transforms": [
+        {
+          "tracking_origin": 0,
+          "coordinates": [
+            0.5,
+            0.5
+          ],
+          "rc": 23,
+          "matrix": null
+        },
+        {
+          "tracking_origin": 1,
+          "coordinates": [
+            0.5,
+            0.5
+          ],
+          "rc": 0,
+          "matrix": [
+            0.3689989447593689,
+            0.0,
+            0.0008894503116607666,
+            -0.5048462152481079,
+            0.0,
+            0.36899998784065247,
+            0.0,
+            1.2510287761688232,
+            -0.0008894503116607666,
+            0.0,
+            0.3689989447593689,
+            -1.1726053953170776
+          ]
+        },
+        {
+          "tracking_origin": 2,
+          "coordinates": [
+            0.5,
+            0.5
+          ],
+          "rc": 23,
+          "matrix": null
+        }
+      ]
+    }
+  ],
+  "interface_error": 0,
+  "dashboard_visible": false
+}

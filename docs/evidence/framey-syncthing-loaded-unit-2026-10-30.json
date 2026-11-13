@@ -1,0 +1,229 @@
+{
+  "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "regression": {
+    "testedHead": "6d7c10c556bd2b850a06583003208609c71c4753",
+    "helperSha256": "f38d6d6c75c7093b1d3f385e492e05d0e8a27f3cfcc76c9c5fc113fdcbf4ac1e",
+    "sourceSha256": {
+      "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "b45854e34400f52c00f9749e77b6aee3d8ba1ad2e96d4e7f4dcfbe5240c956ae",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "a8ac5f6e0dc8116c7a10f1e09146e82dcd06a390492b4d330d0b843d94979517",
+      "tests/decky-runtime/syncthing_service.py": "186a195db21b114aed299ff16f686a89e42b51eb6e3a18442bbc002beb2a6300"
+    },
+    "observedHttpStatus": 204,
+    "mainPidBefore": 359,
+    "mainPidAfter": 0,
+    "consoleSha256": "24b1c8f8e83ede8cd05d40982ee753bfad75ae67d09a54737bd37a4bbf8badc1"
+  },
+  "build": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "patchSha256": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0",
+    "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+    "pythonSha256": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+    "builderImage": "sha256:49b48c81f541784e8e40ea095ae1883159a2ea7b3df40606283612480810b0fa",
+    "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "builds": [
+      {
+        "architecture": "x86_64",
+        "elfMachine": 62,
+        "bytes": 13378712,
+        "sha256": "8902ad2f65c73cd1d08888722f9dba070c7486ab01fb1b7fa6a034a3e0446035",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "x86_64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false,
+        "serviceFileTestsExecuted": true
+      }
+    ],
+    "installerEnabled": false,
+    "runtimeVerified": false
+  },
+  "nativeOwnership": {
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "pythonSha256": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+    "helperSha256": "8902ad2f65c73cd1d08888722f9dba070c7486ab01fb1b7fa6a034a3e0446035",
+    "installerEnabled": false,
+    "independentState": {
+      "listenerConflictBeforeSettingsOrService": true,
+      "foreignServiceFilesPreservedBeforeDBus": true,
+      "reservedManagedNameRefusedAsExternal": true,
+      "ownedRestartReaped": true,
+      "foreignPidIgnored": true,
+      "duplicateOwnershipRefused": true,
+      "activeReloadCount": 3,
+      "unrelatedProcessPreserved": true,
+      "privateSocketMode": true,
+      "privateHttpProxy": true,
+      "privateFixtureAuthErrorPreserved": true,
+      "privateSocketCleanupOnReload": true,
+      "loaderExitStoppedOwnedWatchdog": true
+    },
+    "serviceManagerVerified": false,
+    "result": "published Decky discovery, disabled defaults, native listener/ownership conflicts, owned restart, three reloads and private-socket HTTP transport passed; the upstream HTTP fixture is synthetic; service control, actual Syncthing, sync, Frame and VR unverified",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "architecture": "x86_64",
+    "image": "sha256:169221258866e623f21cc4c9c7e7186d74aaca22d91b77a9a42f393978b62168",
+    "providedImage": true,
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-candidate.py": "d7f6fe692c949f51f4ddb82dff9e38410c0ac1125b725079bfdf004eec95ff99",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/syncthing_candidate.py": "ed70a32ed72faf9d134b49f9370ed4cb6112ab28da98e8a5d8f69860b8c7981f",
+      "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+    }
+  },
+  "serviceVm": {
+    "success": true,
+    "pid1": "systemd",
+    "userManagerVersion": "257.13-1~deb13u1",
+    "userBusPresent": true,
+    "transientUnitExecuted": true,
+    "kernel": "6.12.113+deb13-amd64",
+    "realFrameContacted": false,
+    "hostBusExposed": false,
+    "candidateService": {
+      "architecture": "x86_64",
+      "flatpakPackageVerified": false,
+      "realFrameContacted": false,
+      "systemdManagerActual": true,
+      "ownedUnitLoadedByActualSystemd": true,
+      "rejectedManagedDefinitions": {
+        "drop-in": {
+          "mainPidBefore": 362,
+          "mainPidAfter": 362,
+          "fragmentPath": "/home/tester/.config/systemd/user/frame-control-syncthing.service",
+          "id": "frame-control-syncthing.service",
+          "names": "frame-control-syncthing.service",
+          "dropInPaths": "/home/tester/.config/systemd/user/frame-control-syncthing.service.d/private-foreign.conf",
+          "refused": {
+            "GET state": 500,
+            "POST start": 500,
+            "POST stop": 500,
+            "POST check/start": 500,
+            "POST reload-config": 500,
+            "POST external transition": 500
+          },
+          "unitAndReceiptPreserved": true,
+          "legacyPidPreserved": 291,
+          "legacyStillEnabled": true
+        },
+        "shadow fragment": {
+          "mainPidBefore": 417,
+          "mainPidAfter": 417,
+          "fragmentPath": "/home/tester/.config/systemd/user.control/frame-control-syncthing.service",
+          "id": "frame-control-syncthing.service",
+          "names": "frame-control-syncthing.service",
+          "dropInPaths": "",
+          "refused": {
+            "GET state": 500,
+            "POST start": 500,
+            "POST stop": 500,
+            "POST check/start": 500,
+            "POST reload-config": 500,
+            "POST external transition": 500
+          },
+          "unitAndReceiptPreserved": true,
+          "legacyPidPreserved": 291,
+          "legacyStillEnabled": true
+        },
+        "loaded alias": {
+          "mainPidBefore": 291,
+          "mainPidAfter": 291,
+          "fragmentPath": "/home/tester/.config/systemd/user/decky-syncthing.service",
+          "id": "decky-syncthing.service",
+          "names": "decky-syncthing.service frame-control-syncthing.service",
+          "dropInPaths": "",
+          "refused": {
+            "GET state": 500,
+            "POST start": 500,
+            "POST stop": 500,
+            "POST check/start": 500,
+            "POST reload-config": 500,
+            "POST external transition": 500
+          },
+          "unitAndReceiptPreserved": true,
+          "legacyPidPreserved": 291,
+          "legacyStillEnabled": true
+        }
+      },
+      "dropInOverridePreserved": true,
+      "shadowFragmentPreserved": true,
+      "realSyncthingManagedPid": true,
+      "realDeckyRpcRest": true,
+      "managedServiceTwoWaySync": true,
+      "forwardSha256": "c7efcf812e3b857987733e2bce522cf5c31863d99bc85fa98795a45f6b2b2092",
+      "reverseSha256": "0922306fdcaa591f1aea0ee3808f96799d0f365216889507925a99a326232e3d",
+      "pendingReloadRefused": true,
+      "stopRpcElapsedSeconds": 10.222,
+      "actualStopJobReapedRuntime": true,
+      "legacyRunningUnitPreserved": true,
+      "retainedCertificateAndMarker": true,
+      "actualEnableDisableLinks": true,
+      "externalTransitionRpcElapsedSeconds": 10.62,
+      "ownedTransitionRemovedOnlyCandidateUnit": true,
+      "actualExternalUserServiceControl": true,
+      "retainedSyncAcrossServiceTransition": true,
+      "loadedAliasPreserved": true,
+      "ownedCleanup": true
+    },
+    "architecture": "x86_64",
+    "accelerator": "TCG",
+    "image": "sha256:169221258866e623f21cc4c9c7e7186d74aaca22d91b77a9a42f393978b62168",
+    "providedImage": true,
+    "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+    "initrdSha256": "be98ea1f091be75af5a991446878ea97b753460741c81410486656c9661375aa",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-service.py": "f2ddfd7709f610c67ed10d74bef2588ad7ef28ac76ea35260bf87cc51f3142a1",
+      "tests/decky-runtime/Containerfile.systemd": "b2d4bfd834c50baa25d97a746ea956ad05802fc63ee5eb7645c6dd980986b5b2",
+      "tests/decky-runtime/syncthing_service.py": "85f3a1d99eed97e7c73ac9abf3f43557b6bc3f25b04bc370dd1f12ab54b8ca94",
+      "tests/decky-runtime/syncthing_service_root.py": "7860ab6124766191e0bc644ee70c798ce25af3781d690adade1722d1366b76d1",
+      "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+      "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+      "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+    },
+    "helperSha256": "8902ad2f65c73cd1d08888722f9dba070c7486ab01fb1b7fa6a034a3e0446035",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "decky": "v3.3.0",
+    "runtimeArchiveSha256": "2edc416e7ed136b7c858ed5f3f02a3b8316589605e54c380228ceea7acbf0142",
+    "runtimeBinarySha256": "f5c12679f2bad1b5eff619ba7b04ead1a457e439a1e55dc640d4d8995d7f4dbd",
+    "officialArchiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "installerEnabled": false
+  },
+  "localDefaultNativeImageAttempt": {
+    "outcome": "Docker image build exceeded 300 seconds before candidate execution",
+    "candidateExecuted": false
+  },
+  "unverified": [
+    "native ARM64 execution of this identity guard",
+    "actual Flatpak package",
+    "managed install/update/remove",
+    "existing-service migration",
+    "browser controls",
+    "real Frame runtime",
+    "wearer-visible SteamVR panels",
+    "physical controller interaction"
+  ],
+  "callerOwnedPreparedImageRemoved": true,
+  "precedingServiceCi": {
+    "head": "81e243b893efb54e527f764978345ac895492c26",
+    "checksPassed": 14,
+    "workflow": 41011839394,
+    "amd64Artifact": 12958386602,
+    "arm64Artifact": 12958521417,
+    "mergeCommit": "aea15ae72e135e74a245dc904bdb7f108df8970e",
+    "bothArtifactsIndependentlyVerified": true
+  }
+}

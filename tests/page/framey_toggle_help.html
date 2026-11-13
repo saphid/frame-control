@@ -1,0 +1,61 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  // Only the published controls run. The icon and settings writer below are
+  // inert local substitutes; no suspend, game pause or backend action runs.
+  const FaMoon=()=>React.createElement('span',null,'Moon');
+  let pauseBeforeSuspend=false,overlayPause=false,autoPause=false;
+  const setPauseBeforeSuspend=value=>{pauseBeforeSuspend=value;};
+  const setOverlayPause=value=>{overlayPause=value;};
+  const writes=[],Settings={save:async (key,value)=>{writes.push({key,value});}};
+  const publishedSuspend=()=>__OFFICIAL_SUSPEND__;
+  const publishedOverlay=()=>__OFFICIAL_OVERLAY__;
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const click=node=>ReactDOM.flushSync(()=>node.click());
+  try {
+    render(publishedSuspend());
+    let help=container.querySelector('small');
+    assert(help&&help.textContent==='Pause all apps before suspend and resume those not explicitely paused.',
+      'published suspend setting explanation was lost');
+    assert(getComputedStyle(help).display!=='none','published help requires hidden/hover UI');
+    click(container.querySelector('input'));await Promise.resolve();render(publishedSuspend());
+    assert(pauseBeforeSuspend===true&&writes.length===1&&writes[0].key==='pauseBeforeSuspend'&&writes[0].value===true,
+      'published boolean change callback changed');
+    click(container.querySelector('input'));await Promise.resolve();render(publishedSuspend());
+    assert(pauseBeforeSuspend===false&&writes.length===2&&writes[1].value===false,'published false callback changed');
+    render(publishedOverlay());
+    assert(container.querySelector('input').disabled&&container.textContent.includes('Pause apps when interacting with Steam Overlay.'),
+      'disabled published setting lost its explanation');
+    click(container.querySelector('input'));await Promise.resolve();
+    assert(writes.length===2&&!overlayPause,'disabled published callback ran');
+    autoPause=true;render(publishedOverlay());click(container.querySelector('input'));await Promise.resolve();
+    assert(overlayPause&&writes.length===3&&writes[2].key==='overlayPause'&&writes[2].value===true,'enabled overlay callback changed');
+    render(React.createElement(DFL.ToggleField,{label:'Local',description:'Description',
+      tooltip:React.createElement('em',null,'Extra explanation'),checked:false}));
+    assert(container.querySelectorAll('small').length===2&&container.querySelector('small em')?.textContent==='Extra explanation',
+      'description or React tooltip content was lost');
+    render(React.createElement(DFL.ToggleField,{label:'Local',tooltip:'<b>Plain help</b>',checked:false}));
+    assert(container.textContent.includes('<b>Plain help</b>')&&!container.querySelector('b'),'tooltip text became HTML');
+    render(React.createElement(DFL.ToggleField,{label:'Local',checked:false}));
+    assert(!container.querySelector('small'),'removed tooltip retained old help');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedSuspendExplanation:true,publishedOverlayExplanation:true,visibleWithoutHover:true,
+      publishedBooleanCallbacks:true,disabledCallbackSuppressed:true,descriptionAndReactHelpPreserved:true,
+      textEscaped:true,removedHelpCleared:true,syntheticSettingsWriter:true,realSettingsSaved:false,
+      realPauseOrSuspendInvoked:false,realFrameContacted:false,controllerInputVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

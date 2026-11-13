@@ -90,6 +90,13 @@ def validate(name, args):
 
 
 def call(server, body):
+    # Keep target validation, token consumption and dispatch inside one work
+    # reservation, including direct callers outside the HTTP handler.
+    with server.working():
+        return _call(server, body)
+
+
+def _call(server, body):
     name, args = body.get('name'), body.get('arguments', {})
     action = validate(name, args)
     if name in ('install', 'uninstall', 'panel') and not server.FLATPAK_ID.fullmatch(args['id']):
@@ -98,6 +105,7 @@ def call(server, body):
         raise ValueError('Expected a Steam app ID')
     if name == 'keep_awake' and args['action'] == 'status':
         return keep_awake(server, 'status')
+    action['target'] = server.agent_target()
     token = body.get('confirmation')
     if not token:
         return approvals.request(action)
