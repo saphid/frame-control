@@ -18,22 +18,20 @@ DUMP_SECONDS = 2
 OUTPUT_LIMITS = (16384, 4096)
 
 # This helper has tester credentials and only reads the four properties used
-# by the root observer. Connect directly to the user manager on the first
-# ready-unit query, retaining that authenticated connection for later polls.
+# by the root observer. Authenticate the tester session-bus connection before
+# migration starts, then reuse it for readiness-gated unit-property requests.
 # The fixed object path and explicit GetAll signature avoid a manager lookup.
 UNIT_QUERY = r'''
 import dbus, json, os, sys
 assert os.getuid() == os.geteuid() == os.getgid() == os.getegid() == 1100
 assert not os.getgroups()
-bus = None
+bus = dbus.SessionBus(private=True)
 print(json.dumps({'ready': True}), flush=True)
 for request in sys.stdin:
     if request != 'query\n':
         raise ValueError('Unexpected observer request')
     try:
-        if bus is None:
-            bus = dbus.connection.Connection('unix:path=/run/user/1100/systemd/private')
-        values = bus.call_blocking(None,
+        values = bus.call_blocking('org.freedesktop.systemd1',
             '/org/freedesktop/systemd1/unit/frame_2dcontrol_2dmigration_2ddecky_2dfixture_2eservice',
             'org.freedesktop.DBus.Properties', 'GetAll', 's', ('',), timeout=2)
         budget = int(values['TimeoutStopUSec'])
@@ -85,8 +83,8 @@ class UnitQuery:
         self.process = subprocess.Popen(self.command, stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         try:
-            # Import the credential-dropped helper before the migration probe.
-            # Its connection opens only on the first ready-unit query.
+            # Authenticate the credential-dropped helper before the migration
+            # probe, keeping connection setup out of the property-call budget.
             if self.read(15) != {'ready': True}:
                 raise ValueError('Migration unit query helper not ready')
         except BaseException:
@@ -262,8 +260,8 @@ class Observer:
             return {}
         if not self.baseline:
             # Type=exec exposes the cgroup while the published bootloader is
-            # still starting Python. Wait for its HTTP server before opening
-            # the read-only bus connection; HEAD never reads the auth token.
+            # still starting Python. Wait for its HTTP server before sending
+            # the first property request; HEAD never reads the auth token.
             connection = http.client.HTTPConnection('127.0.0.1', 1337, timeout=0.5)
             try:
                 connection.request('HEAD', '/auth/token')
