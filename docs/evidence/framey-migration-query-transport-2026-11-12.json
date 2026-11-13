@@ -1,62 +1,65 @@
 {
-  "at": "2026-11-12T23:23:12.817805+00:00",
+  "at": "2026-11-13T00:10:45.493409+00:00",
   "architecture": "x86_64",
   "sourceSha256": {
-    "tests/decky-runtime/syncthing_migration_stacks.py": "396bd0e06dc5f98b5cee59c4858a39e090021dfca3298d1f559ce10fb13bc436",
+    "tests/decky-runtime/syncthing_migration_stacks.py": "3098f8bd999f9a830b2b23d1247a1b44a98e52d00babdc93900b705409371f00",
     "tests/decky-runtime/syncthing_flatpak_package_root.py": "9b3751604339e86c2dbedddebda901b793b70e76eebcf5318fa9a5a10192c0ff",
-    "tests/test_syncthing_flatpak_migration_stacks.py": "763f4137b9f11074b8d5c154211723959f8c1834184bb9358c0f30932b3bd7ad",
+    "tests/test_syncthing_flatpak_migration_stacks.py": "12d34929ff06c4ec1154a7a98d15b6c98027dba525798bd98e5adda502f28dad",
     "scripts/framey-test-syncthing-flatpak-package.py": "a1fa3f299b93652a57cf49040b4c8123ff917fe803b1eb0b6d4f18938782dca3"
   },
-  "rawArchiveSha256": "821bd6c0b64c242afe2714612fc3318c81e71db75a6d22504413121c9960d9f6",
+  "rawArchiveSha256": "c9a6b7b3febc07bed6e6f330a63548434f7bf6e802d08c0a6955ae8a768ffac9",
   "queryTransport": "persistent-user-manager",
+  "queryScope": "existing-migration-cgroup",
+  "absentCgroupPolls": 44,
+  "unitQueries": 48,
   "queryHelperJoined": true,
   "queryTransportBenchmark": [
     {
       "attempt": 0,
       "transport": "runuser",
-      "seconds": 0.451,
+      "seconds": 0.477,
       "returncode": 0,
-      "properties": "TimeoutStopUSec=1min 30s\nMainPID=309\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=327\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
       "stderr": ""
     },
     {
       "attempt": 0,
       "transport": "setpriv-user-bus",
-      "seconds": 0.296,
+      "seconds": 0.321,
       "returncode": 0,
-      "properties": "TimeoutStopUSec=1min 30s\nMainPID=309\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=327\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
       "stderr": ""
     },
     {
       "attempt": 1,
       "transport": "runuser",
-      "seconds": 0.386,
+      "seconds": 0.408,
       "returncode": 0,
-      "properties": "TimeoutStopUSec=1min 30s\nMainPID=309\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=327\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
       "stderr": ""
     },
     {
       "attempt": 1,
       "transport": "setpriv-user-bus",
-      "seconds": 0.295,
+      "seconds": 0.313,
       "returncode": 0,
-      "properties": "TimeoutStopUSec=1min 30s\nMainPID=309\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=327\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
       "stderr": ""
     },
     {
       "attempt": 2,
       "transport": "runuser",
-      "seconds": 0.375,
+      "seconds": 0.389,
       "returncode": 0,
-      "properties": "TimeoutStopUSec=1min 30s\nMainPID=309\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=327\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
       "stderr": ""
     },
     {
       "attempt": 2,
       "transport": "setpriv-user-bus",
-      "seconds": 0.301,
+      "seconds": 0.317,
       "returncode": 0,
-      "properties": "TimeoutStopUSec=1min 30s\nMainPID=309\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
+      "properties": "TimeoutStopUSec=1min 30s\nMainPID=327\nControlGroup=/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service\nActiveState=active\n",
       "stderr": ""
     }
   ],
@@ -67,22 +70,22 @@
     "architecture": "x86_64",
     "version": "0.4.3",
     "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
-    "observerSha256": "396bd0e06dc5f98b5cee59c4858a39e090021dfca3298d1f559ce10fb13bc436"
+    "observerSha256": "3098f8bd999f9a830b2b23d1247a1b44a98e52d00babdc93900b705409371f00"
   },
   "pythonBaselinePids": [
-    310
+    328
   ],
   "observerErrors": [],
   "observerJoined": true,
   "cleanStop": {
     "returncode": 0,
-    "seconds": 1.435,
+    "seconds": 1.48,
     "properties": "MainPID=0\nResult=success\nExecMainCode=0\nExecMainStatus=0\nActiveState=inactive\n"
   },
   "ownedQemuReaped": true,
   "bootArtifactsRetained": false,
   "focusedTests": {
-    "flatpak": 95,
+    "flatpak": 96,
     "parentStacks": 4,
     "skipped": 0,
     "passed": true

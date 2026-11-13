@@ -186,13 +186,23 @@ class MigrationStacks(unittest.TestCase):
         response = Mock(status=200)
         connection = Mock()
         connection.getresponse.return_value = response
-        observer = self.observer.Observer(Path('/unused'), {}, ['owned-user'])
+        observer = self.observer.Observer(Path('/unused'), {}, ['owned-user'], cgroups=self.cgroups)
         with patch.object(observer.transport, 'query', return_value=properties), patch.object(
                 self.observer.http.client, 'HTTPConnection', return_value=connection):
             self.assertTrue(observer.properties()['PythonReady'])
         connection.request.assert_called_once_with('HEAD', '/auth/token')
         response.read.assert_not_called()
         connection.close.assert_called_once()
+
+    def test_absent_migration_cgroup_skips_bus_queries_and_http_readiness(self):
+        observer = self.observer.Observer(Path('/unused'), {}, [], cgroups=self.folder/'absent')
+        with patch.object(observer.transport, 'query') as query, patch.object(
+                self.observer.http.client, 'HTTPConnection') as connection:
+            self.assertEqual(observer.properties(), {})
+        query.assert_not_called()
+        connection.assert_not_called()
+        self.assertEqual(observer.report['absentCgroupPolls'], 1)
+        self.assertEqual(observer.report['unitQueries'], 0)
 
     def test_sampler_payload_binds_loader_observer_and_pinned_sampler(self):
         sampler = Mock()

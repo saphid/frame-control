@@ -230,23 +230,34 @@ def sample_group(properties, sampler, *, proc=Path('/proc'),
 class Observer:
     """Run beside the real unprivileged probe; never stop or signal Decky."""
 
-    def __init__(self, sampler, metadata, user_command, *, query=None, capture=None):
+    def __init__(self, sampler, metadata, user_command, *, query=None, capture=None,
+                 cgroups=Path('/sys/fs/cgroup')):
         self.sampler = sampler
         self.user_command = user_command
         self.transport = UnitQuery(user_command) if query is None else None
         self.query = query or self.properties
         self.capture = capture or (lambda properties: sample_group(
-            properties, sampler, cancelled=self.stop.is_set))
+            properties, sampler, cgroups=cgroups, cancelled=self.stop.is_set))
+        self.group = cgroups / GROUP.lstrip('/')
         self.stop = threading.Event()
         self.thread = None
         self.report = dict(sampler=metadata, unit=UNIT, snapshots=[],
                            errors=[], deactivationTimeBasis='first observed deactivating state',
-                           changesStopBudget=False, historicalCauseEstablished=False)
+                           changesStopBudget=False, historicalCauseEstablished=False,
+                           absentCgroupPolls=0, unitQueries=0)
         self.baseline = False
         self.deactivating_at = None
         self.captured_windows = set()
 
     def properties(self):
+        # The observer spans Flatpak preparation and unrelated manager reloads.
+        # Do not query a unit that has not started or has already disappeared.
+        # Its fixed cgroup is only discovery: actual properties and PID/UID/
+        # start-tick checks are still required before any sample is accepted.
+        if not self.group.is_dir():
+            self.report['absentCgroupPolls'] += 1
+            return {}
+        self.report['unitQueries'] += 1
         properties = self.transport.query()
         # Type=exec becomes active before the published bootloader has started
         # Python. HEAD waits for its actual HTTP server without reading a token.

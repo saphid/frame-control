@@ -30,6 +30,21 @@ observer error now fails the package gate even if an earlier baseline was
 valid. The actual unprivileged migration probe, sampling identity checks and
 strict 90-second service-stop budget are unchanged.
 
+The first direct-manager revision at `8aac0b10` also received `NoReply` in
+the actual AMD64 fixture and captured no baseline, despite a clean
+1.701-second migration stop. Its failed artifact is `13996707237`, from job
+`131566926306` in run `43328492137`. That revision did not retain the failing
+query's timing or cgroup presence, so it does not prove which preparation
+operation overlapped the timeout.
+
+The observer spans package preparation, including manager reloads before the
+migration unit starts. It now skips property queries while the fixed migration
+cgroup is absent, and records absent-cgroup polls and actual query counts.
+The cgroup is only a discovery signal: the actual service properties and both
+process-identity checks still determine whether a sample is accepted. Bus
+errors remain fatal to qualification. The updated disposable VM check performs
+three manager reloads before creating the target service.
+
 A disposable AMD64 systemd VM compared three queries through each transport
 against the same published Decky service. All six succeeded and returned
 identical properties. These few timings do not establish an ARM64 performance
@@ -43,7 +58,7 @@ The [record](framey-migration-query-transport-2026-11-12.json) binds the changed
 source files, sampler and raw archive. The
 [compressed raw record](framey-migration-query-transport-2026-11-12.raw.json.gz)
 retains the guest result and both fixture programs. The owned QEMU and
-temporary boot files were removed. All 99 focused tests passed without skips.
+temporary boot files were removed. All 100 focused tests passed without skips.
 
 This empty-plugin feasibility test did not execute the Syncthing migration
 or ARM64. Both native actual-migration runs remain required for the changed
