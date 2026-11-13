@@ -404,9 +404,11 @@
   // Some published buttons expose only Decky's OK action. Native activation
   // uses it as a fallback; keep an explicit click handler authoritative and
   // pass the original click event rather than fabricating gamepad input.
-  const DialogButton = ({children, disabled, onClick, onOKButton, ...props}) =>
-    R.createElement('button', {...props, type:'button', disabled:!!disabled,
+  // The real forwardRef render also supports legacy render({}).type lookup.
+  const DialogButton = R.forwardRef(function DialogButton({children, disabled, onClick, onOKButton, ...props}, ref) {
+    return R.createElement('button', {...props, ref, type:'button', disabled:!!disabled,
       onClick:event=>{if(!disabled)(onClick || onOKButton)?.(event);}}, children);
+  });
   const Focusable = R.forwardRef(function Focusable(
     {children, onActivate, onCancel, onClick, onKeyDown, disabled, tabIndex, role, ...props}, ref) {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
@@ -1231,7 +1233,7 @@
   };
   localModules.set('framey/components', Object.freeze(Object.fromEntries(
     Object.entries(DFL).filter(([name,value])=>/^[A-Z]/.test(name) &&
-      (typeof value==='function' || [Focusable,TextField,ScrollPanel,ScrollPanelGroup].includes(value))))));
+      (typeof value==='function' || [DialogButton,Focusable,TextField,ScrollPanel,ScrollPanelGroup].includes(value))))));
   // Some panels eagerly look up the optional Steam UI sound player. Allow the
   // lookup, but never claim playback or expose Steam's mutable audio store.
   localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({
@@ -1336,7 +1338,6 @@
     };
     addEventListener('pagehide',() => {closed = true; listeners.clear(); close();});
   }
-  DFL.DialogButton.render = () => ({type: DFL.DialogButton});
   const toaster = {toast: ({title, body, subtext, icon, logo, duration, showToast=true, onClick}={}) => {
     const data = {title, body, subtext, icon, logo};
     if (!showToast) return {data, dismiss(){}};
