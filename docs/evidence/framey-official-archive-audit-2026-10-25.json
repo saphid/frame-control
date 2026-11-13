@@ -1,0 +1,116 @@
+{
+  "checkedAtUtc": "2026-10-25",
+  "source": "https://plugins.deckbrew.xyz/plugins",
+  "method": "Downloaded exact current official store versions; local SHA-256 matched each store hash; inspected ZIP plugin.json and dist/index.js without running plugin code.",
+  "limit": "Static inspection on PC. Prior backend load results are documented in docs/decky-frame.md; VR visibility and controller input remain unverified.",
+  "plugins": [
+    {
+      "storeId": 7,
+      "name": "CSS Loader",
+      "storeVersion": "2.1.3",
+      "sha256": "99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231",
+      "manifestApiVersion": null,
+      "manifestFlags": [],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 14,
+      "name": "ProtonDB Badges",
+      "storeVersion": "1.3.4",
+      "sha256": "90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358",
+      "manifestApiVersion": 2,
+      "manifestFlags": [],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 16,
+      "name": "Audio Loader",
+      "storeVersion": "1.6.1",
+      "sha256": "fd5a090c2e2cd4da6723d7bd08937ab31b9f8d4663510431713da531343e303f",
+      "manifestApiVersion": null,
+      "manifestFlags": [
+        "_root"
+      ],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 18,
+      "name": "Bluetooth",
+      "storeVersion": "3.1.1",
+      "sha256": "f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5",
+      "manifestApiVersion": 1,
+      "manifestFlags": [],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 21,
+      "name": "PowerTools",
+      "storeVersion": "2.0.3",
+      "sha256": "47614f53b8c538c4caa15f89a01e4ab106fa328e89f78545bacb3166d104d964",
+      "manifestApiVersion": null,
+      "manifestFlags": [
+        "root",
+        "global-dfl"
+      ],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 23,
+      "name": "Animation Changer",
+      "storeVersion": "1.3.2",
+      "sha256": "f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133",
+      "manifestApiVersion": null,
+      "manifestFlags": [],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 26,
+      "name": "HLTB for Deck",
+      "storeVersion": "2.0.12",
+      "sha256": "bd54a23b0b8ec0798aa590e5be236522a593529d7680e77fb888e2971bf3d558",
+      "manifestApiVersion": 1,
+      "manifestFlags": [],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 36,
+      "name": "SteamGridDB",
+      "storeVersion": "1.8.1",
+      "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0",
+      "manifestApiVersion": 1,
+      "manifestFlags": [
+        "debug"
+      ],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 50,
+      "name": "Storage Cleaner",
+      "storeVersion": "1.4.0",
+      "sha256": "1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591",
+      "manifestApiVersion": 1,
+      "manifestFlags": [],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 68,
+      "name": "Wine Cellar",
+      "storeVersion": "0.2.1",
+      "sha256": "7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8",
+      "manifestApiVersion": 1,
+      "manifestFlags": [
+        "debug"
+      ],
+      "frontendBundle": true
+    },
+    {
+      "storeId": 82,
+      "name": "MagicPods",
+      "storeVersion": "2.0.21",
+      "sha256": "abe2eef5788cb3ff6e73fcb9783e30a54b127e28c761a9bf99e64ab5fc4be9ab",
+      "manifestApiVersion": 1,
+      "manifestFlags": [],
+      "frontendBundle": true
+    }
+  ]
+}

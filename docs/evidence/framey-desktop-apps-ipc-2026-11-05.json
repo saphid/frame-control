@@ -1,0 +1,49 @@
+{
+  "base": "9ab1f3a39ec7cb44c0b49bcd4f0cd87b2cdc2ac2",
+  "architecture": "x86_64",
+  "decky": "v3.3.0",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "cachedImage": "framey-syncthing-browser-vm-mppkd9qczt:20261030",
+  "cachedImageId": "sha256:8ffb5906249afd55935604f4899820d992bab4921bc804331986719ca149ddde",
+  "containerLimits": {
+    "network": "none",
+    "readOnly": true,
+    "uid": 1100,
+    "cpus": 0.5,
+    "memory": "2g",
+    "privateTmpfsHome": true
+  },
+  "sourceSha256": {
+    "ui/frame_decky_store.py": "29f9750eda45dd42050ed6ee5b778998cb09c8b856720ff96cdacdf6e7aaa13d",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "d6235f94d23ecadcec663d3e10f31553d2ea59a4724c07c26bc1d48b57b941a0",
+    "tests/decky-runtime/desktop_apps_private.py": "e7d09b645b5367a5e4a99af35fe734df680479aca9b4bb5e2bcb21904b8c96f0",
+    "scripts/framey-test-decky-runtime.py": "ed1603f0309f2ae3c66cb96f376ff18e99ee00505eabb27fd90bf14d97c40c94",
+    "tests/decky-runtime/cases.json": "fca5dd224c5b1d8a006f9b333ec16f59d6615cc9e86b61855ba970698cf46713"
+  },
+  "negative": {
+    "forcedKills": 1,
+    "seconds": 5.315
+  },
+  "primary": {
+    "forcedKills": [
+      0,
+      0
+    ],
+    "seconds": [
+      0.336,
+      0.306
+    ],
+    "settingsAfterEof": true,
+    "settingsPreserved": true,
+    "unrelatedSiblingPreserved": true
+  },
+  "hostedCI": "pending on exact final PR head",
+  "arm64": "unverified for new EOF probe",
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "strictPrimaryGate": {
+    "acceptsRepaired": true,
+    "rejectsOriginalForcedKill": true
+  }
+}

@@ -1,0 +1,114 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('framey-modal');
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=element=>{let handle;ReactDOM.flushSync(()=>{handle=window.DFL.showModal(element);});return handle;};
+  const close=handle=>ReactDOM.flushSync(()=>handle.Close());
+  const button=text=>[...container.querySelectorAll('button')].find(node=>node.textContent===text);
+  const tap=node=>ReactDOM.flushSync(()=>node.click());
+  const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
+  const NativeConfirm=window.DFL.ConfirmModal;
+  let handlers;
+  function Observe(props) {
+    // Retain the real host action closures so a queued callback can be replayed
+    // after Close, completion or replacement. No React private fields are read.
+    const tree=NativeConfirm(props);
+    handlers=tree.props.children.filter(child=>child?.type==='button').map(child=>child.props.onClick);
+    return tree;
+  }
+  const DFL={...window.DFL,ConfirmModal:Observe};
+  let clearCalls=0,pending;
+  // This is the only backend dependency of the exact published expression.
+  // It records calls in memory; no database, files, plugin service or Frame.
+  const PyCaller={clearDeals:async()=>{clearCalls++;if(pending)await pending.promise;}};
+  const published=()=>__OFFICIAL_CONFIRMATION__;
+  try {
+    let handle=show(published()),old=handlers;
+    close(handle);await handle.ClosedPromise;
+    await old[0]();
+    assert(clearCalls===0,'dismissed published confirmation still called its backend action');
+    handle=show(published());old=handlers;tap(button('Cancel'));await handle.ClosedPromise;
+    await old[0]();assert(clearCalls===0,'cancelled confirmation still authorized its old OK');
+
+    handle=show(published());old=handlers;
+    await old[0]();await settle();await handle.ClosedPromise;
+    assert(clearCalls===1&&!button('Clear'),'published action did not complete and dismiss once');
+    await old[0]();assert(clearCalls===1,'completed confirmation repeated its backend action');
+
+    pending=deferred();handle=show(published());old=handlers;
+    const saving=old[0]();old[0]();old[1]();await settle();
+    assert(clearCalls===2&&button('Close').disabled,'pending action duplicated or failed to lock shell');
+    close(handle);await handle.ClosedPromise;
+    const replacement=show(React.createElement(Observe,{strTitle:'Replacement',onOK:()=>{throw Error('Unexpected replacement submit');}}));
+    pending.resolve();await saving;await settle();
+    assert(button('OK')&&!button('Close').disabled,'late completion closed or locked a newer dialog');
+    await old[0]();assert(clearCalls===2,'closed pending confirmation resumed its old handler');
+    close(replacement);await replacement.ClosedPromise;pending=null;
+
+    // Updating to a different component unmounts the old confirmation while
+    // retaining its shell. Its late success must not dismiss the new content.
+    pending=deferred();handle=show(published());old=handlers;
+    const replacedSave=old[0]();
+    ReactDOM.flushSync(()=>handle.Update(React.createElement('p',null,'New content')));
+    pending.resolve();await replacedSave;await settle();
+    assert(container.textContent.includes('New content')&&!button('Close').disabled,
+      'retired confirmation dismissed or locked replacement content');
+    close(handle);await handle.ClosedPromise;pending=null;
+
+    // Failures remain retryable; a successful retry retires every old action.
+    let attempts=0,next=deferred();
+    handle=show(React.createElement(Observe,{strTitle:'Retry',onOK:()=>{attempts++;return next.promise;}}));
+    old=handlers;const first=old[0]();next.reject(Error('Private save failed'));await first;await settle();
+    assert(container.querySelector('[role="alert"]')?.textContent==='Private save failed','failure was not visible');
+    assert(!button('OK').disabled&&!button('Close').disabled,'failed confirmation stayed locked');
+    next=deferred();const retry=handlers[0]();next.resolve();await retry;await settle();await handle.ClosedPromise;
+    await old[0]();assert(attempts===2,'failed/successful retry callback lifecycle changed');
+
+    // Lock before invoking a synchronous callback, which can reenter it.
+    let syncCalls=0,repeat;
+    handle=show(React.createElement(Observe,{strTitle:'Synchronous',onOK:()=>{if(++syncCalls===1)repeat();}}));
+    repeat=handlers[0];repeat();await settle();await handle.ClosedPromise;
+    assert(syncCalls===1,'synchronous callback reentered before the action lock');
+    repeat();assert(syncCalls===1,'successful synchronous callback ran again');
+
+    let throws=0;
+    handle=show(React.createElement(Observe,{strTitle:'Synchronous retry',onOK:()=>{
+      if(++throws===1)throw Error('Private synchronous failure');
+    }}));
+    handlers[0]();await settle();
+    assert(container.querySelector('[role="alert"]')?.textContent==='Private synchronous failure',
+      'synchronous failure disappeared');
+    handlers[0]();await settle();await handle.ClosedPromise;
+    assert(throws===2,'synchronous failure could not retry');
+
+    const calls={ok:0,cancel:0,middle:0};
+    handle=show(React.createElement(Observe,{strTitle:'Retired actions',
+      onOK:()=>calls.ok++,onCancel:()=>calls.cancel++,onMiddleButton:()=>calls.middle++}));
+    old=handlers;close(handle);await handle.ClosedPromise;
+    for(const action of old)await action();
+    assert(Object.values(calls).every(value=>value===0),'closed cancel/middle action still ran');
+    await settle();assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedFreeLoaderConfirmation:true,dismissedActionRetired:true,cancelledActionRetired:true,
+      successfulActionOnce:true,pendingActionOnce:true,lateCompletionIsolated:true,
+      replacedConfirmationRetired:true,rejectedActionRetryable:true,synchronousReentrySuppressed:true,
+      synchronousFailureRetryable:true,
+      allClosedActionsInert:true,syntheticBackendCallbacks:true,realBackendContacted:false,
+      realFilesChanged:false,realFrameContacted:false,wornVisibilityVerified:false,
+      controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

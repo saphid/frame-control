@@ -1,0 +1,94 @@
+{
+  "at": "2026-10-31T20:00:42.669935+00:00",
+  "sourceRevision": "49c8f82d00e808e6cb90090c79e8d56553a6742a",
+  "main": "13360b13017bbb1a16c5ee6472bb15b5ea996586",
+  "previousHead": "9aaaa004f7504725aff898ab198395d7389cf2f1",
+  "normalMainIntegration": true,
+  "localMergeCorrection": "The initial unpushed merge commit retained checker conflict markers after a helper assertion. A normal follow-up commit repaired them; no history rewrite. Only the corrected final source was tested and published.",
+  "sourceAudit": "All main checker paths, other installer branches, 116 complete catalog rows and policies preserved; original Prefix Manager body retained",
+  "nativeInputs": 21,
+  "server": {
+    "name": "unit",
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-q"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 259.193,
+    "logSha256": "9f5dfe5b3a206a5fd9981a344d85ce9da2276fab2d2dc1b84ff62d718c8261c5",
+    "tests": 1952,
+    "testSeconds": 258.753,
+    "skips": 15
+  },
+  "website": {
+    "name": "site",
+    "argv": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "site/test/onboarding.test.mjs",
+      "site/test/feedback.test.mjs"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 0.117,
+    "logSha256": "17eee9b8b9a7caee535fe0fcbc3f44c2b09d57ece506657eaf641b9ef9eae4ed",
+    "tests": 18,
+    "pass": 18,
+    "fail": 0,
+    "skipped": 0
+  },
+  "nativePrefixRpcCounts": [
+    39,
+    42,
+    40
+  ],
+  "nativePrefixRepairedStopSeconds": [
+    0.16372341802343726,
+    0.21419122209772468
+  ],
+  "nativeTabmasterRpcCounts": [
+    47,
+    48,
+    47
+  ],
+  "nativeTimerRpcCounts": [
+    31,
+    10,
+    18
+  ],
+  "nativeTimerRepairedStopSeconds": [
+    0.224,
+    0.196,
+    0.215,
+    0.214
+  ],
+  "fullE2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 395.64,
+    "catalogPins": 116,
+    "installedRemoved": 69,
+    "expectedRefusals": 47,
+    "allPriorOutcomesAndReasonsMatch": true
+  },
+  "storeVersion": "1.0.1",
+  "storeDigest": "ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473",
+  "githubVersion": "1.0.2",
+  "githubAssetDigest": "sha256:12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6",
+  "storeOutputByteIdenticalToMain": true,
+  "github102CatalogStatus": "unverified",
+  "independentOwnedCleanup": true,
+  "preexistingSimulatorPreserved": true,
+  "combinedSourceHostedCi": false,
+  "combinedSourceArm64": false,
+  "realFrameContacted": false,
+  "globalCleanRuntime": false,
+  "releaseQualified": false,
+  "rawSha256": "dd60973fb6eb55423ee91c8ee1f2478d569a3dd6e85ec067a1d45116ea337fdc",
+  "rawBytes": 47705
+}

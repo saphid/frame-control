@@ -271,12 +271,13 @@ def panels(limit=None):
         out["why"] = ("The headset took too long to list its panels (its X tools didn't answer in time). "
                       + ("Some may be missing. " if found else "") + "Try again, or use the Headset view.")
     elif not found:
-        out["why"] = why_none(unfound)
+        out["why"] = why_none(unfound, props)
     return out
 
 
 # The headset's Linux desktop, by process name (docs/how-the-frame-works.md).
-DESKTOP = ("plasmashell", "kwin_wayland", "kwin_wayland_wrapper", "steamos-nested-desktop", "startplasma-wayland")
+DESKTOP = ("plasmashell", "kwin_wayland", "kwin_wayland_wrapper", "holo-nested-desktop",
+           "steamos-nested-desktop", "startplasma-wayland")
 
 
 def desktop_running():
@@ -295,13 +296,18 @@ def desktop_running():
     return False
 
 
-def why_none(listed):
+def why_none(listed, props):
     """Why panels() found nothing, in words the person at the computer can act on.
-    listed: how many of the windows gamescope lists aren't X11 windows on any display."""
+    listed: how many of the windows gamescope lists aren't X11 windows on any display.
+    props: the root properties actually read; an absent list is not an empty list."""
     missing = [tool for tool in ("xprop", "xwininfo") if not shutil.which(tool)]
     if missing:
         return (f"This SteamOS build has no {' or '.join(missing)}, which Frame Control uses to find the "
                 "headset's panels. Use the Headset view instead, and please report your SteamOS version.")
+    if "GAMESCOPE_FOCUSABLE_WINDOWS" not in props:
+        return ("Frame Control couldn't read gamescope's panel list, so it can't tell whether an app panel is open. "
+                "Check that SteamVR is running in the headset, then try again or use the Headset view. "
+                "If this persists, report your SteamOS version and this exact message.")
     if listed:
         # gamescope lists windows, but none is an X11 window on any display: a Wayland
         # window (a desktop drawn straight to gamescope, say) can't be found or captured this way.
@@ -506,8 +512,10 @@ def apply(gs, event, panel):
         say("ready", focus=panel.get("window"), display=panel.get("display"), stale=True)  # the page re-syncs
         STALE[0] = True
         return panel
-    if STALE[0] and not stale:
+    release = event.get("down") is False and ("button" in event or "key" in event)
+    if STALE[0] and not stale and not (release and "window" not in event):
         # Anything that goes through (a trackpad move names no panel) means caught up: stop re-syncing.
+        # A bare release doesn't: the page leaves the panel off releases, so it says nothing about focus.
         STALE[0] = False
         say("ready", focus=(panel or {}).get("window"), display=(panel or {}).get("display"))
     if "fx" in event and panel and panel.get("window"):

@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-13T01:48:00.130923+00:00",
+  "pullRequest": 681,
+  "sourceCommit": "b8416e7d9d028cf7a9775f02b97fbd3d6e57a8b8",
+  "integratedMain": "775ea057646daf9ef0f48d6c01c18d58613fa339",
+  "hostSha256": "501edc9e795d547fa8c13c876309d466d70ec5e920a6decb842f4c421f3730c4",
+  "tests": 10,
+  "skipped": 0,
+  "passed": true,
+  "browser": "/home/saphid/.cache/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-linux64/chrome-headless-shell",
+  "logSha256": "0046063b9dba763679498db5fb5b791b577f7dd4bdef3c3a91912c1c58d2b9d5",
+  "realFrameContacted": false,
+  "controllerInputVerified": false,
+  "vrKeyboardVerified": false,
+  "wornVisibilityVerified": false,
+  "releaseHoldCleared": false
+}

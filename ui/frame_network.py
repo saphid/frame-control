@@ -240,6 +240,42 @@ def local_ip(towards="192.0.2.1"):
         return None
 
 
+def parse_neighbours(text, local, gateway=None):
+    """Numeric IPv4 neighbours on this host's /24, excluding itself and its router.
+
+    Accepts Linux `ip neigh`, macOS `arp -an` and Windows `arp -a`. The active
+    search uses the same /24; the cache just puts recently seen peers first.
+    """
+    if not valid_ip(local):
+        return []
+    subnet = ipaddress.ip_network(local + "/24", strict=False)
+    found = []
+    for match in re.finditer(r"(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])", text):
+        ip = match.group()
+        if valid_ip(ip) and ipaddress.ip_address(ip) in subnet and ip not in (local, gateway) and ip not in found:
+            found.append(ip)
+    return found
+
+
+def local_scan_candidates(local=None, gateway_ip=None, neighbours=""):
+    """Bounded IPv4 search order for an explicit Find action; never scan a WAN."""
+    local = local or local_ip()
+    if (not valid_ip(local) or not ipaddress.ip_address(local).is_private or
+            ipaddress.ip_address(local).is_loopback or is_tailscale(local)):
+        return []
+    subnet = ipaddress.ip_network(local + "/24", strict=False)
+    recent = parse_neighbours(neighbours, local, gateway_ip)
+    return recent + [str(ip) for ip in subnet.hosts() if str(ip) not in recent and str(ip) not in (local, gateway_ip)]
+
+
+def neighbour_cache():
+    if frame_host.MAC:
+        return run(["arp", "-an"])
+    if frame_host.WINDOWS:
+        return run(["arp", "-a"])
+    return run(["ip", "-4", "neigh", "show"])
+
+
 def gateway():
     """(gateway IP, interface) of the default route."""
     if frame_host.MAC:

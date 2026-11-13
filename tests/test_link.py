@@ -33,6 +33,22 @@ NET = {"id": "n-test", "gateway": "192.168.1.1", "gateway_mac": "aa:bb:cc:dd:ee:
        "ssid": None, "wifi": True, "local_ip": "192.168.1.9", "tailscale": {"up": False, "installed": False}}
 
 
+def fixture_dns(test):
+    """Reserved fixture names fail immediately; loopback still uses real sockets."""
+    resolve = socket.getaddrinfo
+
+    def lookup(host, *args, **kwargs):
+        if isinstance(host, str) and host.lower().rstrip(".").endswith(".invalid"):
+            raise socket.gaierror(socket.EAI_NONAME, "Reserved test hostname")
+        return resolve(host, *args, **kwargs)
+
+    # An OS resolver can block on .invalid past the connection deadline. Tests
+    # expecting an unknown name must not depend on the runner's DNS latency.
+    patcher = mock.patch.object(fl.socket, "getaddrinfo", side_effect=lookup)
+    patcher.start()
+    test.addCleanup(patcher.stop)
+
+
 def explain(msg):
     """A cut-down server.unreachable, so this needs no server import."""
     if "Could not resolve" in msg:
@@ -58,6 +74,53 @@ class FailureDetail(unittest.TestCase):
 
 
 class Probe(unittest.TestCase):
+    def setUp(self):
+        fixture_dns(self)
+
+    def test_mdns_falls_back_only_to_ip_authenticated_on_this_network(self):
+        address = {"host": "frame.local", "kind": "mdns", "last_ip": "192.168.1.40",
+                   "last_ip_network": "n-home"}
+        def result(host, port, **kwargs):
+            return {"state": "answered", "ip": host, "rtt_ms": 1} if host == "192.168.1.40" else \
+                   {"state": "unresolved", "detail": "Can't find name"}
+        with mock.patch.object(fl, "probe", side_effect=result) as probe:
+            self.assertEqual(fl.probe_address(address, 22, "n-home")["ip"], "192.168.1.40")
+            self.assertEqual([c.args[0] for c in probe.call_args_list], ["frame.local", "192.168.1.40"])
+            probe.reset_mock()
+            self.assertEqual(fl.probe_address(address, 22, "n-cafe")["state"], "unresolved")
+            probe.assert_called_once()
+
+    def test_find_uses_cached_ip_and_neighbours_without_trusting_them(self):
+        device = {"id": "d1", "alias": "frame", "port": 22, "addresses": [{"host": "frame.local", "kind": "mdns",
+                  "last_ip": "192.168.1.40", "last_ip_network": "n-test"}]}
+        link = mock.Mock()
+        link.active_device.return_value = device
+        link.state = {"network": NET}
+        def answer(host, port, timeout=3):
+            return {"state": "answered" if host in ("192.168.1.40", "192.168.1.41") else "unresolved",
+                    "detail": "test", "ip": host if host.startswith("192.") else None, "rtt_ms": 1}
+        with mock.patch.object(fl, "probe", side_effect=answer), \
+             mock.patch.object(fl.frame_network, "local_scan_candidates", return_value=["192.168.1.40", "192.168.1.41"]), \
+             mock.patch.object(fl.frame_network, "neighbour_cache", return_value=""), \
+             mock.patch.object(fl.frame_devices, "pinned_keys", return_value=[("ssh-ed25519", "SHA256:test")]), \
+             mock.patch.object(fl, "matches_pinned_key", return_value=True), \
+             mock.patch.object(fl.frame_host, "which", return_value=None), \
+             mock.patch("frame_connect.discover_devkit", return_value=[]):
+            found = fl.mdns_find(link)
+        self.assertEqual(found["scanned"], 1)  # cached IP is tried once
+        self.assertEqual({h["host"] for h in found["hosts"]}, {"192.168.1.40", "192.168.1.41"})
+        self.assertTrue(found["hosts"][0]["added"] is False)
+
+    def test_scan_requires_saved_matching_ssh_key(self):
+        key = ("ssh-ed25519", fd.fingerprint("a2V5"))
+        response = subprocess.CompletedProcess([], 0, "192.168.1.41 ssh-ed25519 a2V5\n", "")
+        with mock.patch.object(fl.frame_host, "which", return_value="ssh-keyscan"), \
+             mock.patch.object(fl.frame_host, "run_ssh", return_value=response):
+            self.assertTrue(fl.matches_pinned_key("192.168.1.41", 22, [key]))
+            self.assertFalse(fl.matches_pinned_key("192.168.1.41", 22, [("ssh-ed25519", "SHA256:other")]))
+            self.assertFalse(fl.matches_pinned_key("name;bad", 22, [key]))
+            self.assertFalse(fl.matches_pinned_key("192.168.1.41", 22, []))
+
     def test_answers_refusals_and_unknown_names(self):
         with socket.socket() as srv:
             srv.bind(("127.0.0.1", 0))
@@ -107,6 +170,7 @@ class Pick(unittest.TestCase):
 @unittest.skipIf(os.name == "nt", "the stand-in ssh is a POSIX script")
 class Connecting(unittest.TestCase):
     def setUp(self):
+        fixture_dns(self)
         self.dir = Path(tempfile.mkdtemp(prefix="frame-link-"))
         self.addCleanup(shutil.rmtree, self.dir, ignore_errors=True)
         (self.dir / "ssh").mkdir()
@@ -897,6 +961,47 @@ class Connecting(unittest.TestCase):
         self.assertEqual(self.routes, [])
         self.assertTrue(all("ControlPath=none" in c for c in self.calls() if "-G" not in c))
 
+    def test_a_test_started_earlier_cant_overwrite_a_newer_one(self):
+        d = self.device("nothing.invalid")
+        entered = {1: threading.Event(), 2: threading.Event()}
+        release = {1: threading.Event(), 2: threading.Event()}
+        calls = []
+
+        def probe(host, port, update=None):
+            calls.append(host)
+            n = len(calls)
+            entered[n].set()
+            release[n].wait(10)
+            return {"state": "refused", "detail": f"test {n}", "ip": None, "rtt_ms": None}
+
+        tests = [threading.Thread(target=self.link.test, args=(d["id"],), daemon=True) for _ in range(2)]
+        with mock.patch.object(fl, "probe", probe):
+            try:
+                tests[0].start()
+                self.assertTrue(entered[1].wait(5), "the first test never probed")
+                tests[1].start()
+                self.assertTrue(entered[2].wait(5), "the second test never probed")
+                # The first finishes while the second is still probing: it mustn't show its
+                # rows or mark the second done.
+                release[1].set()
+                tests[0].join(10)
+                self.assertFalse(tests[0].is_alive())
+                running = self.link.snapshot()["tests"][d["id"]]
+                self.assertFalse(running["done"])
+                self.assertEqual(running["rows"][0]["detail"], "Waiting")
+                release[2].set()
+                tests[1].join(10)
+                self.assertFalse(tests[1].is_alive())
+            finally:
+                for e in release.values():
+                    e.set()
+                for t in tests:
+                    if t.ident:  # started
+                        t.join(10)
+        result = self.link.snapshot()["tests"][d["id"]]
+        self.assertTrue(result["done"])
+        self.assertEqual(result["rows"][0]["detail"], "test 2")
+
     def test_switching_to_a_headset_that_never_answers_stops_using_the_last_one(self):
         self.device("localhost")
         self.hosts({"localhost": "ok"})
@@ -1059,7 +1164,9 @@ class Connecting(unittest.TestCase):
         self.link.connect(["start"])
         line = err.getvalue()
         self.assertIn("frame_link: login failed: The Frame didn't accept this computer's SSH key.", line)
-        self.assertIn("addresses: hostname unresolved; hostname->ipv4", line)
+        # SSH can reject the answering address while the other DNS probe is
+        # still pending. Its timing does not change what the log must scrub.
+        self.assertRegex(line, r"addresses: hostname (?:waiting|resolving|unresolved); hostname->ipv4")
         for leaked in ("steamdeck-jane", "127.0.0.1", "localhost"):
             self.assertNotIn(leaked, line)
         self.assertEqual(self.link.last_failure["stage"], "login")
@@ -1376,24 +1483,6 @@ class ServerConnection(unittest.TestCase):
         self.assertEqual(r.status, 409)
         self.assertIn("switched headsets", json.loads(r.read())["error"])
         conn.close()
-
-    def test_android_discard_is_local_even_with_a_previous_headset_header(self):
-        conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=20)
-        conn.request('POST', '/api/upload', body=b'owned temporary bytes',
-                     headers={'X-Frame-UI': '1', 'X-Mode': 'android', 'X-Filename': 'test.apk'})
-        response = conn.getresponse()
-        self.assertEqual(response.status, 200)
-        token = json.loads(response.read())['token']
-        conn.close()
-        for action, expected in [('import', 409), ('discard', 200), ('discard', 200)]:
-            conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=20)
-            conn.request('POST', '/api/android-import',
-                         body=json.dumps({'action': action, 'tokens': [token]}),
-                         headers={'X-Frame-UI': '1', 'X-Frame-Device': 'previous-headset'})
-            response = conn.getresponse()
-            payload = response.read()
-            self.assertEqual(response.status, expected, payload)
-            conn.close()
 
     def test_guards_and_validation(self):
         self.assertEqual(self.request("GET", "/api/connection", key="")[0], 403)

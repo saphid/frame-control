@@ -1,0 +1,2228 @@
+{
+  "at": "2026-10-31T15:22:10.714967+00:00",
+  "sourceRevision": "4c224815029279f277986d2bc57e525b980f9a0f",
+  "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+  "priorHead": "6b75b3a7587129ab88d750589fdaf1859117b849",
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "83afd797a280b1f8859aea4064874e2bcdd8b2ad67a23f409ea1b641625a7507",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "4ce2ac6e20f44eb380d32536fa1a50cfe8eddd514a799f717eee53133dadea97",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+    "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "c237c8be13f997d0b5167b2c55380dfcd5005ddc8f1d0d48a1ae34bcb9c21200",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "14762b547042e4fa5cf0bb960181ded4c6221f04dd94515345f53c221bde17ed",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "fullMatrixProbeAssertionsPassed": true,
+  "nativeProbes": 45,
+  "archivePins": 34,
+  "sourceFingerprints": 19,
+  "consoleHashesVerified": 45,
+  "consoleObservations": [
+    {
+      "index": 0,
+      "id": 61,
+      "name": "TabMaster",
+      "version": "2.15.1",
+      "positive": true,
+      "rpcs": 47,
+      "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 1
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": 103,
+      "name": "Decky Ludusavi",
+      "version": "1.2.2",
+      "positive": true,
+      "rpcs": 3,
+      "consoleSha256": "cc5f5ec06bbc8f9085a8196412ed4f7cf17ea107944c14b3f3d20a239d717093",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 3
+      },
+      "cleanupStops": [
+        {
+          "pid": 62,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 44,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 27,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": 134,
+      "name": "Deck Progress Tracker",
+      "version": "1.3.6",
+      "positive": true,
+      "rpcs": 18,
+      "consoleSha256": "ec973e9038a3021fef04f0832294dd91d013a5f049212243982ad2a6d4a87d86",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "id": 36,
+      "name": "SteamGridDB",
+      "version": "1.8.1",
+      "positive": true,
+      "rpcs": 14,
+      "consoleSha256": "98bb71372bc053b892f1e10f6e2f6a5e15a5ea6e98edf564597450ca3d03cd6d",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 27,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "id": 18,
+      "name": "Bluetooth",
+      "version": "3.1.1",
+      "positive": true,
+      "rpcs": 13,
+      "consoleSha256": "8a802a530b1f488c46b63bcdc7b909f5b24cda6f965d7db1b14471879b7cecc0",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 11,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 10,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "id": 14,
+      "name": "ProtonDB Badges",
+      "version": "1.3.4",
+      "positive": true,
+      "rpcs": 9,
+      "consoleSha256": "2285bb2a3ea0f108fc073ebc061863f776653ef96c50806ccfefd7aea737d634",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "id": 143,
+      "name": "Desktop Apps",
+      "version": "0.1.0",
+      "positive": true,
+      "rpcs": 13,
+      "consoleSha256": "3ef082a698a3b9a149581e5a63ad23f6eee86e72d345978b6e27410419437893",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "id": 117,
+      "name": "DeckyParty File Manager",
+      "version": "1.0.0",
+      "positive": true,
+      "rpcs": 15,
+      "consoleSha256": "fabc9fa2f6863e9a93bba818bc217c6eb35e0bb46e7f9b8eb917eed3b9dde3ab",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 86,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "id": 131,
+      "name": "Download All",
+      "version": "1.1.0",
+      "positive": true,
+      "rpcs": 1,
+      "consoleSha256": "a8fc1c361a3fc5ff0c9b534b24e45b962eb3fc896c50b5cfa523fe5b1c6c6478",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "id": 130,
+      "name": "Games Prefix Manager",
+      "version": "1.0.1",
+      "positive": true,
+      "rpcs": 39,
+      "consoleSha256": "d4e1addd9b735015af42d3c65f1214003a169dbe42e275a29e1db9085d4b08e7",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "id": 130,
+      "name": "Games Prefix Manager",
+      "version": "1.0.2",
+      "positive": true,
+      "rpcs": 40,
+      "consoleSha256": "f2de8d13aa2cd740d284d65ac86becd270ff79af6f4f75c728f6bff2badb3b3d",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "id": 68,
+      "name": "Wine Cellar",
+      "version": "0.2.1",
+      "positive": true,
+      "rpcs": 7,
+      "consoleSha256": "437be16e694398e4109f5783144850a66df5075870df96e9d1394c416f9c3db7",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 3
+      },
+      "cleanupStops": [
+        {
+          "pid": 37,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "id": 52,
+      "name": "Game Theme Music",
+      "version": "1.7.1-1",
+      "positive": true,
+      "rpcs": 4,
+      "consoleSha256": "494daaca9d27ab6d1e8ce9a0381579646b9fba329c7b698761886112861e1a3c",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "id": 93,
+      "name": "Deck Settings",
+      "version": "1.2.6",
+      "positive": true,
+      "rpcs": 6,
+      "consoleSha256": "6c99bbffcdf113b0f36b6a24d5a31db302fb80880a32959c722f71370f27f535",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 24,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "id": 123,
+      "name": "Steam Status",
+      "version": "1.2.3",
+      "positive": true,
+      "rpcs": 4,
+      "consoleSha256": "285ed8d5d01bea849c7c19d25a8dedfff1a56931c2ac8e1fc109ac657f7f14a7",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "id": 28,
+      "name": "Emuchievements",
+      "version": "2.0.5",
+      "positive": true,
+      "rpcs": 3,
+      "consoleSha256": "f8bfa749ad6eb213eca30a1e5fcdfa00eeb653918c131258eaf6c3e60791db04",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "id": 67,
+      "name": "Battery Tracker",
+      "version": "0.2.0",
+      "positive": true,
+      "rpcs": 35,
+      "consoleSha256": "c16bc2e6d41db6d0020b1eb91fb8dbe6f293f88b53ff5dfbbc10f0c983204a3e",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "id": 114,
+      "name": "Network Sentinel",
+      "version": "1.0.4",
+      "positive": true,
+      "rpcs": 11,
+      "consoleSha256": "504ca9264b49206fe4abd15659906ac4ce182291b58c9b1c9ade6bdc8d29264c",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "id": 13,
+      "name": "Pause Games",
+      "version": "1.0.3",
+      "positive": true,
+      "rpcs": 11,
+      "consoleSha256": "068540840d0b8d3dadfc3be23ba0e06b9cacf44dad5a8ace86d8a069674200b5",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 1
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "id": 24,
+      "name": "RadiYo!",
+      "version": "1.3",
+      "positive": true,
+      "rpcs": 5,
+      "consoleSha256": "467550ec01c68f0dc920484b69ab6a861f8636d9782068587d50e87171158749",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 20,
+      "id": 132,
+      "name": "SuggestMe",
+      "version": "1.5.3",
+      "positive": true,
+      "rpcs": 7,
+      "consoleSha256": "cf7ddc01f7c6026401762d583145f8e5afe878891d342ff9c783874c8d8d5c60",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 21,
+      "id": 79,
+      "name": "Decky Notifications",
+      "version": "1.0.1",
+      "positive": true,
+      "rpcs": 9,
+      "consoleSha256": "1db90ef72c0eb7dd7136e126b77ef70c9ac85d4fa658ffad8b1974d8d172501b",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 26,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "id": 135,
+      "name": "Deck Shelves",
+      "version": "2.0.0",
+      "positive": true,
+      "rpcs": 4,
+      "consoleSha256": "23cc369fc5d581f95de410601df1b7454ecadd7362d942453e626c7fd52f10c8",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "id": 50,
+      "name": "Storage Cleaner",
+      "version": "1.4.0",
+      "positive": true,
+      "rpcs": 5,
+      "consoleSha256": "761fb3f0e6020b4cf072ab692195a669aa012024d42a28f0f6b1ba9bd45a3aee",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 24,
+      "id": 46,
+      "name": "Steamback",
+      "version": "1.0.0-1",
+      "positive": true,
+      "rpcs": 8,
+      "consoleSha256": "7045a2ba2168c0b986286f831edee3f2d1296993a72df7023aa1ba3d83e415ab",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "id": 104,
+      "name": "Game Sync",
+      "version": "1.0.4",
+      "positive": true,
+      "rpcs": 11,
+      "consoleSha256": "79ce57dc430ff9b4fc046326cf075a9738ace760f70198d3a94f49d1f260f21c",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "id": 63,
+      "name": "Free Loader",
+      "version": "1.6.0",
+      "positive": true,
+      "rpcs": 11,
+      "consoleSha256": "5f1991991e494c242267ec0fa855904faaff1764e16483a9bad2e26f1580f894",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "id": 12,
+      "name": "MusicControl",
+      "version": "1.1.6",
+      "positive": true,
+      "rpcs": 19,
+      "consoleSha256": "9082d7cf7aebd39470d42212857a897aa6af8a093e196b1311cb8dbf843e1ec9",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 11,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 10,
+          "signaledProcessGroup": true,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": true,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 28,
+      "id": 111,
+      "name": "Music Control",
+      "version": "1.1.7",
+      "positive": true,
+      "rpcs": 19,
+      "consoleSha256": "7d6d592b41d981c938e5b08aaae06f740da4933fdea01ed5046075460cbe44bc",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 11,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 10,
+          "signaledProcessGroup": true,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": true,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "id": 53,
+      "name": "Shotty",
+      "version": "0.1.0",
+      "positive": true,
+      "rpcs": 17,
+      "consoleSha256": "9f11b46557fe03f31061fd2ab8494a0b608e70fb6ec85493318f392deede371e",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 30,
+      "id": 89,
+      "name": "DeckySpy",
+      "version": "0.6.7",
+      "positive": true,
+      "rpcs": 7,
+      "consoleSha256": "9a1aaeb29dbc147228c9c5a41799d4d98c5f26cb04c056498414818c0981c4ec",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 1
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 31,
+      "id": 96,
+      "name": "Simple Timer",
+      "version": "1.0.0",
+      "positive": true,
+      "rpcs": 0,
+      "consoleSha256": "15ffa4031b0f66fd30c6d61033ffab9bd9e607895e56ad252213aa341e04557f",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 2
+      },
+      "cleanupStops": [
+        {
+          "pid": 52,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 38,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 24,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 32,
+      "id": 60,
+      "name": "DeckyFileServer",
+      "version": "1.2.0",
+      "positive": true,
+      "rpcs": 10,
+      "consoleSha256": "22836f103d4e66d9e98eb7a1195d4905e585244171897a966cae5b33eb1f5882",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 1
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 33,
+      "id": 125,
+      "name": "Decky Localsend",
+      "version": "0.4.5",
+      "positive": true,
+      "rpcs": 3,
+      "consoleSha256": "b5ab744d717402fdc57ba8925c4f5f9386043608961aabca20334658ef5b45ae",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 34,
+      "id": 111,
+      "name": "Music Control",
+      "version": "1.1.7",
+      "positive": false,
+      "rpcs": 0,
+      "consoleSha256": "7d6d592b41d981c938e5b08aaae06f740da4933fdea01ed5046075460cbe44bc",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 11,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 10,
+          "signaledProcessGroup": true,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": true,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 35,
+      "id": 96,
+      "name": "Simple Timer",
+      "version": "1.0.0",
+      "positive": false,
+      "rpcs": 0,
+      "consoleSha256": "6d35c71169834f69de8a8d753ce139f22b598d92a589d38927f099e54c3a4558",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 2
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 36,
+      "id": 96,
+      "name": "Simple Timer",
+      "version": "1.0.0",
+      "positive": false,
+      "rpcs": 0,
+      "consoleSha256": "aacbc9c57c2b8b7b366ea8e9af910ea85909571f178fb5ecee833faff500028d",
+      "markers": {
+        "Sending SIGKILL!": 1,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 37,
+      "id": 63,
+      "name": "Free Loader",
+      "version": "1.6.0",
+      "positive": false,
+      "rpcs": 7,
+      "consoleSha256": "f947b3880c9940ff2498f4226c45adf4ade429eec454a3b3a004f1604d5dcd21",
+      "markers": {
+        "Sending SIGKILL!": 1,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 38,
+      "id": 60,
+      "name": "DeckyFileServer",
+      "version": "1.2.0",
+      "positive": false,
+      "rpcs": 10,
+      "consoleSha256": "22836f103d4e66d9e98eb7a1195d4905e585244171897a966cae5b33eb1f5882",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 1
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 39,
+      "id": 93,
+      "name": "Deck Settings",
+      "version": "1.2.6",
+      "positive": false,
+      "rpcs": 3,
+      "consoleSha256": "266eefe6ac7485fde01e4ff869828f40d5a30f4adf873fefeee92393060583ba",
+      "markers": {
+        "Sending SIGKILL!": 1,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 40,
+      "id": 65,
+      "name": "Decky Terminal",
+      "version": "0.5.3",
+      "positive": false,
+      "rpcs": 0,
+      "consoleSha256": "e9dc5045410adc73df12d29804b9adf5ae4c79f649af14e1c6a1f4bdafb7dcaa",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 41,
+      "id": 61,
+      "name": "TabMaster",
+      "version": "2.15.1",
+      "positive": false,
+      "rpcs": 48,
+      "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+      "markers": {
+        "Sending SIGKILL!": 0,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 1
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 42,
+      "id": 134,
+      "name": "Deck Progress Tracker",
+      "version": "1.3.6",
+      "positive": false,
+      "rpcs": 18,
+      "consoleSha256": "7787b7fed859d97895ba0e5ad0a7e7610ca2c1a34255454ba7477660c4283782",
+      "markers": {
+        "Sending SIGKILL!": 2,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 43,
+      "id": 68,
+      "name": "Wine Cellar",
+      "version": "0.2.1",
+      "positive": false,
+      "rpcs": 4,
+      "consoleSha256": "b04138396f685bc4a5efe368e3b569abe17e55e511ca82dc10de8d817ab37adf",
+      "markers": {
+        "Sending SIGKILL!": 1,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "index": 44,
+      "id": 53,
+      "name": "Shotty",
+      "version": "0.1.0",
+      "positive": false,
+      "rpcs": 16,
+      "consoleSha256": "6ce40ac89c21463cb1a131a3d0689592c9c3271744ba9bb3338195097b780de4",
+      "markers": {
+        "Sending SIGKILL!": 1,
+        "Error during shutdown:": 0,
+        "asyncio.exceptions.CancelledError": 0,
+        "Task was destroyed but it is pending": 0,
+        "Bad file descriptor": 0,
+        "Expecting value: line 1 column 1 (char 0)": 0
+      },
+      "cleanupStops": [
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    }
+  ],
+  "positiveCasesWithForcedKills": [],
+  "installedSource": {
+    "archiveSha256": "973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312",
+    "previousManagedBackendSha256": "d3dbcd73cce1ecd48d4fade93923ffc2574f94b381d55dfee1fbb5d91f12984a",
+    "managedBackendSha256": "7c3b00e081dbfa602a7f811f25d3b19271b881a6fbb90d56c500ba8ea0d2598f",
+    "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "originalBackendSha256": "d3832dc8a870d0a588c0270b4888e1b8a8550d7675599633fb7cb8a4e6c39a13",
+    "onlyIpcPrefixAdded": true,
+    "all8OtherPublishedMembersPreserved": true
+  },
+  "timerCases": [
+    {
+      "caseIndex": 0,
+      "rpcs": 31,
+      "events": 30,
+      "consoleSha256": "15ffa4031b0f66fd30c6d61033ffab9bd9e607895e56ad252213aa341e04557f",
+      "positiveScopedCleanShutdownVerified": true,
+      "expectedNegative": false
+    },
+    {
+      "caseIndex": 1,
+      "rpcs": 10,
+      "events": 14,
+      "consoleSha256": "6d35c71169834f69de8a8d753ce139f22b598d92a589d38927f099e54c3a4558",
+      "positiveScopedCleanShutdownVerified": false,
+      "expectedNegative": true
+    },
+    {
+      "caseIndex": 2,
+      "rpcs": 18,
+      "events": 24,
+      "consoleSha256": "aacbc9c57c2b8b7b366ea8e9af910ea85909571f178fb5ecee833faff500028d",
+      "positiveScopedCleanShutdownVerified": false,
+      "expectedNegative": true
+    }
+  ],
+  "timerRpcCounts": [
+    31,
+    10,
+    18
+  ],
+  "timerEventCounts": [
+    30,
+    14,
+    24
+  ],
+  "repairedCleanStops": 4,
+  "settingsByteIdenticalAcrossEachStop": true,
+  "timerShutdown": {
+    "stops": [
+      {
+        "loaderPid": 9,
+        "descendantsBefore": {
+          "10": {
+            "state": "S",
+            "parent": 9,
+            "start": "351067247"
+          },
+          "19": {
+            "state": "S",
+            "parent": 10,
+            "start": "351067277"
+          },
+          "20": {
+            "state": "S",
+            "parent": 10,
+            "start": "351067277"
+          },
+          "21": {
+            "state": "S",
+            "parent": 20,
+            "start": "351067288"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 19,
+            "returncode": 0
+          },
+          {
+            "pid": 20,
+            "returncode": 0
+          }
+        ],
+        "parentOnlySignal": true,
+        "loaderReturncode": 0,
+        "seconds": 0.196,
+        "fixtureClosedUnixPeers": [
+          "/tmp/plugin_socket_1793459922.9978938"
+        ],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Simple Timer (v1.0.0)\n[plugin][INFO]: Stopping response listener for Simple Timer (v1.0.0)\nCalling Loader unload function for Simple Timer (v1.0.0).\nAttempting to unload with plugin Simple Timer (v1.0.0)'s \"_unload\" function.\n\nSimple Timer has been unloaded.\nUnloaded Simple Timer (v1.0.0)\n\nExpecting value: line 1 column 1 (char 0)\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Simple Timer (v1.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "ecd96175dad3b27daf73aff98747535f129a4e34e3eea5e95c72d5b388b84ede",
+        "cleanShutdownVerified": true
+      },
+      {
+        "loaderPid": 24,
+        "descendantsBefore": {
+          "25": {
+            "state": "S",
+            "parent": 24,
+            "start": "351068783"
+          },
+          "34": {
+            "state": "S",
+            "parent": 25,
+            "start": "351068814"
+          },
+          "35": {
+            "state": "S",
+            "parent": 25,
+            "start": "351068814"
+          },
+          "36": {
+            "state": "S",
+            "parent": 35,
+            "start": "351068825"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 34,
+            "returncode": 0
+          },
+          {
+            "pid": 35,
+            "returncode": 0
+          }
+        ],
+        "parentOnlySignal": true,
+        "loaderReturncode": 0,
+        "seconds": 0.215,
+        "fixtureClosedUnixPeers": [],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Simple Timer (v1.0.0)\n[plugin][INFO]: Stopping response listener for Simple Timer (v1.0.0)\nCalling Loader unload function for Simple Timer (v1.0.0).\nAttempting to unload with plugin Simple Timer (v1.0.0)'s \"_unload\" function.\n\nSimple Timer has been unloaded.\nUnloaded Simple Timer (v1.0.0)\n\n[plugin][INFO]: Plugin Simple Timer (v1.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "0da1c59a66ed7be9b6f3a460d2eeaa99d704759f151d452373e22f7d9088bcf1",
+        "cleanShutdownVerified": true
+      },
+      {
+        "loaderPid": 38,
+        "descendantsBefore": {
+          "48": {
+            "state": "S",
+            "parent": 39,
+            "start": "351069115"
+          },
+          "49": {
+            "state": "S",
+            "parent": 39,
+            "start": "351069115"
+          },
+          "50": {
+            "state": "S",
+            "parent": 49,
+            "start": "351069127"
+          },
+          "39": {
+            "state": "S",
+            "parent": 38,
+            "start": "351069086"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 48,
+            "returncode": 0
+          },
+          {
+            "pid": 49,
+            "returncode": 0
+          }
+        ],
+        "parentOnlySignal": true,
+        "loaderReturncode": 0,
+        "seconds": 0.235,
+        "fixtureClosedUnixPeers": [],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Simple Timer (v1.0.0)\n[plugin][INFO]: Stopping response listener for Simple Timer (v1.0.0)\nCalling Loader unload function for Simple Timer (v1.0.0).\nAttempting to unload with plugin Simple Timer (v1.0.0)'s \"_unload\" function.\n\nSimple Timer has been unloaded.\nUnloaded Simple Timer (v1.0.0)\n\n[plugin][INFO]: Plugin Simple Timer (v1.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "0da1c59a66ed7be9b6f3a460d2eeaa99d704759f151d452373e22f7d9088bcf1",
+        "cleanShutdownVerified": true
+      },
+      {
+        "loaderPid": 52,
+        "descendantsBefore": {
+          "64": {
+            "state": "S",
+            "parent": 63,
+            "start": "351069437"
+          },
+          "53": {
+            "state": "S",
+            "parent": 52,
+            "start": "351069391"
+          },
+          "62": {
+            "state": "S",
+            "parent": 53,
+            "start": "351069425"
+          },
+          "63": {
+            "state": "S",
+            "parent": 53,
+            "start": "351069425"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 62,
+            "returncode": 0
+          },
+          {
+            "pid": 63,
+            "returncode": 0
+          }
+        ],
+        "parentOnlySignal": true,
+        "loaderReturncode": 0,
+        "seconds": 0.215,
+        "fixtureClosedUnixPeers": [],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Simple Timer (v1.0.0)\n[plugin][INFO]: Stopping response listener for Simple Timer (v1.0.0)\nCalling Loader unload function for Simple Timer (v1.0.0).\nAttempting to unload with plugin Simple Timer (v1.0.0)'s \"_unload\" function.\n\nSimple Timer has been unloaded.\nUnloaded Simple Timer (v1.0.0)\n\n[plugin][INFO]: Plugin Simple Timer (v1.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "0da1c59a66ed7be9b6f3a460d2eeaa99d704759f151d452373e22f7d9088bcf1",
+        "cleanShutdownVerified": true
+      }
+    ],
+    "settingsReadbacks": [
+      {
+        "before": {
+          "text": "{\n    \"subtle_mode\": true,\n    \"timer_end\": 1793459997.4498987,\n    \"recent_timers_seconds\": [\n        60,\n        -20,\n        1,\n        60,\n        1\n    ]\n}",
+          "sha256": "ea7b3c7e9a396c4bf544a47b30f77811fcb5b470a08ef61afc38369eb44c4cd7",
+          "settings": {
+            "subtle_mode": true,
+            "timer_end": 1793459997.4498987,
+            "recent_timers_seconds": [
+              60,
+              -20,
+              1,
+              60,
+              1
+            ]
+          }
+        },
+        "after": {
+          "text": "{\n    \"subtle_mode\": true,\n    \"timer_end\": 1793459997.4498987,\n    \"recent_timers_seconds\": [\n        60,\n        -20,\n        1,\n        60,\n        1\n    ]\n}",
+          "sha256": "ea7b3c7e9a396c4bf544a47b30f77811fcb5b470a08ef61afc38369eb44c4cd7",
+          "settings": {
+            "subtle_mode": true,
+            "timer_end": 1793459997.4498987,
+            "recent_timers_seconds": [
+              60,
+              -20,
+              1,
+              60,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "before": {
+          "text": "{\n    \"subtle_mode\": true,\n    \"timer_end\": null,\n    \"recent_timers_seconds\": [\n        60,\n        -20,\n        1,\n        60,\n        1\n    ]\n}",
+          "sha256": "9ebfe1560f0a58d904d64fe194ba0be73bc0892b07e80e8b0208f22dc61e9beb",
+          "settings": {
+            "subtle_mode": true,
+            "timer_end": null,
+            "recent_timers_seconds": [
+              60,
+              -20,
+              1,
+              60,
+              1
+            ]
+          }
+        },
+        "after": {
+          "text": "{\n    \"subtle_mode\": true,\n    \"timer_end\": null,\n    \"recent_timers_seconds\": [\n        60,\n        -20,\n        1,\n        60,\n        1\n    ]\n}",
+          "sha256": "9ebfe1560f0a58d904d64fe194ba0be73bc0892b07e80e8b0208f22dc61e9beb",
+          "settings": {
+            "subtle_mode": true,
+            "timer_end": null,
+            "recent_timers_seconds": [
+              60,
+              -20,
+              1,
+              60,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "before": {
+          "text": "{\n    \"subtle_mode\": true,\n    \"timer_end\": null,\n    \"recent_timers_seconds\": [\n        60,\n        -20,\n        1,\n        60,\n        1\n    ]\n}",
+          "sha256": "9ebfe1560f0a58d904d64fe194ba0be73bc0892b07e80e8b0208f22dc61e9beb",
+          "settings": {
+            "subtle_mode": true,
+            "timer_end": null,
+            "recent_timers_seconds": [
+              60,
+              -20,
+              1,
+              60,
+              1
+            ]
+          }
+        },
+        "after": {
+          "text": "{\n    \"subtle_mode\": true,\n    \"timer_end\": null,\n    \"recent_timers_seconds\": [\n        60,\n        -20,\n        1,\n        60,\n        1\n    ]\n}",
+          "sha256": "9ebfe1560f0a58d904d64fe194ba0be73bc0892b07e80e8b0208f22dc61e9beb",
+          "settings": {
+            "subtle_mode": true,
+            "timer_end": null,
+            "recent_timers_seconds": [
+              60,
+              -20,
+              1,
+              60,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "before": {
+          "text": "{\n    \"timer_end\": null,\n    \"subtle_mode\": true\n}",
+          "sha256": "3ccc19aa6f9e43a67908f99f9ae085cf69de3a8dff96b72a6abe897185155230",
+          "settings": {
+            "timer_end": null,
+            "subtle_mode": true
+          }
+        },
+        "after": {
+          "text": "{\n    \"timer_end\": null,\n    \"subtle_mode\": true\n}",
+          "sha256": "3ccc19aa6f9e43a67908f99f9ae085cf69de3a8dff96b72a6abe897185155230",
+          "settings": {
+            "timer_end": null,
+            "subtle_mode": true
+          }
+        }
+      }
+    ],
+    "unrelatedSiblingPreserved": true,
+    "cleanShutdownVerified": true,
+    "expectedRegression": false,
+    "realFrameContacted": false,
+    "physicalControllerVerified": false,
+    "restartedDiscovery": [
+      [
+        {
+          "name": "Simple Timer",
+          "version": "1.0.0",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      [
+        {
+          "name": "Simple Timer",
+          "version": "1.0.0",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      [
+        {
+          "name": "Simple Timer",
+          "version": "1.0.0",
+          "load_type": 1,
+          "disabled": false
+        }
+      ]
+    ],
+    "console": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: simple-timer\n[loader][INFO]: Loaded Simple Timer (v1.0.0)\nSimple Timer: Settings path = /home/tester/.local/share/frame-control/decky/settings/simple-timer/settings.json\nSimple Timer is being migrated.\nReading settings\nGet timer_end\nGet recent_timers_seconds\nSimple Timer did not detect any Recent Timers.\nGet subtle_mode\nSimple Timer has been initialised.\nSet subtle_mode: True\nSaving settings\nGet subtle_mode\nSet timer_end: None\nSaving settings\nGet recent_timers_seconds\nSet recent_timers_seconds: [60]\nSet timer_end: 1793459985.1273441\nSaving settings\nGet recent_timers_seconds\nGet timer_end\nSet timer_end: None\nSaving settings\nGet timer_end\nGet recent_timers_seconds\nSet recent_timers_seconds: [1, 60]\nSet timer_end: 1793459926.1302407\nSaving settings\nGet recent_timers_seconds\nGet recent_timers_seconds\nSet recent_timers_seconds: [60, 1, 60]\nSet timer_end: 1793459985.1314132\nSaving settings\nGet recent_timers_seconds\nSet timer_end: None\nSaving settings\nGet recent_timers_seconds\nSet recent_timers_seconds: [1, 60, 1, 60]\nSet timer_end: 1793459932.637914\nSaving settings\nGet recent_timers_seconds\nSet timer_end: None\nSaving settings\nGet subtle_mode\nGet timer_end\nGet recent_timers_seconds\nSet recent_timers_seconds: [-20, 1, 60, 1, 60]\nSet timer_end: 1793459917.1467578\nSaving settings\nGet recent_timers_seconds\nSet timer_end: None\nSaving settings\nGet subtle_mode\nGet timer_end\nGet recent_timers_seconds\nSet recent_timers_seconds: [60, -20, 1, 60, 1]\nSet timer_end: 1793459997.4498987\nSaving settings\nGet recent_timers_seconds\nGet timer_end\nGet recent_timers_seconds\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Simple Timer (v1.0.0)\n[plugin][INFO]: Stopping response listener for Simple Timer (v1.0.0)\nCalling Loader unload function for Simple Timer (v1.0.0).\nAttempting to unload with plugin Simple Timer (v1.0.0)'s \"_unload\" function.\n\nSimple Timer has been unloaded.\nUnloaded Simple Timer (v1.0.0)\n\nExpecting value: line 1 column 1 (char 0)\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Simple Timer (v1.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: simple-timer\n[loader][INFO]: Loaded Simple Timer (v1.0.0)\nSimple Timer: Settings path = /home/tester/.local/share/frame-control/decky/settings/simple-timer/settings.json\nSimple Timer is being migrated.\nReading settings\nGet timer_end\nGet recent_timers_seconds\nGet subtle_mode\nSimple Timer has been initialised.\nGet subtle_mode\nGet timer_end\nGet recent_timers_seconds\nSet timer_end: None\nSaving settings\nGet timer_end\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Simple Timer (v1.0.0)\n[plugin][INFO]: Stopping response listener for Simple Timer (v1.0.0)\nCalling Loader unload function for Simple Timer (v1.0.0).\nAttempting to unload with plugin Simple Timer (v1.0.0)'s \"_unload\" function.\n\nSimple Timer has been unloaded.\nUnloaded Simple Timer (v1.0.0)\n\n[plugin][INFO]: Plugin Simple Timer (v1.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: simple-timer\n[loader][INFO]: Loaded Simple Timer (v1.0.0)\nSimple Timer: Settings path = /home/tester/.local/share/frame-control/decky/settings/simple-timer/settings.json\nSimple Timer is being migrated.\nReading settings\nGet timer_end\nGet recent_timers_seconds\nGet subtle_mode\nSimple Timer has been initialised.\nGet subtle_mode\nGet timer_end\nSet timer_end: None\nSaving settings\nGet subtle_mode\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Simple Timer (v1.0.0)\n[plugin][INFO]: Stopping response listener for Simple Timer (v1.0.0)\nCalling Loader unload function for Simple Timer (v1.0.0).\nAttempting to unload with plugin Simple Timer (v1.0.0)'s \"_unload\" function.\n\nSimple Timer has been unloaded.\nUnloaded Simple Timer (v1.0.0)\n\n[plugin][INFO]: Plugin Simple Timer (v1.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: simple-timer\n[loader][INFO]: Loaded Simple Timer (v1.0.0)\nSimple Timer: Settings path = /home/tester/.local/share/frame-control/decky/settings/simple-timer/settings.json\nSimple Timer is being migrated.\nReading settings\nGet timer_end\nSet timer_end: None\nSaving settings\nGet recent_timers_seconds\nSimple Timer did not detect any Recent Timers.\nGet subtle_mode\nSimple Timer has been initialised.\nGet subtle_mode\nGet timer_end\nSet timer_end: None\nSaving settings\nGet subtle_mode\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Simple Timer (v1.0.0)\n[plugin][INFO]: Stopping response listener for Simple Timer (v1.0.0)\nCalling Loader unload function for Simple Timer (v1.0.0).\nAttempting to unload with plugin Simple Timer (v1.0.0)'s \"_unload\" function.\n\nSimple Timer has been unloaded.\nUnloaded Simple Timer (v1.0.0)\n\n[plugin][INFO]: Plugin Simple Timer (v1.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+    "consoleSha256": "15ffa4031b0f66fd30c6d61033ffab9bd9e607895e56ad252213aa341e04557f"
+  },
+  "previousManagedForcedKillReproduced": true,
+  "originalTaskStateFailuresPreserved": true,
+  "sharedAdapterAndTimerHelpersUnchanged": true,
+  "other115CatalogRowsPreserved": true,
+  "all116InstallPoliciesPreserved": true,
+  "other33NativeCasesPreserved": true,
+  "other36NativeDispatchBodiesPreserved": true,
+  "tabmasterRestoreFromCurrentMainPreserved": true,
+  "tabmasterRpcCounts": [
+    47,
+    48
+  ],
+  "fullUnitTests": 1949,
+  "fullUnitSeconds": 257.041,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerSkips": 0,
+  "installerOwnedCleanupVerified": true,
+  "existingBatteryTrackerRepairPr": 519,
+  "batteryTrackerPositiveForcedKillObserved": false,
+  "fullE2eSuiteRunLocally": false,
+  "globalCleanPluginShutdownQualified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "limits": [
+    "Current-main integration qualified locally on native AMD64 only; fresh exact final-head CI/e2e/native AMD64+ARM64/PC/ownership/all package modes, reviews and current main remain merge gates.",
+    "Other native probes do not uniformly enforce clean plugin shutdown. Full-matrix success is not a global clean/error-free console claim; all forced kills and selected diagnostics remain explicit.",
+    "No forced-kill marker appeared in the 34 positive cases in this local run. Most probes do not assert graceful plugin unload, and previous targeted Battery Tracker IPC/flush failures remain owned by #519. This does not qualify a globally clean runtime.",
+    "Current-main native ARM64 Simple Timer forced kills remain historical evidence until this integrated repair is independently qualified on that architecture at the final head.",
+    "The one HTTP/SSH method verifies 37 pinned store install/receipt/removal transactions including current-main TabMaster and repaired Simple Timer; it does not execute official backends or the full e2e suite.",
+    "No refreshed browser, managed Frame, wearer/controller, sound, suspend or release proof. Headset and schedules untouched."
+  ],
+  "sourceIntegrationAudit": {
+    "at": "2026-10-31T15:15:53.041995+00:00",
+    "sourceRevision": "4c224815029279f277986d2bc57e525b980f9a0f",
+    "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+    "priorHead": "6b75b3a7587129ab88d750589fdaf1859117b849",
+    "normalMerge": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorTimerBodyAndHelpersPreserved": true,
+    "all37RuntimeDispatchOccurrencesVerified": true,
+    "mainOtherInstallerBranchesPreserved": true,
+    "onlyPriorTimerInstallerBranchChanged": true,
+    "allMainApplyScriptDispatchesPreserved": true,
+    "freeLoaderAndDeckSettingsRuntimeFixturesMatchMain": true,
+    "mainOther115CompleteCatalogRowsPreserved": true,
+    "all116InstallPoliciesPreserved": true,
+    "sharedIpcConsoleInventoryUnchanged": true,
+    "mainOther33NativeCasesPreserved": true,
+    "mainRunnerPreservedWithOneNewControl": true,
+    "mainOtherE2eAssertionsPreserved": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "83afd797a280b1f8859aea4064874e2bcdd8b2ad67a23f409ea1b641625a7507",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "4ce2ac6e20f44eb380d32536fa1a50cfe8eddd514a799f717eee53133dadea97",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "c237c8be13f997d0b5167b2c55380dfcd5005ddc8f1d0d48a1ae34bcb9c21200",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "14762b547042e4fa5cf0bb960181ded4c6221f04dd94515345f53c221bde17ed",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeInputCount": 19
+  },
+  "mainScopedControlAudit": {
+    "at": "2026-10-31T15:21:45.958172+00:00",
+    "sourceRevision": "4c224815029279f277986d2bc57e525b980f9a0f",
+    "architecture": "x86_64",
+    "freeLoader": [
+      {
+        "originalBackend": false,
+        "rpcs": 11,
+        "cleanShutdownVerified": true,
+        "stopSeconds": [
+          0.214,
+          0.214
+        ],
+        "forcedKills": 0,
+        "privateSnapshotsDecoded": true
+      },
+      {
+        "originalBackend": true,
+        "rpcs": 7,
+        "cleanShutdownVerified": false,
+        "stopSeconds": [
+          5.223
+        ],
+        "forcedKills": 1,
+        "privateSnapshotsDecoded": true
+      }
+    ],
+    "deckSettings": [
+      {
+        "negative": false,
+        "rpcs": 6,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351057360"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351057396"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351057396"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351057408"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.225,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793459824.1914206"
+            ],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 24,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "351057676"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "351057707"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "351057707"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "351057719"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.214,
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          }
+        ]
+      },
+      {
+        "negative": true,
+        "rpcs": 3,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351079676"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351079706"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351079706"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351079718"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 5.274,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793460047.2907836"
+            ],
+            "forcedPluginKills": 1,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\n[plugin][WARNING]: Plugin Deck Settings (v1.2.6) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "716d3502c825fdeebc3c6181a4f5146aae1dd72d6e171247f8851796710f03f6",
+            "cleanShutdownVerified": false
+          }
+        ]
+      }
+    ],
+    "deckSettingsTlsPreserved": true,
+    "freeLoaderPrivateDataPreserved": true,
+    "allScopedConsolesHashed": true,
+    "realFrameContacted": false
+  },
+  "rawJsonSha256": "f8b86daed82eabc077cded024d14f1ba31969c2972b7994e0890ee145f61c728",
+  "rawGzipSha256": "c952521f81a5e4bb8bde38193fefc0919ad0feff491e34b2df2943ff82f3b1f4"
+}

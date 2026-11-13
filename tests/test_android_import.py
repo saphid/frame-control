@@ -1,393 +1,381 @@
-"""Local Android bundles and companion files, using synthetic APK/OBB payloads."""
+"""Local APK/OBB backups: inspect as a unit, verify the target, and finish setup."""
 import sandbox  # noqa: F401
 import io
+import json
+import shutil
+import stat
+import subprocess
+import zipfile
 from pathlib import Path
 import sys
 import tempfile
 import unittest
-import threading
-from types import SimpleNamespace
 from unittest.mock import patch
-import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'ui'))
-import frame_android_import as imports
-from test_quest import apk_bytes, PKG
+import frame_android_import as backup
 import server
-from test_install_queue import wait
+from apk_fixtures import apk, manifest
+from test_quest import apk_bytes
+
+PKG = 'com.Armature.VR4'
+META = {'package': PKG, 'label': PKG, 'version': '', 'version_code': 210,
+        'instance': 2800000001, 'shortcut': 123, 'game_id': 456}
 
 
-class AndroidImport(unittest.TestCase):
+class BackupTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
+        self.apk = self.root / 'VR4-Android-Shipping-arm64.apk'
+        self.apk.write_bytes(apk({'AndroidManifest.xml': manifest(PKG, 0x7f010000, 0x7f010001, 26)}))
+        self.obb = [self.root / f'{kind}.203.{PKG}.obb' for kind in ('main', 'patch')]
+        for p in self.obb:
+            p.write_bytes(b'game data')
 
-    def file(self, name, data):
-        path = self.root / name
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
+    def test_desktop_apk_finds_matching_siblings_but_browser_requires_selection(self):
+        (self.root / 'main.1.org.other.game.obb').write_bytes(b'other game')
+        with patch.object(backup.android, 'ssh') as ssh:
+            desktop = backup.inspect([str(self.apk)], discover=True)
+            browser = backup.inspect([str(self.apk)])
+            selected = backup.inspect([str(self.apk), *map(str, self.obb)])
+        ssh.assert_not_called()
+        self.assertEqual(desktop['obb'], self.obb)
+        self.assertEqual(browser['obb'], [])
+        self.assertEqual(backup.public(selected)['obb'][0]['name'], self.obb[0].name)
+        self.assertEqual(backup.public(selected)['package'], PKG)
+        self.assertNotIn(str(self.root), str(backup.public(selected)))
+
+    def test_wrong_data_empty_data_duplicate_names_and_multiple_apks_fail_before_install(self):
+        other = self.root / 'main.203.org.other.game.obb'
+        other.write_bytes(b'other game')
+        with self.assertRaisesRegex(backup.android.FrameError, 'does not belong'):
+            backup.inspect([str(self.apk), str(other)])
+        self.obb[0].write_bytes(b'')
+        with self.assertRaisesRegex(backup.android.FrameError, 'nonempty'):
+            backup.inspect([str(self.apk), str(self.obb[0])])
+        second = self.root / 'another.apk'
+        second.write_bytes(self.apk.read_bytes())
+        with self.assertRaisesRegex(backup.android.FrameError, 'one game at a time'):
+            backup.inspect([str(self.apk), str(second)])
+        self.obb[0].write_bytes(b'data')
+        folder = self.root / 'copy'
+        folder.mkdir()
+        duplicate = folder / self.obb[0].name
+        duplicate.write_bytes(b'data')
+        with self.assertRaisesRegex(backup.android.FrameError, 'unique names'):
+            backup.inspect([str(self.apk), str(self.obb[0]), str(duplicate)])
+
+    def test_supported_split_set_uses_manifest_base_and_existing_merge_path(self):
+        base = self.root / 'not-named-base.apk'
+        base.write_bytes(apk_bytes(PKG, split_required=True, version_code=210))
+        split = self.root / 'arm64.apk'
+        split.write_bytes(apk_bytes(PKG, split='config.arm64_v8a', version_code=210,
+                                    files={'lib/arm64-v8a/libgame.so': b'game'}))
+        plan = backup.inspect([str(split), str(base)])
+        self.assertEqual(plan['apk'], base)
+        self.assertEqual(plan['splits'], [split])
+        self.assertEqual(backup.public(plan)['splits'], ['arm64.apk'])
+        with patch.object(backup.quest, '_running', return_value=False), \
+                patch.object(backup.android, 'read_meta', return_value=None), \
+                patch.object(backup.android, 'install', return_value=META) as install:
+            backup.install(plan)
+        self.assertEqual(install.call_args.kwargs['splits'], [str(split)])
+
+    def test_split_mismatch_and_unsupported_resource_fail_before_frame_access(self):
+        base = self.root / 'base.apk'
+        base.write_bytes(apk_bytes(PKG, split_required=True, version_code=210))
+        split = self.root / 'split.apk'
+        with patch.object(backup.android, 'ssh') as ssh:
+            split.write_bytes(apk_bytes(PKG, split='config.arm64_v8a', version_code=211,
+                                        files={'lib/arm64-v8a/libgame.so': b'game'}))
+            with self.assertRaisesRegex(backup.android.FrameError, 'version cannot be verified'):
+                backup.inspect([str(base), str(split)])
+            split.write_bytes(apk_bytes(PKG, split='config.xxhdpi', version_code=210,
+                                        files={'res/drawable/icon.png': b'png'}))
+            with self.assertRaisesRegex(backup.android.FrameError, 'screen-density or language resources'):
+                backup.inspect([str(base), str(split)])
+            split.write_bytes(apk_bytes(PKG, split='config.x86_64', version_code=210,
+                                        files={'lib/x86_64/libgame.so': b'game'}))
+            with self.assertRaisesRegex(backup.android.FrameError, 'another device'):
+                backup.inspect([str(base), str(split)])
+        ssh.assert_not_called()
+
+    def test_obb_only_repairs_existing_game_and_requests_apk_when_not_installed(self):
+        with patch.object(backup.android, 'read_meta', return_value=None):
+            with self.assertRaisesRegex(backup.android.FrameError, 'Add its APK'):
+                backup.inspect(list(map(str, self.obb)))
+        with patch.object(backup.android, 'read_meta', return_value=META):
+            plan = backup.inspect(list(map(str, self.obb)))
+        self.assertIsNone(plan['apk'])
+        self.assertEqual(plan['checked']['version_code'], 210)
+
+    def test_apk_and_both_data_files_install_launch_verify_copy_close_in_order(self):
+        plan = backup.inspect([str(self.apk), *map(str, self.obb)])
+        order = []
+        def added(pkg, checked, files, *args, **kwargs):
+            order.append('copy-close')
+            self.assertEqual(pkg, PKG)
+            self.assertEqual(files, self.obb)
+            return {'closed': True, 'message': 'copied', 'app': META, 'needs_game_data': False}
+        with patch.object(backup.quest, '_running', side_effect=[False, False, True]), \
+                patch.object(backup.android, 'read_meta', return_value=None), \
+                patch.object(backup.android, 'install', side_effect=lambda *a, **k: order.append('install') or META), \
+                patch.object(backup.android, 'launch', side_effect=lambda *a: order.append('launch')), \
+                patch.object(backup.quest, '_wait_ready', side_effect=lambda *a: order.append('ready')), \
+                patch.object(backup.quest, '_check_android_package', side_effect=lambda *a: order.append('verify')), \
+                patch.object(backup.quest, 'add_game_data', side_effect=added):
+            result = backup.install(plan)
+        self.assertEqual(order, ['install', 'launch', 'ready', 'verify', 'copy-close'])
+        self.assertIn('2 game-data files', result['message'])
+        self.assertIn('Ready to open', result['message'])
+
+    def test_copy_failure_closes_game_and_keeps_retry_instruction(self):
+        plan = backup.inspect([str(self.apk), *map(str, self.obb)])
+        with patch.object(backup.quest, '_running', side_effect=[False, True]), \
+                patch.object(backup.android, 'read_meta', return_value=None), \
+                patch.object(backup.android, 'install', return_value=META), \
+                patch.object(backup.quest, '_wait_ready'), patch.object(backup.quest, '_check_android_package'), \
+                patch.object(backup.quest, 'add_game_data', side_effect=backup.android.FrameError('transfer failed')), \
+                patch.object(backup.quest, '_close', return_value=(True, None)) as close:
+            with self.assertRaisesRegex(backup.android.FrameError, 'installed, but.*Import the same backup again'):
+                backup.install(plan)
+        close.assert_called_once_with(PKG)
+
+    def test_changed_files_are_rejected_before_frame_access(self):
+        plan = backup.inspect([str(self.apk), *map(str, self.obb)])
+        self.obb[0].write_bytes(b'changed contents')
+        with patch.object(backup.android, 'ssh') as ssh:
+            with self.assertRaisesRegex(backup.android.FrameError, 'backup changed'):
+                backup.install(plan)
+        ssh.assert_not_called()
+
+    def test_running_game_and_newer_installed_version_are_not_replaced(self):
+        plan = backup.inspect([str(self.apk), *map(str, self.obb)])
+        newer = {**META, 'version_code': plan['checked']['version_code'] + 1}
+        for running, existing, message in [(True, None, 'Close'), (False, newer, 'newer')]:
+            with self.subTest(running=running), \
+                    patch.object(backup.quest, '_running', return_value=running), \
+                    patch.object(backup.android, 'read_meta', return_value=existing), \
+                    patch.object(backup.android, 'install') as install:
+                with self.assertRaisesRegex(backup.android.FrameError, message):
+                    backup.install(plan)
+                install.assert_not_called()
+
+    def test_apk_without_data_installs_without_launching(self):
+        plan = backup.inspect([str(self.apk)])
+        with patch.object(backup.quest, '_running', return_value=False), \
+                patch.object(backup.android, 'read_meta', return_value=None), \
+                patch.object(backup.android, 'install', return_value=META), \
+                patch.object(backup.android, 'launch') as launch:
+            result = backup.install(plan)
+        launch.assert_not_called()
+        self.assertFalse(result['needs_game_data'])
+
+
+class StagingTests(unittest.TestCase):
+    setUp = BackupTests.setUp
+    def tearDown(self):
+        for entry in server._android_backups.values():
+            server._discard_android_backup(entry)
+        server._android_backups.clear()
+
+    def test_uploaded_batch_is_inspected_together_and_cancel_removes_all_uploads(self):
+        token = server.android_backup({'action': 'begin'})['token']
+        for path in [self.apk, *self.obb]:
+            class Request:
+                headers = {'X-Filename': path.name, 'X-Mode': 'android-backup',
+                           'X-Android-Backup': token, 'Content-Length': str(path.stat().st_size)}
+                rfile = io.BytesIO(path.read_bytes())
+            server.Handler.upload(Request())
+        read = server.android_backup({'action': 'inspect', 'token': token})
+        self.assertEqual(len(read['plan']['obb']), 2)
+        folders = list(server._android_backups[token]['dirs'])
+        server.android_backup({'action': 'discard', 'token': token})
+        self.assertTrue(all(not Path(p).exists() for p in folders))
+        self.assertTrue(self.apk.exists())
+
+    def test_headset_change_refuses_import_and_pc_folder_is_left_to_title_importer(self):
+        class Link:
+            device = 'a'
+            def active_device(self):
+                return {'id': self.device}
+        link = Link()
+        with patch.object(server, 'LINK', link):
+            read = server.android_backup({'action': 'inspect', 'paths': [str(self.apk)]})
+            link.device = 'b'
+            with self.assertRaisesRegex(server.Failure, 'headset changed'):
+                server.android_backup({'action': 'install', 'token': read['token']})
+        pc = self.root / 'pc'
+        pc.mkdir()
+        (pc / 'game.exe').write_bytes(b'program')
+        self.assertEqual(server.android_backup({'action': 'inspect', 'paths': [str(pc)], 'probe': True}),
+                         {'android': False})
+
+
+class BundleTests(unittest.TestCase):
+    setUp = BackupTests.setUp
+    tearDown = StagingTests.tearDown
+    def bundle(self, entries=None, suffix='.xapk'):
+        path = self.root / ('backup' + suffix)
+        path.write_bytes(apk(entries if entries is not None else {
+            'backup/game.apk': self.apk.read_bytes(),
+            f'backup/Android/obb/{PKG}/{self.obb[0].name}': b'game data',
+            'backup/manifest.json': b'{"package_name":"untrusted.metadata"}',
+        }))
         return path
 
-    def bundle(self, name, files):
-        buf = io.BytesIO()
-        with zipfile.ZipFile(buf, 'w') as archive:
-            for entry, data in files.items():
-                archive.writestr(entry, data)
-        return self.file(name, buf.getvalue())
+    def test_all_explicit_extensions_use_current_preview_and_cancel_cleanup(self):
+        for suffix in ('.xapk', '.apks', '.apkm'):
+            with self.subTest(suffix=suffix):
+                source = self.bundle(suffix=suffix)
+                with patch.object(backup.android, 'ssh') as ssh:
+                    read = server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+                ssh.assert_not_called()
+                self.assertEqual(read['plan']['package'], PKG)
+                self.assertEqual(read['plan']['obb'][0]['name'], self.obb[0].name)
+                folders = list(server._android_backups[read['token']]['dirs'])
+                server.android_backup({'action': 'discard', 'token': read['token']})
+                self.assertTrue(all(not Path(p).exists() for p in folders))
+                self.assertTrue(source.exists())
 
-    def prepare(self, paths):
-        work = Path(tempfile.mkdtemp(dir=self.root))
-        return imports.prepare(paths, work)
+    def test_bundle_with_supported_split_uses_same_preview_and_cleanup(self):
+        source = self.bundle({
+            'base.apk': apk_bytes(PKG, split_required=True, version_code=210),
+            'config.arm64.apk': apk_bytes(PKG, split='config.arm64_v8a', version_code=210,
+                                          files={'lib/arm64-v8a/libgame.so': b'game'}),
+        }, suffix='.apks')
+        with patch.object(backup.android, 'ssh') as ssh:
+            read = server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+        ssh.assert_not_called()
+        self.assertEqual(read['plan']['apk'], 'base.apk')
+        self.assertEqual(read['plan']['splits'], ['config.arm64.apk'])
+        folders = list(server._android_backups[read['token']]['dirs'])
+        server.android_backup({'action': 'discard', 'token': read['token']})
+        self.assertTrue(all(not Path(p).exists() for p in folders))
 
-    def test_xapk_keeps_apk_obb_and_external_data_together(self):
-        obb = 'main.7.' + PKG + '.obb'
-        path = self.bundle('game.xapk', {
-            'game.apk': apk_bytes(version_code=7), 'manifest.json': b'{}', 'icon.png': b'png',
-            'Android/obb/' + PKG + '/' + obb: b'owned assets',
-            'Android/data/' + PKG + '/files/levels.pak': b'owned levels',
-        })
-        plan, = self.prepare([path])
-        self.assertEqual(plan['package'], PKG)
-        self.assertEqual(plan['obb'][0].name, obb)
-        self.assertEqual((plan['data'] / 'files/levels.pak').read_bytes(), b'owned levels')
-        self.assertEqual(plan['checked']['version_code'], 7)
+    def test_browser_upload_bundle_is_staged_and_removed_with_extraction(self):
+        source = self.bundle()
+        token = server.android_backup({'action': 'begin'})['token']
+        class Request:
+            headers = {'X-Filename': source.name, 'X-Mode': 'android-backup',
+                       'X-Android-Backup': token, 'Content-Length': str(source.stat().st_size)}
+            rfile = io.BytesIO(source.read_bytes())
+        server.Handler.upload(Request())
+        read = server.android_backup({'action': 'inspect', 'token': token})
+        self.assertEqual(read['plan']['package'], PKG)
+        self.assertEqual(len(server._android_backups[token]['dirs']), 2)
+        folders = list(server._android_backups[token]['dirs'])
+        server.android_backup({'action': 'discard', 'token': token})
+        self.assertTrue(all(not Path(p).exists() for p in folders))
 
-    def test_wrapped_archives_and_package_obb_folders(self):
-        obb = 'main.7.' + PKG + '.obb'
-        for prefix in ('', 'Game/'):
-            for folder in ('', PKG + '/', 'Android/obb/' + PKG + '/'):
-                with self.subTest(prefix=prefix, folder=folder):
-                    path = self.bundle('game.zip', {
-                        prefix + 'base.apk': apk_bytes(version_code=7),
-                        prefix + folder + obb: b'assets',
-                        prefix + 'Android/data/' + PKG + '/files/setup.sh': b'opaque data',
-                    })
-                    self.assertTrue(imports.is_bundle(path))
-                    plan, = self.prepare([path])
-                    self.assertEqual(plan['obb'][0].name, obb)
-                    self.assertEqual((plan['data'] / 'files/setup.sh').read_bytes(), b'opaque data')
+    def test_reject_layouts_before_any_headset_access_and_cleanup_failed_stage(self):
+        cases = [
+            ({'base.apk': self.apk.read_bytes(), 'split.apk': self.apk.read_bytes()}, 'exactly one base'),
+            ({'base.apk': self.apk.read_bytes(), f'Android/data/{PKG}/save': b'private'}, 'restore'),
+            ({'base.apk': self.apk.read_bytes(), 'main.1.org.other.game.obb': b'wrong'}, 'does not belong'),
+            ({'base.apk': self.apk.read_bytes(), '../outside.obb': b'bad'}, 'unsafe'),
+            ({'base.apk': self.apk.read_bytes(), '/outside.obb': b'bad'}, 'unsafe'),
+            ({'base.apk': self.apk.read_bytes(), 'CON.apk': b'bad'}, 'unsafe'),
+            ({'base.apk': self.apk.read_bytes(), 'other.exe': b'bad'}, 'Unsupported'),
+            ({'base.apk': self.apk.read_bytes(), 'BASE.apk': b'bad'}, 'duplicate'),
+            ({'manifest.json': b'{}'}, 'base APK'),
+        ]
+        for entries, message in cases:
+            with self.subTest(message=message), patch.object(backup.android, 'ssh') as ssh:
+                source = self.bundle(entries)
+                with self.assertRaisesRegex(server.Failure, message):
+                    server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+                self.assertFalse(server._android_backups)
+                ssh.assert_not_called()
+                self.assertTrue(source.exists())
 
-    def test_finder_and_sai_metadata_do_not_become_payloads(self):
-        path = self.bundle('game.apks', {
-            'Game/base.apk': apk_bytes(version_code=7),
-            'Game/meta.sai_v2.json': b'{}', 'Game/meta.sai_v1.json': b'{}',
-            'Game/icon.png': b'icon', 'Game/.DS_Store': b'finder',
-            '__MACOSX/Game/._base.apk': b'not an APK',
-            'Game/._base.apk': b'inline AppleDouble',
-            'Game/Android/data/' + PKG + '/files/.DS_Store': b'finder',
-            'Game/Android/data/' + PKG + '/files/._level': b'inline AppleDouble',
-            'Game/Android/data/' + PKG + '/files/level': b'data',
-        })
-        self.assertTrue(imports.is_bundle(path))
-        plan, = self.prepare([path])
-        self.assertEqual([p.name for p in plan['data'].rglob('*') if p.is_file()], ['level'])
-        self.assertFalse(imports.is_bundle(self.bundle('metadata.zip', {
-            '__MACOSX/._base.apk': b'finder', '._base.apk': b'finder', '.DS_Store': b'finder'})))
-        self.assertFalse(imports.is_bundle(self.bundle('pc-with-metadata.zip', {
-            'Game/game': b'\x7fELF binary', '__MACOSX/._base.apk': b'finder'})))
+    def test_links_limits_bad_zip_and_mixed_selection_are_refused(self):
+        source = self.bundle({'base.apk': self.apk.read_bytes()})
+        link = zipfile.ZipInfo('link.apk')
+        link.external_attr = (stat.S_IFLNK | 0o777) << 16
+        with zipfile.ZipFile(source, 'a') as archive:
+            archive.writestr(link, 'somewhere')
+        destination = self.root / 'extract'
+        destination.mkdir()
+        with self.assertRaisesRegex(backup.android.FrameError, 'links'):
+            backup.unpack_bundle(source, destination)
+        self.assertEqual(list(destination.iterdir()), [])
+        source = self.bundle()
+        for limit, value, message in [('MAX_FILES', 1, 'too many'), ('MAX_BYTES', 1, 'size limit')]:
+            with patch.object(backup, limit, value):
+                with self.assertRaisesRegex(backup.android.FrameError, message):
+                    backup.unpack_bundle(source, destination)
+        with patch.object(backup.shutil, 'disk_usage', return_value=type('Disk', (), {'free': 0})()):
+            with self.assertRaisesRegex(backup.android.FrameError, 'staging space'):
+                backup.unpack_bundle(source, destination)
+        with self.assertRaisesRegex(server.Failure, 'one complete'):
+            server.android_backup({'action': 'inspect', 'paths': [str(source), str(self.apk)]})
+        source.write_bytes(b'not a zip')
+        with self.assertRaisesRegex(server.Failure, 'Could not read'):
+            server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+        self.assertFalse(server._android_backups)
 
-    def test_ignored_metadata_still_obeys_archive_safety_and_budget(self):
-        for name in ('__MACOSX/../escape.apk', '__MACOSX/CON', 'Game/../.DS_Store', 'Game/../._base.apk'):
-            with self.subTest(name=name), self.assertRaises(imports.android.FrameError):
-                self.prepare([self.bundle('bad.zip', {'base.apk': apk_bytes(), name: b'x'})])
-        buf = io.BytesIO()
-        with zipfile.ZipFile(buf, 'w') as archive:
-            archive.writestr('base.apk', apk_bytes())
-            member = zipfile.ZipInfo('__MACOSX/._base.apk')
-            member.external_attr = 0o120777 << 16
-            archive.writestr(member, b'/etc/passwd')
-        with self.assertRaises(imports.android.FrameError):
-            self.prepare([self.file('link.zip', buf.getvalue())])
-        path = self.bundle('large.zip', {'base.apk': apk_bytes(), '.DS_Store': b'x' * 4096})
-        with patch.object(imports, 'MAX_BYTES', 2048), self.assertRaises(imports.android.FrameError):
-            self.prepare([path])
-        path = self.bundle('large-sidecar.zip', {'base.apk': apk_bytes(), '._base.apk': b'x' * 4096})
-        with patch.object(imports, 'MAX_BYTES', 2048), self.assertRaises(imports.android.FrameError):
-            self.prepare([path])
+    def test_manifest_split_and_required_split_are_refused(self):
+        from test_quest import axml
+        for attrs in ({'split': 'config.arm64'}, {'split_required': True},
+                      {'split_required': True, 'resmap': True}):
+            data = axml(PKG, **attrs)
+            if attrs.get('resmap'):
+                # Strip the attribute name, retaining the Android resource ID.
+                data = data.replace('isSplitRequired'.encode('utf-16-le'),
+                                    ('x' * len('isSplitRequired')).encode('utf-16-le'))
+            self.apk.write_bytes(apk({'AndroidManifest.xml': data}))
+            with self.subTest(attrs=attrs):
+                message = 'exactly one base' if attrs.get('split') else 'needs split APKs'
+                with self.assertRaisesRegex(backup.android.FrameError, message):
+                    backup.inspect([str(self.apk)])
 
-    def test_apks_apkm_zip_and_loose_splits_use_manifest_not_filename_order(self):
-        for extension in ('apks', 'apkm', 'zip'):
-            with self.subTest(extension=extension):
-                path = self.bundle('game.' + extension, {
-                    'splits/aaa.apk': apk_bytes(split='config.arm64_v8a', version_code=7,
-                                                files={'lib/arm64-v8a/libgame.so': b'native'}),
-                    'splits/zzz.apk': apk_bytes(split_required=True, version_code=7), 'toc.pb': b'metadata'})
-                plan, = self.prepare([path])
-                self.assertEqual(plan['base'].name, 'zzz.apk')
-                self.assertEqual(len(plan['splits']), 1)
-        base = self.file('base.apk', apk_bytes(version_code=7))
-        split = self.file('split.apk', apk_bytes(split='assets', version_code=7, files={'assets/a': b'a'}))
-        plan, = self.prepare([split, base])
-        self.assertEqual(plan['base'], base)
+    def test_bundle_install_uses_existing_queue_and_cleans_after_failure(self):
+        source = self.bundle()
+        read = server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+        entry = server._android_backups[read['token']]
+        folders = list(entry['dirs'])
+        def job(label, work, **kwargs):
+            return work(lambda *args: None)
+        with patch.object(server, 'ensure_master'), patch.object(server, 'start_job', side_effect=job), \
+                patch.object(backup, 'install', side_effect=backup.android.FrameError('fixture install failure')) as install:
+            with self.assertRaisesRegex(backup.android.FrameError, 'fixture install failure'):
+                server.android_backup({'action': 'install', 'token': read['token']})
+        install.assert_called_once_with(entry['plan'], 'auto', unittest.mock.ANY)
+        self.assertFalse(server._android_backups)
+        self.assertTrue(all(not Path(p).exists() for p in folders))
+        self.assertTrue(source.exists())
 
-    def test_resource_code_and_mismatched_version_splits_fail_before_install(self):
-        base = self.file('base.apk', apk_bytes(version_code=7))
-        for version, files in ((8, {'assets/a': b'a'}), (7, {'classes.dex': b'code'}),
-                               (7, {'res/drawable/a.xml': b'resource'})):
-            with self.subTest(version=version, files=files):
-                split = self.file('split.apk', apk_bytes(split='config', version_code=version, files=files))
-                with self.assertRaises(imports.android.FrameError):
-                    self.prepare([base, split])
-
-    def test_missing_or_multiple_bases_and_mismatched_obb_are_refused(self):
-        for files in (
-            {'split.apk': apk_bytes(split='config', version_code=7)},
-            {'a.apk': apk_bytes(version_code=7), 'b.apk': apk_bytes(version_code=7)},
-            {'a.apk': apk_bytes(version_code=7), 'main.7.org.other.game.obb': b'assets'},
-        ):
-            with self.subTest(files=list(files)):
-                with self.assertRaises(imports.android.FrameError):
-                    self.prepare([self.bundle('bad.xapk', files)])
-
-    def test_traversal_duplicate_symlink_unknown_and_bomb_archives_are_refused(self):
-        for entry in ('../escape.apk', '/escape.apk', 'Android/../escape.apk', 'a\\b.apk', 'extra.pak',
-                      'CON.apk', 'Android/data/' + PKG + '/files/NUL'):
-            with self.subTest(entry=entry):
-                with self.assertRaises(imports.android.FrameError):
-                    self.prepare([self.bundle('bad.xapk', {'base.apk': apk_bytes(version_code=7), entry: b'x'})])
-        buf = io.BytesIO()
-        with zipfile.ZipFile(buf, 'w') as z:
-            member = zipfile.ZipInfo('base.apk')
-            member.create_system = 3
-            member.external_attr = 0o120777 << 16
-            z.writestr(member, b'/etc/passwd')
-        with self.assertRaises(imports.android.FrameError):
-            self.prepare([self.file('link.apks', buf.getvalue())])
-        for duplicate in ('base.apk', 'BASE.APK'):
-            with self.subTest(duplicate=duplicate):
-                buf = io.BytesIO()
-                with zipfile.ZipFile(buf, 'w') as z:
-                    z.writestr('base.apk', apk_bytes(version_code=7))
-                    # Avoid zipfile's duplicate-name warning while testing exact duplicates too.
-                    import warnings
-                    with warnings.catch_warnings():
-                        warnings.simplefilter('ignore', UserWarning)
-                        z.writestr(duplicate, apk_bytes(version_code=7))
-                with self.assertRaisesRegex(imports.android.FrameError, 'duplicate paths'):
-                    self.prepare([self.file('duplicate.apkm', buf.getvalue())])
-        with patch.object(imports, 'MAX_BYTES', 16):
-            with self.assertRaises(imports.android.FrameError):
-                self.prepare([self.bundle('big.xapk', {'base.apk': b'x' * 100})])
-
-    def test_loose_obb_is_associated_by_package_and_plain_pc_zip_is_not_android(self):
-        name = 'main.7.' + PKG + '.obb'
-        plan, = self.prepare([self.file(name, b'assets')])
-        self.assertIsNone(plan['base'])
-        self.assertEqual(plan['package'], PKG)
-        self.assertFalse(imports.is_bundle(self.bundle('pc.zip', {'game.exe': b'MZ'})))
-        self.assertFalse(imports.is_bundle(self.bundle('mixed.zip', {'game.exe': b'MZ', 'android.apk': apk_bytes()})))
-        self.assertFalse(imports.is_bundle(self.bundle('linux.zip', {'game': b'\x7fELF binary', 'android.apk': apk_bytes()})))
-        self.assertTrue(imports.is_bundle(self.bundle('android.zip', {'base.apk': apk_bytes()})))
-        self.assertTrue(imports.is_bundle(self.bundle('data.zip', {'base.apk': apk_bytes(),
-            'Android/data/' + PKG + '/files/setup.sh': b'opaque game data'})))
-
-    def test_required_splits_and_wrong_abi_return_actionable_errors(self):
-        with self.assertRaisesRegex(imports.android.FrameError, 'requires splits'):
-            self.prepare([self.file('base.apk', apk_bytes(version_code=7, split_required=True))])
-        # Rebuild ZIP CRCs: only the binary manifest's attribute name is stripped.
-        with zipfile.ZipFile(io.BytesIO(apk_bytes(version_code=7, split_required=True, resmap=True))) as z:
-            manifest = z.read('AndroidManifest.xml').replace(
-                'isSplitRequired'.encode('utf-16-le'), ('x' * len('isSplitRequired')).encode('utf-16-le'))
-        with self.assertRaisesRegex(imports.android.FrameError, 'requires splits'):
-            self.prepare([self.file('shrunk.apk', self._manifest_apk(manifest))])
-        path = self.file('wrong.apk', apk_bytes(version_code=7, files={'lib/armeabi-v7a/libgame.so': b'arm32'}))
-        with self.assertRaises(imports.android.FrameError) as failure:
-            self.prepare([path])
-        self.assertEqual(failure.exception.apk['package'], PKG)
-        self.assertIn('no arm64-v8a build', failure.exception.apk['blocker'])
-
-    def test_refused_apks_keep_install_reporting(self):
-        unreadable = self.file('bad.apk', b'not an APK')
-        with patch.object(imports.android, '_after_install') as report:
-            with self.assertRaises(imports.android.FrameError):
-                self.prepare([unreadable])
-            self.assertIsNone(report.call_args.args[0])
-            self.assertIsInstance(report.call_args.args[2], imports.android.FrameError)
-        wrong = self.file('wrong.apk', apk_bytes(version_code=7, files={'lib/armeabi-v7a/lib.so': b'32bit'}))
-        with patch.object(imports.android, '_after_install') as report:
-            with self.assertRaises(imports.android.FrameError):
-                self.prepare([wrong])
-            self.assertEqual(report.call_args.args[0]['package'], PKG)
-            self.assertIn('no arm64-v8a build', str(report.call_args.args[2]))
-
-    def test_non_arm64_apk_error_matches_compatibility_report(self):
-        for abi in ('x86_64', 'x86', 'armeabi-v7a'):
-            with self.subTest(abi=abi):
-                wrong = self.file('wrong.apk', apk_bytes(version_code=7, files={'lib/' + abi + '/lib.so': b'native'}))
-                with patch.object(imports.android, '_after_install') as report:
-                    with self.assertRaises(imports.android.FrameError) as failed:
-                        self.prepare([wrong])
-                message = str(failed.exception)
-                self.assertIn('download the APK marked arm64-v8a', message)
-                self.assertNotIn('older Quest games', message)
-                self.assertEqual(str(report.call_args.args[2]), message)
-                self.assertEqual(failed.exception.apk['blocker'], message)
-
-    def test_single_apk_keeps_filename_and_can_replace_an_older_build(self):
-        path = self.file('Older Game.apk', apk_bytes(version_code=7))
-        meta = {'package': PKG, 'label': 'Game', 'version_code': 8, 'flatscreen': True}
-        with patch.object(imports.android, 'read_meta', return_value=meta), \
-                patch.object(imports.quest, '_running', return_value=False), \
-                patch.object(imports.android, 'install', return_value=meta) as install:
-            imports.import_files([path])
-            self.assertEqual(install.call_args.kwargs['source'], 'Older Game.apk')
-            bundle = self.bundle('older.zip', {'base.apk': apk_bytes(version_code=7),
-                                               'main.7.' + PKG + '.obb': b'assets'})
-            install.reset_mock()
-            with self.assertRaisesRegex(imports.android.FrameError, 'older or unknown'):
-                imports.import_files([bundle])
-            install.assert_not_called()
-
-    def _manifest_apk(self, manifest):
-        buf = io.BytesIO()
-        with zipfile.ZipFile(buf, 'w') as archive:
-            archive.writestr('AndroidManifest.xml', manifest)
-        return buf.getvalue()
-
-    def test_asset_apk_in_android_data_is_copied_as_data_not_installed(self):
-        path = self.bundle('game.xapk', {'base.apk': apk_bytes(version_code=7),
-            'Android/data/' + PKG + '/files/extension.apk': b'opaque game data'})
-        plan, = self.prepare([path])
-        self.assertEqual((plan['data'] / 'files/extension.apk').read_bytes(), b'opaque game data')
-        self.assertFalse(plan['splits'])
-
-    def test_archive_import_reaches_real_split_merge_and_signer(self):
-        path = self.bundle('game.apks', {
-            'base.apk': apk_bytes(version_code=7, split_required=True),
-            'config.apk': apk_bytes(split='config.arm64', version_code=7,
-                                    files={'lib/arm64-v8a/libgame.so': b'arm64 payload'})})
-        def installed(apk, info, package, flatscreen, name, source, artwork):
-            with zipfile.ZipFile(apk) as merged:
-                self.assertEqual(merged.read('lib/arm64-v8a/libgame.so'), b'arm64 payload')
-                self.assertIn(b'APK Sig Block 42', Path(apk).read_bytes())
-            return {'package': package, 'label': 'Game', 'version_code': 7, 'flatscreen': True}
-        with patch.object(imports.quest, '_running', return_value=False), \
-                patch.object(imports.android, 'read_meta', return_value=None), \
-                patch.object(imports.android, '_install', side_effect=installed) as install, \
-                patch.object(imports.android, '_after_install'):
-            result = imports.import_files([path])
-            self.assertFalse(result['needs_game_data'])
-            install.assert_called_once()
-
-    def test_two_step_bundle_import_reuses_existing_installer_and_data_copy(self):
-        path = self.bundle('game.xapk', {'base.apk': apk_bytes(version_code=7),
-                                       'main.7.' + PKG + '.obb': b'assets'})
-        meta = {'package': PKG, 'label': 'Game', 'version': '7', 'version_code': 7,
-                'instance': imports.android.instance_id(PKG), 'flatscreen': False}
-        with patch.object(imports.quest, '_running', return_value=False), \
-                patch.object(imports.android, 'read_meta', return_value=None), \
-                patch.object(imports.android, 'install', return_value=meta) as install, \
-                patch.object(imports.quest, 'add_game_data') as copy:
-            result = imports.import_files([path], display='vr')
-            self.assertTrue(result['needs_game_data'])
-            self.assertIn('drop', result['message'])
-            self.assertFalse(install.call_args.kwargs['flatscreen'])
-            copy.assert_not_called()
-        with patch.object(imports.quest, '_running', return_value=True), \
-                patch.object(imports.android, 'read_meta', return_value=meta), \
-                patch.object(imports.android, 'install') as install, \
-                patch.object(imports.quest, 'add_game_data', return_value={
-                    'message': 'Added data; game closed', 'app': meta}) as copy:
-            result = imports.import_files([path])
-            self.assertFalse(result['needs_game_data'])
-            self.assertEqual(copy.call_args.args[0], PKG)
-            self.assertEqual(copy.call_args.kwargs['source'], 'your files')
-            install.assert_not_called()
-
-    def test_data_only_requires_existing_install_and_mismatch_never_writes(self):
-        path = self.file('main.7.' + PKG + '.obb', b'assets')
-        with patch.object(imports.android, 'read_meta', return_value=None), \
-                patch.object(imports.android, 'install') as install:
-            with self.assertRaisesRegex(imports.android.FrameError, 'APK first'):
-                imports.import_files([path])
-            install.assert_not_called()
-        path = self.bundle('game.xapk', {'base.apk': apk_bytes(version_code=7),
-                                       'main.7.' + PKG + '.obb': b'assets'})
-        meta = {'package': PKG, 'label': 'Game', 'version_code': 8, 'instance': imports.android.instance_id(PKG)}
-        with patch.object(imports.android, 'read_meta', return_value=meta), \
-                patch.object(imports.quest, '_running', return_value=True), \
-                patch.object(imports.quest, 'add_game_data') as copy:
-            with self.assertRaises(imports.android.FrameError):
-                imports.import_files([path])
-            copy.assert_not_called()
+    @unittest.skipUnless(shutil.which('node'), 'needs node')
+    def test_actual_send_handler_routes_bundle_to_importer_and_pc_zip_to_titles(self):
+        page = (Path(__file__).resolve().parents[1] / 'ui/index.html').read_text(encoding='utf-8')
+        function = page[page.index('async function sendFilesOne('):page.index('$("androidBackupChoose").onclick')]
+        script = r"""
+const calls = [];
+global.window = {connDevice:'fixture'};
+global.$ = () => ({});
+global.refresh = () => {};
+global.toast = msg => {throw new Error(msg)};
+global.TITLE_EXT = /\.(zip|exe)$/i;
+global.importAndroidFiles = async files => calls.push(['android', files.map(f => f.name)]);
+global.sideload = async file => calls.push(['title', file.name]);
+global.act = () => {throw new Error('unexpected copy')};
+(async () => {
+  for (const name of ['game.xapk', 'game.apks', 'game.apkm', 'pc.zip']) {
+    await sendFilesOne([{name, size:123}], new Set(), 'fixture');
+  }
+  await sendFilesOne([{name:'base.apk',size:123},{name:'split.apk',size:123}], new Set(), 'fixture');
+  process.stdout.write(JSON.stringify(calls));
+})().catch(e => {console.error(e); process.exitCode = 1});
+"""
+        result = subprocess.run(['node', '-e', function + script], capture_output=True, text=True, check=True)
+        self.assertEqual(json.loads(result.stdout), [
+            ['android', ['game.xapk']], ['android', ['game.apks']],
+            ['android', ['game.apkm']], ['title', 'pc.zip'],
+            ['android', ['base.apk', 'split.apk']]])
 
 
-class StagedImports(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.addCleanup(server._purge_android_uploads, float('inf'))
-        self.master = patch.object(server, 'ensure_master').start()
-        self.link = patch.object(server, 'LINK', None).start()
-        self.addCleanup(patch.stopall)
-
-    def stage(self, name='base.apk'):
-        directory = Path(tempfile.mkdtemp(dir=self.tmp.name))
-        path = directory / name
-        path.write_bytes(apk_bytes(version_code=7))
-        return server.stage_android_file(path, str(directory)), directory
-
-    def test_one_use_tokens_pass_all_files_to_queued_import_and_clean_up(self):
-        a, da = self.stage()
-        b, db = self.stage('split.apk')
-        with patch.object(imports, 'import_files', return_value={'message': 'ok'}) as run:
-            job = server.android_import({'action': 'import', 'tokens': [a['token'], b['token']], 'display': 'flat'})
-            self.assertEqual(wait(job['job'])['message'], 'ok')
-            self.assertEqual(len(run.call_args.args[0]), 2)
-            self.assertEqual(run.call_args.kwargs['display'], 'flat')
-        # Queue completion publishes just before its cleanup callback.
-        import time
-        for _ in range(100):
-            if not da.exists() and not db.exists():
-                break
-            time.sleep(.01)
-        self.assertFalse(da.exists() or db.exists())
-        with self.assertRaisesRegex(server.Failure, 'already used'):
-            server.android_import({'action': 'import', 'tokens': [a['token']]})
-
-    def test_remove_queued_import_cleans_its_uploads(self):
-        release, started = threading.Event(), threading.Event()
-        first = server.queue_job('Block', lambda: (started.set(), release.wait(5), {'message': 'ok'})[-1])
-        self.addCleanup(release.set)
-        self.assertTrue(started.wait(5))
-        staged, directory = self.stage()
-        job = server.android_import({'action': 'import', 'tokens': [staged['token']]})
-        server.queue_action({'action': 'remove', 'job': job['job']})
-        self.assertFalse(directory.exists())
-        release.set()
-        wait(first['job'])
-
-    def test_headset_switch_and_bad_token_list_never_queue_an_import(self):
-        selected = ['frame-a']
-        with patch.object(server, 'LINK', SimpleNamespace(active_device=lambda: {'id': selected[0]})):
-            staged, directory = self.stage()
-            selected[0] = 'frame-b'
-            with self.assertRaises(server.Failure) as error:
-                server.android_import({'action': 'import', 'tokens': [staged['token']]})
-            self.assertEqual(error.exception.status, 409)
-            self.assertTrue(directory.exists())
-            server.android_import({'action': 'discard', 'tokens': [staged['token']]})
-            self.assertFalse(directory.exists())
-            selected[0] = 'frame-a'
-            staged, directory = self.stage()
-            with self.assertRaises(server.Failure):
-                server.android_import({'action': 'import', 'tokens': [staged['token'], staged['token']]})
-            server.android_import({'action': 'discard', 'tokens': [staged['token']]})
-            self.assertFalse(directory.exists())
-
-    def test_zip_detection_routes_android_bundles_and_preserves_local_original(self):
-        path = Path(self.tmp.name) / 'game.zip'
-        with zipfile.ZipFile(path, 'w') as archive:
-            archive.writestr('base.apk', apk_bytes(version_code=7))
-        staged = server.stage_title(str(path))
-        self.assertTrue(staged['android'])
-        server.android_import({'action': 'discard', 'tokens': [staged['token']]})
-        self.assertTrue(path.is_file())
-
-    def test_expired_uploads_are_deleted(self):
-        staged, directory = self.stage()
-        server._purge_android_uploads(float('inf'))
-        self.assertFalse(directory.exists())
-        with self.assertRaisesRegex(server.Failure, 'expired'):
-            server.android_import({'action': 'import', 'tokens': [staged['token']]})
+if __name__ == '__main__':
+    unittest.main()

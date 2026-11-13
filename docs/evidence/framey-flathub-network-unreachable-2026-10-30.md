@@ -1,0 +1,9 @@
+# Bounded recovery from an unreachable public package route
+
+PR #497 [job 124341200691](https://github.com/saphid/frame-control/actions/runs/41136819192/job/124341200691) failed while fetching a pinned Flathub object: `URLError(OSError(101, "Network is unreachable"))`. Its retained failed artifact and actual checkout were independently audited, including 126 source hashes. Signatures and runtime steps were skipped. This is a failed download gate, with no package-runtime result.
+
+The existing fetcher retries timeouts, connection failures and selected transient HTTP statuses up to three times. `ENETUNREACH` is an `OSError` outside those connection subclasses, so the observed error fails on attempt one. Add only that errno to the existing transient classification. The 45-second request timeout, three-attempt cap and one/two-second delays stay the same. TLS validation, byte/closure limits, pinned object hashes and offline signature/content gates remain intact.
+
+The new recovery and exhaustion tests reproduce the old failure before the code change. Afterward, all 49 Flatpak transport/preparation/package/cleanup checks pass under system Python with GI, with zero skips. The actual download helper recovers unchanged payload bytes after one unreachable response, preserves the request deadline, and still fails after three unreachable responses. Permission, certificate, missing-object and oversized-content failures remain terminal. The [audit](framey-flathub-network-unreachable-2026-10-30.json) binds code/test and red/green log hashes. No live network request or hardware operation was used by these tests.
+
+This change does not establish that the upstream route has recovered or clear the original failed job. Fresh exact-head CI and all required signed-package/runtime gates must pass. Current main remains held on its own live package jobs. No compatibility, installer, release, real Frame, worn visibility or controller claim changes.

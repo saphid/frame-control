@@ -1,0 +1,605 @@
+--- a/backend/decky-syncthing-watchdog/src/main.rs
++++ b/backend/decky-syncthing-watchdog/src/main.rs
+@@ -3,6 +3,7 @@
+ mod panic_util;
+ mod proxy;
+ mod service;
++mod owned_unit;
+ mod settings;
+ mod util;
+ mod watch_gamescope;
+@@ -27,16 +28,17 @@
+ use log4rs::encode::pattern::PatternEncoder;
+ use log4rs::filter::threshold::ThresholdFilter;
+ use std::convert::Infallible;
+-use std::env::args;
+-use std::fs::{read_to_string, write};
+-use std::net::IpAddr;
++use std::env::{args, var_os};
++use std::fs::{File, OpenOptions, write};
++use std::net::{IpAddr, Ipv4Addr};
+ use std::ops::Deref;
+ use std::path::{Path, PathBuf};
++use std::os::unix::fs::PermissionsExt;
+ use std::process;
+ use std::process::ExitCode;
+-use std::time::Duration;
+-use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt};
+-use tokio::time::sleep;
++use std::sync::Arc;
++use std::time::{Duration, Instant};
++use tokio::net::UnixListener;
+ 
+ const LOGFILE_WATCHDOG_ROLLING: &str = "watchdog.{}.log";
+ const LOGFILE_WATCHDOG: &str = "watchdog.log";
+@@ -49,18 +51,57 @@
+     let watchdog_pid_path = PathBuf::from(args_iter.next().unwrap());
+     let watchdog_log_dir_path = PathBuf::from(args_iter.next().unwrap());
+ 
+-    if other_process_already_running(&watchdog_pid_path) {
+-        debug!("other watchdog was already running. Not starting.");
+-        return ExitCode::SUCCESS;
+-    }
+-
++    if let Err(err) = bind_owner_lifetime() {
++        eprintln!("Watchdog parent unavailable: {err}");
++        return ExitCode::FAILURE;
++    }
++    // Hold the same inode for the whole process lifetime. Never discover or
++    // signal another process using a stale PID or an executable-name match.
++    let _ownership = match acquire_ownership(&watchdog_pid_path) {
++        Ok(file) => file,
++        Err(err) => {
++            eprintln!("Watchdog ownership unavailable: {err}");
++            return ExitCode::FAILURE;
++        }
++    };
++    // Reserve the listener before touching the PID, settings, logs or systemd.
++    // An unrelated listener must survive and no configured service may change.
++    // This fixed port is inside Linux's usual ephemeral client range. A
++    // recently closed outbound client can prevent binding for about a minute.
++    // Wait only for unambiguous TIME_WAIT rows; never attach to another owner
++    // or change settings/services while the listener remains unavailable.
++    let bind_started = Instant::now();
++    let mut waiting_reported = false;
++    let listener = loop {
++        match Server::try_bind(&BIND_ADDR.parse().unwrap()) {
++            Ok(listener) => break listener,
++            Err(err) => {
++                let transient = match (std::fs::read_to_string("/proc/net/tcp"),
++                                       std::fs::read_to_string("/proc/net/tcp6")) {
++                    (Ok(tcp), Ok(tcp6)) => only_loopback_time_wait(&tcp, &tcp6),
++                    _ => false,
++                };
++                if address_in_use(&err) && transient && bind_started.elapsed() < Duration::from_secs(70) {
++                    if !waiting_reported {
++                        eprintln!("Watchdog waiting for loopback TCP TIME_WAIT on {BIND_ADDR} (at most 70s)");
++                        waiting_reported = true;
++                    }
++                    tokio::time::sleep(Duration::from_millis(250)).await;
++                    continue;
++                }
++                eprintln!("Watchdog listener unavailable: {err}");
++                return ExitCode::FAILURE;
++            }
++        }
++    };
++    let private_listener = match owned_listener() {
++        Ok(listener) => listener,
++        Err(err) => {
++            eprintln!("Watchdog private listener unavailable: {err}");
++            return ExitCode::FAILURE;
++        }
++    };
+     update_pid_file(&watchdog_pid_path);
+-    // To avoid race conditions on start, we check again.
+-    sleep(Duration::from_millis(150)).await;
+-    if other_process_already_running(&watchdog_pid_path) {
+-        debug!("other watchdog was already running. Not starting.");
+-        return ExitCode::SUCCESS;
+-    }
+ 
+     setup_self_logging(&watchdog_log_dir_path);
+     register_panic_hook(&watchdog_log_dir_path);
+@@ -84,13 +125,123 @@
+         }
+     });
+ 
+-    let server = Server::bind(&BIND_ADDR.parse().unwrap()).serve(make_svc);
++    let server = listener.serve(make_svc);
+     let watcher = gamescope_watchdog.background_watch();
+ 
+-    let (r1, r2) = tokio::join!(server, watcher);
+-
+-    error!("server exited with: {r1:?} & {r2:?}");
++    let private_server = serve_owned(private_listener, settings.clone());
++    let (r1, r2, r3) = tokio::join!(server, watcher, private_server);
++
++    error!("server exited with: {r1:?} & {r2:?} & {r3:?}");
+     ExitCode::FAILURE
++}
++
++// Parse only the read-only kernel socket tables. Unknown data fails closed.
++// Any IPv6 use of this port is ambiguous (a dual-stack listener may own IPv4).
++fn conflicting_states(table: &str, ipv6: bool) -> Option<Vec<&str>> {
++    let mut lines = table.lines();
++    if !lines.next()?.split_whitespace().any(|field| field == "local_address") {
++        return None;
++    }
++    let mut states = Vec::new();
++    for row in lines {
++        let fields: Vec<_> = row.split_whitespace().collect();
++        if fields.len() < 4 { return None; }
++        let (address, port) = fields[1].split_once(':')?;
++        let port = u16::from_str_radix(port, 16).ok()?;
++        if address.len() != (if ipv6 { 32 } else { 8 }) || u128::from_str_radix(address, 16).is_err() {
++            return None;
++        }
++        if port == 58384 && (ipv6 || address == "0100007F" || address == "00000000") {
++            states.push(fields[3]);
++        }
++    }
++    Some(states)
++}
++
++fn only_loopback_time_wait(tcp: &str, tcp6: &str) -> bool {
++    match (conflicting_states(tcp, false), conflicting_states(tcp6, true)) {
++        (Some(states), Some(v6)) => !states.is_empty() && v6.is_empty()
++            && states.iter().all(|state| *state == "06"),
++        _ => false,
++    }
++}
++
++fn address_in_use(error: &(dyn std::error::Error + 'static)) -> bool {
++    if let Some(error) = error.downcast_ref::<std::io::Error>() {
++        return error.kind() == std::io::ErrorKind::AddrInUse;
++    }
++    error.source().is_some_and(address_in_use)
++}
++
++#[cfg(test)]
++mod listener_retry_tests {
++    use super::*;
++    const HEADER: &str = "  sl  local_address rem_address st\n";
++    fn row(address: &str, port: &str, state: &str) -> String {
++        format!("0: {address}:{port} 0100007F:8000 {state} 0 0\n")
++    }
++    #[test]
++    fn closed_client_can_retry_but_unrelated_ports_do_not_count() {
++        let tcp = format!("{HEADER}{}{}", row("0100007F", "E410", "06"), row("0100007F", "0539", "0A"));
++        assert!(only_loopback_time_wait(&tcp, HEADER));
++        assert!(!only_loopback_time_wait(HEADER, HEADER));
++        assert!(!only_loopback_time_wait(&format!("{HEADER}{}", row("0100007F", "0539", "06")), HEADER));
++    }
++    #[test]
++    fn listeners_and_live_clients_are_refused_even_with_time_wait() {
++        for address in ["0100007F", "00000000"] {
++            for state in ["01", "02", "08", "0A", "unknown"] {
++                let tcp = format!("{HEADER}{}{}", row("0100007F", "E410", "06"), row(address, "E410", state));
++                assert!(!only_loopback_time_wait(&tcp, HEADER));
++            }
++        }
++    }
++    #[test]
++    fn ipv6_port_ownership_is_never_assumed_safe() {
++        let tcp = format!("{HEADER}{}", row("0100007F", "E410", "06"));
++        for state in ["01", "06", "0A"] {
++            let tcp6 = format!("{HEADER}{}", row("00000000000000000000000000000000", "E410", state));
++            assert!(!only_loopback_time_wait(&tcp, &tcp6));
++        }
++    }
++    #[test]
++    fn malformed_or_missing_tables_never_authorize_retry() {
++        let tcp = format!("{HEADER}{}", row("0100007F", "E410", "06"));
++        for bad in ["", "not a socket table", "local_address\ntruncated", "local_address\n0: no:port x 06", "local_address\n0: XXXXXXXX:E410 x 06"] {
++            assert!(!only_loopback_time_wait(bad, HEADER));
++            assert!(!only_loopback_time_wait(&tcp, bad));
++        }
++    }
++    #[test]
++    fn only_address_in_use_errors_can_retry() {
++        use std::io::{Error, ErrorKind};
++        assert!(address_in_use(&Error::from(ErrorKind::AddrInUse)));
++        for kind in [ErrorKind::PermissionDenied, ErrorKind::AddrNotAvailable, ErrorKind::ConnectionRefused] {
++            assert!(!address_in_use(&Error::from(kind)));
++        }
++    }
++}
++
++fn owned_listener() -> std::io::Result<UnixListener> {
++    let path = var_os("FRAMEY_SYNCTHING_SOCKET")
++        .map(PathBuf::from)
++        .ok_or_else(|| std::io::Error::other("Owned socket path is required"))?;
++    let listener = UnixListener::bind(&path)?;
++    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
++    Ok(listener)
++}
++
++async fn serve_owned(listener: UnixListener, settings: Arc<SettingsProvider>) -> std::io::Result<()> {
++    loop {
++        let (stream, _) = listener.accept().await?;
++        let settings = settings.clone();
++        tokio::spawn(async move {
++            let service = service_fn(move |req| handle(Ipv4Addr::LOCALHOST.into(), req, settings.clone()));
++            if let Err(err) = hyper::server::conn::Http::new().serve_connection(stream, service).await {
++                warn!("Owned HTTP connection failed: {err}");
++            }
++        });
++    }
+ }
+ 
+ async fn handle<S>(
+@@ -121,35 +272,56 @@
+     write(pid_file_path, process::id().to_string()).unwrap();
+ }
+ 
+-fn other_process_already_running(pid_file_path: &Path) -> bool {
+-    if pid_file_path.exists() {
+-        let pid_in_file = read_to_string(pid_file_path)
+-            .unwrap()
+-            .trim()
+-            .parse::<u32>()
+-            .unwrap_or_default();
+-        if process::id() == pid_in_file {
+-            // If we are ourselves in the PID file, then we continue as if no other instance
+-            // was running.
+-            return false;
+-        }
+-        let mut system = System::new();
+-        let pid_in_file_as_pid = Pid::from_u32(pid_in_file);
+-
+-        GamescopeWatchdog::does_process_exist_and_match_cond(
+-            &mut system,
+-            pid_in_file_as_pid,
+-            |proc| {
+-                // we check if the process matches the binary name, it could be it's just another
+-                // unrelated process after restart.
+-                proc.exe()
+-                    .to_string_lossy()
+-                    .contains(env!("CARGO_BIN_NAME"))
+-            },
+-        )
+-        .is_some()
+-    } else {
+-        false
++// Linux PR_SET_PDEATHSIG binds this helper to the spawning plugin thread.
++// Decky's five-second SIGKILL fallback cannot run Python's _unload callback.
++// This is a lifetime guard for our child, not PID-file/name-based discovery.
++unsafe extern "C" {
++    fn prctl(option: std::ffi::c_int, ...) -> std::ffi::c_int;
++    fn getppid() -> std::ffi::c_int;
++}
++
++fn bind_owner_lifetime() -> std::io::Result<()> {
++    use std::io::{Error, ErrorKind};
++    let parent = match std::env::var("FRAMEY_SYNCTHING_OWNER_PID") {
++        Ok(value) => value.parse::<i32>()
++            .map_err(|_| Error::new(ErrorKind::InvalidInput, "Invalid owning plugin PID"))?,
++        Err(std::env::VarError::NotPresent) => unsafe { getppid() },
++        Err(error) => return Err(Error::new(ErrorKind::InvalidInput, error)),
++    };
++    if parent <= 1 {
++        return Err(Error::other("Owning plugin is unavailable"));
++    }
++    // PR_SET_PDEATHSIG=1, SIGKILL=9 are Linux ABI constants on both targets.
++    if unsafe { prctl(1, 9 as std::ffi::c_ulong, 0 as std::ffi::c_ulong,
++                     0 as std::ffi::c_ulong, 0 as std::ffi::c_ulong) } != 0 {
++        return Err(Error::last_os_error());
++    }
++    // The expected PID comes from Python before fork/exec: a subreaper must
++    // not become our apparent owner if the plugin died before this guard ran.
++    if unsafe { getppid() } != parent {
++        return Err(Error::other("Owning plugin exited before helper startup"));
++    }
++    Ok(())
++}
++
++fn acquire_ownership(pid_file_path: &Path) -> Result<File, Box<dyn std::error::Error>> {
++    let file = OpenOptions::new()
++        .read(true)
++        .write(true)
++        .create(true)
++        .truncate(false)
++        .open(pid_file_path.with_extension("framey-lock"))?;
++    // A killed predecessor receives its parent-death signal asynchronously.
++    // Allow a bounded handoff, but never bypass another owner's lock.
++    let deadline = Instant::now() + Duration::from_millis(500);
++    loop {
++        match file.try_lock() {
++            Ok(()) => return Ok(file),
++            Err(std::fs::TryLockError::WouldBlock) if Instant::now() < deadline => {
++                std::thread::sleep(Duration::from_millis(25));
++            }
++            Err(error) => return Err(error.into()),
++        }
+     }
+ }
+ 
+--- a/backend/decky-syncthing-watchdog/src/lib.rs
++++ b/backend/decky-syncthing-watchdog/src/lib.rs
+@@ -6,6 +6,7 @@
+ mod panic_util;
+ mod proxy;
+ pub mod service;
++mod owned_unit;
+ mod settings;
+ mod util;
+ mod watch_gamescope;
+--- a/backend/decky-syncthing-watchdog/src/service.rs
++++ b/backend/decky-syncthing-watchdog/src/service.rs
+@@ -2,6 +2,7 @@
+ //! If in Flatpak mode: Installs a custom service and controls it.
+ //! If not in Flatpak mode: Uninstalls it (if exists) and controls the configured service.
+ 
++use crate::owned_unit::{self, OwnedUnit};
+ use crate::settings::{Autostart, Mode, Settings};
+ use homedir::my_home;
+ use log::{debug, info, warn};
+@@ -9,7 +10,6 @@
+ use std::path::PathBuf;
+ use std::sync::LazyLock;
+ use std::time::Duration;
+-use tokio::fs;
+ use tokio::sync::Mutex;
+ use tokio::time::Instant;
+ use which::which;
+@@ -19,12 +19,26 @@
+ 
+ static LAST_START: LazyLock<Mutex<Option<Instant>>> = LazyLock::new(Default::default);
+ static WHICH_FLATPAK: LazyLock<Result<PathBuf, which::Error>> = LazyLock::new(|| which("flatpak"));
+-static SERVICE_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
+-    my_home()
+-        .transpose()
+-        .and_then(|x| x.ok())
+-        .map(|h| h.join(".config").join("systemd").join("user"))
+-});
++fn managed_unit() -> io::Result<OwnedUnit> {
++    let home = my_home().map_err(io::Error::other)?.ok_or_else(|| io::Error::other("home dir not found"))?;
++    OwnedUnit::open(&home)
++}
++
++fn control_guard(service_type: &ServiceType<'_>) -> io::Result<Option<OwnedUnit>> {
++    match service_type {
++        ServiceType::Managed => {
++            let owned = managed_unit()?;
++            owned.require()?;
++            Ok(Some(owned))
++        }
++        ServiceType::External { name, .. } => {
++            if name.trim_end_matches(".service") == owned_unit::UNIT {
++                return Err(io::Error::other("Reserved managed unit cannot be selected as external"));
++            }
++            Ok(None)
++        }
++    }
++}
+ 
+ pub type ServiceError = anyhow::Error;
+ 
+@@ -34,7 +48,7 @@
+ }
+ 
+ impl<'a> ServiceType<'a> {
+-    const MANAGED_SERVICE_NAME: &'static str = "decky-syncthing";
++    const MANAGED_SERVICE_NAME: &'static str = owned_unit::UNIT;
+ 
+     fn get_for(settings: &'a Settings) -> Self {
+         match settings.mode {
+@@ -66,18 +80,28 @@
+     debug!("Init service");
+     let service_type = ServiceType::get_for(settings);
+     let managed_service_name = ServiceType::Managed.systemd_unit().0;
++    // Preflight and hold ownership before opening DBus or performing an action.
++    // The legacy decky-syncthing unit is never adopted, disabled or removed.
++    let owned = managed_unit()?;
++    let contents = if matches!(service_type, ServiceType::Managed) {
++        let executable = WHICH_FLATPAK.as_ref().map_err(|e| io::Error::other(*e))?;
++        Some(owned_unit::render(executable.to_str().ok_or_else(|| io::Error::other("Non-UTF8 flatpak path"))?,
++                               &settings.flatpak_name, &settings.flatpak_binary)?)
++    } else {
++        control_guard(&service_type)?;
++        None
++    };
+     let systemctl_user = Systemctl::new(SessionType::Session).await?;
++    if matches!(service_type, ServiceType::Managed) {
++        systemctl_user.verify_managed(&owned, !owned.exists()?).await?;
++    }
+     match &service_type {
+         ServiceType::Managed => {
+             // Create/Update the managed service.
+             debug!("Create managed service service");
+-            create_managed_service(
+-                managed_service_name,
+-                &settings.flatpak_name,
+-                &settings.flatpak_binary,
+-            )
+-            .await?;
++            owned.write(contents.as_ref().unwrap())?;
+             systemctl_user.daemon_reload().await?;
++            systemctl_user.verify_managed(&owned, false).await?;
+             // Enable or disable the managed service based on autostart settings.
+             match settings.autostart {
+                 Autostart::Boot => {
+@@ -90,17 +114,20 @@
+                     systemctl_user.disable(managed_service_name).await?;
+                 }
+             }
++            // Enable/disable changes our install links and can mark the unit
++            // stale. Finish our own change before the next identity check.
++            systemctl_user.daemon_reload().await?;
++            systemctl_user.verify_managed(&owned, false).await?;
+         }
+         ServiceType::External { name, user_service } => {
+             // Disable & delete the managed service.
+-            if service_exists_in_config(managed_service_name).await? {
+-                debug!("Disable and delete managed service");
+-                systemctl_user.disable(managed_service_name).await.ok();
+-
+-                let r = delete_managed_service(managed_service_name).await;
+-                if r.is_ok() {
+-                    systemctl_user.daemon_reload().await.ok();
+-                }
++            if owned.exists()? {
++                owned.require()?;
++                systemctl_user.verify_managed(&owned, false).await?;
++                systemctl_user.stop(managed_service_name).await?;
++                systemctl_user.disable(managed_service_name).await?;
++                owned.remove()?;
++                systemctl_user.daemon_reload().await?;
+             }
+             // Enable or disable the external service based on autostart settings.
+             let systemctl_client = match *user_service {
+@@ -134,12 +161,16 @@
+ pub async fn get_state(settings: &Settings) -> Result<SyncthingState, ServiceError> {
+     debug!("get_state");
+     let service_type = ServiceType::get_for(settings);
++    let _ownership = control_guard(&service_type)?;
+     let (service_name, is_user_service) = service_type.systemd_unit();
+     let systemctl_client = match is_user_service {
+         true => Systemctl::new(SessionType::Session),
+         false => Systemctl::new(SessionType::System),
+     }
+     .await?;
++    if let Some(owned) = _ownership.as_ref() {
++        systemctl_client.verify_managed(owned, false).await?;
++    }
+     systemctl_client.state(service_name).await
+ }
+ 
+@@ -150,12 +181,16 @@
+     }
+     debug!("start_service");
+     let service_type = ServiceType::get_for(settings);
++    let _ownership = control_guard(&service_type)?;
+     let (service_name, is_user_service) = service_type.systemd_unit();
+     let systemctl_client = match is_user_service {
+         true => Systemctl::new(SessionType::Session),
+         false => Systemctl::new(SessionType::System),
+     }
+     .await?;
++    if let Some(owned) = _ownership.as_ref() {
++        systemctl_client.verify_managed(owned, false).await?;
++    }
+     let r = systemctl_client.start(service_name).await;
+     if r.is_ok() {
+         *LAST_START.lock().await = Some(Instant::now());
+@@ -170,12 +205,16 @@
+     }
+     debug!("stop_service");
+     let service_type = ServiceType::get_for(settings);
++    let _ownership = control_guard(&service_type)?;
+     let (service_name, is_user_service) = service_type.systemd_unit();
+     let systemctl_client = match is_user_service {
+         true => Systemctl::new(SessionType::Session),
+         false => Systemctl::new(SessionType::System),
+     }
+     .await?;
++    if let Some(owned) = _ownership.as_ref() {
++        systemctl_client.verify_managed(owned, false).await?;
++    }
+     systemctl_client.stop(service_name).await
+ }
+ 
+@@ -186,53 +225,6 @@
+         None => Duration::from_secs(999),
+         Some(last_update) => Instant::now().duration_since(*last_update),
+     }
+-}
+-
+-fn service_path(unit: &str) -> Result<PathBuf, io::Error> {
+-    SERVICE_DIR
+-        .as_ref()
+-        .map(|x| x.join(format!("{unit}.service")))
+-        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "home dir not found"))
+-}
+-
+-async fn create_managed_service(
+-    unit: &str,
+-    flatpak: &str,
+-    flatpak_exec: &str,
+-) -> Result<(), io::Error> {
+-    let path = service_path(unit)?;
+-    fs::create_dir_all(path.parent().unwrap()).await?;
+-    let flatpak_cmd = WHICH_FLATPAK
+-        .as_ref()
+-        .map_err(|e| io::Error::other(*e))?
+-        .to_str()
+-        .unwrap();
+-    fs::write(
+-        path,
+-        format!(
+-            "[Unit]
+-Description=Decky managed Syncthing starter - Open Source Continuous File Synchronization
+-
+-[Service]
+-ExecStart={} run --die-with-parent --command={} {} --no-browser --no-restart
+-Restart=on-failure
+-SuccessExitStatus=3 4
+-RestartForceExitStatus=3 4
+-
+-[Install]
+-WantedBy=default.target",
+-            flatpak_cmd, flatpak_exec, flatpak
+-        ),
+-    )
+-    .await
+-}
+-
+-async fn delete_managed_service(unit: &str) -> Result<(), io::Error> {
+-    fs::remove_file(service_path(unit)?).await
+-}
+-
+-async fn service_exists_in_config(unit: &str) -> Result<bool, io::Error> {
+-    Ok(service_path(unit)?.exists())
+ }
+ 
+ pub mod systemctl {
+@@ -260,6 +252,31 @@
+             Ok(Self(conn, proxy))
+         }
+ 
++        /// Load the real manager's unit and reject aliases, shadow fragments,
++        /// drop-ins and stale definitions before any managed operation.
++        pub async fn verify_managed(&self, owned: &crate::owned_unit::OwnedUnit,
++                                    allow_absent: bool) -> anyhow::Result<()> {
++            let name = format!("{}.service", crate::owned_unit::UNIT);
++            let path = match self.1.load_unit(&name).await {
++                Ok(path) => path,
++                Err(zbus::Error::MethodError(error, _, _))
++                    if allow_absent && error.as_str() == "org.freedesktop.systemd1.NoSuchUnit" => return Ok(()),
++                Err(error) => return Err(error.into()),
++            };
++            let unit = UnitProxy::builder(&self.0).path(path)?
++                .cache_properties(zbus::proxy::CacheProperties::No).build().await?;
++            let loaded = crate::owned_unit::LoadedUnit {
++                id:unit.id().await?, fragment:unit.fragment_path().await?,
++                names:unit.names().await?, drop_ins:unit.drop_in_paths().await?,
++                load_state:unit.load_state().await?, needs_reload:unit.need_daemon_reload().await?,
++            };
++            if allow_absent && loaded.load_state == "not-found" && loaded.fragment.is_empty() &&
++                loaded.id == name && loaded.names == [name] && loaded.drop_ins.is_empty() {
++                return Ok(());
++            }
++            Ok(owned.verify_loaded(&loaded)?)
++        }
++
+         pub async fn daemon_reload(&self) -> anyhow::Result<()> {
+             debug!("systemd: reloading daemon");
+             Ok(self.1.reload().await?)
+@@ -313,11 +330,14 @@
+ 
+         pub async fn state(&self, unit: &str) -> anyhow::Result<State> {
+             debug!("systemd: getting state for {unit}");
++            // Inactive units can be collected after Stop. Load the definition
++            // for this read without starting it, instead of treating a missing
++            // in-memory object as a failed service.
+             let unit_result = if !unit.ends_with(".service") {
+                 let unit = format!("{unit}.service");
+-                self.1.get_unit(&unit).await
++                self.1.load_unit(&unit).await
+             } else {
+-                self.1.get_unit(unit).await
++                self.1.load_unit(unit).await
+             };
+ 
+             let Ok(path) = unit_result else {

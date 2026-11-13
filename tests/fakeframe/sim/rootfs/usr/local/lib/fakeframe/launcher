@@ -1,0 +1,11 @@
+#!/bin/sh
+# How the Frame simulator's fake Steam starts a game (fakesteam.py LAUNCHER): an
+# arm64 ELF on an x86-64 computer goes through qemu-user, the way the Frame runs
+# x86-64 programs through FEX; anything else runs as it is. Static programs only
+# (the smoke test's are): there are no arm64 libraries in the simulator.
+machine=$(od -An -tx1 -j18 -N2 "$1" 2>/dev/null | tr -d ' \n')
+if [ "$(head -c4 "$1" 2>/dev/null | od -An -c | tr -d ' \n')" = '177ELF' ] &&
+   [ "$machine" = b700 ] && [ "$(uname -m)" = x86_64 ]; then
+  exec qemu-aarch64 "$@"
+fi
+exec "$@"

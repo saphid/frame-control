@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-31T21:43:27.519477+00:00",
+  "sourceRevision": "ed54d5ad6d861e5ac22100d2ea8ab0436ca74678",
+  "main": "de5eb65ff954381cec0df7b1f339f6916abee3d2",
+  "priorHead": "0ed5b06ed5b2942492f4a6ad96448e3d977ebf49",
+  "passed": true,
+  "normalMainIntegration": true,
+  "nativeArchitecture": "x86_64",
+  "nativeInputs": 22,
+  "nativeCases": 10,
+  "batteryRpcs": [
+    38,
+    35
+  ],
+  "batteryStopSeconds": [
+    0.225,
+    0.214
+  ],
+  "batteryPreviousForcedStopSeconds": 5.195,
+  "twoSqliteSnapshotsIndependentlyVerified": true,
+  "pendingSamplesPersistAcrossRestart": true,
+  "priorLostSamplesNegativeRetained": true,
+  "tabmasterRpcs": [
+    47,
+    48,
+    47
+  ],
+  "timerRpcs": [
+    31,
+    10,
+    18
+  ],
+  "deckypartyRpcs": [
+    15,
+    8
+  ],
+  "deckypartyRepairedReloadSeconds": [
+    0.366,
+    0.365,
+    0.364
+  ],
+  "deckypartyNegativeReloadSeconds": 5.275,
+  "server": {
+    "tests": 1961,
+    "skips": 15
+  },
+  "site": {
+    "tests": 18,
+    "skips": 0
+  },
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 400.054,
+    "records": 116,
+    "installedRemoved": 69,
+    "expectedRefusals": 47,
+    "allPriorOutcomesAndReasonsMatch": true
+  },
+  "ownedCleanupVerified": true,
+  "compatibility": "partial",
+  "globalCleanRuntime": false,
+  "realFrameContacted": false,
+  "newHeadHostedArm64AndPackagesQualified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "365c69ed0a630654e1c449fbc95fc61e4830ed94f01a1e052c162dcab623aa39",
+  "rawBytes": 51441
+}

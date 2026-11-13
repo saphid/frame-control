@@ -1,0 +1,75 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const DFL=window.DFL,SP_REACT=window.SP_REACT,container=document.getElementById('fixture');
+  __OFFICIAL_ICONS__
+  let root,changes=[],actions=0;
+  const mount=element=>{
+    if(root)ReactDOM.flushSync(()=>root.unmount());
+    root=ReactDOM.createRoot(container);
+    ReactDOM.flushSync(()=>root.render(element));
+  };
+  function PublishedSetting({secondsRemaining=0}) {
+    const [subtleMode,setSubtleMode]=SP_REACT.useState(false);
+    const saveSubtleMode=next=>{changes.push(next);setSubtleMode(next);};
+    return __OFFICIAL_CONTROL__;
+  }
+  const checkIcon=()=>{
+    const svg=container.querySelector('svg');
+    assert(svg,'published speaker icon is missing');
+    assert(svg.getAttribute('viewBox')==='0 0 384 512','published icon viewBox changed');
+    assert(svg.querySelector('path').getAttribute('d')===__ICON_PATH__,'published icon geometry changed');
+    return svg;
+  };
+  try {
+    mount(SP_REACT.createElement(PublishedSetting));
+    checkIcon();
+    assert(container.querySelector('strong').textContent==='Subtle Mode','setting label lost');
+    assert(container.querySelector('small').textContent.includes('small toast'),'setting description lost');
+    const checkbox=()=>container.querySelector('input[type="checkbox"]');
+    ReactDOM.flushSync(()=>checkbox().click());
+    assert(checkbox().checked&&JSON.stringify(changes)==='[true]','published callback did not update setting once');
+    checkIcon();
+    ReactDOM.flushSync(()=>root.render(SP_REACT.createElement(PublishedSetting,{secondsRemaining:15})));
+    checkIcon();assert(checkbox().disabled,'published disabled state lost');
+    ReactDOM.flushSync(()=>checkbox().click());
+    assert(checkbox().checked&&changes.length===1,'disabled setting changed');
+    ReactDOM.flushSync(()=>root.render(SP_REACT.createElement(PublishedSetting,{secondsRemaining:30})));
+    ReactDOM.flushSync(()=>checkbox().click());
+    assert(!checkbox().checked&&JSON.stringify(changes)==='[true,false]','reenabled setting callback lost');
+    checkIcon();
+
+    const action=disabled=>SP_REACT.createElement(DFL.ButtonItem,{label:'Local preview',disabled,
+      icon:SP_REACT.createElement(FaVolumeDown,{title:'Speaker preview',className:'author-icon',style:{color:'red'}}),
+      onClick:()=>actions++},'Preview');
+    mount(action(false));
+    const svg=checkIcon();
+    assert(svg.classList.contains('author-icon')&&svg.style.color==='red','author icon class/style lost');
+    assert(svg.querySelector('title').textContent==='Speaker preview','author icon title lost');
+    ReactDOM.flushSync(()=>container.querySelector('button').click());assert(actions===1,'button callback lost');
+    ReactDOM.flushSync(()=>root.render(action(true)));checkIcon();
+    ReactDOM.flushSync(()=>container.querySelector('button').click());assert(actions===1,'disabled button callback ran');
+    mount(SP_REACT.createElement(DFL.Field,{label:'Custom setting',icon:SP_REACT.createElement('span',null,'Custom icon')},'Value'));
+    assert(container.textContent.includes('Custom icon')&&container.textContent.includes('Value'),'direct Field lost supplied React content');
+    mount(SP_REACT.createElement(DFL.ToggleField,{label:'No icon',checked:false,onChange(){}}));
+    assert(!container.querySelector('svg')&&container.querySelector('input'),'omitted icon changed ordinary control');
+    assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());root=null;
+    document.getElementById('result').textContent=JSON.stringify({passed:true,publishedToggleAndIcon:true,
+      publishedPathPreserved:true,settingCallbacks:true,disabled:true,buttonIconContent:true,directField:true,
+      syntheticSettings:true,realBackendContacted:false,realFrameContacted:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

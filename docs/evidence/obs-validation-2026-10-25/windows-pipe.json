@@ -1,0 +1,10 @@
+{
+  "alive_without_receiver": true,
+  "platform": "win32",
+  "has_udp_connreset": false,
+  "packet_bytes": 1316,
+  "ssh_pid": 2668,
+  "stop_seconds": 0.0,
+  "helper_exit": 0,
+  "ssh_child_alive": false
+}

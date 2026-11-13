@@ -7,6 +7,9 @@ This covers three directions, plus input:
 - **C. iPhone → Frame**: mirror the phone inside the headset.
 - **PC VR from Linux**: [feasibility and options](linux-vr-streaming.md),
   including Valve's streaming and USB support. No Linux host tested yet.
+- **Linux desktop → Frame panels**: [PC-host feasibility on lxso2](evidence/linux-pc-host-lxso2-2026-10-24.md).
+  Blocked on missing desktop portal/PipeWire and native build dependencies;
+  Linux desktop capture remains disabled and unverified.
 - **Input**: type and point in the Frame from the Mac or iPhone.
 - **Live view and Control**: watch a panel flat and tap on it to use it.
 
@@ -20,6 +23,20 @@ The confidence labels are the same as in [ssh.md](ssh.md).
 | **RDP to xrdp** | A separate Linux (Xorg) desktop session as `steamos` | **Confirmed (Frame)** for the server ([debugging](https://partner.steamgames.com/doc/steamhardware/steamframe/debugging)); **Inferred** for the Mac client | On the Mac, use Microsoft **Windows App** (the old "Microsoft Remote Desktop") from the App Store. Add PC `frame.local` (or the IP), user `steamos`, and the Developer Mode password. Valve says Xorg is the default session. This is a *separate* X session, not a mirror of what's in the headset. It's good for running GUI apps and supports clipboard sync. |
 | **ADB + scrcpy (Lepton only)** | A mirror of the Android container | **Guess** | `brew install scrcpy android-platform-tools`, then `adb connect frame.local:5555` while Lepton Development is running ([adb_lepton](https://partner.steamgames.com/doc/steamhardware/steamframe/adb_lepton)), then `scrcpy`. This only shows Android apps, not SteamOS. |
 | VNC server on the Frame (krfb / wayvnc) | A mirror of the Plasma desktop | **Inferred (SteamOS)** | Deck users run krfb in Desktop Mode ([one.vg](https://one.vg/blog/remote-control-your-steam-deck)). On the Frame, the in-headset desktop is a virtual screen, and krfb isn't known to be preinstalled. RDP and Steam Link cover this case, so it's not recommended. |
+
+**RDP from Windows, verified 2026-09-30:** Windows 11 25H2's Remote Desktop
+(`mstsc`) against BUILD_ID 20260925.6191901. xrdp picks TLS, not NLA, so
+Remote Desktop never asks for a user or password. It warns that the certificate
+(`www.xrdp.org`) can't be verified. After **Yes**, xrdp shows its own "Login to
+frame" box with the username blank. Any user but `steamos` gets "User does not
+exist, or could not be authenticated". Signing in as `steamos` with the
+Developer Mode password opens a Plasma (X11) desktop within about 6 seconds.
+It's a new session on display `:10`, separate from what the headset shows,
+and it uses about 1.3 GB of the Frame's memory. Closing Remote Desktop leaves
+it running, and the next sign-in reconnects to it. To end it, find its
+session with `loginctl list-sessions` over SSH (its leader is `xrdp-sesexec`)
+and run `loginctl terminate-session <id>`; the headset's own session keeps
+running.
 
 **Recommendation for A:** start with Steam Link for macOS, because Valve
 documents it. Use Windows App (RDP) when you want a proper Linux desktop on the
@@ -130,17 +147,41 @@ capture it.
 
 ## Input: type and point in the Frame from the Mac or iPhone
 
-**Built: Home → Keyboard and trackpad**, in every version of Frame Control
+**Built: Home → Type on the headset** (or press `T`), in every version of Frame Control
 (Mac, Windows, Linux, iPhone and iPad), with nothing to install on the device
 you're holding. On a phone the panel is a trackpad (drag to move, tap to click,
 two fingers to scroll, two-finger tap to right-click) plus a text field that
 types on the Frame. On a computer, clicking the pad passes your mouse and
-keyboard through to the Frame until you press Esc (⌘ is sent as Ctrl on a Mac).
+keyboard through to the Frame until you press Esc. Ctrl, Alt, Shift and Super/Meta
+use ordered press/release events; Command sends Linux Super in this tool. The
+Esc button and shortcut menu send keys that the host may reserve. See
+[supported keys, shortcuts and test limits](keyboard-input.md).
 
-It goes through **KDE Connect**, the first-party route (KDE makes the Frame's
-desktop): Frame Control's server runs [`ui/frame_input_agent.py`](../ui/frame_input_agent.py)
-on the Frame, which talks KDE Connect's own LAN protocol to the Frame's
-`kdeconnectd` as if it were a phone. KDE Connect does the typing and clicking.
+Since Control (below), the pad goes through **gamescope's own input socket**
+([`ui/frame_touch.py`](../ui/frame_touch.py)), so it reaches whichever panel has
+focus, Steam's own menus included, and needs nothing installed on the Frame.
+Only characters that aren't on a US keyboard (accents, emoji) go through
+**KDE Connect** as below; it starts the first time you type one. (Before
+Control, everything went through KDE Connect, which is why the notes below
+describe it in detail.)
+
+The server keyboard queue holds at most 200 events, including text being sent.
+A batch with an accent sends its whole keyboard part through KDE Connect, and
+later keys follow it there while typing is pending. If the batch will not fit,
+the server rejects it before sending any clicks or keys; the page keeps it and
+retries after polling. Accepted events are never evicted to make room. A timeout
+or helper failure retains unsent text and shows **Try again**; that button resumes
+the retained queue. The queue lives in memory and is lost if the server exits.
+Switching headsets cancels queued text and stops both input helpers before the
+new route is published. Both controls validate the intended headset before they
+start. Ordering between the two input services uses a typing-time estimate;
+neither service acknowledges when characters reach the application.
+
+[PR #66 verification on 2026-10-24](evidence/pad-gamescope-2026-10-24.md)
+records an owned focused X11 panel receiving a click and `Frame66` plus Enter
+on a real Frame with SteamOS 0.5.6, after the shared headset became available.
+The helper, window and owner-marked lock were cleaned up. This is ASCII input
+proof, not wearer-visible, Unicode or packaged Electron GUI verification.
 
 **Verified 2026-09-28** (SteamOS 0.4.1, build 20260925.6191901):
 
@@ -271,6 +312,17 @@ How (**verified 2026-09-29**, SteamOS 0.4.1, build 20260925.6191901):
   [#73](https://github.com/saphid/frame-control/issues/73) (SteamOS 0.4.5, desktop
   open but not found). The likely cause there was the page itself: a second
   `loadPanels` (the panel switcher's) replaced the Desktop view's, fixed in #84.
+  If the `GAMESCOPE_FOCUSABLE_WINDOWS` property cannot be read, discovery now
+  reports that the panel list is unreadable and whether a panel is open is
+  unknown. A failed X connection or missing property is not evidence that the
+  desktop is closed. Check that SteamVR is running, retry or use Headset view;
+  if it persists, report the exact message and SteamOS version. The confirmed
+  empty-list advice is retained when the property is present but empty.
+  [2026-10-24 investigation and verification limits](evidence/panel-discovery-2026-10-24.md).
+  A later [packaged v0.4.17 test on the real Frame](evidence/desktop-capture-packaged-2026-10-24.md)
+  captured a mapped, focused nested KDE compositor on SteamOS 0.5.6. SteamVR
+  still reported its overlay hidden, so that test does not establish the
+  wearer's visible-desktop condition in #73 or justify closing it.
 - Tested from the iPhone app (Simulator): a tap on the Desktop view focused a
   text box in the panel and the text field typed into it; a trackpad move went
   exactly (+40, +25).

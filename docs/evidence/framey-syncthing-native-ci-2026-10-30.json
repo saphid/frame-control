@@ -1,0 +1,205 @@
+{
+  "date": "2026-10-30",
+  "pullRequest": 472,
+  "head": "3fcda281e24dcb11897cabcc8de8db261a105244",
+  "workflowRun": 41026287920,
+  "workflowUrl": "https://github.com/saphid/frame-control/actions/runs/41026287920",
+  "architectures": {
+    "x86_64": {
+      "artifactId": 12964248021,
+      "verification": {
+        "head": "3fcda281e24dcb11897cabcc8de8db261a105244",
+        "architecture": "x86_64",
+        "artifactSha256": "bbc6358fd0134ea375c845c54ec3cdf571707505e4902415e6b026dbbe9313d8",
+        "allSourceFingerprintsVerified": true,
+        "signedContentAndActualPackageVerified": true,
+        "requiredResults": {
+          "signedBundlesInstalled": true,
+          "packageLaunched": true,
+          "actualTwoWaySync": true,
+          "runtimeOriginGpgVerificationEnabled": true,
+          "appOriginGpgVerificationEnabled": true,
+          "actualUserServiceLifecycle": true,
+          "certificateRetained": true,
+          "syncRetainedAfterRestart": true,
+          "ownedServiceRemoved": true,
+          "ownedProcessesReaped": true,
+          "noOwnedFlatpakInstancesRemain": true,
+          "uninstallPreservedOwnedData": true
+        },
+        "commits": {
+          "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+          "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+        },
+        "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+        "stopElapsedSeconds": 0.102,
+        "installerEnabled": false,
+        "realFrameContacted": false
+      },
+      "exactHead": {
+        "headSha": "3fcda281e24dcb11897cabcc8de8db261a105244",
+        "architecture": "x86_64",
+        "sourceSha256": {
+          "scripts/framey-prepare-syncthing-flatpak.py": "c4317b618e28f148d51ec4c3394d82b7fb1f031c35b0a96b674c9b9899419b1a",
+          "scripts/framey-test-syncthing-flatpak-package.py": "3f56b22d89fcb32cd3db209f9991f76ae8aed0cbbcf2b486469e76cf7523b5ea",
+          "scripts/framey-test-syncthing-service.py": "9ca5466d872571b983e5eddbc93f1ac9a9d9b91045f259c46c3efe27bce3cc82",
+          "tests/decky-runtime/syncthing_flatpak_package.py": "32b3f6f929a2ed07beae3c5df8263575d40a85f8ae16c618c91328a774b08002",
+          "tests/decky-runtime/syncthing_flatpak_package_root.py": "5db2dc0ff1a56f761efad1de2d5e31f7a807e676e0172bda34130ad87d0efacb",
+          "tests/decky-runtime/Containerfile.flatpak-bundles": "58a8e6ef0e3b18d83f9bff165482ad62e2ec317903e75b8ae9cd9329a142146e",
+          "tests/decky-runtime/Containerfile.flatpak-vm": "fcf5874a330ee0bfcd8a44b19532cffe1ba6fc0f700276abd0d476708a2c0ed6",
+          ".github/workflows/syncthing-flatpak-package.yml": "94e08001629ad9396416469a18d1062aa07f58a4859a5b6fdad25285383728a1"
+        },
+        "packagePass": true
+      },
+      "guest": {
+        "success": true,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "pid1": "systemd",
+        "userBusPresent": true,
+        "flatpak": {
+          "realFrameContacted": false,
+          "architecture": "x86_64",
+          "flatpakVersion": "Flatpak 1.16.6",
+          "signedBundlesInstalled": true,
+          "packageLaunched": true,
+          "actualTwoWaySync": true,
+          "installerEnabled": false,
+          "runtimeEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+          "runtimeInstallElapsedSeconds": 70.35,
+          "runtimeInstallLog": "Installing runtime/org.gnome.Platform/x86_64/49",
+          "runtimeInstalledCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+          "runtimeOriginGpgVerificationEnabled": true,
+          "appEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+          "appInstallElapsedSeconds": 4.268,
+          "appInstallLog": "Installing app/me.kozec.syncthingtk/x86_64/stable",
+          "appInstalledCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+          "appOriginGpgVerificationEnabled": true,
+          "installedSignatures": {
+            "app": true,
+            "runtime": true
+          },
+          "userOverrides": "",
+          "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+          "flatpakInfo": "[Application]\nname=me.kozec.syncthingtk\nruntime=runtime/org.gnome.Platform/x86_64/49\n\n[Instance]\ninstance-id=295756548\ninstance-path=/home/tester/.var/app/me.kozec.syncthingtk\napp-path=/home/tester/.local/share/flatpak/app/me.kozec.syncthingtk/x86_64/stable/2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034/files\napp-commit=2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034\nruntime-path=/home/tester/.local/share/flatpak/runtime/org.gnome.Platform/x86_64/49/2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d/files\nruntime-commit=2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d\nbranch=stable\narch=x86_64\nflatpak-version=1.16.6\nsession-bus-proxy=true\nsystem-bus-proxy=true\nextra-args=--usb-list=;--usb-list=;\n\n[Context]\nshared=network;ipc;\nsockets=x11;wayland;fallback-x11;\nfilesystems=host;\n\n[Session Bus Policy]\norg.kde.StatusNotifierWatcher=talk\n\n[Environment]\nALSA_CONFIG_PATH=/usr/share/alsa/alsa-flatpak.conf\nGI_TYPELIB_PATH=/app/lib/girepository-1.0\nGST_PLUGIN_SYSTEM_PATH=/app/lib/gstreamer-1.0:/usr/lib/extensions/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/codecs-extra/lib/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/gstreamer-1.0\nXDG_DATA_DIRS=/app/share:/usr/share:/usr/share/runtime/share:/run/host/user-share:/run/host/share\nALSA_CONFIG_DIR=/usr/share/alsa\n__EGL_EXTERNAL_PLATFORM_CONFIG_DIRS=/etc/egl/egl_external_platform.d:/usr/lib/x86_64-linux-gnu/GL/egl/egl_external_platform.d:/usr/share/egl/egl_external_platform.d\nPYTHONUSERBASE=/var/data/python",
+          "mountNamespaceOutside": "mnt:[4026531841]",
+          "mountNamespaceInside": "mnt:[4026532120]",
+          "serviceMainPid": 500,
+          "apiKeyErrorStatus": 403,
+          "serviceStopElapsedSeconds": 0.102,
+          "actualUserServiceLifecycle": true,
+          "serviceRestartPid": 555,
+          "certificateRetained": true,
+          "syncRetainedAfterRestart": true,
+          "forwardSha256": "4c17df9c90053c119aee0b5d7a33c79c374944fb252cdebbd03f2aba85897ef2",
+          "reverseSha256": "17fb3e94f39e81227f4539e16e4456c64a27208ff80ffdac77808e7b4183337e",
+          "ownedServiceRemoved": true,
+          "ownedProcessesReaped": true,
+          "forcedTermination": false,
+          "noOwnedFlatpakInstancesRemain": true,
+          "uninstallPreservedOwnedData": true
+        }
+      }
+    },
+    "aarch64": {
+      "artifactId": 12964244750,
+      "verification": {
+        "head": "3fcda281e24dcb11897cabcc8de8db261a105244",
+        "architecture": "aarch64",
+        "artifactSha256": "828b439dc190cc3caa663e58cb8f81c6af84cab40c25de24cd291b6e6773a65f",
+        "allSourceFingerprintsVerified": true,
+        "signedContentAndActualPackageVerified": true,
+        "requiredResults": {
+          "signedBundlesInstalled": true,
+          "packageLaunched": true,
+          "actualTwoWaySync": true,
+          "runtimeOriginGpgVerificationEnabled": true,
+          "appOriginGpgVerificationEnabled": true,
+          "actualUserServiceLifecycle": true,
+          "certificateRetained": true,
+          "syncRetainedAfterRestart": true,
+          "ownedServiceRemoved": true,
+          "ownedProcessesReaped": true,
+          "noOwnedFlatpakInstancesRemain": true,
+          "uninstallPreservedOwnedData": true
+        },
+        "commits": {
+          "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+          "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+        },
+        "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-arm64) flatbld@f9c7a45a62fa 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+        "stopElapsedSeconds": 0.716,
+        "installerEnabled": false,
+        "realFrameContacted": false
+      },
+      "exactHead": {
+        "headSha": "3fcda281e24dcb11897cabcc8de8db261a105244",
+        "architecture": "aarch64",
+        "sourceSha256": {
+          "scripts/framey-prepare-syncthing-flatpak.py": "c4317b618e28f148d51ec4c3394d82b7fb1f031c35b0a96b674c9b9899419b1a",
+          "scripts/framey-test-syncthing-flatpak-package.py": "3f56b22d89fcb32cd3db209f9991f76ae8aed0cbbcf2b486469e76cf7523b5ea",
+          "scripts/framey-test-syncthing-service.py": "9ca5466d872571b983e5eddbc93f1ac9a9d9b91045f259c46c3efe27bce3cc82",
+          "tests/decky-runtime/syncthing_flatpak_package.py": "32b3f6f929a2ed07beae3c5df8263575d40a85f8ae16c618c91328a774b08002",
+          "tests/decky-runtime/syncthing_flatpak_package_root.py": "5db2dc0ff1a56f761efad1de2d5e31f7a807e676e0172bda34130ad87d0efacb",
+          "tests/decky-runtime/Containerfile.flatpak-bundles": "58a8e6ef0e3b18d83f9bff165482ad62e2ec317903e75b8ae9cd9329a142146e",
+          "tests/decky-runtime/Containerfile.flatpak-vm": "fcf5874a330ee0bfcd8a44b19532cffe1ba6fc0f700276abd0d476708a2c0ed6",
+          ".github/workflows/syncthing-flatpak-package.yml": "94e08001629ad9396416469a18d1062aa07f58a4859a5b6fdad25285383728a1"
+        },
+        "packagePass": true
+      },
+      "guest": {
+        "success": true,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "pid1": "systemd",
+        "userBusPresent": true,
+        "flatpak": {
+          "realFrameContacted": false,
+          "architecture": "aarch64",
+          "flatpakVersion": "Flatpak 1.16.6",
+          "signedBundlesInstalled": true,
+          "packageLaunched": true,
+          "actualTwoWaySync": true,
+          "installerEnabled": false,
+          "runtimeEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+          "runtimeInstallElapsedSeconds": 387.845,
+          "runtimeInstallLog": "Installing runtime/org.gnome.Platform/aarch64/49",
+          "runtimeInstalledCommit": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9",
+          "runtimeOriginGpgVerificationEnabled": true,
+          "appEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+          "appInstallElapsedSeconds": 45.896,
+          "appInstallLog": "Installing app/me.kozec.syncthingtk/aarch64/stable",
+          "appInstalledCommit": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+          "appOriginGpgVerificationEnabled": true,
+          "installedSignatures": {
+            "app": true,
+            "runtime": true
+          },
+          "userOverrides": "",
+          "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-arm64) flatbld@f9c7a45a62fa 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+          "flatpakInfo": "[Application]\nname=me.kozec.syncthingtk\nruntime=runtime/org.gnome.Platform/aarch64/49\n\n[Instance]\ninstance-id=1353538164\ninstance-path=/home/tester/.var/app/me.kozec.syncthingtk\napp-path=/home/tester/.local/share/flatpak/app/me.kozec.syncthingtk/aarch64/stable/b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0/files\napp-commit=b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0\nruntime-path=/home/tester/.local/share/flatpak/runtime/org.gnome.Platform/aarch64/49/c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9/files\nruntime-commit=c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9\nbranch=stable\narch=aarch64\nflatpak-version=1.16.6\nsession-bus-proxy=true\nsystem-bus-proxy=true\nextra-args=--usb-list=;--usb-list=;\n\n[Context]\nshared=network;ipc;\nsockets=x11;wayland;fallback-x11;\nfilesystems=host;\n\n[Session Bus Policy]\norg.kde.StatusNotifierWatcher=talk\n\n[Environment]\nALSA_CONFIG_PATH=/usr/share/alsa/alsa-flatpak.conf\nGI_TYPELIB_PATH=/app/lib/girepository-1.0\nGST_PLUGIN_SYSTEM_PATH=/app/lib/gstreamer-1.0:/usr/lib/extensions/gstreamer-1.0:/usr/lib/aarch64-linux-gnu/codecs-extra/lib/gstreamer-1.0:/usr/lib/aarch64-linux-gnu/gstreamer-1.0\nXDG_DATA_DIRS=/app/share:/usr/share:/usr/share/runtime/share:/run/host/user-share:/run/host/share\nALSA_CONFIG_DIR=/usr/share/alsa\n__EGL_EXTERNAL_PLATFORM_CONFIG_DIRS=/etc/egl/egl_external_platform.d:/usr/lib/aarch64-linux-gnu/GL/egl/egl_external_platform.d:/usr/share/egl/egl_external_platform.d\nPYTHONUSERBASE=/var/data/python",
+          "mountNamespaceOutside": "mnt:[4026531841]",
+          "mountNamespaceInside": "mnt:[4026532112]",
+          "serviceMainPid": 505,
+          "apiKeyErrorStatus": 403,
+          "serviceStopElapsedSeconds": 0.716,
+          "actualUserServiceLifecycle": true,
+          "serviceRestartPid": 562,
+          "certificateRetained": true,
+          "syncRetainedAfterRestart": true,
+          "forwardSha256": "4c17df9c90053c119aee0b5d7a33c79c374944fb252cdebbd03f2aba85897ef2",
+          "reverseSha256": "17fb3e94f39e81227f4539e16e4456c64a27208ff80ffdac77808e7b4183337e",
+          "ownedServiceRemoved": true,
+          "ownedProcessesReaped": true,
+          "forcedTermination": false,
+          "noOwnedFlatpakInstancesRemain": true,
+          "uninstallPreservedOwnedData": true
+        }
+      }
+    }
+  },
+  "nativePackageVerified": true,
+  "combinedDeckyVerified": false,
+  "installerEnabled": false,
+  "realFrameContacted": false
+}

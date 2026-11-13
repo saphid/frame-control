@@ -1,15 +1,55 @@
 # Testing
 
-Frame Control is tested in three layers, from fast and fake to slow and real.
-A fourth, a SteamOS VM, may come later ([issue #6](https://github.com/saphid/steam-frame/issues/6)).
+Frame Control uses unit tests, Fake Frame end-to-end tests and a real-headset
+smoke test. The [Frame simulator](#frame-simulator) keeps the fake Frame running
+for trying changes by hand before they go near the headset. A Windows test VM
+checks the packaged app. A SteamOS VM may come later
+([issue #6](https://github.com/saphid/frame-control/issues/6)).
 
 | Layer | Runs | Needs | Covers |
 |---|---|---|---|
-| Unit tests (`tests/*.py`) | `python3 -m unittest discover -s tests` | Nothing | Parsing, validation, request guards; SSH and HTTP are mocked |
+| Unit tests (`tests/*.py`) | `python3 -m unittest discover -s tests` | Python 3 and Node.js | Parsing, validation, request guards; SSH and HTTP are mocked |
 | Fake Frame (`tests/e2e`) | `scripts/e2e.sh` | Linux with Docker | The real server and scripts against a container that behaves like a Frame |
+| [Frame simulator](#frame-simulator) | `scripts/frame-sim.sh up` | Docker | The app, scripts and smoke test by hand against a long-running fake Frame on `frame-sim` |
 | Headset smoke test | `scripts/frame-smoke.sh` | A Frame on the `frame` alias | Install, launch and remove on the real device, recorded with its BUILD_ID |
+| [Windows test VM](#windows-test-vm) | `scripts/windows-vm.sh` | A Linux machine with KVM and Docker | The Windows build on a real Windows desktop, against a real Frame when needed |
 
 ## Unit tests
+
+Automatic screenshot and clip copying has offline coverage in
+`tests/test_autosync.py`:
+
+```sh
+python3 -m unittest discover -s tests -p test_autosync.py -v
+```
+
+Fake sources exercise the three-attempt limit, visible exhausted errors,
+Resume/Copy everything now recovery, successful-copy deduplication, disk-full
+pauses and headset changes around lists and transfers. Server tests use the
+production `working(meant)` reservation and listing/copy adapters; a Node test
+executes the Settings renderer to check that Resume is available after an error.
+These tests use no headset. See the
+[auto-sync reliability test record](evidence/autosync-reliability-2026-10-25.md).
+
+The gamescope keyboard/trackpad route has focused suites in `test_input.py`,
+`test_touch.py` and `test_service_regressions.py`. They cover pad translation,
+ASCII/modifier keys, Unicode queuing/retries, stale panel targets, release
+handling, route cancellation, and intended-headset start/status guards.
+`tests/page/pad_queue.mjs` and `tests/page/ctrl_gestures.mjs` execute the page's
+real queue and gesture functions in Node. These are offline tests; their
+acknowledgements do not prove that a real application received input.
+`tests/test_keyboard_chords.py` also executes the production typing-tool browser
+handlers through server validation, gamescope translation and the libei key-call
+boundary, with HTTP/SSH transport and the final device stubbed. It checks modifier holds, shortcut
+menus and focus-loss releases; see [keyboard support](keyboard-input.md).
+See [the 2026-10-24 PR #66 evidence](evidence/pad-gamescope-2026-10-24.md)
+for the real focused-panel click/key observation, cleanup and remaining limits.
+
+The read-only power/heat sampler has fixture and transport tests in
+`tests/test_power_sample.py`. Run
+`python3 -m unittest discover -s tests -p test_power_sample.py -v`.
+See [power-and-heat.md](power-and-heat.md) for sampling, smoke-lock behavior and
+real-device verification limits.
 
 ```sh
 python3 -m unittest discover -s tests
@@ -38,10 +78,27 @@ node --check ui/control-center.js
 Responsive layout, actual browser rendering and keyboard/touch behavior still
 need browser verification. No Control Center test connects to a real headset.
 
-About 120 tests, a few seconds, on Python 3.9 and newer. GitHub Actions runs
-them on macOS, Windows and Linux. They don't pick up `tests/e2e`.
+GitHub Actions runs this suite on macOS and Windows with Python 3.12, and on
+Linux with Python 3.13. Unit-test discovery does not pick up `tests/e2e`.
 
 ## The fake Frame
+
+Frame doctor has focused offline tests in `tests/test_frame_doctor.py` and
+fake-Frame fault tests in `tests/e2e/test_doctor.py`:
+
+```sh
+python3 -m unittest discover -s tests -p test_frame_doctor.py -v
+scripts/e2e.sh test_doctor
+```
+
+They cover privacy filtering, host-key preservation, restart safety and missing
+journal evidence, plus asleep, full-title-storage, SSH/devkit-off and missing-key
+faults. The plan/report tests cover exact-evidence advice, blocked plans,
+private exclusive baselines, malformed input, target mismatches and comparisons
+without repair claims. The fake-Frame storage test records a full-disk baseline,
+clears only the fake fault and compares a fresh run. The fake's doctor-only
+`systemctl show` responses assume stable restart counters and inactive keep-awake; unsupported queries fail. These tests do not
+exercise a real SteamOS user manager or touch a headset.
 
 `tests/fakeframe/` builds a container that stands in for the headset, and a
 second one for the computer Frame Control runs on. `scripts/e2e.sh` builds
@@ -60,6 +117,19 @@ are `fakeframe-frame` and `fakeframe-host`; the compose project, network and
 volumes are `fakeframe-e2e*`. CI runs it on a native arm64 runner
 (`ubuntu-24.04-arm`, the `e2e` job in `.github/workflows/checks.yml`).
 
+CI prepares all exact version/digest archives from `ui/framey-compatibility.json`,
+verifies SHA-256 even on cache hits, and mounts the cache read-only for the full
+catalog installer audit. A missing download, bad digest or missing result fails
+the job. The `e2e-catalog` artifact retains the cache verification and per-plugin
+install/remove or expected-refusal results, including partial results on failure.
+This tests transport and installer policy; it does not execute official plugin
+backends or prove browser, real Frame or worn VR usability.
+
+To include that audit locally, prepare the cache with
+`python3 scripts/framey-cache-catalog.py --cache /tmp/framey-catalog --output /tmp/catalog-cache.json`,
+then run `FRAMEY_AUDIT_CACHE=/tmp/framey-catalog FRAMEY_AUDIT_OUTPUT=/tmp/catalog-result.json scripts/e2e.sh`.
+Without a cache, local e2e keeps the explicit optional-catalog skip.
+
 The host container exists because OpenSSH reads `~/.ssh/config` from the
 passwd home directory, not `$HOME`. There, `ssh frame` reaches the fake Frame
 through the same `Host frame` block `ui/frame_connect.py` writes, the
@@ -75,8 +145,8 @@ its guards want.
 | `sshd` with key and password logins, `rsync`, `python3` | Real |
 | Valve's steamos-devkit-service on port 32000 and its hooks, vendored unmodified in `tests/fakeframe/steamos-devkit-service` | Real; only its `dbus` import (for mDNS through systemd-resolved) is a stand-in that logs the registration |
 | Valve's devkit-utils, copied over by Frame Control itself | Real |
-| **fakesteam**: `~/.steam/steam.pid`, `steam.token` and the `steam.pipe` FIFO; answers `approve-ssh-key`, `create-shortcut`, `run-game`, `list-shortcuts` and `delete-shortcut` with the response files devkit-utils waits for; takes `steam://rungameid`, `install` and `store` URLs | Fake |
-| DevTools on `127.0.0.1:8080` with a `SharedJSContext` target. The JavaScript Frame Control sends runs for real in Node against stand-in `SteamClient`, `appStore` and `downloadsStore` objects (`cef_shim.js`), so async functions, optional chaining and `Map`s behave as in Steam's CEF | The JS engine is real; the objects are fake |
+| **fakesteam**: `~/.steam/steam.pid`, `steam.token` and the `steam.pipe` FIFO; answers `approve-ssh-key`, `create-shortcut`, `run-game`, `list-shortcuts` and `delete-shortcut` with the response files devkit-utils waits for; takes `steam://rungameid`, `install` and `store` URLs. Games it really runs start under a stand-in `reaper SteamLaunch AppId=<id> -- <command>` (bash with that command line), so force quit finds a real process tree | Fake |
+| DevTools on `127.0.0.1:8080` with a `SharedJSContext` target. The JavaScript Frame Control sends runs for real in Node against stand-in `SteamClient`, `appStore` and `downloadsStore` objects (`cef_shim.js`), so async functions, optional chaining and `Map`s behave as in Steam's CEF. `SteamUIStore.RunningApps` lists launches that haven't exited; `TerminateApp` ends only launches that never ran a process, so a running program needs Frame Control's signals | The JS engine is real; the objects are fake |
 | `steam`, `wpctl`, `flatpak`, `podman`, `nmcli`, `qdbus6`, `gamescopectl`, SteamOS's `steamos-enable-sshd` helper, and Lepton's launcher | Stubs that record their calls |
 | Battery, charger and thermal zones under `/sys/class` | Files the supervisor writes. `/sys` is read-only in a container and Docker's AppArmor profile refuses writes under it, so each folder is a volume mounted twice: over `/sys/class/...` for `frame_status.py` to read, and under `/var/lib/fakeframe/sys` for the supervisor to write |
 | `vrserver` and `plasmashell` | Renamed `sleep` processes, so the status page and the clipboard find them |
@@ -125,43 +195,191 @@ switch while SSH is down:
   the app (the host container is Linux, so the `rsync` paths are tested and the
   `scp` fallback isn't).
 
+## Frame simulator
+
+`scripts/frame-sim.sh` runs the fake Frame on its own, outside the e2e harness,
+so you or an agent can try a change against something that answers like a
+headset before pushing it to one. It listens on 127.0.0.1 and `up` writes an
+SSH alias for it, `frame-sim`, the same way Frame Control's setup does. It shows
+up in the app's Devices list, and anything that takes `FRAME_ALIAS` can use it.
+
+```sh
+scripts/frame-sim.sh up                 # build and start it; a few minutes the first time
+ssh frame-sim                           # a shell on the "headset", as steamos
+scripts/frame-sim.sh ui                 # ui/server.py against it, on http://127.0.0.1:47811/
+scripts/frame-sim.sh run scripts/push.sh            # any script, with FRAME_ALIAS=frame-sim
+scripts/frame-sim.sh smoke              # the headset smoke test, against the simulator
+scripts/frame-sim.sh ctl sleep on       # any fault switch; `ctl help` lists them
+scripts/frame-sim.sh down               # stop it (--forget also removes the alias and volumes)
+```
+
+It needs Docker (on a Mac, Colima as above) and Python 3. The images are
+`fakeframe-frame` (the e2e fake, rebuilt by `up` as needed) and `frame-sim` on
+top of it (`tests/fakeframe/sim`). The ports are 2222 for SSH, 32000 for
+Valve's devkit service and 9999 for the control port
+(`FRAME_SIM_SSH_PORT`, `FRAME_SIM_DEVKIT_PORT`, `FRAME_SIM_CTL_PORT`).
+
+`up` changes your `~/.ssh` in the ways Frame Control's own setup does. It
+creates `id_ed25519_frame` and `id_rsa_frame_devkit` if they're missing, adds
+the `frame-sim` block to `~/.ssh/config` and the simulator's host key to
+`known_hosts`. The simulator trusts your `id_ed25519_frame.pub` alongside its
+own harness key. Its host keys live in a volume, so restarting or rebuilding it
+doesn't look like a different headset; `down --forget` removes the alias, the
+host key and the app's pin.
+
+Everything in [What's real and what's fake](#whats-real-and-whats-fake) holds.
+The simulator adds stand-ins for what the fake can't show:
+
+| On the simulator | |
+|---|---|
+| The headset view (**Headset view**, `/api/screenshot?view=headset`) | `ui/frame_vrshot.py` runs unchanged against a stand-in `libopenvr_api.so` (`sim/openvr/fake_openvr.c`). It draws a side-by-side test picture: "FRAME SIMULATOR", the running title, the battery and the time |
+| Live view, panel video and recordings with sound | The app's own ffmpeg commands, through a wrapper that swaps the `/dev/video99`, x11grab and pulse inputs for the moving test picture and a quiet tone. Encoding, scaling and file handling are ffmpeg's |
+| SteamVR's `vrcmd` | `--stats`, `--overlays` and `--showdashboard` with made-up panels, in the formats the app parses |
+| The proximity sensor | `/sys/bus/iio/devices/iio:device0/in_proximity_raw`: 0 when nobody wears it, 120 when worn (a guess above the smoke test's 0-10 range) |
+| arm64 games on an x86-64 computer | qemu-user, as the Frame runs x86-64 programs through FEX. Static programs only: there are no arm64 libraries |
+
+Two switches belong to the simulator alone:
+
+| Command | Effect |
+|---|---|
+| `ctl vr on\|off` | SteamVR running. Off: `vrcmd` fails, the headset view gets init error 121, and `/dev/video99` is gone, so live view and recording say SteamVR isn't running |
+| `ctl worn on\|off` | Someone wearing it. On: activity level 1 and a high proximity reading, so the smoke test refuses to run, as it would on a worn headset |
+
+The smoke test passes against the simulator: 14 of 14 steps, and 15 with
+`--pair` after `ctl pairing on` (x86-64 Linux, 2026-10-30). That makes the
+simulator a quick way to check a change to the smoke test itself. Results go
+to `tests/smoke/results-sim/` and are marked `"simulated": true`.
+`scripts/verify-frame-smoke-result.py` refuses those, and any result that
+doesn't say, so the release gate still needs a run on the headset.
+
+Everything rendered is a test pattern: the simulator shows that the app asks for
+the right things and handles the answers. It says nothing about SteamVR, Proton,
+FEX, Android or how the headset performs. Use the headset smoke test for those.
+The desktop panel list stays empty (the fake has no `xprop` or `xwininfo`), and
+so does Android, as on the fake Frame.
+
 ## Headset smoke test
 
-**Documented shared-device procedure:** before a test installs, launches or
-stops an application, acquire `ssh frame 'mkdir /tmp/frame-test.lock'`. If it
-fails, leave that lock alone and continue offline work. Only the thread that
-acquired it releases it with `ssh frame 'rmdir /tmp/frame-test.lock'`, after
-cleanup. Keep each device session to a few minutes.
+**Documented shared-device procedure:** before any headset read or a test that
+installs, launches or stops an application, atomically create
+`/tmp/frame-test.lock` on the Frame and write a unique token to its `owner`
+file. If creation fails, leave that lock alone and continue offline work. Only
+the owner that verifies its token may remove its `owner` file and lock directory
+after cleanup. Keep each device session to a few minutes.
 
 Check battery capacity and charging state under `/sys/class/power_supply`
 before and after; keep capacity above 20%. Stop only processes started by the
 test, remove temporary installs and profiles, and restore the prior dashboard
 state. Leave Steam and SteamVR running. Do not reboot or change global settings.
 Record the build, actual interaction results, cleanup and any unworn-headset
-limits alongside screenshots or logs. These are caller responsibilities; the
-smoke script below does not acquire this shared lock itself.
+limits alongside screenshots or logs. The smoke script below acquires and
+releases its own tokenized shared lock; other device tests follow this
+procedure themselves.
+
+[Packaged Desktop Capture evidence, 2026-10-24](evidence/desktop-capture-packaged-2026-10-24.md)
+records v0.4.17 GUI button captures of a real mapped nested desktop on SteamOS
+0.5.6, a bounded owned user unit, and cleanup back to the original Game Mode
+state. Check X window mapping/focus and SteamVR overlay visibility separately:
+successful capture of a mapped window does not prove the desktop is visible
+to a wearer. That run's overlay stayed `not_visible`; #73 remains unverified
+for its reported visible-desktop/0.4.5 condition. Only state/log metadata is public.
 
 ```sh
 scripts/frame-smoke.sh           # needs `ssh frame` to work without a password
 scripts/frame-smoke.sh --pair    # also pairs a throwaway key: approve it in the headset
 ```
 
+The wrapper uses POSIX `sh` and Python 3 on macOS or Linux; zsh is not required.
+It resolves the checkout path independently of the current working directory.
+`/path/to/checkout/scripts/frame-smoke.sh --help` is safe to run offline and
+does not contact the headset.
+
+Before reading headset status or changing titles, the smoke script atomically
+acquires the shared `/tmp/frame-test.lock` with a unique owner token. It reads
+SteamVR activity, proximity and battery while locked. An awake headset, unknown
+activity, battery below 20%, or a busy lock stops the run without installing
+anything. It releases only its own lock after cleanup. The JSON result includes
+the read-only preflight and the source checkout's commit and clean/dirty state.
+For a release, run it from a clean checkout of the exact release commit;
+`scripts/verify-frame-smoke-result.py` rejects a different or dirty checkout,
+missing steps, skipped or failed launches, and an unconfirmed lock release.
+
 It checks `properties.json` and the status, then installs, launches and
 removes three tiny titles built from bytes by `tests/smoke/tiny_programs.py`
 (an ARM64 and an x86-64 static Linux program that sleep for ten seconds, and
 an x86-64 `.exe` that exits at once). A launch passes only with fresh evidence:
 the ARM64 program running, the `.exe` started (its process or Steam's log),
-and the x86-64 program running or Steam logging that its runtime isn't
-installed, which is what the Frame does today. Steam's log lines about each
-title are kept.
+and the static x86-64 program running through the title-local FEX launcher.
+If Steam logs that the optional x86-64 runtime is not installed, that launch
+is **skipped**, with the reason and log saved in
+the result. It does not prove that the x86-64 title ran. Steam's log lines about
+each title are kept.
 
 Everything it installs is removed again, also after a failure: the titles and
 their Steam shortcuts, a paired key, and `~/devkit-utils` if it wasn't there
 before (if it was, it stays, synced to this checkout as Frame Control always
 does). A cleanup that fails counts as a failed step. Results go to
 `tests/smoke/results/<time>-<BUILD_ID>.json` (not committed) with a summary on
-screen; it exits 0 when every step passed, 1 if one failed, 2 if the headset
-isn't reachable.
+screen. The summary counts passed, skipped and failed steps separately. It
+exits 0 only when every step passed, 1 if a step failed or was skipped, or 2 if
+the headset isn't reachable. A skipped x86-64 launch blocks a release smoke
+gate even though it remains separately labeled in the result.
+
+Smoke process cleanup runs before and after title removal and during the
+initial/final leftover sweeps. It targets only the reserved `fc_smoke_arm64`,
+`fc_smoke_x86_64`, `fc_smoke_exe` IDs and their legacy `fc-smoke-` equivalents.
+Each leftover sweep checks all six IDs, even if no title directory or install
+record remains. It removes their exact `-argv.json`, `-env.json`,
+`-settings.json` and `-framecontrol.json` files, syncs Steam's shortcuts, then
+syncs again to verify that none of those IDs is still registered. Missing
+devkit utilities are copied before syncing and removed at the end if they
+were absent before the run. Metadata or shortcuts that remain, or a reported
+sync failure, fail cleanup. Similarly named titles and their metadata are
+outside the deletion boundary.
+On the target, `tests/smoke/stop_processes.py` requires the SSH user's uid and
+an exact title directory in `/proc` cwd/exe or an individual absolute command
+argument; similarly named folders and shell command substrings do not count.
+Deleted cwd/exe paths still count, so a process left after file removal can be
+found. It sends SIGTERM, waits up to three seconds, then uses SIGKILL with
+another three-second bound, rescanning for survivors. PID handles prevent PID
+reuse from signalling another process. Linux Python 3.9+ with pidfd support
+is required; missing support, signal errors and survivors fail the
+cleanup step. Stopped PIDs are recorded in the results JSON.
+If the initial leftover cleanup fails, the run skips installs and pairing and
+records the failure instead of overwriting an active test title.
+
+This deliberately does not stop shared Wine/Proton services by name or prefix,
+Steam, SteamVR, process groups or arbitrary descendants. A process that drops
+all title-path evidence cannot safely be attributed and is outside this
+check. Unreadable `/proc` fields provide no ownership evidence; other readable
+fields are still checked, and a wholly unattributable process is left alone.
+Real Frame verification, 2026-10-24, SteamOS build `20261015.6141207`: the
+fixed Python smoke entry point passed all 13 steps under the shared device lock.
+The `fc_smoke_exe` launch ran under Proton Experimental (ARM64), and its
+remove step stopped five test-owned wrapper/Proton PIDs before removing the
+title; the following process sweep found none. The final cleanup found no
+test titles or processes, the test desktop was closed, and the battery
+remained at 99%. That historical run used the Python entry point directly;
+the current POSIX wrapper has local offline coverage on a PATH without zsh.
+The current runner and all-six-ID cleanup sweeps passed another 13-step real
+Frame run on 25 October, build `20261022.6153909`, at source commit `1255ef2`.
+The Windows title's remove step stopped five test-owned Proton/wrapper PIDs;
+the final sweep and independent readback found no reserved files or processes.
+SteamVR stayed running, observed focus properties matched before/after, and
+this task's shared lock was released. The headset was unworn. This run did
+not seed synthetic orphan metadata or shortcuts; those cases use local
+fixtures. [Sanitized results](evidence/round2-smoke-2026-10-25.json).
+The local regression suite runs real Linux processes in temporary fake title
+directories (including deleted folders and a TERM-resistant wrapper); it checks
+exit, escalation and survival of unrelated processes. Local filesystem commands
+with mocked SSH/Steam also cover orphan metadata, shortcut-only leftovers,
+sync failures and exact ID boundaries. Wrapper tests check offline help,
+argument forwarding and exit status from another working directory. None of
+these local tests contacts a headset:
+
+```sh
+python3 -m unittest discover -s tests -p test_smoke_cleanup.py -v
+```
 
 `--pair` asks the devkit service to pair a new RSA key, which needs someone
 in the headset to open **Settings → Developer → Pair new host** and approve
@@ -186,11 +404,138 @@ refuses ids with a hyphen (`missing/invalid arguments`), which the fake had
 accepted. The fake now refuses them the same way, and Frame Control makes ids
 Steam accepts.
 
+## PC panel host tests
+
+PC in the headset (Experimental, Windows only). `tests/test_pcview.py` checks
+that only Windows gets the PC host and that it starts nothing until turned on,
+the Tools link and card wording, source-bound tickets, reconnect/Stop
+revocation, input release, source-coordinate mapping and use of the existing
+panel launcher. `tests/test_pc_controller.py` checks the C rate controller
+against a frozen trace of the Mac's Swift one.
+
+The `PC host libraries` workflow builds the native adapter on Windows (and
+the unshipped Linux adapter on Ubuntu x64 and ARM64), then runs a real x264
+synthetic stream through the HTTP/WebSocket agent. x264 is GPL, so only these
+CI builds include it (`desktop/build.py --with-x264`); the release workflow
+tests the installer's own bundle with its bundled Python and checks x264 isn't
+in it. `FRAME_PC_REQUIRE_NATIVE=1` and `FRAME_PC_REQUIRE_X264=1` make a missing
+bundle or encoder fail CI instead of skipping.
+
+These automated CI checks do not capture a desktop, exercise Media Foundation
+or a GPU, or check laser alignment. A [Windows test VM](#windows-test-vm) run
+on 2026-10-24 captured its actual desktop with Desktop Duplication, encoded
+with Media Foundation and streamed to a real Frame. It found MSYS2 disables
+WGC: an element name alone does not prove its optional capture properties
+exist. Native property-probe tests and source-selection regressions now cover
+that boundary. [Dated evidence and limits](evidence/windows-vm-2026-10-24.md);
+[what's verified](pc-in-headset.md#whats-verified).
+
+## Windows test VM
+
+Windows CI runs the unit tests and checks installer contents. Desktop capture,
+installer launch and interactive behavior need a Windows machine. This is a Windows 11 VM in a
+[dockur/windows](https://github.com/dockur/windows) container on a Linux machine
+with KVM, driven from the Mac with `scripts/windows-vm.sh`.
+
+Setting it up, once, on the Linux machine:
+
+- **Windows comes from Microsoft.** The container downloads the Windows 11
+  image from Microsoft on first start. Windows runs unactivated, which is fine
+  for testing. Don't use activation workarounds or third-party Windows images.
+- **Publish its ports on loopback only.** Map `127.0.0.1:2222:22` (SSH),
+  `127.0.0.1:8006:8006` (the web console) and, if you need it,
+  `127.0.0.1:13389:3389`. The Mac reaches them through `ssh -J`. Use
+  `restart: "no"` and `stop_grace_period: 2m` so it only runs when someone is
+  testing, and a `docker stop` shuts Windows down cleanly.
+- **Give it SSH on first sign-in.** The container runs `/oem/install.bat`
+  once. Have it add the OpenSSH Server capability, start `sshd`, set PowerShell
+  as its default shell, and put a dedicated public key (for example
+  `~/.ssh/id_ed25519_winvm` on the Mac) in
+  `C:\ProgramData\ssh\administrators_authorized_keys`.
+- Give it 4 cores, 8 GB of memory and a 32 GB disk. That's enough for the app
+  and the tests. Inspect free memory/disk, KVM access and existing VMs before
+  starting; leave other VMs alone. The first install can take tens of minutes
+  (the 2026-10-24 run took about 16 minutes to reach the desktop), rather than
+  the 1–2 minute startup of an already installed guest.
+- For PC streaming, check the actual bundled capture properties. MSYS2's
+  GStreamer build disables WGC: this app falls back to Desktop Duplication for
+  whole screens and explains why individual windows are unavailable. A VM
+  capture test does not prove physical GPU encoding or laser alignment.
+
+Using it, with `WINVM_HOST` set to the Linux machine's ssh alias:
+
+```sh
+scripts/windows-vm.sh up                        # start it and wait for SSH (1-2 minutes)
+scripts/windows-vm.sh put Frame-Control-Setup-x64.exe
+scripts/windows-vm.sh ps 'Start-Process "$env:USERPROFILE\Downloads\Frame-Control-Setup-x64.exe" /S -Wait'
+scripts/windows-vm.sh shot screen.png            # what's on its screen
+scripts/windows-vm.sh click 723 359              # screen pixels, as in the screenshot
+scripts/windows-vm.sh keys s t e a m o s ret     # QEMU key names
+scripts/windows-vm.sh down                       # shut Windows down
+```
+
+- **Clicks go through a scheduled task.** Commands over SSH run in a
+  session with no desktop, so `click` and `scroll` write the position to a
+  file, and a scheduled task running as the signed-in user replays it. The
+  VM's screen must be signed in; it is after `up`. Clicks and scrolls sent at
+  the same time run one after another. QEMU's own `mouse_move` is relative
+  and drifts, so the script doesn't use it.
+- **Screenshots may not show the pointer.** Check the result of a click (a
+  menu that opens, a button that changes) rather than the pointer's position.
+- **Windows' `ssh` waits for stdin.** The script closes it for every command.
+  Do the same if you run `ssh` in the VM by hand.
+- **Starting the app.** Run Frame Control in the signed-in session, not over
+  SSH. Use its Start-menu shortcut via `click`, or a scheduled task like the
+  one `click` uses.
+
+**Testing against a real Frame.** The VM reaches the headset on the LAN like
+any other computer. Run **Set Up Connection** in the VM's Frame Control once;
+that makes the VM's keys. So the VM doesn't keep access between test runs,
+afterwards take the lines it added out of the headset's
+`~/.ssh/authorized_keys`: the ones matching the VM's
+`~/.ssh/id_ed25519_frame.pub` and, if pairing made one,
+`~/.ssh/id_rsa_frame_devkit.pub`. Check that `ssh -o BatchMode=yes frame true`
+in the VM now fails. Then, around each run:
+
+```sh
+scripts/windows-vm.sh frame-key add       # let the VM's key into the headset
+# ... test ...
+scripts/windows-vm.sh frame-key remove    # and take it out again
+```
+
+`add` appends the VM's key tagged `windows-vm-test`, unless the headset
+already trusts that key through another line. `remove` deletes only the exact
+line `add` wrote, so it doesn't undo what Set Up Connection did, and it leaves
+the file alone if it can't rewrite it. Follow the shared-device
+procedure in [Headset smoke test](#headset-smoke-test) before installing or
+launching anything on the headset.
+
+**Verified 2026-09-30:** Windows 11 Pro 25H2 (build 26200) against a Frame on
+BUILD_ID 20260925.6191901. The script was used to install Frame Control 0.4.0,
+connect it to the Frame and follow Remote Desktop through to the Frame's
+desktop ([what it does](streaming.md#a-see-and-control-the-frame-from-the-mac)).
+`frame-key` left `authorized_keys` byte-for-byte as it was.
+
+## Force quit
+
+`tests/test_force_quit.py` feeds `ui/frame_running.py` made-up process tables:
+the `reaper SteamLaunch AppId=` parsing, naming from Steam, manifests, Android
+`meta.json` and devkit folders, and a Frame's worth of Steam, gamescope, SteamVR,
+sshd and session processes that must never be signalled. Processes that ignore
+SIGTERM, survive SIGKILL or exit and have their pid reused check the escalation.
+The Control Center's confirmation, duplicate and headset-switch handling run in
+`tests/control_center.cjs`. `tests/e2e/test_running.py` force quits real process
+trees on the fake Frame. None of it has run on a headset.
+
 ## Owned media player
 
 `tests/test_media.py` covers layout evidence and overrides, OU eye ordering,
 hardware-decoder command construction, malformed splats, stereo parallax and
-fake-Frame library/process ownership. `tests/e2e/test_media_transfer.py` checks the real
+fake-Frame library/process ownership. It also covers optional-surround refusal
+at creation, setup, first upload and retry after standby, fatal screen refusal,
+and best-effort overlay teardown with shutdown.
+Run `python3 -m unittest discover -s tests -p test_media.py -v`.
+`tests/e2e/test_media_transfer.py` checks the real
 HTTP/SSH upload and library listing without pretending the fake renders VR.
 Real decode timings and captured stereo output are recorded in
 [vr-video.md](vr-video.md). Generated media only; no external player required.
@@ -233,3 +578,115 @@ Chromium rendering and the same helper through HTTP. Close the switcher after
 testing. [The recorded device checks](panels.md#frame-controls-panel-switcher)
 cover actual focus, HTTP guards and an OpenXR sample transition, and separately
 identify the unverified Steam-game, spatial layout, reboot and laser behaviors.
+
+## Backup and recovery kit
+
+`tests/test_backup.py` runs the headset-side script `ui/frame_backup_remote.py`
+for real against a temporary folder laid out like the Frame's home, with only
+SSH faked: path selection and the secrets it must never copy, the manifest and
+checksums, restore checks after a reset, restore writing only its own files,
+unsafe archives and backup names, and the exact Game Mode command.
+`tests/e2e/test_recovery_kit.py` backs up and restores a Proton save on the fake
+Frame through the server. See [backup-and-recovery.md](backup-and-recovery.md#verification).
+A full backup and an identical-file Proton save restore were checked on a
+real Frame running build `20261015.6141207`; an after-reset restore and
+Android data restore remain unverified. See the linked device evidence.
+
+## Game storage
+
+`python3 -m unittest discover -s tests -p test_storage.py -v` exercises the
+read-only metadata probe, guarded HTTP endpoint and Node renderer/navigation
+regressions. All headset reads are temporary fixtures or mocked SSH. See
+[game storage](game-storage.md#verification-and-limits) for coverage and device
+verification limits. This suite does not move games or contact a headset.
+
+## Battery monitoring
+
+`tests/test_battery.py` covers real file parsing with temporary sysfs-like
+files, source preference, missing/invalid sensors and permission errors.
+`tests/control_center.cjs` covers charging states and optional health fields,
+alongside existing stale/offline handling. No headset is used. See
+[battery monitoring](battery-health.md) for sources, units and limitations.
+
+## Host-key recovery presentation
+
+`python3 -m unittest discover -s tests -p test_link_ui.py -v` runs the page's
+connection/banner/selection functions in Node and checks the recovery CSS guard.
+`test_link.py` covers connection failures and short probe reasons with fake SSH
+and local sockets. Neither suite uses a real headset.
+
+Browser verification on 2026-10-24 used the current page's markup, styles and
+recovery renderers with synthetic changed-key state and two headsets at
+1280×800. It caught a later `.item .s` rule overriding the earlier wrapping
+rule, which the original source-only assertion missed. Check computed wrapping,
+the complete explanation, tooltip punctuation, Refresh bounds and selection
+after **Use this headset** when changing these styles. This fixture does not
+exercise Electron integration or a real SSH identity change.
+
+
+## PC-only Windows wireless diagnosis
+
+```sh
+python3 -m unittest discover -s tests -p 'test_wireless.py' -v
+node --test tests/wireless.cjs
+```
+
+The checks workflow runs this targeted suite on Windows, including the real
+read-only PowerShell query, and the normal server suite includes it on all
+platforms. HTTP tests instantiate only a handler, never the app connector.
+Fixtures cover duplicate instance identity, unknown states, GUID matching,
+localised/denied channel data and 6 GHz ambiguity. No tests contact a real Frame.
+A Windows CI runner/VM cannot prove physical Steam dongle behaviour or audio RF
+interference. See [sources and limits](windows-wireless-doctor.md).
+
+### Actual Decky backend shim gate
+
+Fake-Frame tests stub plugin execution, so they cannot prove Decky's Python
+calling convention. `Decky backend runtime` CI separately runs the published,
+SHA-256-pinned **Decky 3.3.0** executable on native amd64 and ARM64 Linux.
+The loader discovers production-managed official archives and calls their public
+methods over its actual websocket API. No test imports or instantiates `Plugin`.
+
+```sh
+python3 scripts/framey-test-decky-runtime.py --output /tmp/decky-runtime.json
+# Offline loader cache (still checked against its pinned native digest):
+python3 scripts/framey-test-decky-runtime.py --loader /path/to/PluginLoader --output /tmp/decky-runtime.json
+```
+
+Run on Linux with Docker. Image build and the pinned loader download need network;
+plugin execution has no network, published ports, host home/audio/D-Bus/device
+mounts, capabilities or writable repository. Each case has its own unprivileged
+container, private tmpfs home and temporary files. Nothing contacts the headset
+or its shared lock. Failed/timed-out containers and the private image tag are
+removed by the runner.
+
+Each completed native case retains `runtimeConsole.text` and its SHA-256 after
+final fixture cleanup, plus process return codes and any forced-kill escalation.
+Probe or cleanup exceptions print the complete available console to stderr and
+do not emit a successful case result. Five tests exercise long output, normal
+shutdown, a failed probe, forced cleanup, cleanup exceptions and parent-owned
+child shutdown; four use real subprocesses. The fixture sends SIGTERM only to
+the owned Decky loader and waits eight seconds for its unload protocol. Auxiliary
+fixtures retain group cleanup, and bounded group SIGKILL escalation remains
+recorded. `cleanShutdownVerified: false` explicitly prevents treating captured
+output or a zero loader exit as clean plugin shutdown. Case-specific lifecycle
+gates still apply.
+
+Every `compat_shims.append` in the managed installer must have a case in
+`tests/decky-runtime/cases.json`. Add each affected pinned official archive and
+a safe public-method probe when introducing a shim. Ordinary unit tests reject
+uncovered shim names. The runtime job verifies the managed receipt, loader
+plugin discovery, and a successful backend call; a discovery listing alone
+could conceal a crashed backend process.
+
+Current cases cover both Music Control entries, Shotty and DeckySpy. DeckySpy
+verifies native psutil import plus read-only CPU, memory, uptime, battery and
+network metrics through actual legacy RPC calls. Music Control uses
+the private silent MPRIS fixture to check discovery, metadata, play/pause,
+next/previous, seek and volume, with independent service-state readbacks.
+Shotty checks backend import, rescuer state and empty screenshot aggregation
+inside its disposable home. A fourth negative-control case deliberately
+reintroduces #335's incorrect bound-method transformation and must reproduce
+the real loader's legacy backend-call failure. The gate fails if that regression goes
+undetected. These checks verify backend behavior in a container; they do not
+upgrade any plugin's Frame, actual media playback or worn-VR compatibility claim.

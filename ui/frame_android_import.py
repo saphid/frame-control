@@ -1,29 +1,23 @@
-"""Local APK sets, ZIP-based Android bundles and companion data. Stdlib only.
-
-Unpack into private staging, check every package before installing any, and use
-the same installer and running-instance data copy as Quest import. No game is
-started here. A data-bearing import takes two drops, as Quest takes two imports.
-"""
-from pathlib import Path, PurePosixPath
-import os
+"""Import a local Android backup: one APK and its matching expansion files."""
 import re
+import time
+from pathlib import Path, PurePosixPath
 import shutil
 import stat
 import struct
-import tempfile
-import time
 import zipfile
+import zlib
+
+import frame_apk
 
 import frame_android as android
-import frame_apk
 import frame_quest as quest
 
-ARCHIVES = {'.xapk', '.apks', '.apkm', '.zip'}
-EXTENSIONS = ARCHIVES | {'.apk', '.obb'}
+OBB = re.compile(r'(main|patch)\.[0-9]+\.([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)+)\.obb')
+
+ARCHIVES = {'.xapk', '.apks', '.apkm'}
 MAX_BYTES = 16 * 1024**3
 MAX_FILES = 4096
-TMP_PREFIX = 'frame-android-import-'
-OBB = re.compile(r'(?:main|patch)\.[0-9]+\.([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)+)\.obb')
 METADATA = {'manifest.json', 'info.json', 'icon.png', 'toc.pb', 'meta.sai_v1.json', 'meta.sai_v2.json'}
 WINDOWS_DEVICE = re.compile(r'(?:CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\..*)?', re.I)
 
@@ -47,28 +41,6 @@ def _members(archive):
             for m in members]
 
 
-def is_bundle(path):
-    """Sniff ZIPs so PC-game ZIPs retain their existing route. No extraction."""
-    try:
-        with zipfile.ZipFile(path) as archive:
-            members = [(m, n) for m, n in _members(archive)
-                       if not m.is_dir() and not _finder_metadata(m.filename)]
-            # A PC distribution may include an optional Android build too.
-            for member, name in members:
-                # External app data is opaque, even if a file resembles a PC program.
-                if name.startswith(('Android/data/', 'Android/obb/')):
-                    continue
-                if name.lower().endswith(('.exe', '.appimage', '.sh')):
-                    return False
-                if not name.lower().endswith(('.apk', '.obb', '.apk.idsig')):
-                    with archive.open(member) as src:
-                        if src.read(4) == b'\x7fELF':
-                            return False
-            return any(n.lower().endswith(('.apk', '.obb')) or n.startswith('Android/data/') for _, n in members)
-    except (OSError, ValueError, RuntimeError, NotImplementedError, zipfile.BadZipFile):
-        return False
-
-
 def _path(name):
     parts = PurePosixPath(name.rstrip('/')).parts
     if (not parts or len(name) > 512 or len(parts) > 32 or name.startswith('/') or '\\' in name or
@@ -82,16 +54,16 @@ def _path(name):
 def _kind(name):
     parts = _path(name)
     if len(parts) >= 4 and parts[:2] == ('Android', 'data') and android.PKG_RE.fullmatch(parts[2]):
-        return 'data', parts[2], parts[3:]
+        raise android.FrameError('Android/data restore is not supported by this importer; choose an APK/OBB-only backup')
     if name.lower().endswith('.apk'):
         return 'apk', None, None
     if name.lower().endswith('.obb'):
         match = OBB.fullmatch(parts[-1])
         if not match or not (len(parts) == 1 or
-                len(parts) == 2 and parts[0] == match[1] or
-                len(parts) == 4 and parts[:2] == ('Android', 'obb') and parts[2] == match[1]):
+                len(parts) == 2 and parts[0] == match[2] or
+                len(parts) == 4 and parts[:2] == ('Android', 'obb') and parts[2] == match[2]):
             raise android.FrameError('OBB needs its standard main/patch.<version>.<package>.obb name and Android/obb/<package> location')
-        return 'obb', match[1], None
+        return 'obb', match[2], None
     if (len(parts) == 1 and name in METADATA) or name.lower().endswith('.apk.idsig'):
         return 'metadata', None, None
     raise android.FrameError('Unsupported Android bundle file: ' + name + '; no files were installed')
@@ -144,166 +116,215 @@ def _unpack(path, root, budget):
     return output
 
 
-def prepare(paths, root):
-    """Validate and group files by manifest package; return private install plans."""
-    groups, budget = {}, {'bytes': 0, 'files': 0}
-    if not paths or len(paths) > 128:
-        raise android.FrameError('Choose between 1 and 128 Android files')
-    for i, path in enumerate(paths):
-        path = Path(path)
-        if path.suffix.lower() not in EXTENSIONS or not path.is_file() or path.stat().st_size == 0:
-            raise android.FrameError('Choose a nonempty APK, OBB, XAPK, APKS, APKM or Android ZIP file')
-        if path.suffix.lower() in ARCHIVES:
-            directory = root / str(i)
-            directory.mkdir()
-            try:
-                entries = _unpack(path, directory, budget)
-            except (OSError, ValueError, RuntimeError, zipfile.BadZipFile, NotImplementedError) as e:
-                raise android.FrameError('Could not read Android bundle: ' + str(e)) from e
+def unpack_bundle(path, root):
+    """Extract a single explicit Android bundle into caller-owned staging.
+
+    Reuse the regular backup inspector and installer; no archive metadata is
+    trusted as package identity, and ordinary PC ZIPs keep their existing route.
+    """
+    try:
+        entries = _unpack(Path(path), Path(root), {'bytes': 0, 'files': 0})
+    except android.FrameError:
+        raise
+    except (OSError, ValueError, RuntimeError, EOFError, struct.error, zlib.error,
+            zipfile.BadZipFile) as error:
+        raise android.FrameError('Could not read Android bundle: ' + str(error)) from error
+    paths = [str(local) for local, _, _, _ in entries]
+    if not any(Path(p).suffix.lower() == '.apk' for p in paths):
+        raise android.FrameError('Android bundles must contain a base APK and optional supported splits or OBB files.')
+    return paths
+
+
+def _apk_identity(path):
+    """Use the manifest, not the filename, to identify a base or split APK."""
+    try:
+        with zipfile.ZipFile(path) as archive:
+            elements = frame_apk.manifest_elements(
+                frame_apk._read(archive, 'AndroidManifest.xml', frame_apk.MAX_MANIFEST))
+        attrs = next((attrs for tag, attrs in elements if tag == 'manifest'), {})
+        package = (attrs.get('package') or (None, None, None))[2]
+        split = (attrs.get('split') or (None, None, None))[2]
+        code = (attrs.get('versionCode') or (None, None, None))[1]
+        major = (attrs.get('versionCodeMajor') or (None, 0, None))[1]
+        if not package or not android.PKG_RE.fullmatch(package):
+            raise android.FrameError(f'{path.name}: no valid package in APK manifest')
+        return package, split, (major, code) if code is not None else None
+    except (zipfile.BadZipFile, frame_apk.ApkError, OSError, UnicodeError,
+            ValueError, RuntimeError, EOFError, zlib.error, struct.error,
+            IndexError) as error:
+        raise android.FrameError(f'Could not read APK manifest in {path.name}: {error}') from error
+
+
+def _check_standalone(path):
+    try:
+        with zipfile.ZipFile(path) as archive:
+            elements = frame_apk.manifest_elements(
+                frame_apk._read(archive, 'AndroidManifest.xml', frame_apk.MAX_MANIFEST))
+        if any((tag == 'manifest' and attrs.get('split', (None, None, None))[2]) or
+               (tag == 'application' and attrs.get('isSplitRequired', (None, 0, None))[1])
+               for tag, attrs in elements):
+            raise android.FrameError('This backup needs split APKs. This importer accepts only a standalone APK; '
+                                     'use the documented Quest/CLI split workflow for supported library/asset splits.')
+    except (zipfile.BadZipFile, frame_apk.ApkError, OSError, ValueError, struct.error, IndexError) as error:
+        raise android.FrameError('Could not read APK manifest: ' + str(error)) from error
+
+
+def inspect(paths, discover=False):
+    """Inspect selected files before installing anything. Desktop APK drops can find
+    sibling OBBs; browser uploads include only files explicitly selected by the user."""
+    if not isinstance(paths, list) or not paths or len(paths) > 100:
+        raise android.FrameError('Choose one game APK and its .obb game-data files together.')
+    files = []
+    for value in paths:
+        path = Path(value).expanduser().absolute()
+        if path.is_dir():
+            files.extend(p for p in sorted(path.iterdir()) if p.suffix.lower() in ('.apk', '.obb'))
         else:
-            budget['bytes'] += path.stat().st_size
-            budget['files'] += 1
-            entries = [(path, *_kind(path.name))]
-        if budget['bytes'] > MAX_BYTES or budget['files'] > MAX_FILES:
-            raise android.FrameError('Android import exceeds its size or file limit')
-        packages = set()
-        for local, kind, pkg, rel in entries:
-            split = None
-            if kind == 'apk':
-                started = time.time()
-                try:
-                    with zipfile.ZipFile(local) as archive:
-                        elements = frame_apk.manifest_elements(
-                            frame_apk._read(archive, 'AndroidManifest.xml', frame_apk.MAX_MANIFEST))
-                        attrs = next(a for tag, a in elements if tag == 'manifest')
-                    pkg = attrs.get('package', (None, None, None))[2]
-                    split = attrs.get('split', (None, None, None))[2]
-                except (OSError, ValueError, StopIteration, struct.error, IndexError, KeyError,
-                        frame_apk.ApkError, zipfile.BadZipFile) as e:
-                    error = android.FrameError('Could not read APK manifest: ' + str(e))
-                    android._after_install(None, None, error, started)
-                    raise error from e
-            if not pkg or not android.PKG_RE.fullmatch(pkg):
-                raise android.FrameError('Invalid Android package in import')
-            packages.add(pkg)
-            group = groups.setdefault(pkg, {'package': pkg, 'base': None, 'splits': [], 'obb': [],
-                                             'data': None, 'required': False,
-                                             'split_names': set(), 'data_names': set()})
-            if kind == 'apk':
-                if split:
-                    if split in group['split_names']:
-                        raise android.FrameError('Duplicate split APK: ' + split)
-                    group['split_names'].add(split)
-                    group['splits'].append(local)
-                elif group['base']:
-                    raise android.FrameError('Several base APKs for ' + pkg + '; choose one build or device variant')
-                else:
-                    group['base'] = local
-                    group['required'] = any(bool(a.get('isSplitRequired', (None, 0, None))[1])
-                                            for tag, a in elements if tag == 'application')
-            elif kind == 'obb':
-                if local.stat().st_size == 0:
-                    raise android.FrameError('OBB game data must not be empty')
-                if local.name in {p.name for p in group['obb']}:
-                    raise android.FrameError('Duplicate OBB: ' + local.name)
-                group['obb'].append(local)
-            elif kind == 'data':
-                name = '/'.join(rel).casefold()
-                if name in group['data_names']:
-                    raise android.FrameError('Duplicate Android/data file')
-                group['data_names'].add(name)
-                # Private destination, unrelated to archive paths or package-controlled symlinks.
-                group['data'] = root / ('data-' + pkg)
-                target = group['data'].joinpath(*rel)
-                target.parent.mkdir(parents=True, exist_ok=True)
-                local.rename(target)
-        if path.suffix.lower() in ARCHIVES and len(packages) != 1:
-            raise android.FrameError('An Android bundle must contain one matching app and its data')
-    for group in groups.values():
-        base, splits = group['base'], group['splits']
-        if splits and not base:
-            raise android.FrameError('Split APK set is missing its base APK')
-        if group['required'] and not splits:
-            raise android.FrameError('This base APK requires splits; select the complete APK set together')
-        if base:
-            started = time.time()
+            files.append(path)
+    files = list(dict.fromkeys(files))
+    if not files or len(files) > 100:
+        raise android.FrameError('No Android backup found. Choose a folder containing one APK and its game data.')
+    for path in files:
+        if path.suffix.lower() not in ('.apk', '.obb') or not path.is_file() or path.stat().st_size == 0:
+            raise android.FrameError(f'{path.name}: choose a nonempty APK or .obb game-data file.')
+    apks = [p for p in files if p.suffix.lower() == '.apk']
+    apk, splits = None, []
+    if apks:
+        identities = [(p, *_apk_identity(p)) for p in apks]
+        bases = [p for p, _, split, _ in identities if not split]
+        if len(bases) != 1:
+            raise android.FrameError('Choose one game at a time: exactly one base APK is required.')
+        apk = bases[0]
+        package, version = next((pkg, code) for p, pkg, _, code in identities if p == apk)
+        split_names = set()
+        for path, pkg, split, code in identities:
+            if path == apk:
+                continue
+            if pkg != package or split in split_names:
+                raise android.FrameError('Split APKs must have the same package and distinct split names.')
+            if version is None or code is None or code != version:
+                raise android.FrameError('Split APK version cannot be verified against the base APK.')
+            split_names.add(split)
+            splits.append(path)
+    if apk:
+        if not splits:
+            _check_standalone(apk)
+        info = android.apk_info(str(apk))
+        if not splits:
             try:
-                checked = quest.inspect(group['package'], str(base), [str(p) for p in splits])
+                android.check_installable(info)
             except android.FrameError as error:
-                # Retain the older-build lookup offered by the original single-APK uploader.
-                info = android.apk_info(base)
-                abis = set(info['abis'])
-                for split in splits:
-                    abis.update(android.apk_info(split)['abis'])
-                try:
-                    android.check_installable(dict(info, abis=sorted(abis)))
-                except android.FrameError as incompatible:
-                    incompatible.apk = {'package': info['package'], 'version_code': info.get('version_code'),
-                                        'blocker': str(incompatible)}
-                    android._after_install(info, None, incompatible, started)
-                    raise incompatible from error
+                error.apk = {'package': info['package'], 'version_code': info.get('version_code'),
+                             'blocker': str(error)}
                 raise
-            if splits and (checked['version_code'] is None or any(
-                    android.apk_info(p).get('version_code') != checked['version_code'] for p in splits)):
-                raise android.FrameError('Base and split APKs must have the same version code')
-            group['checked'] = checked
-    if not groups:
-        raise android.FrameError('No Android app or game data found')
-    return list(groups.values())
+        if splits:
+            added = android.split_entries(str(apk), [str(p) for p in splits])
+            if any(name.startswith('lib/') and not name.startswith('lib/arm64-v8a/') for name in added):
+                raise android.FrameError('This split set includes native libraries for another device. '
+                                         'Choose only the arm64-v8a split for the Frame.')
+        checked = quest.inspect(info['package'], str(apk), [str(p) for p in splits])
+        pkg = checked['package']
+        if discover and len(files) == 1:
+            files.extend(p for p in sorted(apk.parent.iterdir())
+                         if p not in files and OBB.fullmatch(p.name) and OBB.fullmatch(p.name)[2] == pkg)
+    else:
+        packages = {OBB.fullmatch(p.name)[2] for p in files if OBB.fullmatch(p.name)}
+        if len(packages) != 1:
+            raise android.FrameError('Choose the APK and game-data files for one game together.')
+        pkg = packages.pop()
+        if not android.PKG_RE.fullmatch(pkg):
+            raise android.FrameError('The game-data filename has an invalid Android package name.')
+        meta = android.read_meta(pkg)
+        if not meta:
+            raise android.FrameError('This game is not installed. Add its APK alongside these game-data files.')
+        checked = {k: meta.get(k) for k in ('package', 'label', 'version', 'version_code')}
+        checked['version_code'] = quest._installed_code(pkg, meta)
+        if checked['version_code'] is None:
+            raise android.FrameError('Add the matching APK so Frame Control can check which game version this data belongs to.')
+        checked['warnings'] = []
+    obb = [p for p in files if p.suffix.lower() == '.obb']
+    if len(obb) > 99:
+        raise android.FrameError('Choose one APK and at most 99 game-data files.')
+    if obb and checked['version_code'] is None:
+        raise android.FrameError('The APK has no readable version code, so its game-data target cannot be checked.')
+    names = set()
+    for path in obb:
+        match = OBB.fullmatch(path.name)
+        if not match or match[2] != pkg:
+            raise android.FrameError(f'{path.name} does not belong to {checked["label"]}. Choose matching game data.')
+        if not path.is_file() or not path.stat().st_size or path.name in names:
+            raise android.FrameError(f'{path.name}: game-data files must be nonempty and have unique names.')
+        names.add(path.name)
+    return {'apk': apk, 'splits': splits, 'obb': obb, 'checked': checked,
+            'signatures': {str(p): (p.stat().st_size, p.stat().st_mtime_ns) for p in [*apks, *obb]}}
 
 
-def import_files(paths, display='auto', progress=None):
+def public(plan):
+    checked = plan['checked']
+    return {**checked, 'apk': plan['apk'].name if plan['apk'] else None,
+            'splits': [p.name for p in plan['splits']],
+            'obb': [{'name': p.name, 'size': p.stat().st_size} for p in plan['obb']],
+            'size': sum(size for size, _ in plan['signatures'].values())}
+
+
+def install(plan, display='auto', progress=None):
+    """The explicit Import button authorizes starting the game to add its data.
+    Reuse the Quest import's instance/version checks, verified transfer and close."""
+    report = progress or (lambda *_: None)
     if display not in ('auto', 'flat', 'vr'):
-        raise android.FrameError('invalid APK display mode')
-    report = progress or (lambda *args: None)
-    with tempfile.TemporaryDirectory(prefix=f'{TMP_PREFIX}{os.getpid()}-') as directory:
-        report('Checking Android files', 5)
-        plans = prepare(paths, Path(directory))
-        results, pending = [], False
-        with android._install_lock:
-            # Preflight every target before changing any of them.
-            for plan in plans:
-                pkg = plan['package']
-                meta = android.read_meta(pkg)
-                plan['existing'], plan['running'] = meta, quest._running(pkg)
-                if not plan['base']:
-                    if not meta:
-                        raise android.FrameError('Install the APK first for ' + pkg + '; no game data was copied')
-                    plan['checked'] = {'package': pkg, 'label': meta['label'], 'version': meta.get('version'),
-                                       'version_code': quest._installed_code(pkg, meta), 'warnings': []}
-                checked = plan['checked']
-                if plan['running']:
-                    quest._check_target(pkg, meta, checked)
-                    if not (plan['obb'] or plan['data']):
-                        raise android.FrameError('Close ' + checked['label'] + ' before installing it again')
-                elif meta and plan['base'] and (plan['splits'] or plan['obb'] or plan['data']):
-                    have, new = quest._installed_code(pkg, meta), checked['version_code']
-                    if have is None or new is None or int(new) < int(have):
-                        raise android.FrameError('Cannot replace ' + checked['label'] + ' with an older or unknown version')
-            for i, plan in enumerate(plans):
-                pkg, checked = plan['package'], plan['checked']
-                report('Importing ' + checked['label'], 20 + i * 60 // len(plans))
-                if plan['running']:
-                    result = quest.add_game_data(pkg, checked, plan['obb'], plan['data'], report,
-                                                 checked['warnings'], source='your files')
-                else:
-                    meta = plan['existing']
-                    if plan['base']:
-                        meta = android.install(str(plan['base']), splits=[str(p) for p in plan['splits']],
-                                               source=plan['base'].name,
-                                               flatscreen=None if display == 'auto' else display == 'flat')
-                    needs = bool(plan['obb'] or plan['data'])
-                    pending |= needs
-                    message = (f"Installed {meta['label']} in the Steam library." if plan['base'] else
-                               f"{meta['label']}'s game data has not been copied yet.")
-                    if needs:
-                        message += (f" Start {meta['label']} from Steam, leave it open, then drop the same files "
-                                    'again to add game data and close it. Relaunch afterwards. '
-                                    'If it exits immediately, this data-copy path cannot be used yet.')
-                    warnings = list(checked['warnings']) + list(meta.get('vr_issues', []))
-                    result = {'app': meta, 'message': ' '.join([message, *dict.fromkeys(warnings)])}
-                results.append(result)
-        report('Done', 100)
-        return {'message': ' '.join(r['message'] for r in results),
-                'apps': [r['app'] for r in results], 'app': results[0]['app'] if len(results) == 1 else None,
-                'needs_game_data': pending}
+        raise android.FrameError('Invalid Android display mode.')
+    for path, signature in plan['signatures'].items():
+        p = Path(path)
+        if not p.is_file() or (p.stat().st_size, p.stat().st_mtime_ns) != signature:
+            raise android.FrameError('The backup changed after it was read. Choose the files again.')
+    checked = plan['checked']
+    pkg, label = checked['package'], checked['label']
+    with android._install_lock:
+        if plan['apk']:
+            if quest._running(pkg):
+                raise android.FrameError(f'Close {label} on the Frame, then try importing again.')
+            quest._check_downgrade(android.read_meta(pkg), checked, False)
+            report('Installing the game app', 15)
+            meta = android.install(str(plan['apk']), source=plan['apk'].name,
+                                   flatscreen=None if display == 'auto' else display == 'flat',
+                                   splits=[str(p) for p in plan['splits']])
+        else:
+            meta = android._meta_or_fail(pkg)
+        if not plan['obb']:
+            report('Done', 100)
+            warnings = list(checked['warnings']) + list(meta.get('vr_issues') or [])
+            return {'message': f'Installed {label}. Open it from your Steam library.', 'app': meta,
+                    'needs_game_data': False, 'warnings': warnings}
+        try:
+            if not quest._running(pkg):
+                report('Starting the game to add its data', 55)
+                android.launch(pkg)
+                deadline = time.monotonic() + 90
+                while not quest._running(pkg):
+                    if time.monotonic() >= deadline:
+                        raise android.FrameError('The game did not start. Check that Steam is open on the Frame.')
+                    time.sleep(2)
+            report('Preparing Android for game data', 65)
+            quest._wait_ready(meta)
+            # Android can be booted before Lepton has installed the APK.
+            deadline = time.monotonic() + 90
+            while True:
+                try:
+                    quest._check_android_package(meta, checked['version_code'])
+                    break
+                except quest.QuestError:
+                    if time.monotonic() >= deadline:
+                        raise
+                    time.sleep(2)
+            result = quest.add_game_data(pkg, checked, plan['obb'], None, report,
+                                         checked['warnings'], source='your backup')
+            if result['closed']:
+                result['message'] = (f'Imported {label} and {len(plan["obb"])} game-data '
+                                     f'file{"s" if len(plan["obb"]) != 1 else ""}. '
+                                     'Ready to open from your Steam library.')
+            return result
+        except Exception as error:
+            closed, why = quest._close(pkg)
+            detail = ('The game is closed.' if closed else f'Close the game on the Frame ({why}).')
+            raise android.FrameError(f'{label} is installed, but its game-data setup did not finish: {error}. '
+                                     f'{detail} Import the same backup again to retry.') from error

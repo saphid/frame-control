@@ -1,0 +1,176 @@
+{
+  "date": "2026-10-30",
+  "baseCommit": "3e42bf2cfd65750691690eba833e205c3fefd8cf",
+  "candidateOnly": true,
+  "rating": "broken",
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "nativeArchitecturesExecuted": [
+    "x86_64"
+  ],
+  "arm64CrossCompiledNotExecutedLocally": true,
+  "rustFilesystemTests": {
+    "passed": 9,
+    "failed": 0
+  },
+  "pythonTests": {
+    "ownershipTransport": 15,
+    "compatibilityContracts": 16,
+    "panelTransport": 30
+  },
+  "builderSha256": "1546bb102e27555b0ed56fe9dd00b9f90c6443fab5db299003630db10e6685fd",
+  "build": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "patchSha256": "b45854e34400f52c00f9749e77b6aee3d8ba1ad2e96d4e7f4dcfbe5240c956ae",
+    "ownedUnitSha256": "a8ac5f6e0dc8116c7a10f1e09146e82dcd06a390492b4d330d0b843d94979517",
+    "pythonSha256": "efa3c8f21adddca20124a786a8f4deb65e903b7c8ef39a1977e0f07776cb09a1",
+    "builderImage": "sha256:49b48c81f541784e8e40ea095ae1883159a2ea7b3df40606283612480810b0fa",
+    "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "builds": [
+      {
+        "architecture": "x86_64",
+        "elfMachine": 62,
+        "bytes": 13179776,
+        "sha256": "f38d6d6c75c7093b1d3f385e492e05d0e8a27f3cfcc76c9c5fc113fdcbf4ac1e",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "x86_64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false,
+        "serviceFileTestsExecuted": true
+      },
+      {
+        "architecture": "aarch64",
+        "elfMachine": 183,
+        "bytes": 12159584,
+        "sha256": "7dbc98a0c8f67d01414c3d9d6413512cba848a0f0259b11cdfaae0b9efc60771",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "aarch64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false,
+        "serviceFileTestsExecuted": false
+      }
+    ],
+    "installerEnabled": false,
+    "runtimeVerified": false
+  },
+  "publishedDecky": {
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "pythonSha256": "efa3c8f21adddca20124a786a8f4deb65e903b7c8ef39a1977e0f07776cb09a1",
+    "helperSha256": "f38d6d6c75c7093b1d3f385e492e05d0e8a27f3cfcc76c9c5fc113fdcbf4ac1e",
+    "installerEnabled": false,
+    "independentState": {
+      "listenerConflictBeforeSettingsOrService": true,
+      "foreignServiceFilesPreservedBeforeDBus": true,
+      "reservedManagedNameRefusedAsExternal": true,
+      "ownedRestartReaped": true,
+      "foreignPidIgnored": true,
+      "duplicateOwnershipRefused": true,
+      "activeReloadCount": 3,
+      "unrelatedProcessPreserved": true,
+      "privateSocketMode": true,
+      "privateHttpProxy": true,
+      "privateFixtureAuthErrorPreserved": true,
+      "privateSocketCleanupOnReload": true,
+      "loaderExitStoppedOwnedWatchdog": true
+    },
+    "serviceManagerVerified": false,
+    "result": "published Decky discovery, disabled defaults, native listener/ownership conflicts, owned restart, three reloads and private-socket HTTP transport passed; the upstream HTTP fixture is synthetic; service control, actual Syncthing, sync, Frame and VR unverified",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "architecture": "x86_64",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-candidate.py": "28ac8b3168a7e29c33c214cb7e84bec93424e1ec68516193b47b59c88071692f",
+      "tests/decky-runtime/syncthing_candidate.py": "ed70a32ed72faf9d134b49f9370ed4cb6112ab28da98e8a5d8f69860b8c7981f",
+      "ui/vendor/syncthing-0.2.7/main.py": "efa3c8f21adddca20124a786a8f4deb65e903b7c8ef39a1977e0f07776cb09a1",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "b45854e34400f52c00f9749e77b6aee3d8ba1ad2e96d4e7f4dcfbe5240c956ae",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "a8ac5f6e0dc8116c7a10f1e09146e82dcd06a390492b4d330d0b843d94979517"
+    }
+  },
+  "realSyncthing": {
+    "runtime": "v2.1.7",
+    "binarySha256": "f5c12679f2bad1b5eff619ba7b04ead1a457e439a1e55dc640d4d8995d7f4dbd",
+    "helperSha256": "f38d6d6c75c7093b1d3f385e492e05d0e8a27f3cfcc76c9c5fc113fdcbf4ac1e",
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "independentState": {
+      "twoWaySync": true,
+      "runtimeRestartPreservedFiles": true,
+      "realRestProxy": true,
+      "realApiKeyErrorPreserved": true,
+      "completionPercent": 100,
+      "deckyShutdownStoppedOwnedHelper": true,
+      "allOwnedProcessesReaped": true
+    },
+    "markerBytes": 3239,
+    "markerSha256": "39fd6ed70748fda5b97fd6b75eeebe1ed9e1a077662c40fd813624420989320e",
+    "reverseBytes": 1677,
+    "reverseSha256": "ebc4a5eb1748124f2cb2ab2f419ae3eea04e5d6c5eee94de06661729f35e5fc7",
+    "realDeckyRpcProxy": {
+      "/rest/system/status": 200,
+      "/rest/system/version": 200,
+      "/rest/config/options": 200,
+      "/rest/config/devices": 200,
+      "/rest/stats/device": 200,
+      "/rest/config/folders": 200,
+      "/rest/stats/folder": 200,
+      "/rest/db/status?folder=framey-private": 200,
+      "/rest/system/connections": 200
+    },
+    "apiKeyErrorStatus": 403,
+    "installerEnabled": false,
+    "syncthingStopBudgetSeconds": 25,
+    "serviceManagerVerified": false,
+    "systemdBus": "absent; service setup stays disabled",
+    "realFrameContacted": false,
+    "runtimeStopElapsedUpperBoundsSeconds": [
+      10.083,
+      10.083
+    ],
+    "architecture": "x86_64",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "runtimeArchiveSha256": "2edc416e7ed136b7c858ed5f3f02a3b8316589605e54c380228ceea7acbf0142",
+    "runtimeArchiveUrl": "https://github.com/syncthing/syncthing/releases/download/v2.1.7/syncthing-linux-amd64-v2.1.7.tar.gz",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+      "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+      "ui/vendor/syncthing-0.2.7/main.py": "efa3c8f21adddca20124a786a8f4deb65e903b7c8ef39a1977e0f07776cb09a1",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "b45854e34400f52c00f9749e77b6aee3d8ba1ad2e96d4e7f4dcfbe5240c956ae",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "a8ac5f6e0dc8116c7a10f1e09146e82dcd06a390492b4d330d0b843d94979517"
+    }
+  },
+  "serviceManagerProbe": {
+    "actualManagerExitCode": 1,
+    "usableManagerBus": false,
+    "machineIdPresent": true,
+    "cgroupWritable": false,
+    "testModeExitCode": 0,
+    "runtimeVerified": false,
+    "hostSecurityChanged": false,
+    "ownedProbeCleaned": true
+  },
+  "remaining": [
+    "new-patch native ARM64 CI",
+    "actual DBus/systemd runtime",
+    "loaded unit identity/drop-ins/aliases/enable links",
+    "Flatpak package ownership and migration",
+    "managed install/update/remove",
+    "browser controls",
+    "Frame runtime",
+    "worn visual/controller usability"
+  ]
+}

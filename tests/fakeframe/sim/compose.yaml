@@ -1,0 +1,44 @@
+# The Frame simulator: one fake Frame on this computer's loopback, for testing
+# Frame Control by hand or from an agent without the headset. scripts/frame-sim.sh
+# drives it; it writes the `frame-sim` SSH alias that points here.
+name: frame-sim
+services:
+  frame:
+    image: frame-sim
+    pull_policy: never
+    container_name: frame-sim
+    hostname: frame               # the Frame's default hostname (docs/ssh.md)
+    init: true
+    ports:
+      - "127.0.0.1:${FRAME_SIM_SSH_PORT:-2222}:22"
+      - "127.0.0.1:${FRAME_SIM_DEVKIT_PORT:-32000}:32000"   # steamos-devkit-service (pairing)
+      - "127.0.0.1:${FRAME_SIM_CTL_PORT:-9999}:9999"        # fakeframe-ctl's control port
+    tmpfs:
+      # Its own filesystem, so `fakeframe-ctl disk-full on` can fill it (it fills RAM:
+      # tmpfs), but big enough for a real game or two.
+      - /home/steamos/devkit-game:size=1g,mode=0755,exec
+    volumes:
+      - keys:/keys
+      - hostkeys:/var/lib/fakeframe-sim
+      # Your public key, so `ssh frame-sim` logs in (init.py EXTRA_KEYS).
+      - ${FRAME_SIM_PUBKEY:?scripts/frame-sim.sh sets FRAME_SIM_PUBKEY}:/etc/fakeframe/authorized_keys.extra:ro
+      # /sys is read-only in a container: each folder is a volume mounted twice,
+      # once where Frame Control reads it and once where the fake writes it
+      # (see tests/fakeframe/compose.yaml; /sys/bus in sim/.../simstate.py).
+      - power:/sys/class/power_supply
+      - power:/var/lib/fakeframe/sys/power_supply
+      - thermal:/sys/class/thermal
+      - thermal:/var/lib/fakeframe/sys/thermal
+      - sysbus:/sys/bus
+      - sysbus:/var/lib/fakeframe/sim/sysbus
+    healthcheck:
+      test: ["CMD", "fakeframe-ctl", "ping"]
+      interval: 2s
+      timeout: 10s
+      retries: 60
+volumes:
+  keys:
+  hostkeys:
+  power:
+  thermal:
+  sysbus:

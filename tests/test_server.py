@@ -88,6 +88,91 @@ class ServerGuards(unittest.TestCase):
                 self.assertIn(mime, headers['Content-Type'])
                 self.assertIn(marker, payload)
 
+    def test_store_page_served_with_anti_framing_headers(self):
+        status, headers, payload = self.request("GET", "/store")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["X-Frame-Options"], "DENY")
+        self.assertIn(b"<title>APK Store</title>", payload)
+
+    def test_nxnative_ui_and_private_source_status(self):
+        code, headers, body = self.request('GET', '/nxnative.js')
+        self.assertEqual(code, 200)
+        self.assertIn('text/javascript', headers['Content-Type'])
+        self.assertIn(b'Preparation steps', body)
+        self.assertEqual(self.request('GET', '/api/nxnative')[0], 403)
+        code, _, body = self.request('GET', '/api/nxnative', headers={'X-Frame-UI':'1'})
+        self.assertEqual(code, 200)
+        result = json.loads(body)
+        self.assertIsInstance(result['sources'], list)
+        self.assertIsInstance(result['games'], list)
+        self.assertIn('command', result['preparation'])
+
+    def test_nxnative_invalid_operations_do_not_start_installs(self):
+        for payload in ({'action':'install','source':'s'}, {'action':'remove'},
+                        {'action':'add','location':False}, {'action':'unknown'}):
+            with self.subTest(payload=payload):
+                code, result = self.post('/api/nxnative', payload)
+                self.assertEqual(code, 400)
+                self.assertNotIn('job', result)
+
+    def test_local_extension_is_listed_and_sandboxed(self):
+        folder = Path(os.environ["FRAME_CONTROL_DATA_DIR"]) / "extensions" / "test-glance"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "manifest.json").write_text(json.dumps({"id": "test-glance", "name": "Test Glance",
+            "version": "1.0", "description": "Test status", "entry": "index.html"}))
+        (folder / "index.html").write_text('<script src="main.js"></script>')
+        (folder / "main.js").write_text('parent.postMessage({type:"frame-control:request",id:1,action:"status"},"*");')
+        try:
+            code, _, body = self.request("GET", "/api/extensions", headers={"X-Frame-UI": "1"})
+            self.assertEqual(code, 200)
+            self.assertIn("test-glance", [x["id"] for x in json.loads(body)["extensions"]])
+            code, headers, body = self.request("GET", "/extension/test-glance/index.html")
+            self.assertEqual(code, 200)
+            self.assertIn(b"main.js", body)
+            self.assertIn("frame-ancestors 'self'", headers["Content-Security-Policy"])
+            self.assertNotIn("X-Frame-Options", headers)
+            self.assertEqual(self.request("GET", "/extension/test-glance/manifest.json")[0], 404)
+            self.assertEqual(self.request("GET", "/extension/test-glance/../index.html")[0], 404)
+            try:
+                (folder / "escape.js").symlink_to(Path(__file__))
+            except OSError:  # Windows may not allow an unprivileged test to create a symlink.
+                pass
+            else:
+                self.assertEqual(self.request("GET", "/extension/test-glance/escape.js")[0], 404)
+        finally:
+            shutil.rmtree(folder)
+
+    def test_decky_write_requires_experimental_acknowledgement(self):
+        code, body = self.post('/api/decky', {'action': 'install'})
+        self.assertEqual(code, 400)
+        self.assertIn('experimental', body['error'])
+
+    def test_incompatible_extension_is_reported_and_assets_are_unavailable(self):
+        folder = Path(os.environ['FRAME_CONTROL_DATA_DIR']) / 'extensions' / 'future-panel'
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / 'manifest.json').write_text(json.dumps({'id': 'future-panel', 'name': 'Future',
+            'version': '1.0', 'description': 'Requires a newer API', 'apiVersion': 2}))
+        (folder / 'index.html').write_text('<p>Incompatible panel</p>')
+        try:
+            self.assertEqual(self.request('GET', '/api/extensions')[0], 403)
+            code, _, body = self.request('GET', '/api/extensions', headers={'X-Frame-UI': '1'})
+            self.assertEqual(code, 200)
+            data = json.loads(body)
+            self.assertNotIn('future-panel', [x['id'] for x in data['extensions']])
+            self.assertTrue(any(x['folder'] == 'future-panel' and 'apiVersion' in x['error']
+                                for x in data['errors']))
+            self.assertEqual(self.request('GET', '/extension/future-panel/index.html')[0], 404)
+        finally:
+            shutil.rmtree(folder)
+
+    def test_headset_page_and_install_acknowledgement(self):
+        code, _, body = self.request('GET', '/headset')
+        self.assertEqual(code, 200)
+        self.assertIn(b'Frame Control VR [fc-headset]', body)
+        code, body = self.post('/api/headset', {'action': 'install'})
+        self.assertEqual(code, 400)
+        self.assertIn('opt-in', body['error'])
+
     def test_foreign_host_rejected(self):
         # DNS rebinding: a hostile name pointed at 127.0.0.1.
         for path in ("/", "/api/status"):
@@ -103,6 +188,10 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(self.request("GET", "/api/stream")[0], 403)
         self.assertEqual(self.request("GET", "/api/shots/image?id=1/250820/20260925225208_1.jpg")[0], 403)
         self.assertEqual(self.request("POST", "/api/launch", {"appid": "620"})[0], 403)
+        self.assertEqual(self.request("GET", "/api/record")[0], 403)
+        self.assertEqual(self.request("GET", "/api/clips")[0], 403)
+        self.assertEqual(self.request("POST", "/api/record", {"action": "start"})[0], 403)
+        self.assertEqual(self.request("POST", "/api/clips/export", {"id": "1/video/bg_620_20261020_201950"})[0], 403)
 
     def test_captures_are_not_cacheable(self):
         # Headset captures show everything on screen; nothing may cache them.
@@ -128,10 +217,23 @@ class ServerGuards(unittest.TestCase):
             ("/api/shots/save", {"ids": [1]}),
             ("/api/shots/save", {"ids": ["1/250820/../../.ssh/id_ed25519"]}),
             ("/api/shots/save", {"ids": ["1/250820/20260925225208_1.jpg; rm -rf ~"]}),
+            ("/api/record", {}),
+            ("/api/record", {"action": "explode"}),
+            ("/api/clips/export", {}),
+            ("/api/clips/export", {"id": 5}),
+            ("/api/clips/export", {"id": "1/video/../../../../.ssh"}),
+            ("/api/clips/export", {"id": "1/video/bg;rm -rf ~"}),
+            ("/api/clips/export", {"id": "../1/video/bg"}),
         ]
         for path, body in cases:
             status, payload = self.post(path, body)
             self.assertEqual(status, 400, f"{path} {body} -> {payload}")
+
+    def test_recorder_idle_until_started(self):
+        status, _, payload = self.request("GET", "/api/record", headers={"X-Frame-UI": "1"})
+        self.assertEqual((status, json.loads(payload)), (200, {"state": "idle"}))
+        status, payload = self.post("/api/record", {"action": "stop"})
+        self.assertEqual(status, 409, payload)
 
     def test_showing_a_shot_needs_it_saved_here(self):
         status, payload = self.post("/api/open", {"what": "shot", "id": "1/250820/19990101000000_1.jpg"})
@@ -171,24 +273,6 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(self.post("/api/titles", {"action": "discard", "token": r["token"]})[0], 200)
         self.assertEqual(self.post("/api/titles", {"action": "install", "token": r["token"]})[0], 400)
 
-    def test_android_upload_and_zip_detection_stage_one_use_tokens(self):
-        from apk_fixtures import apk, manifest
-        payload = apk({'AndroidManifest.xml': manifest('org.example.game', 0, 0, 30)})
-        archive = io.BytesIO()
-        with zipfile.ZipFile(archive, 'w') as z:
-            z.writestr('base.apk', payload)
-        for mode, name in (('android', 'game.xapk'), ('title', 'game.zip')):
-            with self.subTest(mode=mode):
-                status, _, raw = self.request('POST', '/api/upload', archive.getvalue(),
-                    {'X-Frame-UI': '1', 'X-Mode': mode, 'X-Filename': name})
-                staged = json.loads(raw)
-                self.assertEqual(status, 200, staged)
-                self.assertTrue(staged['android'])
-                body = {'action': 'discard', 'tokens': [staged['token']]}
-                self.assertEqual(self.post('/api/android-import', body)[0], 200)
-                body['action'] = 'import'
-                self.assertEqual(self.post('/api/android-import', body)[0], 400)
-
     def test_title_input_validation(self):
         status, _, _ = self.request("POST", "/api/upload", b"not a zip",
                                     {"X-Frame-UI": "1", "X-Mode": "title", "X-Filename": "x.zip"})
@@ -203,6 +287,17 @@ class ServerGuards(unittest.TestCase):
             self.assertEqual(status, 400, f"{body} -> {payload}")
         self.assertEqual(self.request("GET", "/api/titles/job?token=nope", headers={"X-Frame-UI": "1"})[0], 404)
         self.assertEqual(self.request("POST", "/api/titles", {"action": "list"})[0], 403)
+
+    def test_direct_local_transfer_is_desktop_only(self):
+        status, payload = self.post("/api/transfer", {"action": "copy-local", "path": "/tmp/a.bin"})
+        self.assertEqual(status, 403, payload)
+
+    def test_oversized_browser_upload_rejected_without_reading_body(self):
+        status, _, payload = self.request("POST", "/api/upload", b"",
+                                          {"X-Frame-UI": "1", "X-Filename": "large.bin",
+                                           "Content-Length": str(27 * 1024 ** 3)})
+        self.assertEqual(status, 413, payload)
+        self.assertIn(b"limited to 8 GiB", payload)
 
     def test_web_install_needs_the_app_page(self):
         # A website can only open frame-control:// links; it can't call these itself.
@@ -291,7 +386,7 @@ class OneServer(unittest.TestCase):
         self.assertIn("Frame Control on", first.stdout.readline())
         second = subprocess.run([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0"], env=env,
                                 capture_output=True, text=True, timeout=60)
-        self.assertEqual(second.returncode, 1)
+        self.assertEqual(second.returncode, 1, second.stderr)
         self.assertIn("already running", second.stderr)
         first.terminate()
         first.wait(10)
@@ -363,10 +458,27 @@ class OneServer(unittest.TestCase):
 
         # Stopped as the app stops it: by closing stdin (the only way on Windows,
         # where terminate() is a hard kill) and, elsewhere, by SIGTERM too.
-        for stop in ["stdin"] + (["sigterm"] if os.name != "nt" else []):
+        for stop in ["stdin"] + (["sigterm", "stdin+late-sigterm"] if os.name != "nt" else []):
             with self.subTest(stop=stop):
                 left_by_dead = [staged(tmp, "frame-vr-", dead.pid), staged(index_dir, ".download-", dead.pid)]
-                proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
+                command = [sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"]
+                if stop == "stdin+late-sigterm":
+                    # Deliver the app's second stop mechanism exactly as cleanup
+                    # replaces the signal handler: the race observed on a real Mac.
+                    wrapper = (
+                        "import os, runpy, signal, sys; from pathlib import Path\n"
+                        "original = signal.signal\n"
+                        "def install(sig, handler):\n"
+                        "    if sig == signal.SIGTERM and handler == signal.SIG_IGN:\n"
+                        "        os.kill(os.getpid(), signal.SIGTERM)\n"
+                        "    return original(sig, handler)\n"
+                        "signal.signal = install\n"
+                        "sys.argv = sys.argv[1:]\n"
+                        "sys.path.insert(0, str(Path(sys.argv[0]).parent))\n"
+                        "runpy.run_path(sys.argv[0], run_name='__main__')\n"
+                    )
+                    command = [sys.executable, "-c", wrapper, *command[1:]]
+                proc = subprocess.Popen(command,
                                         env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT, text=True)
                 try:
@@ -374,7 +486,7 @@ class OneServer(unittest.TestCase):
                     self.assertEqual([d for d in left_by_dead if d.exists()], [])
                     in_flight = [staged(tmp, "frame-vr-", proc.pid), staged(tmp, "frame-agent-", proc.pid),
                                  staged(index_dir, ".download-", proc.pid)]
-                    if stop == "stdin":
+                    if stop.startswith("stdin"):
                         proc.stdin.close()
                     else:
                         proc.terminate()
@@ -417,7 +529,10 @@ class ArtworkSettings(unittest.TestCase):
                         time.sleep(0.05)
                 key = {"X-Frame-UI": "1", "Content-Type": "application/json"}
                 self.assertEqual(request("GET", "/api/settings/artwork")[0], 403)
-                self.assertEqual(request("POST", "/api/settings/artwork", {"steamgriddb_api_key": "abc"})[0], 403)
+                # The missing-key guard runs before reading a body. Leaving an
+                # unread body on Windows can reset this test connection before
+                # http.client receives the 403 response.
+                self.assertEqual(request("POST", "/api/settings/artwork")[0], 403)
                 status, payload = request("GET", "/api/settings/artwork", headers=key)
                 self.assertEqual((status, json.loads(payload)["steamgriddb_configured"]), (200, False))
                 status, payload = request("POST", "/api/settings/artwork", {"steamgriddb_api_key": "abc_1"}, key)
@@ -495,6 +610,10 @@ class PageScripts(unittest.TestCase):
         r = subprocess.run(["node", str(ROOT / "tests" / "page" / "meta_rows.mjs")], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
+    def test_large_local_file_uses_direct_copy(self):
+        r = subprocess.run(["node", str(ROOT / "tests" / "page" / "large_transfer.mjs")], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
 
 @unittest.skipIf(os.name == "nt", "runs on the Frame (Linux); local-bin/ssh is a POSIX shell script")
 class LocalMode(unittest.TestCase):
@@ -542,6 +661,14 @@ class LocalMode(unittest.TestCase):
         self.assertEqual(status, 200, body)
         self.assertIsInstance(body["titles"], list)
 
+    def test_recordings_are_for_a_computer(self):
+        for method, path, body in (("GET", "/api/record", None), ("GET", "/api/clips", None),
+                                   ("POST", "/api/record", {"action": "start"}),
+                                   ("POST", "/api/clips/export", {"id": "1/video/bg_620_20261020_201950"})):
+            status, payload = self.request(method, path, body)
+            self.assertEqual(status, 400, (path, payload))
+            self.assertIn("computer", payload["error"])
+
     def test_open_is_for_the_app_and_power_needs_a_password(self):
         self.assertEqual(self.request("POST", "/api/open", {"what": "terminal"})[0], 400)
         status, body = self.request("POST", "/api/open", {"what": "reboot"})
@@ -573,6 +700,8 @@ class UnreachableMessages(unittest.TestCase):
             "No ED25519 host key is known for frame-control-f7b4e9ac and you have requested strict checking.\n"
             "Host key verification failed.": "isn't saved yet",
             "kex_exchange_identification: read: Connection reset by peer": "dropped",
+            "Connection to <ip> closed by remote host.": "dropped",
+            "close - IO is still pending on closed socket. read:1, write:0, io:0000": "dropped",
             "Timed out talking to frame": "too long",
         }
         for raw, words in cases.items():

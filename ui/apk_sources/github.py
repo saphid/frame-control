@@ -1,17 +1,77 @@
 """Curated publisher releases; optional topic discovery is page-only."""
-import fnmatch, json, os, re, urllib.parse
+import fnmatch, hashlib, json, os, re, sys, threading, urllib.parse
 
-from . import SourceError, _web
+from . import SourceAuthError, SourceError, _credentials, _web
 
 KIND = 'github'
 API = 'https://api.github.com'
+ENV = 'FRAME_GITHUB_TOKEN'  # wins over a token saved in source settings
+CREDENTIAL = 'github'  # _credentials key; only ever sent to api.github.com
+_rejected = set()  # SHA-256 of tokens GitHub answered 401 to (this run only)
+_rejected_lock = threading.Lock()
 TOPICS = ('oculus-quest', 'openxr', 'quest')
 HOSTS = ('github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com')
 
 
 def sources():
     return [{'id': KIND, 'kind': KIND, 'name': 'GitHub releases', 'url': 'https://github.com',
-             'builtin': True, 'enabled': True, 'trust': 'community'}]
+             'builtin': True, 'enabled': True, 'trust': 'community', 'token': token_status()}]
+
+
+def _token():
+    """(token, where it came from) or (None, None). The environment variable wins."""
+    env = os.environ.get(ENV)
+    if env:
+        return env, 'env'
+    saved = _credentials.get(CREDENTIAL)
+    if saved and saved.kind == 'bearer':
+        return saved, 'saved'
+    return None, None
+
+
+def _credential(token):
+    if isinstance(token, _credentials.Credential):
+        return token
+    try:
+        return _credentials.bearer(API + '/', token)
+    except ValueError as e:
+        raise SourceError('%s is not a usable GitHub token: %s' % (ENV, e)) from None
+
+
+def _digest(credential):
+    return hashlib.sha256(credential.header().encode()).hexdigest()
+
+
+def token_status():
+    """Whether a token is set, where from, and whether GitHub rejected it; never the token."""
+    token, where = _token()
+    rejected = False
+    if token is not None:
+        try:
+            with _rejected_lock:
+                rejected = _digest(_credential(token)) in _rejected
+        except SourceError:
+            rejected = True
+    return {'set': token is not None, 'from': where, 'rejected': rejected}
+
+
+def set_token(token):
+    """Save a personal access token for api.github.com (FRAME_GITHUB_TOKEN still wins)."""
+    if not isinstance(token, str) or not token.strip():
+        raise SourceError('Paste a GitHub token')
+    try:
+        credential = _credentials.bearer(API + '/', token.strip())
+    except ValueError as e:
+        raise SourceError('That is not a usable GitHub token: ' + str(e)) from None
+    _credentials.put(CREDENTIAL, credential)
+    with _rejected_lock:
+        _rejected.discard(_digest(credential))  # a fresh chance
+    return {'message': 'GitHub token saved' + (' (%s is set and is used instead)' % ENV if os.environ.get(ENV) else '')}
+
+
+def clear_token():
+    _credentials.remove(CREDENTIAL)
+    return {'message': 'GitHub token removed'}
 
 
 def _curated():
@@ -20,13 +80,33 @@ def _curated():
 
 
 def _api(path):
+    """GET from the GitHub API, with the user's token if there is one. If GitHub rejects
+    the token (401), retry once without it, like Obtainium, and remember the rejection."""
     headers = {'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'}
-    token = os.environ.get('FRAME_GITHUB_TOKEN')
-    if token:
-        headers['Authorization'] = 'Bearer ' + token
+    token, _ = _token()
+    auth = _credential(token) if token is not None else None
+    with _rejected_lock:
+        if auth and _digest(auth) in _rejected:
+            auth = None  # already refused this run: don't spend a request on it again
+    hint = ' (add a GitHub token in the store\'s source settings, or set %s, to raise the limit)' % ENV
+    if token is not None and not auth:
+        hint = ' (GitHub rejected your token; replace it in the store\'s source settings)'
+
+    def get(auth):
+        return _web.read(API + path, ('api.github.com',), headers, name='GitHub',
+                         hint='' if auth else hint, auth=auth)
     try:
-        return json.loads(_web.read(API + path, ('api.github.com',), headers, name='GitHub',
-                                    hint='' if token else ' (set FRAME_GITHUB_TOKEN to raise the limit)'))
+        try:
+            data = get(auth)
+        except SourceAuthError:
+            if not auth:
+                raise
+            with _rejected_lock:
+                _rejected.add(_digest(auth))
+            print('GitHub rejected the access token (HTTP 401); continuing without it', file=sys.stderr)
+            hint = ' (GitHub rejected your token; replace it in the store\'s source settings)'
+            data = get(None)
+        return json.loads(data)
     except (ValueError, TypeError) as e:
         raise SourceError('Invalid GitHub response') from e
 

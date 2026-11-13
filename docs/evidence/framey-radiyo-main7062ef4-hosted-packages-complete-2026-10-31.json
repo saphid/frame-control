@@ -1,0 +1,14 @@
+{
+  "head": "8b6b4fafeefeda8fce10f676037f78a96c455862",
+  "at": "2026-10-31T21:13:17.883053+00:00",
+  "qualifiedPackageModes": 4,
+  "arm64Artifact": 13058036271,
+  "uniqueSources": 128,
+  "hashBindings": 1281,
+  "rawSha256": "8b095c55fe63fc6ed19ba2c32d88eb303bef58c2ab7c4039a3baba5ab0ed2505",
+  "published": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "realFrameContacted": false,
+  "publicationContext": "Prepared before current-main integration; published here as exact older-head proof. Historical pending fields retain their preparation scope."
+}

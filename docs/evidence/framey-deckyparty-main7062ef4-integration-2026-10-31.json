@@ -1,0 +1,112 @@
+{
+  "at": "2026-10-31T20:17:20.789650+00:00",
+  "sourceRevision": "1e08214b6624f7b4f0f14d67164e961ed5a110c2",
+  "main": "7062ef4d81d7fa25e1562d22d0b1b92fa526b499",
+  "priorHead": "1d4f64984aece0cc0b221dd41da28b2013000ddd",
+  "passed": true,
+  "sourceAudit": {
+    "at": "2026-10-31T20:07:21.372904+00:00",
+    "sourceRevision": "1e08214b6624f7b4f0f14d67164e961ed5a110c2",
+    "baseMain": "7062ef4d81d7fa25e1562d22d0b1b92fa526b499",
+    "priorHead": "1d4f64984aece0cc0b221dd41da28b2013000ddd",
+    "originalNormalMergeParents": [
+      "1d4f64984aece0cc0b221dd41da28b2013000ddd",
+      "7062ef4d81d7fa25e1562d22d0b1b92fa526b499"
+    ],
+    "currentMainIntegrated": true,
+    "wholeMainCheckerAstPreserved": true,
+    "mainTimerHelpersByteIdentical": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorDeckypartyBodyAndHelpersPreserved": true,
+    "priorDeckypartyBodyPreserved": true,
+    "freeLoaderRuntimeBodyMatchesMain": true,
+    "all37RuntimeDispatchOccurrencesVerified": true,
+    "mainOtherInstallerBranchesPreserved": true,
+    "onlyPriorDeckypartyInstallerBranchChanged": true,
+    "allMainApplyScriptDispatchesPreserved": true,
+    "freeLoaderAndDeckSettingsRuntimeFixturesMatchMain": true,
+    "mainOther115CompleteCatalogRowsPreserved": true,
+    "other115CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleAndInventoryUnchanged": true,
+    "all116InstallPoliciesPreserved": true,
+    "sharedIpcConsoleInventoryUnchanged": true,
+    "mainOther33NativeCasesPreserved": true,
+    "mainRunnerPreservedWithOneNewControl": true,
+    "mainOtherE2eAssertionsPreserved": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "c47525d72087cda0f60998767ee5c70b995bfa28b0388e4b16ec2c6b504111ef",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "5de71cc43a4190064eb4cf5d48e46e369b3fbea85c61e9ea69c6cbc84bfcbb2c",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "6d101ff1ca285b578aae6f8eabdd76113c10317ac3e6272a4be59b3b51b87eca",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "ed1cc7f58f772357be8c387ee8a8f1f947537e580a8c2f3f0442a5459bc0c13d",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeInputCount": 21
+  },
+  "server": {
+    "tests": 1960,
+    "skips": 15
+  },
+  "site": {
+    "tests": 18,
+    "skips": 0
+  },
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 399.247,
+    "records": 116
+  },
+  "nativeArchitecture": "x86_64",
+  "nativeCases": 8,
+  "nativeFingerprints": 21,
+  "deckypartyRpcs": [
+    15,
+    8
+  ],
+  "tabmasterRpcs": [
+    47,
+    48,
+    47
+  ],
+  "timerRpcs": [
+    31,
+    10,
+    18
+  ],
+  "deckypartyReloadSeconds": [
+    0.365,
+    0.376,
+    0.379
+  ],
+  "negativeDeckypartyReloadSeconds": 5.275,
+  "deckypartyStopSeconds": [
+    0.214,
+    0.215
+  ],
+  "ownedCleanupVerified": true,
+  "prior531FailurePreserved": true,
+  "currentHeadHostedArm64AndPackagesVerified": false,
+  "compatibility": "partial",
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "d5be6953c6609468b5daa03201996d7fd610e8d54a2a7797fc54ea27bdc8ed12",
+  "rawBytes": 67854
+}

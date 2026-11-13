@@ -1,0 +1,57 @@
+{
+  "observedAt": "2026-10-30T15:49:32.489981+00:00",
+  "sourceRevision": "fa576a40c4ba69c0432eedbf9bb05a2b6933f364",
+  "architecture": "x86_64",
+  "decky": "v3.3.0",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "diagnosticPluginPrepended": true,
+  "originalImportFailureReproduced": true,
+  "runtime": {
+    "version": "3.14.8 (main, Oct  1 2026, 02:39:56) [GCC 15.2.0]",
+    "versionInfo": [
+      3,
+      14,
+      8,
+      "final",
+      0
+    ],
+    "cacheTag": "cpython-314",
+    "abiFlags": "",
+    "extensionSuffixes": [
+      ".cpython-314-x86_64-linux-gnu.so",
+      ".abi3.so",
+      ".so"
+    ],
+    "executable": "/home/tester/.local/share/frame-control/decky/PluginLoader",
+    "sysPath": [
+      "/tmp/_MEI00000009P3WaJx/base_library.zip",
+      "/tmp/_MEI00000009P3WaJx/python3.14/lib-dynload",
+      "/tmp/_MEI00000009P3WaJx",
+      "/usr/lib/python313.zip",
+      "/usr/lib/python3.13",
+      "/usr/lib/python3.13/lib-dynload",
+      "/usr/local/lib/python3.13/dist-packages",
+      "/usr/lib/python3/dist-packages",
+      "/home/tester/.local/share/frame-control/decky/plugins/decky-terminal/py_modules"
+    ],
+    "modules": {
+      "termios": null,
+      "pty": "/usr/lib/python3.13/pty.py",
+      "tty": "/usr/lib/python3.13/tty.py",
+      "_posixsubprocess": "/tmp/_MEI00000009P3WaJx/python3.14/lib-dynload/_posixsubprocess.cpython-314-x86_64-linux-gnu.so",
+      "_struct": "/tmp/_MEI00000009P3WaJx/python3.14/lib-dynload/_struct.cpython-314-x86_64-linux-gnu.so"
+    }
+  },
+  "logSha256": "683d22d521ea986f7ff201a42920369ef8b6c295179d6e67b50cfe4b0bf2df4e",
+  "resultSha256": "958d7690c63a844c02152d11fb94ef753325a333b6d076e95ad960f11942a546",
+  "sourceSha256": {
+    "tests/decky-runtime/check.py": "e937655be17ec28b2de1bb4f56a5b9bb02250f7dde430791c0fabe5e14a6bafb",
+    "scripts/framey-test-decky-runtime.py": "faee02abc2fb5acb19620b068e48591aa71b4d9762235aaa4478e035a03dfd54",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f"
+  },
+  "rpcMethodsSucceeded": 0,
+  "ptyCommandsExecuted": 0,
+  "arm64AbiVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false
+}

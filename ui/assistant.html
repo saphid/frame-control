@@ -14,7 +14,7 @@ button.primary { background:#176b9c } button:disabled { opacity:.5; cursor:wait 
 summary { overflow-wrap:anywhere; cursor:pointer }
 pre { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; max-height:380px; overflow:auto } [hidden] { display:none!important } #status { min-height:1.5em } small { color:#b8c6d5 }
 </style>
-<header><h1>Frame Control · Assistant</h1><a href="/">Back to Frame Control</a></header>
+<header><h1>Frame Control · Assistant</h1><a id="back" href="/" referrerpolicy="no-referrer">Back to Frame Control</a></header>
 <section id="approval" hidden aria-labelledby="approval-title">
 <h2 id="approval-title">An agent wants to change your Frame</h2>
 <p>Review the exact action below. Approve only if you asked for it. Approval expires after five minutes and works once.</p>
@@ -42,6 +42,8 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; max-height:380
 'use strict';
 const $ = id => document.getElementById(id);
 const key = __FRAME_KEY__;
+const backParams = new URLSearchParams({key});
+$('back').href = '/?' + backParams;
 let generation = 0;
 async function api(path, body) {
   const response = await fetch(path, {method:body === undefined ? 'GET' : 'POST',

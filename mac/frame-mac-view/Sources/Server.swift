@@ -249,7 +249,7 @@ final class WebSocket {
             var payload = Data(buffer[(start + off)..<(start + off + len)])
             if masked {
                 let mask = [UInt8](buffer[(start + maskOff)..<(start + maskOff + 4)])
-                payload.withUnsafeMutableBytes { p in
+                payload.withUnsafeMutableBytes { (p: UnsafeMutableRawBufferPointer) in
                     for i in 0..<len { p[i] ^= mask[i & 3] }
                 }
             }

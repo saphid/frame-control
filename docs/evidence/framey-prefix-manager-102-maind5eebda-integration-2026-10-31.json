@@ -1,0 +1,74 @@
+{
+  "at": "2026-10-31T21:58:21.739862+00:00",
+  "sourceRevision": "77ec170b8af81332100ddfd67a2801e93bdb9bd0",
+  "main": "d5eebdac850bdedaf0472dc1bbc93afede17c710",
+  "priorHead": "7e027694f1a6096e42b77790fb589c84b4a45cfc",
+  "passed": true,
+  "normalMainIntegration": true,
+  "nativeArchitecture": "x86_64",
+  "nativeInputs": 22,
+  "nativeCases": 11,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "prefixManagerCleanStopSeconds": [
+    0.2140760119073093,
+    0.21386240795254707
+  ],
+  "prefixManagerNegativeStopSeconds": 5.2232526964508,
+  "store101FilesAndReceiptUnchanged": true,
+  "github102ExactArchiveRepairVerified": true,
+  "tabmasterRpcs": [
+    47,
+    48,
+    47
+  ],
+  "timerRpcs": [
+    31,
+    10,
+    18
+  ],
+  "deckypartyRpcs": [
+    15,
+    8
+  ],
+  "deckypartyRepairedReloadSeconds": [
+    0.366,
+    0.362,
+    0.363
+  ],
+  "deckypartyNegativeReloadSeconds": 5.273,
+  "server": {
+    "tests": 1960,
+    "skips": 15
+  },
+  "site": {
+    "tests": 18,
+    "skips": 0
+  },
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 399.436,
+    "records": 116,
+    "installedRemoved": 69,
+    "expectedRefusals": 47,
+    "allPriorOutcomesAndReasonsMatch": true
+  },
+  "ownedCleanupVerified": true,
+  "store130Version": "1.0.1",
+  "store130Sha256": "ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473",
+  "store130Compatibility": "partial",
+  "githubCandidateVersion": "1.0.2",
+  "githubCandidateSha256": "12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6",
+  "githubCandidateCompatibility": "unverified",
+  "globalCleanRuntime": false,
+  "realFrameContacted": false,
+  "newHeadHostedArm64AndPackagesQualified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "c56f28f29fe621b5f1f0b0965bad9ef511c8de921ebc35a512fc02a5e3683aba",
+  "rawBytes": 51529
+}

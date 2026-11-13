@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-31T06:59:20.230570+00:00",
+  "sourceRevision": "21e58d4e570c36ff229832cf276ef83a9a07c3fc",
+  "project": "framey-shotty277-902ec62786",
+  "realFrameContacted": false,
+  "sourceSha256": {
+    "tests/fakeframe/Containerfile": "55c56a8d047f50d9c892028c373d228bd674c2b364b4322d82765a4e26ab0804",
+    "tests/fakeframe/host.Containerfile": "6faccc39e4765050f57e82ce4ba1e66609a6a3fb4c23fc4461c846d39e0fd933",
+    "tests/fakeframe/compose.yaml": "064c2b5897c5a6903cf8bb32656021ec1a2b2be58e670b9d95d025962212418f",
+    "tests/e2e/test_framey.py": "717da16ba112d533f4fb2999bd54c5d97221627a9f2498890bdc9e9f482f6aec",
+    "ui/frame_decky_store.py": "b105a6a9d8b84055a298ce904f9c21fc44416adb84f00f4112c156635be5c4d9",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "ui/framey-compatibility.json": "066a18aa25280a8f0ab6faa0ab3fde9f9743319da12e6b402b9f5d34127d76cd"
+  },
+  "imageIds": {
+    "framey-shotty277-902ec62786-frame": "sha256:679f30d953ef03039568b79ecb95ee542e65c8a3fee30300fd68bb84c0238bba",
+    "framey-shotty277-902ec62786-host": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+  },
+  "testReturncode": 0,
+  "ownedProjectDownReturncode": 0,
+  "tagRemovalReturncodes": {
+    "framey-shotty277-902ec62786-frame": 0,
+    "framey-shotty277-902ec62786-host": 0
+  },
+  "remainingOwnedContainers": [],
+  "remainingOwnedVolumes": [],
+  "remainingOwnedNetworks": [],
+  "logSha256": "6a4d098d0168483553e4856e8bfdde49af7ca218375c4beb00f613eef1d4ca83"
+}

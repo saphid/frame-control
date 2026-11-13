@@ -1,0 +1,18 @@
+{
+  "expectedUpstreamCancelledTaskCallbackErrorsCaptured": 99,
+  "cleanupErrorFree": false,
+  "reproduced": true,
+  "emptyEofTaskCreationsBeforeBoundedStop": 100,
+  "scheduledHeartbeatRanDuringThoseCreations": false,
+  "ownedTasksCancelledAndJoined": true,
+  "sourceUnmodified": true,
+  "actualPublishedLoaderExecuted": false,
+  "nativeFailureCauseProven": false,
+  "scope": "Exact pinned upstream UnixSocket class with a private already-EOF asyncio StreamReader; observer bounds creation to100 and then drains owned tasks. This supports EOF starvation as a candidate; it does not establish the cause of the native unload failure.",
+  "pinnedCommit": "67196adfa9b299f20dfb0cc932e88a169417b7d5",
+  "path": "backend/decky_loader/localplatform/localsocket.py",
+  "sourceSha256": "cbc62b1f142df0678de0996c00214c0e0fd9cce35cc032daaa40717e49710138",
+  "realFrameContacted": false,
+  "originalNativeFailureProvenByThisRepro": false,
+  "temporaryPluginInjectionRemoved": true
+}

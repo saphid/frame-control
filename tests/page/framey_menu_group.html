@@ -1,0 +1,61 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><button id="opener">Fixture focus target</button>
+<div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), container=document.getElementById('fixture');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const root=ReactDOM.createRoot(container),opener=document.getElementById('opener');
+  let isMicroSDeckInstalled=false;
+  const presetName='micro sd card',writes=[];
+  window.MicroSDeck={CardsAndGames:[[{uid:'private-card',name:'Private fixture card'},[]]]};
+  const getActionDescription=()=>({});
+  const tabMasterManager={createPresetTab:(...args)=>writes.push(args)};
+  // Only the exact pinned preset-menu expression runs. A private callback
+  // records synthetic selections; no card discovery/library/backend runs.
+  const published=()=>__OFFICIAL_GROUP__;
+  const render=()=>ReactDOM.flushSync(()=>root.render(published()));
+  const buttons=()=>[...container.querySelectorAll('button')];
+  const clickAll=()=>ReactDOM.flushSync(()=>buttons().forEach(button=>button.click()));
+  try {
+    render();
+    opener.focus();
+    for(const button of buttons()){
+      assert(button.matches(':disabled'),'disabled parent left a nested action enabled');
+      button.focus();assert(document.activeElement===opener,'disabled child accepted focus');
+    }
+    clickAll();assert(writes.length===0,'disabled published menu invoked a preset action');
+    assert([...container.querySelectorAll('legend')].map(node=>node.textContent).join(',')===
+      'Micro SD Card,Specific Card','group labels lost');
+    isMicroSDeckInstalled=true;render();
+    assert(buttons().every(button=>!button.matches(':disabled')),'enabled group left children disabled');
+    buttons()[1].focus();assert(document.activeElement===buttons()[1],'enabled action not focusable');
+    clickAll();
+    assert(JSON.stringify(writes)===JSON.stringify([
+      ['micro sd card','Inserted Card'],['micro sd card','Private fixture card','private-card']
+    ]),'published preset callback arguments changed');
+    isMicroSDeckInstalled=false;render();clickAll();
+    assert(writes.length===2,'disabling an existing group did not retire native activation');
+    let individual=0;
+    ReactDOM.flushSync(()=>root.render(React.createElement(DFL.MenuGroup,{label:'Enabled outer'},
+      React.createElement(DFL.MenuItem,{disabled:true,onClick:()=>individual++},'Unavailable'),
+      React.createElement(DFL.MenuGroup,{label:'Disabled nested',disabled:true},
+        React.createElement(DFL.MenuItem,{onSelected:()=>individual++},'Nested unavailable')))));
+    clickAll();assert(individual===0&&buttons().every(button=>button.matches(':disabled')),
+      'individual/nested disabled states were lost');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedGroup:true,
+      nestedDisabledInheritance:true,disabledFocusBlocked:true,disabledClicksBlocked:true,
+      enabledCallbacksPreserved:true,disableAfterUpdate:true,individualDisabledRetained:true,
+      groupLabels:true,syntheticPresetActions:true,realFrameContacted:false,realLibraryEdit:false});
+  }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
