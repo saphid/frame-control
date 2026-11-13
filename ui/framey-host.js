@@ -865,7 +865,8 @@
         'aria-label':title},
         !props.bHideCloseIcon && R.createElement('button', {
           type:'button', disabled:!!modal.running || modalCancelDisabled(modal),
-          onClick:()=>dismissModal(modal)}, cancelText), modal.element);
+          onClick:()=>dismissModal(modal)}, cancelText),
+        R.createElement(DialogBoundary, {close:modal.close}, modal.element));
     }) : null);
   };
   function modalCallback(modal, name) {
@@ -990,6 +991,7 @@
       const failed = failure => {error.textContent='Dialog close callback failed: '+String(failure?.message || failure);};
       try {Promise.resolve(onClosed?.()).catch(failed);} catch (failure) {failed(failure);}
     };
+    modal.close = Close;
     modal.dismiss = () => {
       if (!modals.includes(modal)) return;
       const callback=modal.source?.props?.closeModal;
@@ -1390,6 +1392,19 @@
     }
     render() { return this.state.failure ? R.createElement('p', {role:'alert'},
       `This Decky panel is not compatible with Framey: ${this.state.failure}`) : this.props.children; }
+  }
+  class DialogBoundary extends PanelBoundary {
+    static getDerivedStateFromProps(props, state) {
+      // Only an explicit handle.Update supplies a new decorated element.
+      // Stack/busy redraws keep a failed view retired and healthy state intact.
+      return props.children === state.content ? null : {content:props.children, failure:null};
+    }
+    render() {
+      return this.state.failure ? R.createElement(R.Fragment, null, super.render(),
+        // Match handle.Close: broken plugin cancellation handlers, hidden
+        // close icons or disabled Cancel cannot strand the panel behind inert.
+        R.createElement('button', {type:'button', onClick:this.props.close}, 'Close failed dialog')) : this.props.children;
+    }
   }
   function PluginSurface({plugin}) {
     const [view, setView] = R.useState(plugin.content ? 'panel' : 'settings');
