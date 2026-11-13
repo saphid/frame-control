@@ -411,6 +411,63 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             self.assertEqual(framey_panel.local_bundle(14),
                              (self.folder/'dist/index.js').read_bytes())
 
+    def test_duplicate_owned_ids_cannot_choose_frontend_by_folder_order(self):
+        other = self.plugins/'copied-plugin'
+        (other/'dist/chunks').mkdir(parents=True)
+        (other/'plugin.json').write_text('{"name":"Copied plugin","api_version":2}')
+        (other/'dist/index.js').write_text('export default () => "copied frontend";')
+        (other/'dist/chunks/view.js').write_text('export const title = "Copied settings";')
+        chunks = self.folder/'dist/chunks'
+        chunks.mkdir()
+        (chunks/'view.js').write_text('export const title = "Original settings";')
+        for digest in (RECEIPT, 'b'*64):
+            (other/'.frame-control-store.json').write_text(json.dumps({'storeId':14,'sha256':digest}))
+            for order in ([other,self.folder],[self.folder,other]):
+                for label,read in (
+                        ('bundle',lambda: framey_panel.local_bundle(14)),
+                        ('panel',lambda: framey_panel.panel(14)),
+                        ('entry',lambda: framey_panel.local_module(14,RECEIPT,'index.js')),
+                        ('chunk',lambda: framey_panel.local_module(14,RECEIPT,'chunks/view.js'))):
+                    with self.subTest(digest=digest,first=order[0].name,read=label), \
+                            patch.object(Path,'iterdir',return_value=iter(order)):
+                        with self.assertRaisesRegex(FileNotFoundError,'multiple|ambiguous'):
+                            read()
+
+    def test_duplicate_receipt_blocks_before_bundle_read_and_recovers_without_rewriting_files(self):
+        other = self.plugins/'copied-plugin'
+        other.mkdir()
+        receipt = other/'.frame-control-store.json'
+        receipt.write_text(json.dumps({'storeId':14,'sha256':'b'*64}))
+        # A stale valid ownership receipt is ambiguous even if that folder's
+        # frontend is absent. Do not select the usable copy and start its JS.
+        original = {p:p.read_bytes() for p in self.plugins.rglob('*') if p.is_file()}
+        with patch.object(Path,'read_bytes',side_effect=AssertionError('Frontend read before unique ownership')):
+            with self.assertRaisesRegex(FileNotFoundError,'multiple|ambiguous'):
+                framey_panel.panel(14)
+        self.assertEqual({p:p.read_bytes() for p in self.plugins.rglob('*') if p.is_file()},original)
+        # Repair only this disposable peer receipt; admission must re-read it.
+        receipt.unlink()
+        self.assertEqual(framey_panel.local_bundle(14),original[self.folder/'dist/index.js'])
+        receipt.write_text(json.dumps({'storeId':15,'sha256':'b'*64}))
+        self.assertIn(b'framey-bundle',framey_panel.panel(14))
+
+    def test_panel_ambiguity_agrees_with_existing_backend_identity_guard(self):
+        other = self.plugins/'copied-plugin'
+        (other/'dist').mkdir(parents=True)
+        (other/'plugin.json').write_text('{"name":"Copied plugin","api_version":2}')
+        (other/'dist/index.js').write_text('export default () => "copied frontend";')
+        (other/'.frame-control-store.json').write_text(json.dumps({'storeId':14,'sha256':RECEIPT}))
+        namespace = {'json':json}
+        exec(framey_panel.frame_decky.PLUGIN_SCAN,namespace)
+        found = namespace['plugins'](self.plugins)
+        self.assertEqual([p['storeId'] for p in found],[14,14])
+        with patch.object(framey_panel.frame_decky,'plugin_status',return_value={'plugins':found}):
+            with self.assertRaises(framey_panel.PanelError):
+                framey_panel.call_method(lambda *a,**k:self.fail('Ambiguous backend call reached SSH'),
+                                         14,'get_setting',[],receipt=RECEIPT)
+        with self.assertRaisesRegex(FileNotFoundError,'multiple|ambiguous'):
+            framey_panel.local_bundle(14)
+
     def test_legacy_iife_is_admitted_without_api_manifest(self):
         (self.folder/'plugin.json').write_text(json.dumps({'name':'Legacy', 'flags':[]}))
         (self.folder/'dist/index.js').write_text(
