@@ -1,0 +1,24 @@
+{
+  "main": "5adf2271ed901aa1d522f563a89015ae718e6019",
+  "precedingPrHead": "1561734deb565c8b655f581c6761fb66ea33448c",
+  "integration": "663cafb6bb45339a95935ade4e71bbde904bc8d2",
+  "focusedTests": 134,
+  "actualChromiumStartupTests": 2,
+  "productUiTreeBefore": "7ddcd9cc6f00de273dc9a0cd1f60cf9bc90290f5",
+  "productUiTreeAfter": "7ddcd9cc6f00de273dc9a0cd1f60cf9bc90290f5",
+  "terminalProbeSha256": {
+    "scripts/framey-test-terminal-browser.py": "d0211b167881e88de0f16f35c91ce5728d7cf36bc07ea72747c8a746fb0aec7d",
+    "tests/decky-runtime/terminal_browser.py": "f721918f053df4c4d360f901cf96ee8f197e442cc237704c8ec4498cb89e0780",
+    "tests/decky-runtime/terminal_http.py": "9852d6647126e2b785d9fa0f9947e0c5a40bf5df2eb1fd83e14a893376788c5c",
+    "tests/decky-runtime/terminal_lifecycle.py": "f5e82a58f6d91f2bbc6a7cda7b76f384c2a905b3b935e8216aa3c4b2a5892d21",
+    "tests/decky-runtime/terminal_candidate.py": "a99fa777574e7cb53a755ae561e24ce1e70428ce8885c7f44a72052bd41b5b1f",
+    "tests/page/framey_terminal_events.mjs": "99d8a6e12041682d1d6532fa52e22c57872ae358d3388809d0e75d904df19c37"
+  },
+  "priorHttpProof": "framey-terminal-mainc764-integration-2026-11-14.json",
+  "freshHostedQualificationRequired": true,
+  "precedingHeadNotFullyGreen": true,
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "rawReport": "framey-terminal-main5ad-refresh-2026-11-14.json.gz",
+  "rawReportSha256": "ee64e49056a917d2fb98abdef6baa00489ed824a6ff082cc0e915c4b76b6e30e"
+}
