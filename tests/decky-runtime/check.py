@@ -87,6 +87,7 @@ def main():
     parser.add_argument('--reproduce-deck-shelves-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
+    parser.add_argument('--reproduce-bluetooth-unload-regression', action='store_true')
     parser.add_argument('--terminal-candidate', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-unload-regression', action='store_true')
@@ -404,6 +405,11 @@ def main():
             source = source.replace(old, new)
         (plugin/'main.py').write_text(source)
 
+    if args.reproduce_bluetooth_unload_regression:
+        assert record['id'] == 18
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     candidate = None
     if args.terminal_candidate:
         from terminal_candidate import apply
@@ -799,10 +805,18 @@ def main():
                     report['result'] = 'original unmodified Deck Progress two forced unload kills reproduced; lifecycle failed, not a qualified compatibility pass'
             elif case['probe'] == 'bluetooth-private-bluez':
                 report['privateBluez'] = bluetooth_bluez.exercise(
-                    current, plugin, io.BytesIO(data), record, backend, private_bluez, log)
-                report['result'] = ('published Decky API1 discovery and unmodified backend, private BlueZ '
+                    current, plugin, io.BytesIO(data), record, backend, private_bluez, log,
+                    loader=loader, env=env, processes=processes, rpc=rpc, until_ready=until_ready,
+                    regression=args.reproduce_bluetooth_unload_regression)
+                if args.reproduce_bluetooth_unload_regression:
+                    report['shim'] = None
+                    report['expectedRegression'] = dict(originalPluginUnmodified=True,
+                        forcedPluginKills=1, qualifiedCompatibilityPass=False)
+                report['result'] = ('original Bluetooth child EOF forced kill reproduced; expected negative only'
+                    if args.reproduce_bluetooth_unload_regression else
+                    'published Decky API1 discovery and child-only IPC repair, private BlueZ '
                     'paired-device filtering, adapter selection, alias/battery replies, connection/power '
-                    'round trips and clean shutdown passed; actual radio, pairing, browser and VR unverified')
+                    'round trips, post-EOF RPC, restart and two clean parent-only stops passed; actual radio, pairing, browser and VR unverified')
             elif case['probe'] == 'terminal-import-regression':
                 # Discovery also lists a backend whose import failed. Require
                 # the precise original failure without attempting backend calls.

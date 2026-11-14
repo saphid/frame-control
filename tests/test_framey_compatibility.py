@@ -14,6 +14,15 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_bluetooth_copy_without_child_ipc_repair_requires_reinstall(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 18)
+        old = dict(storeId=18, version=record['version'], sha256=record['sha256'])
+        updated = dict(old, compatShims=['bluetooth-ipc-eof'])
+        plugins = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in plugins], ['partial', 'partial'])
+        self.assertIn('Update or reinstall', plugins[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', plugins[1]['compatibility']['reason'])
+
     def test_fileserver_old_receipt_requires_child_ipc_repair(self):
         record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 60)
         shims = ['deckyfileserver-user-native', 'deckyfileserver-https-address',

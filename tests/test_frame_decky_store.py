@@ -238,6 +238,55 @@ class ArchiveTests(unittest.TestCase):
 
 @unittest.skipIf(os.name == 'nt', 'remote plugin transaction runs on Linux')
 class StoreTransaction(unittest.TestCase):
+    def test_bluetooth_ipc_repair_is_pinned_and_preserves_original_archive_files(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 18)
+        data = official_archive(record)
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        for plugin_id in (18, 42):
+            with self.subTest(plugin_id=plugin_id):
+                result = self.apply('install', data, plugin_id=plugin_id, folder=record['folder'])
+                self.assertEqual(result.returncode, 0, result.stderr)
+                folder = self.folder.parent/record['folder']
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for item in original.infolist():
+                        if item.is_dir():
+                            continue
+                        name = item.filename.split('/', 1)[1]
+                        expected = original.read(item)
+                        if plugin_id == 18 and name == 'main.py':
+                            expected = prefix + expected
+                        self.assertEqual((folder/name).read_bytes(), expected, name)
+                helper = folder/'py_modules/framey_decky_ipc.py'
+                if plugin_id == 18:
+                    self.assertEqual(helper.read_bytes(), Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+                else:
+                    self.assertFalse(helper.exists())
+                receipt = json.loads((folder/'.frame-control-store.json').read_text())
+                self.assertEqual(receipt.get('compatShims', []), ['bluetooth-ipc-eof'] if plugin_id == 18 else [])
+                self.assertEqual(self.apply('remove', plugin_id=plugin_id, folder=record['folder']).returncode, 0)
+        self.assertFalse(frame_decky_store.apply_script(18, '0'*64).startswith('FRAMEY_BLUETOOTH_IPC_SOURCE ='))
+
+    def test_bluetooth_missing_ipc_payload_preserves_installed_copy_and_service(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 18)
+        data = official_archive(record)
+        self.assertEqual(self.apply('install', data, plugin_id=18, folder=record['folder']).returncode, 0)
+        folder = self.folder.parent/record['folder']
+        (folder/'private-saved.txt').write_bytes(b'keep private data')
+        before = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+        calls = self.record_service_calls()
+        original = frame_decky_store.apply_script
+        def without_payload(plugin_id, digest):
+            return original(plugin_id, digest).replace('FRAMEY_BLUETOOTH_IPC_SOURCE =', 'FRAMEY_UNUSED_IPC_SOURCE =', 1)
+        with patch.object(frame_decky_store, 'apply_script', side_effect=without_payload):
+            result = self.apply('update', data, expected=record['sha256'], plugin_id=18, folder=record['folder'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Bluetooth child IPC EOF repair', result.stderr)
+        self.assertEqual({str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}, before)
+        self.assertEqual(calls.read_text(), '')
+
     def test_type_collisions_are_rejected_before_extraction_or_service_changes(self):
         original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
         self.assertEqual(self.apply('install', original).returncode, 0)
