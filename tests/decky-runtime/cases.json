@@ -1,5 +1,13 @@
 [
   {
+    "id": 124,
+    "shim": "alarme-paused-restart",
+    "probe": "alarme-private-lifecycle",
+    "additionalShims": [
+      "alarme-ipc-eof"
+    ]
+  },
+  {
     "id": 19,
     "shim": null,
     "probe": "notebook-private-pages"
@@ -39,7 +47,9 @@
   {
     "id": 23,
     "shim": "animation-preserve-overrides",
-    "additionalShims": ["animation-ipc-eof"],
+    "additionalShims": [
+      "animation-ipc-eof"
+    ],
     "probe": "animation-private-overrides"
   },
   {
@@ -94,7 +104,9 @@
   {
     "id": 131,
     "shim": "download-all-local-queue",
-    "additionalShims": ["download-all-ipc-eof"],
+    "additionalShims": [
+      "download-all-ipc-eof"
+    ],
     "probe": "download-all-logging"
   },
   {
@@ -135,13 +147,17 @@
   {
     "id": 123,
     "shim": "steam-status-verified-tls",
-    "additionalShims": ["steam-status-ipc-eof"],
+    "additionalShims": [
+      "steam-status-ipc-eof"
+    ],
     "probe": "steam-status-private-settings"
   },
   {
     "id": 28,
     "shim": "emuchievements-safe-arm64",
-    "additionalShims": ["emuchievements-ipc-eof"],
+    "additionalShims": [
+      "emuchievements-ipc-eof"
+    ],
     "probe": "emuchievements-private-hash"
   },
   {
@@ -155,7 +171,9 @@
   {
     "id": 114,
     "shim": "network-sentinel-user-psutil",
-    "additionalShims": ["network-sentinel-ipc-eof"],
+    "additionalShims": [
+      "network-sentinel-ipc-eof"
+    ],
     "probe": "network-sentinel"
   },
   {
@@ -174,13 +192,17 @@
   {
     "id": 132,
     "shim": "suggestme-verified-tls",
-    "additionalShims": ["suggestme-ipc-eof"],
+    "additionalShims": [
+      "suggestme-ipc-eof"
+    ],
     "probe": "suggestme-private"
   },
   {
     "id": 79,
     "shim": "notifications-private-logs",
-    "additionalShims": ["notifications-ipc-eof"],
+    "additionalShims": [
+      "notifications-ipc-eof"
+    ],
     "probe": "notifications-private"
   },
   {
@@ -191,7 +213,9 @@
   {
     "id": 50,
     "shim": "storage-cleaner-bounded-delete",
-    "additionalShims": ["storage-cleaner-ipc-eof"],
+    "additionalShims": [
+      "storage-cleaner-ipc-eof"
+    ],
     "probe": "storage-cleaner"
   },
   {
@@ -215,13 +239,17 @@
   {
     "id": 12,
     "shim": "music-control-system-dbus-env",
-    "additionalShims": ["music-control-ipc-eof"],
+    "additionalShims": [
+      "music-control-ipc-eof"
+    ],
     "probe": "mpris"
   },
   {
     "id": 111,
     "shim": "music-control-system-dbus-env",
-    "additionalShims": ["music-control-ipc-eof"],
+    "additionalShims": [
+      "music-control-ipc-eof"
+    ],
     "probe": "mpris"
   },
   {
@@ -236,7 +264,9 @@
   {
     "id": 89,
     "shim": "deckyspy-psutil-and-battery",
-    "additionalShims": ["deckyspy-ipc-eof"],
+    "additionalShims": [
+      "deckyspy-ipc-eof"
+    ],
     "probe": "system-monitor"
   },
   {
@@ -260,13 +290,17 @@
   {
     "id": 125,
     "shim": "localsend-digest-native",
-    "additionalShims": ["localsend-ipc-eof"],
+    "additionalShims": [
+      "localsend-ipc-eof"
+    ],
     "probe": "localsend"
   },
   {
     "id": 100,
     "shim": "surround-owned-runtime",
-    "additionalShims": ["surround-ipc-eof"],
+    "additionalShims": [
+      "surround-ipc-eof"
+    ],
     "probe": "surround-private-audio"
   }
 ]
