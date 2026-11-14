@@ -41,24 +41,51 @@ addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(
     // Direct native activation forwards the original React click event once;
     // onChange still supplies the checked boolean, not the event.
     const clicks=[],changes=[];
-    function Direct({disabled=false}) {
+    function Direct({disabled=false,description,tooltip}) {
       const [checked,setChecked]=React.useState(false);
-      return React.createElement(DFL.DialogCheckbox,{label:'Direct setting',checked,disabled,
+      return React.createElement(DFL.DialogCheckbox,{label:'Direct setting',checked,disabled,description,tooltip,
         onClick:event=>clicks.push({type:event.type,node:event.currentTarget}),
         onChange:value=>{changes.push(value);setChecked(value);}});
     }
-    render(React.createElement(Direct));
+    render(React.createElement(Direct,{description:React.createElement('em',null,'Setting explanation'),
+      tooltip:'Extra checkbox help'}));
+    const helps=container.querySelectorAll('small');
+    assert(helps.length===2&&helps[0].querySelector('em')?.textContent==='Setting explanation'&&
+      helps[1].textContent==='Extra checkbox help','documented checkbox description or tooltip was dropped');
+    assert([...helps].every(node=>node.getClientRects().length&&getComputedStyle(node).display!=='none'),
+      'checkbox help is not visible without hover');
     const direct=input();ReactDOM.flushSync(()=>direct.click());
     assert(clicks.length===1&&clicks[0].type==='click'&&clicks[0].node===direct,'original click event was lost');
     assert(JSON.stringify(changes)==='[true]'&&direct.checked,'boolean change callback was lost');
-    render(React.createElement(Direct,{disabled:true}));
+    ReactDOM.flushSync(()=>helps[0].click());
+    assert(!direct.checked&&JSON.stringify(changes)==='[true,false]'&&clicks.length===2,
+      'clicking explanation must toggle its checkbox exactly once');
+    direct.focus();
+    render(React.createElement(Direct,{description:'Updated explanation',tooltip:'<b>Plain help</b>'}));
+    assert(input()===direct&&document.activeElement===direct&&!direct.checked,'help update replaced input, focus or state');
+    assert(container.textContent.includes('Updated explanation')&&container.textContent.includes('<b>Plain help</b>')&&
+      !container.querySelector('b')&&!container.querySelector('em'),'help update retained old content or interpreted HTML');
+    render(React.createElement(Direct,{disabled:true,description:'Disabled explanation',tooltip:'Still readable'}));
+    assert(container.textContent.includes('Disabled explanation')&&container.textContent.includes('Still readable'),
+      'disabled checkbox lost its explanation');
     ReactDOM.flushSync(()=>input().click());
-    assert(clicks.length===1&&changes.length===1,'disabled checkbox invoked callbacks');
+    ReactDOM.flushSync(()=>container.querySelector('small').click());
+    assert(clicks.length===2&&changes.length===2,'disabled checkbox invoked callbacks');
+    render(React.createElement(Direct,{disabled:true}));
+    assert(!container.querySelector('small'),'removed help retained stale content');
+    // Uncontrolled checkbox state also survives help-only prop changes.
+    render(React.createElement(DFL.DialogCheckbox,{label:'Uncontrolled',defaultChecked:true,tooltip:'First hint'}));
+    const uncontrolled=input();ReactDOM.flushSync(()=>uncontrolled.click());
+    render(React.createElement(DFL.DialogCheckbox,{label:'Uncontrolled',defaultChecked:true,tooltip:'Second hint'}));
+    assert(input()===uncontrolled&&!uncontrolled.checked&&container.textContent.includes('Second hint'),
+      'help update reset an uncontrolled checkbox');
     assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
     ReactDOM.flushSync(()=>root.unmount());root=null;
     document.getElementById('result').textContent=JSON.stringify({passed:true,publishedClassAndStyle:true,
       publishedHitRouting:true,publishedSelectionOnce:true,originalClickEvent:true,booleanChange:true,
-      disabled:true,syntheticFilters:true,realArtworkChanged:false,realFrameContacted:false});
+      disabled:true,syntheticDescriptionAndTooltip:true,visibleWithoutHover:true,descriptionLabelActivation:true,
+      helpUpdatesKeepInputFocusAndState:true,helpTextEscaped:true,disabledHelpVisible:true,removedHelpCleared:true,
+      uncontrolledStatePreserved:true,syntheticFilters:true,realArtworkChanged:false,realFrameContacted:false});
   } catch(error) {
     document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
   }
