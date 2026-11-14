@@ -1,0 +1,203 @@
+{
+  "pr": 483,
+  "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+  "mainBefore": "07c953b266bcb9b6ea24e1fcbba7e91e0de614ea",
+  "merge": "4ee10b041a5e35436aded8606f6de1d2d865d709",
+  "testedIntegration": "1ac6bd52e0ae08f5a1da9c03453359c582422b9f",
+  "testedTree": "e6f05789c1bac11f3a1927803775a222d9c37077",
+  "actualTreeAndParentsVerified": true,
+  "hostedChecksPassed": 19,
+  "nativeArtifactAudit": {
+    "decky-runtime-ubuntu-latest": {
+      "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+      "artifactId": 14110655462,
+      "zipSha256": "145943a7496a752db412c1c38e28847de4759107d125f7c9aef79a1cca2fda6f",
+      "sourceHashesVerified": 56,
+      "primaryCases": 42,
+      "controls": 36,
+      "consoleDigestsVerified": 78,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-483-exact171-native-decky-runtime-ubuntu-latest.json"
+    },
+    "decky-runtime-ubuntu-24.04-arm": {
+      "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+      "artifactId": 14110465239,
+      "zipSha256": "7746c52d3af244257176f27e51d069ccc28994890e4df0c3a87725114fefc8a1",
+      "sourceHashesVerified": 56,
+      "primaryCases": 42,
+      "controls": 36,
+      "consoleDigestsVerified": 78,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-483-exact171-native-decky-runtime-ubuntu-24.04-arm.json"
+    },
+    "terminal-candidate-ubuntu-24.04-arm": {
+      "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+      "artifactId": 14109313680,
+      "zipSha256": "b414f2f26ffcb6747316b04c6b905e9cda2e9595ba438a64f592b089ec752fc7",
+      "sourceHashesVerified": 68,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-483-exact171-native-terminal-candidate-ubuntu-24.04-arm.json"
+    },
+    "terminal-candidate-ubuntu-latest": {
+      "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+      "artifactId": 14108839950,
+      "zipSha256": "794d27bfa4e40f43fa76bac36e7c0ecfe1785d5360e740e366388535b3455da9",
+      "sourceHashesVerified": 68,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-483-exact171-native-terminal-candidate-ubuntu-latest.json"
+    }
+  },
+  "rawReport": "framey-syncthing-arm-browser-merge-4ee10b04-2026-11-14.json.gz",
+  "rawReportSha256": "6e48aaadc584198cdfd7c426143e9c40b76d7b395fe4a2010b541af6c103f5ad",
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "physicalInputVerified": false,
+  "focusedTests": 85,
+  "actualChromiumStartupTests": 2,
+  "packageAudit": {
+    "frame-coordinator-483-exact171-ubuntu-24.04-arm": {
+      "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+      "architecture": "aarch64",
+      "sourceBindings": {
+        "exact": 30,
+        "inputs": 14
+      },
+      "packetSha256": null,
+      "signedInstallAndTwoWaySyncVerified": true,
+      "migrationAndPreservationVerified": true,
+      "ownedMigrationStopSeconds": 10.107,
+      "ownedServiceStopSeconds": 9.834,
+      "ownedCleanupVerified": true,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "browser": {}
+    },
+    "frame-coordinator-483-exact171-ubuntu-24.04-arm-browser-http": {
+      "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+      "architecture": "aarch64",
+      "sourceBindings": {
+        "exact": 137,
+        "inputs": 132
+      },
+      "packetSha256": "4c7649cf3373e6e3f30e49e73b6562ebd81e45b69335d1bcf108beb16faada3d",
+      "signedInstallAndTwoWaySyncVerified": true,
+      "migrationAndPreservationVerified": true,
+      "ownedMigrationStopSeconds": 10.435,
+      "ownedServiceStopSeconds": 9.763,
+      "ownedCleanupVerified": true,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "browser": {
+        "stagesVerified": 4,
+        "captureSha256": {
+          "running1": "d603095923641cbcdbdab3cd4b8d033852788ae16bc7a68260a72eb0c33a9750",
+          "stopped2": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+          "restarted3": "d603095923641cbcdbdab3cd4b8d033852788ae16bc7a68260a72eb0c33a9750",
+          "stopped4": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+        },
+        "capturesVisuallyInspected": true,
+        "manualPortFallbackUsed": true,
+        "startupTraceRetained": true,
+        "httpGatewayVerified": true
+      }
+    },
+    "frame-coordinator-483-exact171-ubuntu-latest": {
+      "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+      "architecture": "x86_64",
+      "sourceBindings": {
+        "exact": 30,
+        "inputs": 14
+      },
+      "packetSha256": null,
+      "signedInstallAndTwoWaySyncVerified": true,
+      "migrationAndPreservationVerified": true,
+      "ownedMigrationStopSeconds": 1.533,
+      "ownedServiceStopSeconds": 1.409,
+      "ownedCleanupVerified": true,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "browser": {}
+    },
+    "frame-coordinator-483-exact171-ubuntu-latest-browser-http": {
+      "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+      "architecture": "x86_64",
+      "sourceBindings": {
+        "exact": 137,
+        "inputs": 132
+      },
+      "packetSha256": "10697d7f67b791d66180eb4b140b749aeceb10062141e8080334d9e8bb96b8c4",
+      "signedInstallAndTwoWaySyncVerified": true,
+      "migrationAndPreservationVerified": true,
+      "ownedMigrationStopSeconds": 2.205,
+      "ownedServiceStopSeconds": 1.996,
+      "ownedCleanupVerified": true,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "browser": {
+        "stagesVerified": 4,
+        "captureSha256": {
+          "running1": "c6fdae8164879c824c97f8c8c304e910c533406c8e0d40dfb32a2244801eb88d",
+          "stopped2": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+          "restarted3": "c6fdae8164879c824c97f8c8c304e910c533406c8e0d40dfb32a2244801eb88d",
+          "stopped4": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+        },
+        "capturesVisuallyInspected": true,
+        "manualPortFallbackUsed": false,
+        "startupTraceRetained": true,
+        "httpGatewayVerified": true
+      }
+    },
+    "frame-coordinator-483-exact171-ubuntu-latest-production-parent-http": {
+      "head": "171c13c1ce6968bde61a95594d20c3fd533de1f8",
+      "architecture": "x86_64",
+      "sourceBindings": {
+        "exact": 138,
+        "inputs": 133
+      },
+      "packetSha256": "55cd3d38e0e553ceb1e72f7fdbd5b946b8db21ce23ef1e0ff357ae336575a761",
+      "signedInstallAndTwoWaySyncVerified": true,
+      "migrationAndPreservationVerified": true,
+      "ownedMigrationStopSeconds": 1.552,
+      "ownedServiceStopSeconds": 1.391,
+      "ownedCleanupVerified": true,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "browser": {
+        "stagesVerified": 4,
+        "captureSha256": {
+          "running1": "f73b537a491c81319d057e7a386b38a241b36b594d1314a2112b15fbbd2dc8b9",
+          "stopped2": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+          "restarted3": "f73b537a491c81319d057e7a386b38a241b36b594d1314a2112b15fbbd2dc8b9",
+          "stopped4": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+        },
+        "capturesVisuallyInspected": true,
+        "manualPortFallbackUsed": false,
+        "startupTraceRetained": true,
+        "httpGatewayVerified": true,
+        "productionParent": {
+          "verified": true,
+          "captureSha256": {
+            "running1": "aa6ae4b6cca6fca474a132e42e2368e9cc2c634c588e0424c93eeecd7fb7d1b3",
+            "stopped2": "f4d94092a724300b4f5ad109f24142b7c70bd2ad6738309df937ec10c98e2455",
+            "restarted3": "aa6ae4b6cca6fca474a132e42e2368e9cc2c634c588e0424c93eeecd7fb7d1b3",
+            "stopped4": "f4d94092a724300b4f5ad109f24142b7c70bd2ad6738309df937ec10c98e2455"
+          },
+          "capturesVisuallyInspected": true
+        }
+      }
+    }
+  },
+  "installerEnabled": false,
+  "historicalArmFailureCauseProven": false,
+  "fetchObjectListsReplicated": false
+}
