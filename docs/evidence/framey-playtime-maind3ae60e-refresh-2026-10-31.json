@@ -1,0 +1,185 @@
+{
+  "at": "2026-10-31T09:25:41.540144+00:00",
+  "sourceRevision": "0d52ef036135ee1b6621865f79e70e22fcccb3bc",
+  "baseMain": "d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f",
+  "priorHead": "f0ada47f9218a4478abcf63bb33d2da04c775da7",
+  "all31MainProbeBodiesPreserved": true,
+  "completePlayTimeProbeAndHelperUnchanged": true,
+  "mainProductionSourceSha256": {
+    "ui/frame_decky_store.py": "b105a6a9d8b84055a298ce904f9c21fc44416adb84f00f4112c156635be5c4d9",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "ui/index.html": "ae864f88cd32e246788f71d71e8bbe96282e950ad3d0e0721a7562a456d28e07",
+    "ui/frame_touch.py": "85bd7630e00cd7cfa24798e9601997d96ff1dd9639e3662bcb87940e335b5930",
+    "ui/server.py": "ccdf981376a8f910e6fb423f3fed3bd3b314bbb8cb02ed427365031286989f10",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581"
+  },
+  "all116PoliciesPreserved": true,
+  "other115CompleteCatalogRecordsPreserved": true,
+  "playtimeCompleteCatalogRecordPreserved": true,
+  "focusedTests": 92,
+  "unitLogSha256": "7b8c3c968800d78fcd0db1661dc388efc00de0f1341172724fada4a06d3847df",
+  "nativeArchitecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "archiveSha256": "10fc3beea48991c77cb02867e919b618d4cd6d5e9c6a6d0ccd5266c13214039f",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "69589e27fbff33f5ec7d7c280558ba808b44ebf65a387aa9e1a74358c292dfea",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "647f1241399cf6ca9b1a81fa9819238cabf7b4281779ca9fd43c501d6870bcd2",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "9a5acdd7a35205a2b787ce729d5274ff9a7730c240a3999e5b1a935c2263b49d",
+    "tests/framey_official.py": "4797e17bee52fdf135c7c6a5e1dea1613e99709bd899dcccd5a24c1b5de5edb6",
+    "ui/frame_decky_store.py": "b105a6a9d8b84055a298ce904f9c21fc44416adb84f00f4112c156635be5c4d9",
+    "tests/decky-runtime/playtime_private.py": "c8337d550ea2ca5ea27e49279566617dd76e4b762c471cac6ece6dec5ac2f061",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "all16SourceFingerprintsVerified": true,
+  "independentPlayTimeAudit": {
+    "rpcCalls": 22,
+    "backendHashes": 40,
+    "stageReadbacks": 6,
+    "databases": [
+      {
+        "user": "76561198000000001",
+        "sha256": "ece0f50c5fb99d1304890ee0cea2bb421f3aa65f34480ee5507a3e20cd1b3026",
+        "bytes": 114688,
+        "integrity": "ok",
+        "rows": {
+          "games": [
+            [
+              "424242",
+              "Private Alice game"
+            ]
+          ],
+          "sessions": [
+            [
+              "424242",
+              300
+            ]
+          ],
+          "totals": [
+            [
+              "424242",
+              300
+            ]
+          ],
+          "tracking": []
+        }
+      },
+      {
+        "user": "76561198000000002",
+        "sha256": "00e740f473644b869e7cad94ce8f1ba48a35dac8c35aa1708784b2a00217d107",
+        "bytes": 114688,
+        "integrity": "ok",
+        "rows": {
+          "games": [
+            [
+              "424242",
+              "Private Bob game"
+            ]
+          ],
+          "sessions": [
+            [
+              "424242",
+              600
+            ]
+          ],
+          "totals": [
+            [
+              "424242",
+              600
+            ]
+          ],
+          "tracking": []
+        }
+      }
+    ],
+    "ownedLoaderStops": [
+      {
+        "returncode": 0,
+        "elapsedSeconds": 0.26413136906921864,
+        "parentOnlySignal": true,
+        "ownedProcessCount": 5,
+        "adoptedChildExits": [
+          {
+            "pid": 19,
+            "returncode": 0
+          },
+          {
+            "pid": 20,
+            "returncode": 0
+          }
+        ],
+        "ownedProcessIdentitiesReaped": true
+      },
+      {
+        "returncode": 0,
+        "elapsedSeconds": 0.21394931292161345,
+        "parentOnlySignal": true,
+        "ownedProcessCount": 5,
+        "adoptedChildExits": [
+          {
+            "pid": 32,
+            "returncode": 0
+          },
+          {
+            "pid": 33,
+            "returncode": 0
+          }
+        ],
+        "ownedProcessIdentitiesReaped": true
+      }
+    ],
+    "loaderConsoleSha256": "4cd129b7d02c62b63d07dd03e5d36133eb7f6fc791b6f5fa36b3af654724a01e",
+    "rawPlaytimeLoaderConsoleRetainedAndAudited": true,
+    "automaticRecordingVerified": false,
+    "browserVerified": false,
+    "realFrameContacted": false,
+    "physicalControllerVerified": false
+  },
+  "completeAvailableConsoleSha256": "4cd129b7d02c62b63d07dd03e5d36133eb7f6fc791b6f5fa36b3af654724a01e",
+  "genericCleanupStops": [
+    {
+      "pid": 22,
+      "signaledProcessGroup": false,
+      "forcedKill": false,
+      "loader": true,
+      "parentOnlySignal": false,
+      "returncode": 0
+    },
+    {
+      "pid": 9,
+      "signaledProcessGroup": false,
+      "forcedKill": false,
+      "loader": true,
+      "parentOnlySignal": false,
+      "returncode": 0
+    }
+  ],
+  "globalCleanShutdownVerified": false,
+  "processReapingEvidence": "Source-bound PID/start-time assertions and adopted-exit records; no complete retained process snapshot.",
+  "rawJsonSha256": "57da73036abef45e482f6a3b2677a27aa63ae10772f9a2401f2f06ef2fe48804",
+  "rawGzipSha256": "507813badeb163ac72eed169e37d14a0cbd85523ee959017831a6406b69737fb",
+  "newOwnedContainers": 0,
+  "newOwnedImageTags": 0,
+  "fullNativeMatrixExpected": {
+    "probes": 41,
+    "archivePins": 34,
+    "sourceFingerprints": 16
+  },
+  "realFrameContacted": false,
+  "compatibility": "partial",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local AMD64 single-case replay only; main package gates and fresh final-head checks/e2e/native/package qualification remain required.",
+    "No automatic recorder/private MobX observer, integrated browser, existing-database migration, Steam library/game lifecycle, managed Frame, wearer/controller or release proof.",
+    "Two scoped zero-exit stops and retained console do not prove global clean plugin shutdown."
+  ]
+}

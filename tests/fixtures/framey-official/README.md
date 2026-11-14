@@ -26,6 +26,9 @@ from a local fixture so CI does not depend on the store being online.
 `117.zip` was added from the digest-verified static audit cache on 2026-10-30.
 A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
+`66.zip` was added from the digest-verified repository-pinned audit cache on
+2026-10-31. No fresh live store metadata was read for this addition.
+
 `134.zip` was downloaded from the official CDN on 2026-10-31 and matched the existing catalog digest. This is not a fresh full-store metadata claim.
 
 `19.zip` was downloaded from the official CDN on 2026-10-30 and matches
@@ -35,7 +38,9 @@ returned HTTP 403; no new listing/version claim follows from that download.
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
 | `19.zip` | Notebook | 0.1.5 | `c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c` |
+| `66.zip` | PlayTime | 3.2.5 | `10fc3beea48991c77cb02867e919b618d4cd6d5e9c6a6d0ccd5266c13214039f` |
 | `37.zip` | Discord Status | 1.5.0 | `00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45` |
+| `133.zip` | Non-Steam Badges | 0.1.0 | `9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131` |
 | `23.zip` | Animation Changer | 1.3.2 | `f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133` |
 | `134.zip` | Deck Progress Tracker | 1.3.6 | `784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3` |
 | `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |
