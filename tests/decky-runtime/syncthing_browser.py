@@ -67,12 +67,19 @@ addEventListener('message',async event=>{
 PARENT = r'''
 let ready=false;window.stage=null;window.startupErrors=[];
 window.startupState={parentInstalled:true,iframeLoads:0,cacheRequests:0,seedReplies:0,readyMessages:0};
+window.startupEvents=[];
+const startedAt=performance.now();
+const traceStartup=(type,method)=>{
+ if(startupEvents.length<32)startupEvents.push({type,method,atMs:Math.round(performance.now()-startedAt)});
+};
 addEventListener('error',event=>startupErrors.push(event.message));
 addEventListener('unhandledrejection',event=>startupErrors.push(String(event.reason)));
 const panel=()=>document.getElementById('panel').contentWindow;
 addEventListener('message',async event=>{
  if(event.source!==panel())return;
  const req=event.data||{};
+ traceStartup(String(req.type||'unknown').slice(0,64),
+   typeof req.method==='string'?req.method.slice(0,64):null);
  if(req.type==='framey:cache:init'){
   startupState.cacheRequests++;
   panel().postMessage({type:'framey:cache:seed',session:req.session,entries:{}},'*');
@@ -89,7 +96,8 @@ addEventListener('message',async event=>{
  try{
   const response=await fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req)});
   const result=await response.json();panel().postMessage({type:'framey:reply',id:req.id,result},'*');
- }catch(e){window.failure='RPC bridge failed';}
+  traceStartup('rpc-reply',req.method);
+ }catch(e){traceStartup('rpc-failure',req.method);window.failure='RPC bridge failed';}
 });
 window.advance=action=>{if(!ready)throw Error('Panel not ready');window.stage=null;
  panel().postMessage({type:'test:advance',action},'*');};
@@ -123,8 +131,10 @@ def ready_page(report):
         phase = 'panel-errors'
         snapshot = candidate.eval("""({errors:window.startupErrors||[],
             state:window.startupState||null,documentState:document.readyState,
-            iframeAssigned:!!document.getElementById('panel')?.getAttribute('src')})""")
+            iframeAssigned:!!document.getElementById('panel')?.getAttribute('src'),
+            events:window.startupEvents||[]})""")
         report['startupErrors'] = snapshot['errors']
+        report['startupEvents'] = snapshot.get('events', [])
         report['startupState'] = {key: snapshot[key] for key in
                                   ('state', 'documentState', 'iframeAssigned')}
     except (OSError, frame_steam.Fail) as error:

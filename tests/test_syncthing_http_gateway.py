@@ -150,6 +150,7 @@ class BrowserParentErrors(unittest.TestCase):
 const assert=require('node:assert/strict'),vm=require('node:vm');
 const replies=[],owned={postMessage:message=>replies.push(message)},handlers=[];
 const context={document:{getElementById:()=>({contentWindow:owned})},
+ performance:require('node:perf_hooks').performance,
  addEventListener:(type,handler)=>handlers.push({type,handler})};
 context.window=context;vm.createContext(context);vm.runInContext(SOURCE,context);
 const message=handlers.find(v=>v.type==='message').handler;
