@@ -1,0 +1,191 @@
+{
+  "pr": 702,
+  "includesMergedPrs": [
+    503,
+    511
+  ],
+  "head": "9948d1620bcf31d5372121af40deb504eb75bdfb",
+  "mainBefore": "98775cd2987c9c0bfb2993d5f70525a413ef7702",
+  "merge": "bbbf7260265e94d00a9a11d0454e29778a9522d4",
+  "testedTree": "3c739e343c158941a1b1d60cbc7157be312b6344",
+  "actualTreeAndParentsVerified": true,
+  "original503And511HeadsVerifiedAncestors": true,
+  "hostedChecksPassed": 25,
+  "actualMainStoreCompatRuntimeTestsPassed": 153,
+  "actualMainPanelTestsPassed": 38,
+  "actualMainPanelBrowserChecksSkipped": 1,
+  "nativeArtifactAudit": {
+    "decky-runtime-ubuntu-latest": {
+      "head": "9948d1620bcf31d5372121af40deb504eb75bdfb",
+      "artifactId": 14108500440,
+      "zipSha256": "49e637135bf81803380366e3108c3e9cd8abd6a1b42a166f7f54109202618334",
+      "sourceHashesVerified": 60,
+      "primaryCases": 44,
+      "controls": 39,
+      "consoleDigestsVerified": 83,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-702-exact9948-native-decky-runtime-ubuntu-latest.json"
+    },
+    "decky-runtime-ubuntu-24.04-arm": {
+      "head": "9948d1620bcf31d5372121af40deb504eb75bdfb",
+      "artifactId": 14107852176,
+      "zipSha256": "5f43fabc4b1c349e1881b298d0c8da64ce028a9d42b96130e1795ae43969250a",
+      "sourceHashesVerified": 60,
+      "primaryCases": 44,
+      "controls": 39,
+      "consoleDigestsVerified": 83,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-702-exact9948-native-decky-runtime-ubuntu-24.04-arm.json"
+    },
+    "terminal-candidate-ubuntu-24.04-arm": {
+      "head": "9948d1620bcf31d5372121af40deb504eb75bdfb",
+      "artifactId": 14107741455,
+      "zipSha256": "3c1df60cff73f67b38ba9460daa48463c7fbbf7b3f1efa83b099dff9114f4a12",
+      "sourceHashesVerified": 72,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-702-exact9948-native-terminal-candidate-ubuntu-24.04-arm.json"
+    },
+    "terminal-candidate-ubuntu-latest": {
+      "head": "9948d1620bcf31d5372121af40deb504eb75bdfb",
+      "artifactId": 14107673981,
+      "zipSha256": "d4f34fcd2b6c6c23c2ceb71309f85cf166523e198a945ddc15a14a659e431f42",
+      "sourceHashesVerified": 72,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-702-exact9948-native-terminal-candidate-ubuntu-latest.json"
+    }
+  },
+  "strictLifecycleAndSqliteAudit": {
+    "ubuntu-latest": {
+      "ownedStops": {
+        "18": 2,
+        "66": 2,
+        "133": 2
+      },
+      "databases": {
+        "76561198000000001": {
+          "sha256": "ece0f50c5fb99d1304890ee0cea2bb421f3aa65f34480ee5507a3e20cd1b3026",
+          "rows": {
+            "games": [
+              [
+                "424242",
+                "Private Alice game"
+              ]
+            ],
+            "sessions": [
+              [
+                "424242",
+                300
+              ]
+            ],
+            "totals": [
+              [
+                "424242",
+                300
+              ]
+            ],
+            "tracking": []
+          },
+          "integrity": "ok"
+        },
+        "76561198000000002": {
+          "sha256": "00e740f473644b869e7cad94ce8f1ba48a35dac8c35aa1708784b2a00217d107",
+          "rows": {
+            "games": [
+              [
+                "424242",
+                "Private Bob game"
+              ]
+            ],
+            "sessions": [
+              [
+                "424242",
+                600
+              ]
+            ],
+            "totals": [
+              [
+                "424242",
+                600
+              ]
+            ],
+            "tracking": []
+          },
+          "integrity": "ok"
+        }
+      }
+    },
+    "ubuntu-24.04-arm": {
+      "ownedStops": {
+        "18": 2,
+        "66": 2,
+        "133": 2
+      },
+      "databases": {
+        "76561198000000001": {
+          "sha256": "ece0f50c5fb99d1304890ee0cea2bb421f3aa65f34480ee5507a3e20cd1b3026",
+          "rows": {
+            "games": [
+              [
+                "424242",
+                "Private Alice game"
+              ]
+            ],
+            "sessions": [
+              [
+                "424242",
+                300
+              ]
+            ],
+            "totals": [
+              [
+                "424242",
+                300
+              ]
+            ],
+            "tracking": []
+          },
+          "integrity": "ok"
+        },
+        "76561198000000002": {
+          "sha256": "00e740f473644b869e7cad94ce8f1ba48a35dac8c35aa1708784b2a00217d107",
+          "rows": {
+            "games": [
+              [
+                "424242",
+                "Private Bob game"
+              ]
+            ],
+            "sessions": [
+              [
+                "424242",
+                600
+              ]
+            ],
+            "totals": [
+              [
+                "424242",
+                600
+              ]
+            ],
+            "tracking": []
+          },
+          "integrity": "ok"
+        }
+      }
+    }
+  },
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "rawReport": "framey-backend-merge-bbbf7260-2026-11-14.json.gz",
+  "rawReportSha256": "4c88ead158da777cc37522d122b9543cd8825f5c185e891cb30adf152f295f0c"
+}
