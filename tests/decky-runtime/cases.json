@@ -8,9 +8,22 @@
     ]
   },
   {
+    "id": 133,
+    "shim": "nonsteam-badges-user-paths",
+    "probe": "nonsteam-private-shortcuts",
+    "additionalShims": [
+      "nonsteam-badges-ipc-eof"
+    ]
+  },
+  {
     "id": 19,
     "shim": null,
     "probe": "notebook-private-pages"
+  },
+  {
+    "id": 66,
+    "shim": null,
+    "probe": "playtime-private-sessions"
   },
   {
     "id": 75,
@@ -80,7 +93,7 @@
   },
   {
     "id": 18,
-    "shim": null,
+    "shim": "bluetooth-ipc-eof",
     "probe": "bluetooth-private-bluez"
   },
   {

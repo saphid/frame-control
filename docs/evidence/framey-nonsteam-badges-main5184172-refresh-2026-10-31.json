@@ -1,0 +1,1499 @@
+{
+  "at": "2026-10-31T07:06:26.260042+00:00",
+  "sourceRevision": "447d0445806557a20cc272e74582898aab7442ad",
+  "baseMain": "51841728090a45f9f452b4cd4ccf93f4caf8df14",
+  "priorHead": "1016d0729866d7809f9925a716c4409ebb63f759",
+  "normalMergeParentsVerified": true,
+  "focusedHostTests": 91,
+  "allTwelveSourceFingerprintsPerReportVerified": true,
+  "catalogUnionAndWineSourcePreserved": true,
+  "nativeNonSteam": {
+    "decky": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "ac09837d690c144673c336b65d797261941adfc22e1d860b332b1928117fef28",
+      "ui/framey_decky_ipc.py": "b938352007c2ac17cb2e79e73cf364884d8d92e6f39be954c92c1dd67e9943b0",
+      "tests/decky-runtime/check.py": "03fa3fd2353a7b77e9a05e42100a914a191da7a5a3b6fcf317ead0ae19a1d237",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "f03f6863ecb99aa852df1d7b0295731fdc852de8f980d05525be117106950e35",
+      "tests/framey_official.py": "87ae38d824418fcacbdb3f7d99c113d27412f63240354e82490b9f4b5c6650ab",
+      "ui/frame_decky_store.py": "ea6a2cfc2b45f1db6bb6459fb18d17f5d20581e34360807619d3c0e91d9f0cca",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "357bd5c472218c510dcdd579cb972706ec3ccc176e6177f3ed2548c8cc448128",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "cases": [
+      {
+        "id": 133,
+        "name": "Non-Steam Badges",
+        "version": "0.1.0",
+        "sha256": "9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131",
+        "shim": "nonsteam-badges-user-paths",
+        "calls": [
+          {
+            "method": "get_all_store_mappings",
+            "result": {}
+          },
+          {
+            "method": "get_all_store_mappings",
+            "result": {
+              "4294967173": {
+                "store": "gog",
+                "name": "Private GOG"
+              },
+              "4242": {
+                "store": "epic",
+                "name": "Private Epic"
+              },
+              "4343": {
+                "store": "amazon",
+                "name": "Private Amazon"
+              },
+              "4444": {
+                "store": "amazon",
+                "name": "Private Luna"
+              },
+              "4545": {
+                "store": null,
+                "name": "Private Other"
+              }
+            }
+          },
+          {
+            "method": "get_all_store_mappings",
+            "result": {}
+          },
+          {
+            "method": "get_all_store_mappings",
+            "result": {
+              "4294967173": {
+                "store": "gog",
+                "name": "Private GOG"
+              },
+              "4242": {
+                "store": "epic",
+                "name": "Private Epic"
+              },
+              "4343": {
+                "store": "amazon",
+                "name": "Private Amazon"
+              },
+              "4444": {
+                "store": "amazon",
+                "name": "Private Luna"
+              },
+              "4545": {
+                "store": null,
+                "name": "Private Other"
+              }
+            }
+          },
+          {
+            "method": "get_all_store_mappings",
+            "result": {
+              "4294967173": {
+                "store": "gog",
+                "name": "Private GOG"
+              },
+              "4242": {
+                "store": "epic",
+                "name": "Private Epic"
+              },
+              "4343": {
+                "store": "amazon",
+                "name": "Private Amazon"
+              },
+              "4444": {
+                "store": "amazon",
+                "name": "Private Luna"
+              },
+              "4545": {
+                "store": null,
+                "name": "Private Other"
+              }
+            }
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Non-Steam Badges",
+            "version": "0.1.0",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateShortcuts": {
+          "actualUserHome": true,
+          "originalBackendUnmodified": false,
+          "originalBackendSha256": "af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704",
+          "installedBackendSha256": "17c2880823cc0683f887fe95c419b64ba39fe18671eab4257ffecb7422ea1970",
+          "signedAppIdNormalized": true,
+          "storeClassification": true,
+          "missingAppIdSkipped": true,
+          "malformedVdfRefused": true,
+          "mappingsPreservedAcrossLoaderRestart": true,
+          "originalHardcodedHomeFailureReproduced": false,
+          "privateShortcutsPreserved": true,
+          "unchangedArchiveFiles": {
+            "LICENSE": "152ca0aa1e15489763b6d432702ed026c8f1768eda093429ea2e66c366ad756b",
+            "package.json": "74ff4a42daf4cfcf3baf74a626fc2bc2f88fa637fe586d23b523d5031bb73fbf",
+            "plugin.json": "528cc9b00cc8b0afa0fb690a18e90d44c44bf062e9f18b4c03c8bb58f10ce56b",
+            "README.md": "41d9d1775bc5fe61a46e7335ade85bdc1ace065589cbd1f0aceea3eec137a89e",
+            "dist/index.js": "f290b52ae62b4437e3f48d287d47a0f4f3eeb5dc35e55f29c12205454a103721",
+            "dist/index.js.map": "d304f2608749d51720411d64cea85c13319538265878215a88736a9dff708ddc",
+            "py_modules/vdf/vdict.py": "4b88f06f246abf1f7fec566dd9dcbf6a115dfd4e4a4a912265cb1e6173bf43d2",
+            "py_modules/vdf/__init__.py": "8287027feb42abc4d142566780f9b044e2a8164e8ae3139a45dceb27cb3db6c0",
+            "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "payloadSha256": "b342426af8686d61bff588ee426f931d0da91bae4134891dd069dfe0a2775001",
+          "ownedLoaderStops": [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.21395434066653252,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.21481665782630444,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            }
+          ],
+          "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: Unterminated cstring (offset: 1)\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "loaderConsoleSha256": "f36939e4aa182a3836aead693eb27576025c9475885e74ec96e0fbb2df385c32",
+          "loaderConsoleErrorFree": false,
+          "browserVerified": false,
+          "steamPageBadgesVerified": false,
+          "steamSearchVerified": false,
+          "activeSteamAccountSelectionVerified": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API1 private shortcut mappings and restart persistence passed; browser badges, active Steam account, Steam search, Frame and VR unverified"
+      },
+      {
+        "id": 133,
+        "name": "Non-Steam Badges",
+        "version": "0.1.0",
+        "sha256": "9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_all_store_mappings",
+            "result": {}
+          },
+          {
+            "method": "get_all_store_mappings",
+            "result": {}
+          },
+          {
+            "method": "get_all_store_mappings",
+            "result": {}
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Non-Steam Badges",
+            "version": "0.1.0",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateShortcuts": {
+          "actualUserHome": true,
+          "originalBackendUnmodified": true,
+          "originalBackendSha256": "af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704",
+          "installedBackendSha256": "af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704",
+          "signedAppIdNormalized": false,
+          "storeClassification": false,
+          "missingAppIdSkipped": false,
+          "malformedVdfRefused": false,
+          "mappingsPreservedAcrossLoaderRestart": false,
+          "originalHardcodedHomeFailureReproduced": true,
+          "privateShortcutsPreserved": true,
+          "unchangedArchiveFiles": {
+            "LICENSE": "152ca0aa1e15489763b6d432702ed026c8f1768eda093429ea2e66c366ad756b",
+            "package.json": "74ff4a42daf4cfcf3baf74a626fc2bc2f88fa637fe586d23b523d5031bb73fbf",
+            "plugin.json": "528cc9b00cc8b0afa0fb690a18e90d44c44bf062e9f18b4c03c8bb58f10ce56b",
+            "README.md": "41d9d1775bc5fe61a46e7335ade85bdc1ace065589cbd1f0aceea3eec137a89e",
+            "dist/index.js": "f290b52ae62b4437e3f48d287d47a0f4f3eeb5dc35e55f29c12205454a103721",
+            "dist/index.js.map": "d304f2608749d51720411d64cea85c13319538265878215a88736a9dff708ddc",
+            "py_modules/vdf/vdict.py": "4b88f06f246abf1f7fec566dd9dcbf6a115dfd4e4a4a912265cb1e6173bf43d2",
+            "py_modules/vdf/__init__.py": "8287027feb42abc4d142566780f9b044e2a8164e8ae3139a45dceb27cb3db6c0",
+            "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "payloadSha256": "b342426af8686d61bff588ee426f931d0da91bae4134891dd069dfe0a2775001",
+          "ownedLoaderStops": [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.1639456977136433,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.21659332001581788,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessIdentitiesReaped": true,
+              "ownedProcessCount": 5
+            }
+          ],
+          "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "loaderConsoleSha256": "84f1bf62d71d74878d4836d7670617b423f5331ab6986258d23ed7de2c4a3b5f",
+          "loaderConsoleErrorFree": false,
+          "browserVerified": false,
+          "steamPageBadgesVerified": false,
+          "steamSearchVerified": false,
+          "activeSteamAccountSelectionVerified": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "original hardcoded-home empty mapping failure reproduced; browser badges, active Steam account, Steam search, Frame and VR unverified"
+      }
+    ]
+  },
+  "nativeWine": {
+    "decky": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "ac09837d690c144673c336b65d797261941adfc22e1d860b332b1928117fef28",
+      "ui/framey_decky_ipc.py": "b938352007c2ac17cb2e79e73cf364884d8d92e6f39be954c92c1dd67e9943b0",
+      "tests/decky-runtime/check.py": "03fa3fd2353a7b77e9a05e42100a914a191da7a5a3b6fcf317ead0ae19a1d237",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "f03f6863ecb99aa852df1d7b0295731fdc852de8f980d05525be117106950e35",
+      "tests/framey_official.py": "87ae38d824418fcacbdb3f7d99c113d27412f63240354e82490b9f4b5c6650ab",
+      "ui/frame_decky_store.py": "ea6a2cfc2b45f1db6bb6459fb18d17f5d20581e34360807619d3c0e91d9f0cca",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "357bd5c472218c510dcdd579cb972706ec3ccc176e6177f3ed2548c8cc448128",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "cases": [
+      {
+        "id": 68,
+        "name": "Wine Cellar",
+        "version": "0.2.1",
+        "sha256": "7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8",
+        "shim": "wine-cellar-native-bridge",
+        "calls": [
+          {
+            "method": "framey_ws_open",
+            "result": "3e0819981d0e1ddb84ab88f107fe1eb0"
+          },
+          {
+            "method": "framey_ws_send",
+            "result": null
+          },
+          {
+            "method": "framey_ws_poll",
+            "result": {
+              "messages": [
+                "{\"type\":\"UpdateState\",\"command\":null,\"notification\":null,\"steam_visible_tools\":null,\"app_state\":{\"catalog_flavors\":[{\"flavor\":\"ProtonGE\",\"releases\":[]},{\"flavor\":\"Luxtorpeda\",\"releases\":[]},{\"flavor\":\"Boxtron\",\"releases\":[]},{\"flavor\":\"ProtonCachyOS\",\"releases\":[]}],\"installed_tools\":[],\"app_compat_tool_mappings\":{},\"app_compat_tool_mappings_stale\":false,\"current_operation\":null,\"queued_operations\":[],\"updater_state\":\"Idle\",\"updater_last_check\":null,\"steam_visible_tools\":[]},\"operation_state\":null}"
+              ],
+              "closed": false
+            }
+          },
+          {
+            "method": "framey_ws_open",
+            "result": "5bb7dae723cc052bbf3a108765b36d86"
+          },
+          {
+            "method": "framey_ws_send",
+            "result": null
+          },
+          {
+            "method": "framey_ws_poll",
+            "result": {
+              "messages": [
+                "{\"type\":\"UpdateState\",\"command\":null,\"notification\":null,\"steam_visible_tools\":null,\"app_state\":{\"catalog_flavors\":[{\"flavor\":\"ProtonGE\",\"releases\":[]},{\"flavor\":\"Luxtorpeda\",\"releases\":[]},{\"flavor\":\"Boxtron\",\"releases\":[]},{\"flavor\":\"ProtonCachyOS\",\"releases\":[]}],\"installed_tools\":[],\"app_compat_tool_mappings\":{},\"app_compat_tool_mappings_stale\":false,\"current_operation\":null,\"queued_operations\":[],\"updater_state\":\"Idle\",\"updater_last_check\":null,\"steam_visible_tools\":[]},\"operation_state\":null}"
+              ],
+              "closed": false
+            }
+          },
+          {
+            "method": "framey_ws_close",
+            "result": null
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Wine Cellar",
+            "version": "0.2.1",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "helperSha256": "7796bfc96d466824617b2fee96dc1bc4beda30c776a9c61e0cc168d3473d29fe",
+        "wineCellarLifecycle": {
+          "stops": [
+            {
+              "loaderPid": 9,
+              "helperPid": 23,
+              "childBefore": {
+                "state": "S",
+                "parent": 21,
+                "start": "348110449"
+              },
+              "ancestors": [
+                21,
+                20,
+                10,
+                9
+              ],
+              "parentOnlySignal": true,
+              "loaderReturncode": 0,
+              "seconds": 0.201,
+              "samples": [
+                {
+                  "seconds": 0.0,
+                  "child": {
+                    "state": "S",
+                    "parent": 21,
+                    "start": "348110449"
+                  }
+                },
+                {
+                  "seconds": 0.05,
+                  "child": null
+                },
+                {
+                  "seconds": 0.1,
+                  "child": null
+                },
+                {
+                  "seconds": 0.151,
+                  "child": null
+                }
+              ],
+              "exactChildRemaining": false,
+              "forcedPluginKills": 0,
+              "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\nCalling Loader unload function for Wine Cellar (v0.2.1).\nAttempting to unload with plugin Wine Cellar (v0.2.1)'s \"_unload\" function.\n\n[Wine Cask] 2026-10-31 07:05:56 INFO 127.0.0.1:54426 disconnected\nWine Cellar Framey socket closed: 0 bytes read on a total of 2 expected bytes\nTerminating Wine Cask (the Wine Cellar backend)...\nWine Cask stopped with exit code -15\nUnloaded Wine Cellar (v0.2.1)\n\nStopping event loop\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+              "consoleSha256": "26d1540bb5ec50cb0ac8bb319865cc2855e56c7dcf4cd264df8ee661b808c52f",
+              "cleanShutdownVerified": true,
+              "expectedRegression": false,
+              "socketOpenAtUnload": true
+            },
+            {
+              "loaderPid": 37,
+              "helperPid": 51,
+              "childBefore": {
+                "state": "S",
+                "parent": 49,
+                "start": "348110753"
+              },
+              "ancestors": [
+                49,
+                48,
+                38,
+                37
+              ],
+              "parentOnlySignal": true,
+              "loaderReturncode": 0,
+              "seconds": 0.201,
+              "samples": [
+                {
+                  "seconds": 0.0,
+                  "child": {
+                    "state": "S",
+                    "parent": 49,
+                    "start": "348110753"
+                  }
+                },
+                {
+                  "seconds": 0.05,
+                  "child": null
+                },
+                {
+                  "seconds": 0.1,
+                  "child": null
+                },
+                {
+                  "seconds": 0.151,
+                  "child": null
+                }
+              ],
+              "exactChildRemaining": false,
+              "forcedPluginKills": 0,
+              "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\nCalling Loader unload function for Wine Cellar (v0.2.1).\nAttempting to unload with plugin Wine Cellar (v0.2.1)'s \"_unload\" function.\n\nTerminating Wine Cask (the Wine Cellar backend)...\nWine Cask stopped with exit code -15\nUnloaded Wine Cellar (v0.2.1)\n\nStopping event loop\nExpecting value: line 1 column 1 (char 0)\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+              "consoleSha256": "25be18ed5353e1bf450a113b82a40bc3d89c6ff3246fdd92dfc5896e8c0c6630",
+              "cleanShutdownVerified": true,
+              "expectedRegression": false,
+              "socketOpenAtUnload": false
+            }
+          ],
+          "readbacks": [
+            {
+              "type": "UpdateState",
+              "command": null,
+              "notification": null,
+              "steam_visible_tools": null,
+              "app_state": {
+                "catalog_flavors": [
+                  {
+                    "flavor": "ProtonGE",
+                    "releases": []
+                  },
+                  {
+                    "flavor": "Luxtorpeda",
+                    "releases": []
+                  },
+                  {
+                    "flavor": "Boxtron",
+                    "releases": []
+                  },
+                  {
+                    "flavor": "ProtonCachyOS",
+                    "releases": []
+                  }
+                ],
+                "installed_tools": [],
+                "app_compat_tool_mappings": {},
+                "app_compat_tool_mappings_stale": false,
+                "current_operation": null,
+                "queued_operations": [],
+                "updater_state": "Idle",
+                "updater_last_check": null,
+                "steam_visible_tools": []
+              },
+              "operation_state": null
+            },
+            {
+              "type": "UpdateState",
+              "command": null,
+              "notification": null,
+              "steam_visible_tools": null,
+              "app_state": {
+                "catalog_flavors": [
+                  {
+                    "flavor": "ProtonGE",
+                    "releases": []
+                  },
+                  {
+                    "flavor": "Luxtorpeda",
+                    "releases": []
+                  },
+                  {
+                    "flavor": "Boxtron",
+                    "releases": []
+                  },
+                  {
+                    "flavor": "ProtonCachyOS",
+                    "releases": []
+                  }
+                ],
+                "installed_tools": [],
+                "app_compat_tool_mappings": {},
+                "app_compat_tool_mappings_stale": false,
+                "current_operation": null,
+                "queued_operations": [],
+                "updater_state": "Idle",
+                "updater_last_check": null,
+                "steam_visible_tools": []
+              },
+              "operation_state": null
+            }
+          ],
+          "console": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-wine-cellar\n[loader][INFO]: Loaded Wine Cellar (v0.2.1)\nWine Cellar main.py https://github.com/FlashyReese/decky-wine-cellar\n[backend] Settings path: /home/tester/.local/share/frame-control/decky/settings/decky-wine-cellar\nStarting Wine Cask (the Wine Cellar backend)...\nWine Cask started with PID 23\n[Wine Cask] 2026-10-31 07:05:54 INFO Logging to: /home/tester/.local/share/frame-control/decky/logs/decky-wine-cellar/wine-cask.log\n[Wine Cask] 2026-10-31 07:05:54 INFO Using DECKY_USER_HOME: /home/tester\n[Wine Cask] 2026-10-31 07:05:54 INFO Looking for Steam directory in /home/tester\n[Wine Cask] 2026-10-31 07:05:54 INFO Found Steam directory: /home/tester/.local/share/Steam\n[Wine Cask] 2026-10-31 07:05:54 INFO Listening on: 127.0.0.1:48725\n[Wine Cask] 2026-10-31 07:05:54 ERROR Request error: error sending request for url (https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:05:54 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:05:54 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:05:54 ERROR Request error: error sending request for url (https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:05:54 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:05:54 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:05:54 ERROR Request error: error sending request for url (https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:05:54 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:05:54 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:05:54 ERROR Request error: error sending request for url (https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:05:54 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:05:54 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:05:56 INFO Incoming TCP connection from: 127.0.0.1:54426\n[Wine Cask] 2026-10-31 07:05:56 INFO WebSocket connection established: 127.0.0.1:54426\n[Wine Cask] 2026-10-31 07:05:56 INFO Received a message from 127.0.0.1:54426\n[Wine Cask] 2026-10-31 07:05:56 INFO Type: UpdateState\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\nCalling Loader unload function for Wine Cellar (v0.2.1).\nAttempting to unload with plugin Wine Cellar (v0.2.1)'s \"_unload\" function.\n\n[Wine Cask] 2026-10-31 07:05:56 INFO 127.0.0.1:54426 disconnected\nWine Cellar Framey socket closed: 0 bytes read on a total of 2 expected bytes\nTerminating Wine Cask (the Wine Cellar backend)...\nWine Cask stopped with exit code -15\nUnloaded Wine Cellar (v0.2.1)\n\nStopping event loop\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-wine-cellar\n[loader][INFO]: Loaded Wine Cellar (v0.2.1)\nWine Cellar main.py https://github.com/FlashyReese/decky-wine-cellar\n[backend] Settings path: /home/tester/.local/share/frame-control/decky/settings/decky-wine-cellar\nStarting Wine Cask (the Wine Cellar backend)...\nWine Cask started with PID 51\n[Wine Cask] 2026-10-31 07:05:57 INFO Logging to: /home/tester/.local/share/frame-control/decky/logs/decky-wine-cellar/wine-cask.log\n[Wine Cask] 2026-10-31 07:05:57 INFO Using DECKY_USER_HOME: /home/tester\n[Wine Cask] 2026-10-31 07:05:57 INFO Looking for Steam directory in /home/tester\n[Wine Cask] 2026-10-31 07:05:57 INFO Found Steam directory: /home/tester/.local/share/Steam\n[Wine Cask] 2026-10-31 07:05:57 INFO Listening on: 127.0.0.1:60165\n[Wine Cask] 2026-10-31 07:05:57 ERROR Request error: error sending request for url (https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:05:57 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:05:57 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:05:57 ERROR Request error: error sending request for url (https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:05:57 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:05:57 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:05:57 ERROR Request error: error sending request for url (https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:05:57 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:05:57 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:05:57 ERROR Request error: error sending request for url (https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:05:57 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:05:57 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:05:59 INFO Incoming TCP connection from: 127.0.0.1:58830\n[Wine Cask] 2026-10-31 07:05:59 INFO WebSocket connection established: 127.0.0.1:58830\n[Wine Cask] 2026-10-31 07:05:59 INFO Received a message from 127.0.0.1:58830\n[Wine Cask] 2026-10-31 07:05:59 INFO Type: UpdateState\n[Wine Cask] 2026-10-31 07:05:59 INFO 127.0.0.1:58830 disconnected\nWine Cellar Framey socket closed: 0 bytes read on a total of 2 expected bytes\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\nCalling Loader unload function for Wine Cellar (v0.2.1).\nAttempting to unload with plugin Wine Cellar (v0.2.1)'s \"_unload\" function.\n\nTerminating Wine Cask (the Wine Cellar backend)...\nWine Cask stopped with exit code -15\nUnloaded Wine Cellar (v0.2.1)\n\nStopping event loop\nExpecting value: line 1 column 1 (char 0)\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "fb4bdc1156bcd6fb254b80811e29d83ccdccb0f3c3d359ee75d5f757db73c4dc",
+          "cleanShutdownVerified": true,
+          "expectedRegression": false
+        },
+        "result": "actual Decky 3.3.0 discovery, two read-only native helper state replies and two parent-only zero-exit loader stops with reaped children; no install/uninstall, Frame or VR test"
+      },
+      {
+        "id": 68,
+        "name": "Wine Cellar",
+        "version": "0.2.1",
+        "sha256": "7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8",
+        "shim": "wine-cellar-native-bridge",
+        "calls": [
+          {
+            "method": "framey_ws_open",
+            "result": "6dbcab8ad33598708463424417b4ac0d"
+          },
+          {
+            "method": "framey_ws_send",
+            "result": null
+          },
+          {
+            "method": "framey_ws_poll",
+            "result": {
+              "messages": [
+                "{\"type\":\"UpdateState\",\"command\":null,\"notification\":null,\"steam_visible_tools\":null,\"app_state\":{\"catalog_flavors\":[{\"flavor\":\"ProtonGE\",\"releases\":[]},{\"flavor\":\"Luxtorpeda\",\"releases\":[]},{\"flavor\":\"Boxtron\",\"releases\":[]},{\"flavor\":\"ProtonCachyOS\",\"releases\":[]}],\"installed_tools\":[],\"app_compat_tool_mappings\":{},\"app_compat_tool_mappings_stale\":false,\"current_operation\":null,\"queued_operations\":[],\"updater_state\":\"Idle\",\"updater_last_check\":null,\"steam_visible_tools\":[]},\"operation_state\":null}"
+              ],
+              "closed": false
+            }
+          },
+          {
+            "method": "framey_ws_close",
+            "result": null
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Wine Cellar",
+            "version": "0.2.1",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "helperSha256": "7796bfc96d466824617b2fee96dc1bc4beda30c776a9c61e0cc168d3473d29fe",
+        "wineCellarLifecycle": {
+          "stops": [
+            {
+              "loaderPid": 9,
+              "helperPid": 23,
+              "childBefore": {
+                "state": "S",
+                "parent": 21,
+                "start": "348111458"
+              },
+              "ancestors": [
+                21,
+                20,
+                10,
+                9
+              ],
+              "parentOnlySignal": true,
+              "loaderReturncode": 0,
+              "seconds": 5.226,
+              "samples": [
+                {
+                  "seconds": 0.0,
+                  "child": {
+                    "state": "S",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.05,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.1,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.151,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.201,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.251,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.301,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.352,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.402,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.452,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.502,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.553,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.603,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.653,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.703,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.754,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.805,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.855,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.905,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 0.955,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.006,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.056,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.106,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.156,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.206,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.257,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.307,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.357,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.407,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.458,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.508,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.558,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.608,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.659,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.709,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.759,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.809,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.86,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.91,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 1.96,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.01,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.06,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.111,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.161,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.211,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.261,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.312,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.362,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.412,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.462,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.513,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.563,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.613,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.663,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.714,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.764,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.814,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.864,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.915,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 2.965,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.015,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.065,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.116,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.166,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.216,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.266,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.316,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.367,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.417,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.467,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.518,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.568,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.618,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.668,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.719,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.769,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.819,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.869,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.92,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 3.97,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.02,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.07,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.121,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.171,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.221,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.271,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.322,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.372,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.422,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.472,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.523,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.573,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.623,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.673,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.724,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.774,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.824,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.874,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.925,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 4.975,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 5.025,
+                  "child": {
+                    "state": "Z",
+                    "parent": 21,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 5.075,
+                  "child": {
+                    "state": "Z",
+                    "parent": 1,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 5.126,
+                  "child": {
+                    "state": "Z",
+                    "parent": 1,
+                    "start": "348111458"
+                  }
+                },
+                {
+                  "seconds": 5.176,
+                  "child": {
+                    "state": "Z",
+                    "parent": 1,
+                    "start": "348111458"
+                  }
+                }
+              ],
+              "exactChildRemaining": true,
+              "forcedPluginKills": 1,
+              "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\nCalling Loader unload function for Wine Cellar (v0.2.1).\nAttempting to unload with plugin Wine Cellar (v0.2.1)'s \"_unload\" function.\n\nTerminating Wine Cask (the Wine Cellar backend)...\n[plugin][WARNING]: Plugin Wine Cellar (v0.2.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+              "consoleSha256": "9defe30128b526eb7d0f32868bdfefa91d87b8fcede846916c1df490467e15bf",
+              "cleanShutdownVerified": false,
+              "expectedRegression": true,
+              "socketOpenAtUnload": false
+            }
+          ],
+          "readbacks": [
+            {
+              "type": "UpdateState",
+              "command": null,
+              "notification": null,
+              "steam_visible_tools": null,
+              "app_state": {
+                "catalog_flavors": [
+                  {
+                    "flavor": "ProtonGE",
+                    "releases": []
+                  },
+                  {
+                    "flavor": "Luxtorpeda",
+                    "releases": []
+                  },
+                  {
+                    "flavor": "Boxtron",
+                    "releases": []
+                  },
+                  {
+                    "flavor": "ProtonCachyOS",
+                    "releases": []
+                  }
+                ],
+                "installed_tools": [],
+                "app_compat_tool_mappings": {},
+                "app_compat_tool_mappings_stale": false,
+                "current_operation": null,
+                "queued_operations": [],
+                "updater_state": "Idle",
+                "updater_last_check": null,
+                "steam_visible_tools": []
+              },
+              "operation_state": null
+            }
+          ],
+          "console": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-wine-cellar\n[loader][INFO]: Loaded Wine Cellar (v0.2.1)\nWine Cellar main.py https://github.com/FlashyReese/decky-wine-cellar\n[backend] Settings path: /home/tester/.local/share/frame-control/decky/settings/decky-wine-cellar\nStarting Wine Cask (the Wine Cellar backend)...\nWine Cask started with PID 23\n[Wine Cask] 2026-10-31 07:06:04 INFO Logging to: /home/tester/.local/share/frame-control/decky/logs/decky-wine-cellar/wine-cask.log\n[Wine Cask] 2026-10-31 07:06:04 INFO Using DECKY_USER_HOME: /home/tester\n[Wine Cask] 2026-10-31 07:06:04 INFO Looking for Steam directory in /home/tester\n[Wine Cask] 2026-10-31 07:06:04 INFO Found Steam directory: /home/tester/.local/share/Steam\n[Wine Cask] 2026-10-31 07:06:04 INFO Listening on: 127.0.0.1:46957\n[Wine Cask] 2026-10-31 07:06:04 ERROR Request error: error sending request for url (https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:06:04 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:06:04 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:06:04 ERROR Request error: error sending request for url (https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:06:04 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:06:04 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:06:04 ERROR Request error: error sending request for url (https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:06:04 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:06:04 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:06:04 ERROR Request error: error sending request for url (https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1)\ncaused by: error sending request for url (https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1)\ncaused by: client error (Connect)\ncaused by: dns error\ncaused by: error resolving DNS\ncaused by: failed to lookup address information: Temporary failure in name resolution\n[Wine Cask] 2026-10-31 07:06:04 ERROR full debug error: Request(\n    reqwest::Error {\n        kind: Request,\n        url: \"https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1\",\n        source: hyper_util::client::legacy::Error(\n            Connect,\n            ConnectError(\n                \"dns error\",\n                DnsError {\n                    inner: Custom {\n                        kind: Uncategorized,\n                        error: \"failed to lookup address information: Temporary failure in name resolution\",\n                    },\n                },\n            ),\n        ),\n    },\n)\n[Wine Cask] 2026-10-31 07:06:04 ERROR Unable to fetch new releases. No cached releases found.\n[Wine Cask] 2026-10-31 07:06:06 INFO Incoming TCP connection from: 127.0.0.1:55730\n[Wine Cask] 2026-10-31 07:06:06 INFO WebSocket connection established: 127.0.0.1:55730\n[Wine Cask] 2026-10-31 07:06:06 INFO Received a message from 127.0.0.1:55730\n[Wine Cask] 2026-10-31 07:06:06 INFO Type: UpdateState\n[Wine Cask] 2026-10-31 07:06:06 INFO 127.0.0.1:55730 disconnected\nWine Cellar Framey socket closed: 0 bytes read on a total of 2 expected bytes\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\nCalling Loader unload function for Wine Cellar (v0.2.1).\nAttempting to unload with plugin Wine Cellar (v0.2.1)'s \"_unload\" function.\n\nTerminating Wine Cask (the Wine Cellar backend)...\n[plugin][WARNING]: Plugin Wine Cellar (v0.2.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "dc4d217c15580d33665399c77380b0dc49dbfb36ca8b5f6f577f808270ddd9fe",
+          "cleanShutdownVerified": false,
+          "expectedRegression": true
+        },
+        "result": "prior managed IPC EOF failure reproduced: zombie child and Decky forced plugin stop; negative control only, not clean qualification"
+      }
+    ]
+  },
+  "fakeFrame": {
+    "at": "2026-10-31T07:04:46.992675+00:00",
+    "sourceRevision": "447d0445806557a20cc272e74582898aab7442ad",
+    "project": "framey-nonsteam278-c442d0788a",
+    "realFrameContacted": false,
+    "sourceSha256": {
+      "tests/fakeframe/Containerfile": "55c56a8d047f50d9c892028c373d228bd674c2b364b4322d82765a4e26ab0804",
+      "tests/fakeframe/host.Containerfile": "6faccc39e4765050f57e82ce4ba1e66609a6a3fb4c23fc4461c846d39e0fd933",
+      "tests/fakeframe/compose.yaml": "064c2b5897c5a6903cf8bb32656021ec1a2b2be58e670b9d95d025962212418f",
+      "tests/e2e/test_framey.py": "7da41304c95b3de199449d0dfc6575d21faea05fcea56f5e589564d941b71ae9",
+      "ui/frame_decky_store.py": "ea6a2cfc2b45f1db6bb6459fb18d17f5d20581e34360807619d3c0e91d9f0cca",
+      "ui/framey_decky_ipc.py": "b938352007c2ac17cb2e79e73cf364884d8d92e6f39be954c92c1dd67e9943b0",
+      "ui/framey-compatibility.json": "0b1009dd500c31e8faa25298d89ee32020e5470d1dbf8282f1215c08355e4331"
+    },
+    "imageIds": {
+      "framey-nonsteam278-c442d0788a-frame": "sha256:679f30d953ef03039568b79ecb95ee542e65c8a3fee30300fd68bb84c0238bba",
+      "framey-nonsteam278-c442d0788a-host": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+    },
+    "testReturncode": 0,
+    "ownedProjectDownReturncode": 0,
+    "tagRemovalReturncodes": {
+      "framey-nonsteam278-c442d0788a-frame": 0,
+      "framey-nonsteam278-c442d0788a-host": 0
+    },
+    "remainingOwnedContainers": [],
+    "remainingOwnedVolumes": [],
+    "remainingOwnedNetworks": [],
+    "logSha256": "f73c5d00bb991f6966eeb0285c1766cd9361b277e1137b9757197ac049f48088"
+  },
+  "independentVerifierSha256": {
+    "nonsteam": "14e63fbd6ee5ae1746834ebab80b7df62774be003db51496a768ffc6c4e45484",
+    "wine": "7a9811b60bae88b8d0bbd8a1cdc6a3b7285d01c424a38fc9dcacab37e29909d7"
+  },
+  "ownedNativeAndFakeFrameResourcesRemoved": true,
+  "compatibility": "partial",
+  "realFrameContacted": false,
+  "limits": [
+    "Targeted local native AMD64 only; final-head full hosted matrix and ARM64 still required",
+    "No visible Steam badges, active Steam account selection, live search, integrated browser/backend, real Frame or controller proof",
+    "Historical prior-head CI passes do not qualify this refreshed head"
+  ]
+}
