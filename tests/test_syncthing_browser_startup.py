@@ -27,6 +27,13 @@ addEventListener('message', event => {
     parent.postMessage({type:'framey:ready'}, '*');
 });
 parent.postMessage({type:'framey:cache:init', session:'fixture'}, '*');
+(async () => {
+  let parentDomDenied=false, connectionDenied=false;
+  try { parent.document.documentElement; } catch (e) { parentDomDenied=true; }
+  try { await fetch(new URL('/forbidden', location.href)); }
+  catch (e) { connectionDenied=true; }
+  parent.postMessage({type:'test:sandbox',parentDomDenied,connectionDenied}, '*');
+})();
 </script></html>'''
 
 
@@ -36,38 +43,53 @@ class BrowserStartup(unittest.TestCase):
         source = ROOT / 'tests/decky-runtime/syncthing_browser.py'
         tree = ast.parse(source.read_text())
         nodes = [node for node in tree.body
-                 if isinstance(node, ast.FunctionDef) and node.name == 'browser_document'
+                 if isinstance(node, ast.FunctionDef) and node.name == 'browser_documents'
                  or isinstance(node, ast.Assign) and any(
                      isinstance(target, ast.Name) and target.id in ('PARENT', 'PROBE')
                      for target in node.targets)]
         scope = dict(base64=base64, json=json)
         exec(compile(ast.Module(body=nodes, type_ignores=[]), str(source), 'exec'), scope)
-        document = scope['browser_document'](CHILD)
-        cut = document.index('<script>' + scope['PARENT'])
         spec = importlib.util.spec_from_file_location('startup_cdp', ROOT / 'ui/frame_steam.py')
         cdp = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cdp)
 
-        for delay in (0, 7):
-            with self.subTest(parent_script_delay=delay):
-                self.check_startup(cdp, document, cut, delay)
+        for delay, padding in ((0, 0), (7, 0), (0, 2 * 1024**2)):
+            with self.subTest(parent_script_delay=delay, padding_bytes=padding):
+                documents = scope['browser_documents'](CHILD + '<!--' + 'x' * padding + '-->')
+                documents['/'] = documents['/'].replace('</script>', '''
+addEventListener('message',event=>{
+ if(event.source===document.getElementById('panel').contentWindow &&
+    event.data?.type==='test:sandbox')
+  window.childSandbox={...event.data,origin:event.origin};
+});
+</script>''')
+                cut = documents['/'].index('<script>' + scope['PARENT'])
+                self.check_startup(cdp, documents, cut, delay)
 
-    def check_startup(self, cdp, document, cut, delay):
+    def check_startup(self, cdp, documents, cut, delay):
+        requests = []
+
         class Handler(http.server.BaseHTTPRequestHandler):
             def log_message(self, *_args):
                 pass
 
             def do_GET(self):
-                if self.path != '/':
+                requests.append(self.path)
+                if self.path not in documents:
                     self.send_error(404)
                     return
+                data = documents[self.path].encode()
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Content-Length', str(len(data)))
                 self.end_headers()
-                self.wfile.write(document[:cut].encode())
-                self.wfile.flush()
-                time.sleep(delay)
-                self.wfile.write(document[cut:].encode())
+                if self.path == '/':
+                    self.wfile.write(data[:cut])
+                    self.wfile.flush()
+                    time.sleep(delay)
+                    self.wfile.write(data[cut:])
+                else:
+                    self.wfile.write(data)
 
         server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
         server.daemon_threads = True
@@ -100,7 +122,7 @@ class BrowserStartup(unittest.TestCase):
                                 ready = page.eval("typeof ready !== 'undefined' && ready")
                             except cdp.Fail:
                                 ready = False
-                            if ready:
+                            if ready and page.eval('!!window.childSandbox'):
                                 break
                         time.sleep(.1)
                     self.assertTrue(ready, 'child seed request was lost during parent delivery')
@@ -110,6 +132,19 @@ class BrowserStartup(unittest.TestCase):
                     self.assertGreaterEqual(state['cacheRequests'], 1)
                     self.assertEqual(state['seedReplies'], state['cacheRequests'])
                     self.assertGreaterEqual(state['readyMessages'], 1)
+                    self.assertIn('/panel', requests)
+                    self.assertNotIn('/forbidden', requests)
+                    self.assertEqual(page.eval('window.childSandbox'), dict(
+                        type='test:sandbox', parentDomDenied=True,
+                        connectionDenied=True, origin='null'))
+                    self.assertEqual(page.eval("document.getElementById('panel').getAttribute('sandbox')"),
+                                     'allow-scripts')
+                    # Large panel bytes never become target URLs returned by
+                    # /json on every CDP readiness attempt.
+                    with cdp.urllib.request.urlopen(cdp.CDP, timeout=2) as response:
+                        targets = response.read(65537)
+                    self.assertLessEqual(len(targets), 65536)
+                    self.assertTrue(all(len(t['url']) < 256 for t in json.loads(targets)))
             finally:
                 if page is not None:
                     page.sock.close()

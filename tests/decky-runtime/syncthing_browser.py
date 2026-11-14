@@ -181,22 +181,27 @@ def startup_diagnostics(browser, profile, log):
     return report
 
 
-def browser_document(panel):
-    """Install the parent receiver before the opaque child can send its seed request."""
+def browser_documents(panel):
+    """Serve the opaque child separately, with its receiver installed first.
+
+    A data URL repeats the entire encoded panel in Chromium's target metadata.
+    Use the same HTTP delivery as the production parent, while preserving the
+    child's opaque sandbox and its policy that denies network connections.
+    """
     # The parent permits embedded runtime scripts; the opaque child separately
     # denies every network connection, including the private parent's RPC URL.
     policy = '''<meta http-equiv="Content-Security-Policy" content="default-src 'none';
 script-src 'unsafe-inline' data: blob:; connect-src 'none'; style-src 'unsafe-inline'; img-src data:">'''
     panel = panel.replace('<html lang="en">', '<html lang="en">'+policy)
     panel = panel.replace('</html>', '<script>'+PROBE+'</script></html>')
-    child = 'data:text/html;base64,' + base64.b64encode(panel.encode()).decode() + '#fixture'
-    return '''<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy"
-content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src data:; connect-src 'self'; style-src 'unsafe-inline'; img-src data:">
+    parent = '''<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy"
+content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; img-src data:">
 <title>Owned Syncthing actual backend</title><style>body{margin:0;background:#0d1925;color:white}iframe{width:1200px;height:1050px;border:0}</style>
 <iframe id="panel" sandbox="allow-scripts"></iframe><script>''' + PARENT + '''
 document.getElementById('panel').addEventListener('load',()=>startupState.iframeLoads++);
-document.getElementById('panel').src = ''' + json.dumps(child) + ''';
+document.getElementById('panel').src = '/panel#fixture';
 </script>'''
+    return {'/': parent, '/panel': panel}
 
 
 def exercise(legacy_rpc, runtime_identity, service):
@@ -205,7 +210,8 @@ def exercise(legacy_rpc, runtime_identity, service):
     assert not Path('/sys/class/net/eth0').exists()
     initial = json.loads(legacy_rpc('get_settings_json'))
     assert initial['is_setup'] is False and not initial['api_key']
-    document = browser_document(Path('/input/browser-panel.html').read_text())
+    documents = browser_documents(Path('/input/browser-panel.html').read_text())
+    document_requests = []
     calls, stages, screenshots, observations = [], [], {}, []
     rpc_lock = threading.Lock()
 
@@ -214,13 +220,17 @@ def exercise(legacy_rpc, runtime_identity, service):
             pass
 
         def do_GET(self):
-            if self.path != '/':
+            if self.path not in documents:
                 self.send_error(404)
                 return
+            data = documents[self.path].encode()
+            if len(document_requests) < 16:
+                document_requests.append(dict(path=self.path, bytes=len(data)))
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', str(len(data)))
             self.end_headers()
-            self.wfile.write(document.encode())
+            self.wfile.write(data)
 
         def do_POST(self):
             if self.path != '/rpc':
@@ -261,6 +271,9 @@ def exercise(legacy_rpc, runtime_identity, service):
     report = {'success': False, 'syntheticInput': True, 'actualDeckyRpc': True,
               'installerEnabled': False, 'realFrameContacted': False,
               'hostBusExposed': False, 'browserSandboxDisabled': False,
+              'documentDelivery': 'loopback-http-opaque-sandbox',
+              'documentSha256': {path: hashlib.sha256(text.encode()).hexdigest()
+                                 for path, text in documents.items()},
               'panelSha256': hashlib.sha256(Path('/input/browser-panel.html').read_bytes()).hexdigest()}
     try:
         profile = Path(temporary.name)
@@ -377,7 +390,8 @@ def exercise(legacy_rpc, runtime_identity, service):
                 report['lastStageUnavailable'] = True
         raise
     finally:
-        report.update(stages=stages, calls=calls, actualPackagedProcessObservations=observations)
+        report.update(stages=stages, calls=calls, actualPackagedProcessObservations=observations,
+                      documentRequests=list(document_requests))
         if page:
             page.sock.close()
         if browser:
