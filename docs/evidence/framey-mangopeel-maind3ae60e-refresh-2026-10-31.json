@@ -1,0 +1,81 @@
+{
+  "at": "2026-10-31T09:29:36.756069+00:00",
+  "sourceRevision": "1b782a07da4d032de3f00ed4b0ee301d044f80b8",
+  "baseMain": "d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f",
+  "priorHead": "47c08f8a1201b71b0f7fee89eb6b7a405ef263a5",
+  "normalMerge": true,
+  "historyRewritten": false,
+  "allMainProbeAndConsoleBytesPreserved": true,
+  "completeMangoPeelRepairAndProbePreserved": true,
+  "all116PoliciesPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "mangoPeelCompleteCatalogRowPreserved": true,
+  "focusedTests": 95,
+  "unitLogSha256": "c71d953172cbe32e80f7bd65468cdb19ebefefa2fc253e9b3fa7e680fe0b2f0c",
+  "nativeArchitecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "6a7d80acc8ce803e35c01798bd53b3850e89944084e41d1cce78cb1e8045e7b4",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "4177c08dcc38008d0cba6c5fb9547ec64ebb218867edc8a2b9f76439f2e26ec6",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "86506e21a73a487136496d478f3112fbe24ce8d6e62ba389a229be7c5ceaf743",
+    "tests/decky-runtime/mangopeel.py": "21cf93c8b9828aed5c488cbbcf589b0de113897fdeca3423d7fcadba832711be",
+    "tests/framey_official.py": "325fff9205d7aa196d06ae62e40ddedf0ae99a58a516e9d3a8acbd874fb89736",
+    "ui/frame_decky_store.py": "07a161bbf37dad7d57c60c27bffc7f6f5c0ca518d22f02efc6039cf3ff4faf20",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "all16SourceFingerprintsVerified": true,
+  "archiveSha256": "71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1",
+  "backendSha256": "743702383ee805ec02bd8d434a3c99196b1e2a7503b5df7ebaa6ad30a19182bd",
+  "childIpcRepairSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "backendIndependentlyReconstructed": true,
+  "scopedReloadAndFinalParentOnlyStopPassed": true,
+  "loaderExitCode": 0,
+  "completeAvailablePostCleanupConsoleSha256": "74e3f295b5de7820c24d495100b2c1ff4f444638f1c68ab87204e7c9b2297010",
+  "genericCleanupStops": [
+    {
+      "pid": 10,
+      "signaledProcessGroup": false,
+      "forcedKill": false,
+      "loader": true,
+      "parentOnlySignal": false,
+      "returncode": 0
+    },
+    {
+      "pid": 9,
+      "signaledProcessGroup": true,
+      "forcedKill": false,
+      "loader": false,
+      "parentOnlySignal": false,
+      "returncode": -15
+    }
+  ],
+  "globalCleanShutdownVerified": false,
+  "rawJsonSha256": "d5e5f64f8249c3214db6cbd955e276b7b986b73126fe5887e8657e431755d3ef",
+  "rawGzipSha256": "3a07033306aeb4b1093a6debefb88ef8683a6dc083f82bfb97e9635dfcd1593c",
+  "newOwnedContainers": 0,
+  "newOwnedImageTags": 0,
+  "fullNativeMatrixExpected": {
+    "probes": 41,
+    "archivePins": 34,
+    "sourceFingerprints": 16
+  },
+  "realFrameContacted": false,
+  "compatibility": "partial",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local AMD64 single-case replay; fresh final-head hosted checks/e2e/native/ownership/package and exact-main package gates remain required.",
+    "Preservation assertions are source-bound; complete filesystem/process snapshots were not retained.",
+    "No actual MangoHud overlay, integrated browser/backend, live Steam/game lifecycle, headset, wearer/controller or release proof.",
+    "Global clean plugin shutdown remains unverified; scoped MangoPeel success and retained console do not prove every plugin."
+  ]
+}

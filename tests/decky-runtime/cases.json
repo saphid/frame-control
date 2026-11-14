@@ -1,5 +1,13 @@
 [
   {
+    "id": 56,
+    "shim": "mangopeel-watch-lifetime",
+    "additionalShims": [
+      "mangopeel-ipc-eof"
+    ],
+    "probe": "mangopeel-private-watch"
+  },
+  {
     "id": 124,
     "shim": "alarme-paused-restart",
     "probe": "alarme-private-lifecycle",
