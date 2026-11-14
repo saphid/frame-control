@@ -618,6 +618,25 @@ assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0,
 api.routerHook.removeRoute('/plugin/first');
 api.routerHook.removeRoute('/plugin/second');
 
+// Cleanup from a retired view must not remove a later route registration.
+const retiredRoute=api.routerHook.addRoute('/plugin/replaced',LocalRoute);
+const currentRoute=api.routerHook.addRoute('/plugin/replaced',GameRoute);
+retiredRoute();retiredRoute();
+assert.equal(window.DFL.Navigation.Navigate('/plugin/replaced'),true);
+assert.equal(nodes(window.__surface({plugin}),GameRoute).length,1);
+const sameComponentRoute=api.routerHook.addRoute('/plugin/replaced',GameRoute);
+currentRoute();
+assert.equal(window.DFL.Navigation.Navigate('/plugin/replaced'),true,
+  'a registration owns its disposer even when both components are identical');
+api.routerHook.removeRoute('/plugin/replaced');
+const readdedRoute=api.routerHook.addRoute('/plugin/replaced',LocalRoute);
+sameComponentRoute();
+assert.equal(window.DFL.Navigation.Navigate('/plugin/replaced'),true,
+  'explicit removal must retire cleanup before the path is re-added');
+readdedRoute();readdedRoute();
+assert.equal(window.DFL.Navigation.Navigate('/plugin/replaced'),false);
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0);
+
 // Event subscription is acknowledged before a method that immediately emits.
 const onMessage=listeners.find(x=>x.type==='message').handler;
 // The headset's two scroll buttons target the last trusted pointer's nested
