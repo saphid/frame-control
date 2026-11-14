@@ -224,21 +224,27 @@ The maintainer reads reports on the Frame Control dashboard in PostHog, or
 with `python3 ui/frame_report.py inbox [days]`, which uses the same personal
 API key as `frame_compat_db.py sync`.
 
-## Contact email (optional)
+## Mailing list and contact email (optional)
 
 Frame Control never needs an email address. If you'd like to leave one, there
 are two separate choices, both off until you tick them:
 
 | Choice | What it's for |
 |---|---|
-| **Email me about Frame Control updates** | Occasional notices about new releases and updates |
+| **Join the mailing list: new features and updates** | Occasional emails about new features and updates |
 | **The maintainer may contact me with follow-up questions** | Questions about problem reports you send, mostly |
 
-You're asked once, in a bar at the top of the page, after the Frame has
-connected for the first time, and never in the same visit as the first-run
-privacy notice. **No thanks** hides it for good, and it isn't
-shown again even if you ignore it. **Contact email** in **Privacy & updates**
-is where you add, change or remove the address and either choice at any time.
+The first time Frame Control opens, a bar at the top of the page asks
+"Want to hear about new features? Join the Frame Control mailing list." with
+an empty email field, **Join** and **No thanks**. It only asks about the
+mailing list; follow-up questions are a separate choice in **Privacy &
+updates**. If the first-run privacy notice is showing, it waits until that's
+closed, so the two never appear together. It doesn't need the Frame to be set
+up. **No thanks** hides it for good, and it isn't shown again even if you
+ignore it. **Mailing list and contact email** in **Privacy & updates** (also
+**Help → Join the Mailing List…** in the desktop app) is where you join later,
+or change or remove the address and either choice, at any time. Unticking the
+mailing list is unsubscribing.
 
 **What's sent, and where.** The address and the two choices go privately to
 Frame Control's PostHog project, the same place as problem reports, as a
@@ -270,10 +276,40 @@ this computer and is sent when PostHog can be reached. The earlier event
 stays in PostHog until its data retention removes it; to have it deleted
 sooner, ask the maintainer (for example in a problem report).
 
-Nothing sends email yet: this only records who agreed to what. The
-maintainer lists the addresses with
-`python3 ui/frame_report.py contacts [updates|followup]`, which uses the same
-personal API key as `inbox`.
+**The Cloudflare mailing list.** When you explicitly join or change an existing
+mailing-list choice, the app also sends that choice to
+`https://framecontrol.fun/api/mailing-list`, on the website's Cloudflare Pages
+project. This request contains only the email address, an explicit `updates`
+boolean, a random capability used to change this copy's subscription, and a
+revision number used to order retries. It contains no analytics id or machine
+details. Follow-up-only choices and skipping the offer send nothing to this
+endpoint. Existing saved choices aren't automatically copied to a new backend.
+
+Cloudflare D1 privately stores the current address and revision under a hash of
+the random capability, with a change timestamp. Changing the address replaces
+the previous one. Unsubscribing sets the address to null; only the capability
+hash, revision and timestamp remain, so a delayed older signup can't restore
+it. Duplicate addresses from separate app copies are deduplicated when exported;
+unsubscribing in the app withdraws this copy's subscription. The website reuses
+its short-lived salted IP hashes to limit requests, without storing raw IPs in
+the list. Cloudflare necessarily processes the connection's IP address.
+
+The mailing request has its own durable local queue in `contact/contact.json`.
+It retries in the background independently of PostHog, including after restarting.
+Saving, skipping and continuing to use the app never wait for either service.
+An offline removal clears the queued address immediately and leaves a withdrawal
+to send when the endpoint is available. Until it arrives, the server still has
+the previous choice. If Cloudflare storage hasn't been provisioned, the endpoint
+returns 503 and the same queue retains the choice safely.
+
+No newsletter sending service is configured and no confirmation or newsletter
+emails are sent by this feature. Cloudflare is the private signup backend;
+[site/README.md](../site/README.md#mailing-list) describes provisioning and a
+maintainer-only export of current opt-ins. The existing
+`python3 ui/frame_report.py contacts [updates|followup]` command still lists
+PostHog consent records; use the Cloudflare export for the mailing list. A future
+sending service must honor current withdrawals, provide an unsubscribe option
+in every email, and be named here before addresses are transferred to it.
 
 ## Turning it all off
 

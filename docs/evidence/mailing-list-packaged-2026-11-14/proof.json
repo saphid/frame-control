@@ -1,0 +1,176 @@
+{
+  "observedAt": "2026-11-14",
+  "testedHead": "e2b0b159f4b82bc3bef5e494124ca0477a04a24c",
+  "platform": "isolated private Linux x64 Boat VM; Electron directory package",
+  "buildExit": 0,
+  "sandbox": "normal Electron sandbox; no debugger or sandbox bypass",
+  "network": "mailing and telemetry endpoints overridden to disposable localhost HTTP sink; synthetic example.invalid addresses",
+  "flows": {
+    "firstRun": "privacy notice precedes empty optional offer; join accepted with mailing-only opt-in",
+    "skip": "No thanks survives restart; zero mailing requests",
+    "laterJoin": "Help \u2192 Join the Mailing List opens Privacy settings and focuses email; revision1 delivered",
+    "editFailure": "forced localhost503 retains edited revision2 in durable mailing queue",
+    "restartRetry": "same revision2 delivered200 after restart; mailing queue drained",
+    "unsubscribe": "revision3 tombstone delivered200; email and choices cleared; queues empty"
+  },
+  "artifacts": {
+    "head": "e2b0b159f4b82bc3bef5e494124ca0477a04a24c",
+    "archiveRegularFiles": 2231,
+    "afterBuildFiles": 2235,
+    "changed": [],
+    "featureHashes": {
+      "ui/index.html": {
+        "sourceSha256": "e8ee05a20ad4321f31fe447a721400805e1d72820fd529b8288f5d406f1502b8",
+        "packagedSha256": "e8ee05a20ad4321f31fe447a721400805e1d72820fd529b8288f5d406f1502b8",
+        "matches": true
+      },
+      "ui/server.py": {
+        "sourceSha256": "313bc1afbe60b7fefc527f23ea93ccb374b7cd4ed2877f5796f4da81384fe7a0",
+        "packagedSha256": "313bc1afbe60b7fefc527f23ea93ccb374b7cd4ed2877f5796f4da81384fe7a0",
+        "matches": true
+      },
+      "ui/frame_contact.py": {
+        "sourceSha256": "db61d6fb96688a8ccfdac253fdeaa4aca21c74103ffac19dcf3b67046bb961af",
+        "packagedSha256": "db61d6fb96688a8ccfdac253fdeaa4aca21c74103ffac19dcf3b67046bb961af",
+        "matches": true
+      },
+      "ui/frame_mailing.py": {
+        "sourceSha256": "3e8a53618efeab28063edb003e87eafb67cd5a3fa2ca86f1ae082fb2f89114e4",
+        "packagedSha256": "3e8a53618efeab28063edb003e87eafb67cd5a3fa2ca86f1ae082fb2f89114e4",
+        "matches": true
+      },
+      "app/main.js": {
+        "sourceSha256": "eb0b3253fccdd75ab303f71f39bd07d4b60a3d1ee7071d74788c892a34e12203",
+        "packagedSha256": "eb0b3253fccdd75ab303f71f39bd07d4b60a3d1ee7071d74788c892a34e12203",
+        "matches": true,
+        "asarIntegrityMatches": true
+      },
+      "app/preload.js": {
+        "sourceSha256": "c9f389f6d869455802f75ebd15fecd45e83c36fde22faceb670047a255c8d333",
+        "packagedSha256": "c9f389f6d869455802f75ebd15fecd45e83c36fde22faceb670047a255c8d333",
+        "matches": true,
+        "asarIntegrityMatches": true
+      },
+      "app/package.json": {
+        "sourceSha256": "bc12193d79175540672004d83aac22bf631f9a1067687e4965896871f6ee8a0b",
+        "packagedSha256": "220d3db527707ee4cf5ecae993f0e04e00710cc9f8cc73aca4212925a7e31ff5",
+        "matches": false,
+        "asarIntegrityMatches": true,
+        "note": "electron-builder normalizes packaged app metadata; raw package.json is not byte-identical"
+      },
+      "app/package-lock.json": {
+        "sourceSha256": "c8a3bb4f99e2b864b28f6c2342d120d267bee3ec06e44bb5a5b79775d0680073",
+        "packagedSha256": null,
+        "matches": false,
+        "note": "excluded by Electron packaging; not an executable runtime input"
+      }
+    },
+    "appAsarSha256": "3acc5a176c63be118c6e14af84e601fbb76d1ddd05098566cfef1c3abea89430",
+    "executableSha256": "6703eb7dacea0ba00887ef07f0a4acd3b8f2297fc4f09e3d5f15989bd635d5f8",
+    "receiptsTarSha256": "bb94b21890a0335adffa752602ef07a09fe6238e4eb35a5c4b4a9d91dce50b33",
+    "buildExit": "0",
+    "manifestFilterExclusions": [
+      "examples/framey-settings/dist/index.js",
+      "examples/framey-settings/dist/index.js.map"
+    ],
+    "verifiedSourceFiles": 2229,
+    "manifestLimitation": "after-build manifest excluded all dist directories, including two tracked example dist files; these two files were not hash checked"
+  },
+  "requestTimeline": [
+    {
+      "at": 1794632605.2429755,
+      "path": "/batch/",
+      "status": 200,
+      "email": null,
+      "rev": null,
+      "updates": null
+    },
+    {
+      "at": 1794632974.1416757,
+      "path": "/batch/",
+      "status": 200,
+      "email": null,
+      "rev": null,
+      "updates": null
+    },
+    {
+      "at": 1794632974.1427643,
+      "path": "/api/mailing-list",
+      "status": 200,
+      "email": "frame113-join@example.invalid",
+      "rev": 1,
+      "updates": true
+    },
+    {
+      "at": 1794632996.2200103,
+      "path": "/batch/",
+      "status": 200,
+      "email": null,
+      "rev": null,
+      "updates": null
+    },
+    {
+      "at": 1794632996.221255,
+      "path": "/api/mailing-list",
+      "status": 503,
+      "email": "frame113-edit@example.invalid",
+      "rev": 2,
+      "updates": true
+    },
+    {
+      "at": 1794633013.214053,
+      "path": "/api/mailing-list",
+      "status": 200,
+      "email": "frame113-edit@example.invalid",
+      "rev": 2,
+      "updates": true
+    },
+    {
+      "at": 1794633069.0748084,
+      "path": "/batch/",
+      "status": 200,
+      "email": null,
+      "rev": null,
+      "updates": null
+    },
+    {
+      "at": 1794633069.0756466,
+      "path": "/api/mailing-list",
+      "status": 200,
+      "email": "",
+      "rev": 3,
+      "updates": false
+    },
+    {
+      "at": 1794633139.716771,
+      "path": "/batch/",
+      "status": 200,
+      "email": null,
+      "rev": null,
+      "updates": null
+    },
+    {
+      "at": 1794633209.5695632,
+      "path": "/batch/",
+      "status": 200,
+      "email": null,
+      "rev": null,
+      "updates": null
+    },
+    {
+      "at": 1794633209.5705626,
+      "path": "/api/mailing-list",
+      "status": 200,
+      "email": "frame113-first@example.invalid",
+      "rev": 1,
+      "updates": true
+    }
+  ],
+  "cleanup": "app/server processes absent after clean quit; VM stop accepted and sandbox absent from complete subsequent Boat list",
+  "limitations": [
+    "Linux directory package, not installer/AppImage, Windows or macOS qualification",
+    "no real Steam Frame or physical headset",
+    "no D1 provisioning/binding, deployment or newsletter send",
+    "local sink proves client persistence/retry, not hosted backend topology"
+  ]
+}
