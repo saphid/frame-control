@@ -12,6 +12,14 @@ MANAGED_FRONTENDS = {
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
+    {'id': 75, 'name': 'Reshadeck', 'version': '0.2.0', 'api_version': 'legacy',
+     'folder': 'reshadeck', 'sha256': 'f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281'},
+    {'id': 100, 'name': 'Virtual Surround Sound', 'version': '0.0.5', 'api_version': 1,
+     'folder': 'decky-virtual-surround-sound', 'sha256': 'b6c514d147cc46bad5331ca9da36628eb9c330976e13735687499a4a9f17f6d4'},
+    {'id': 37, 'name': 'Discord Status', 'version': '1.5.0', 'api_version': 1,
+     'folder': 'DiscordStatus', 'sha256': '00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45'},
+    {'id': 38, 'name': 'Volume Mixer', 'version': '1.2.1-1', 'api_version': 'legacy', 'folder': 'VolumeMixer-decky', 'sha256': '11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3'},
+    {'id': 87, 'name': 'ScreenSaver', 'version': '1.1.2', 'api_version': 'legacy', 'folder': 'DeckyInhibitScreenSaver', 'sha256': '5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822'},
     {'id': 23, 'name': 'Animation Changer', 'version': '1.3.2', 'api_version': 'legacy',
      'folder': 'SDH-AnimationChanger', 'sha256': 'f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133'},
     {'id': 61, 'name': 'TabMaster', 'version': '2.15.1', 'api_version': 1, 'folder': 'TabMaster', 'sha256': 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5'},
@@ -100,6 +108,14 @@ LEGACY_PLUGINS = (
     {'id': 7, 'name': 'CSS Loader', 'version': '2.1.3', 'api_version': 'legacy',
      'folder': 'SDH-CssLoader', 'sha256': '99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231'},
 )
+
+# Dialog-component replay only. Keep it out of PLUGINS/LEGACY_PLUGINS so
+# fake-store install fixtures do not imply full Web Browser support.
+WEB_BROWSER_143 = {
+    'id': 59, 'name': 'Web Browser', 'version': '1.4.3', 'api_version': 'legacy',
+    'folder': 'DeckWebBrowser',
+    'sha256': '1192864fddc5d72550346b8dff02c21d71f0c40a06ac41c4e67bb6220d267f9d',
+}
 
 
 def archive(plugin):

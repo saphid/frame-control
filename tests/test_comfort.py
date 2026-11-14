@@ -261,6 +261,12 @@ class SensorTests(unittest.TestCase):
 class DesktopBundleTests(unittest.TestCase):
     """server.comfort runs the copy cached on the headset; the sources go only when it's missing."""
 
+    def test_only_status_is_safe_to_retry(self):
+        import server
+        with patch.object(server, 'ssh', return_value='{"active": false}') as ssh:
+            self.assertEqual(server.comfort({'action': 'cancel'}), {'active': False})
+        self.assertFalse(ssh.call_args.kwargs['retry'])
+
     @unittest.skipUnless(os.name == "posix", "checks POSIX permissions")
     def test_sources_are_sent_once_per_version(self):
         import server
@@ -273,8 +279,8 @@ class DesktopBundleTests(unittest.TestCase):
             (here / 'frame_comfort.py').write_text('import json, sys\nprint(json.dumps({"active": False, "got": sys.argv[1]}))\n')
             sent = []
 
-            def ssh(remote, *, stdin, timeout):  # the headset: the script run under its own home
-                sent.append(stdin)
+            def ssh(remote, *, stdin, timeout, retry=False):  # the headset: the script run under its own home
+                sent.append((stdin, retry))
                 return subprocess.run([sys.executable, '-'], input=stdin, capture_output=True, text=True, check=True,
                                       env={**os.environ, 'HOME': str(home)}).stdout
 
@@ -282,11 +288,12 @@ class DesktopBundleTests(unittest.TestCase):
                 first = server.comfort({'action': 'status'})
                 self.assertEqual(json.loads(first['got']), {'action': 'status'})
                 self.assertEqual(len(sent), 2)  # the check, then the sources
-                self.assertNotIn('# frame_steam.py', sent[0])
-                self.assertIn('# frame_steam.py', sent[1])
+                self.assertNotIn('# frame_steam.py', sent[0][0])
+                self.assertIn('# frame_steam.py', sent[1][0])
+                self.assertTrue(all(retry for _, retry in sent))
                 self.assertEqual(server.comfort({'action': 'status'}), first)
                 self.assertEqual(len(sent), 3)
-                self.assertNotIn('# frame_steam.py', sent[2])
+                self.assertNotIn('# frame_steam.py', sent[2][0])
                 cached, = (home / '.cache/frame-control/comfort').iterdir()
                 self.assertEqual(sorted(p.name for p in cached.iterdir()), sorted(server.COMFORT_FILES))
                 self.assertEqual(cached.stat().st_mode & 0o777, 0o700)

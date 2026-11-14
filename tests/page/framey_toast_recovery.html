@@ -1,0 +1,70 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), notices=document.getElementById('framey-toasts');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const toaster=window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit.connect(2,'fixture').toaster;
+  const flush=callback=>ReactDOM.flushSync(callback);
+  const button=(node,text)=>[...node.querySelectorAll('button')].find(item=>item.textContent===text);
+  const create=data=>{let handle;flush(()=>{handle=toaster.toast(data);});return handle;};
+  const fields=['title','body','icon','logo','subtext'];
+  let cases=0,healthyCleanups=0,brokenCleanups=0,opened=0;
+  function Healthy() {
+    const [count,setCount]=React.useState(0);
+    React.useLayoutEffect(()=>()=>{healthyCleanups++;},[]);
+    return React.createElement('button',{onClick:()=>setCount(count+1)},'Healthy count '+count);
+  }
+  try {
+    for(const field of fields) {
+      for(const failure of [Error('Synthetic toast render failure'),'string failure','',0,false,null,undefined]) {
+        function Broken(){throw failure;}
+        const data={title:'Healthy title',body:'Healthy body',icon:'Healthy icon',logo:'Healthy logo',subtext:'Healthy subtext',
+          [field]:React.createElement(Broken)};
+        const toast=create(data),item=notices.lastElementChild;
+        assert(item?.querySelector('[role="alert"]')?.textContent.includes('notification'),
+          'failed '+field+' has no local notification fallback');
+        for(const peer of fields.filter(value=>value!==field))
+          assert(item.textContent.includes(data[peer]),'failed '+field+' removed healthy '+peer);
+        assert(button(item,'Dismiss'),'render failure removed Dismiss');
+        flush(()=>button(item,'Dismiss').click());toast.dismiss();
+        assert(!item.isConnected&&!notices.children.length,'failed toast did not dismiss cleanly');
+        cases++;
+      }
+    }
+    let breakBody;
+    function Breakable() {
+      const [broken,setBroken]=React.useState(false);breakBody=()=>setBroken(true);
+      React.useLayoutEffect(()=>()=>{brokenCleanups++;},[]);
+      if(broken)throw Error('Late synthetic toast failure');
+      return React.createElement('span',null,'Initially healthy body');
+    }
+    const rich=create({title:React.createElement(Healthy),body:React.createElement(Breakable),
+      subtext:'Healthy footer',onClick:()=>{opened++;}}),richNode=notices.lastElementChild;
+    flush(()=>button(richNode,'Healthy count 0').click());
+    flush(()=>breakBody());
+    assert(button(richNode,'Healthy count 1'),'body failure reset healthy sibling state');
+    assert(brokenCleanups===1,'failed body effect was not cleaned up');
+    assert(richNode.textContent.includes('Healthy footer')&&button(richNode,'Open'),'healthy content or Open lost');
+    const peer=create({title:'Separate toast',body:React.createElement('em',null,'Healthy peer body')});
+    flush(()=>button(richNode,'Open').click());
+    assert(opened===1&&!richNode.isConnected&&healthyCleanups===1,'failed toast Open/dismiss did not clean its roots');
+    assert(notices.children.length===1&&notices.textContent.includes('Healthy peer body'),'failed toast damaged another toast');
+    flush(()=>peer.dismiss());rich.dismiss();
+    assert(!notices.children.length,'healthy peer did not dismiss');
+    const fresh=create({title:'Fresh notification',body:React.createElement('span',null,'Fresh healthy content')});
+    assert(notices.textContent.includes('Fresh healthy content')&&!notices.querySelector('[role="alert"]'),
+      'new toast inherited an old render failure');
+    flush(()=>fresh.dismiss());
+    const hidden=create({title:React.createElement(()=>{throw Error('Hidden toast rendered');}),showToast:false});
+    hidden.dismiss();assert(!notices.children.length,'hidden toast rendered content');
+    result.textContent=JSON.stringify({passed:true,isolatedFieldFailures:cases,
+      errorsStringsAndFalsyThrows:true,healthyFieldsPreserved:true,healthyStatePreserved:true,
+      failedEffectsCleaned:true,dismissAndOpenPreserved:true,independentToasts:true,
+      freshToastRecovers:true,hiddenToastInert:true,syntheticRenderFailures:true,realFrameContacted:false});
+  }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

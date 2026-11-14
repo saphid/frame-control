@@ -1,0 +1,78 @@
+{
+  "source": "Live public Steam endpoints, 2026-11-05; compatibility lookups omitted in this smoke check",
+  "detail": {
+    "id": 620980,
+    "name": "Beat Saber",
+    "tags": [
+      "VR",
+      "Rhythm",
+      "Music",
+      "Moddable",
+      "Fast-Paced",
+      "Multiplayer",
+      "Singleplayer",
+      "First-Person",
+      "Music-Based Procedural Generation",
+      "Swordplay"
+    ],
+    "dlc_count": 279,
+    "movies": [
+      {
+        "name": "Gameplay Short New",
+        "thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/256736673/ddcddf906a38f0ecd1ece2c799023b1875a36fd7/movie_600x337.jpg?t=1790687476",
+        "sources": [
+          {
+            "url": "https://video.akamai.steamstatic.com/store_trailers/620980/197811/e609ae62df8d9d6c4bf1d848fae8c772d0564704/1750563474/hls_264_master.m3u8?t=1790687476",
+            "type": "application/vnd.apple.mpegurl"
+          }
+        ]
+      },
+      {
+        "name": "8th Anniversary ",
+        "thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257344733/02a6fa05c9740674f3adaf4229e1e9e8ba458ba1/movie_600x337.jpg?t=1779972963",
+        "sources": [
+          {
+            "url": "https://video.akamai.steamstatic.com/store_trailers/620980/695238758/31ed7e3a5050b6b98f659dee5add968704cd21b3/1779957070/hls_264_master.m3u8?t=1779972963",
+            "type": "application/vnd.apple.mpegurl"
+          }
+        ]
+      }
+    ]
+  },
+  "about_characters": 1344,
+  "catalog": {
+    "query": "",
+    "country": "AU",
+    "start": 50,
+    "price": "10",
+    "discount": true,
+    "tag": "action",
+    "total": 4180,
+    "page_size": 50,
+    "returned": 50,
+    "has_more": true,
+    "first_three": [
+      {
+        "id": 1359980,
+        "name": "POSTAL: Brain Damaged",
+        "price_text": "A$ 7.37",
+        "discount_percent": 75,
+        "release": "9 Jun, 2022"
+      },
+      {
+        "id": 4339680,
+        "name": "Totally Safe Moon Project",
+        "price_text": "A$ 6.37",
+        "discount_percent": 25,
+        "release": "30 Oct, 2026"
+      },
+      {
+        "id": 2304440,
+        "name": "Creatures of Ava",
+        "price_text": "A$ 7.30",
+        "discount_percent": 80,
+        "release": "7 Aug, 2024"
+      }
+    ]
+  }
+}

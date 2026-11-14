@@ -23,13 +23,20 @@ def plugins(folder):
             if info.is_symlink() or not info.is_file() or info.stat().st_size > 16384: continue
             try:
                 data = json.loads(info.read_text())
+                if not isinstance(data, dict): continue
                 marker = child / '.frame-control-store.json'
                 try:
                     owned = json.loads(marker.read_text()) if marker.is_file() and not marker.is_symlink() else {}
                 except (OSError, ValueError): owned = {}
-                found.append({'folder': child.name, 'name': str(data.get('name', child.name))[:80],
+                # Valid JSON can still be a list or scalar. A bad receipt
+                # cannot claim ownership or abort the remaining inventory.
+                if not isinstance(owned, dict): owned = {}
+                # This name is also the backend RPC/event identity and store
+                # collision key. Only presentation metadata may be shortened;
+                # the manifest read above already bounds the complete name.
+                found.append({'folder': child.name, 'name': str(data.get('name', child.name)),
                               'author': str(data.get('author', ''))[:80],
-                              'storeId': owned.get('storeId') if isinstance(owned.get('storeId'), int) else None,
+                              'storeId': owned.get('storeId') if type(owned.get('storeId')) is int and owned['storeId']>0 else None,
                               'version': str(owned.get('version', ''))[:40],
                               'sha256': str(owned.get('sha256', ''))[:64],
                               'compatShims': [s[:100] for s in owned.get('compatShims', []) if isinstance(s, str)][:16]
