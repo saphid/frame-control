@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-31T00:34:10.702853+00:00",
+  "head": "56ceb6978c5ed2ceb5a962ad12688b5bd175fbe7",
+  "oldHead": "1aaf2b5533619e41e9c9364a5ac31c3b0c04a566",
+  "normalMainMerge": "358e423a62300689543e2083d5213af763c03a46",
+  "mergeConflict": "Adjacent AlarMe and Bluetooth probe branches; retained both unchanged bodies in the same if/elif chain",
+  "bothProbeBodiesAstIdenticalToSources": true,
+  "all116VersionsDigestsRatingsBlockInstallPoliciesPreserved": true,
+  "other115FullCatalogRowsMatchCurrentMain": true,
+  "alarmeFullCatalogRecordUnchanged": true,
+  "productionStoreSourceUnchanged": true,
+  "focusedTestsPassed": 198,
+  "sourceDiffCheckAgainstCurrentMain": true,
+  "inheritedRawBluetoothConsoleWhitespaceNotRewritten": true,
+  "mistakenSimpleTimer96RunDoesNotQualifyAlarme": true
+}
