@@ -1,0 +1,39 @@
+{
+  "head": "ebf75f2bb0995ab12180abfa5ec858d9753e1a3a",
+  "runId": 41078417943,
+  "jobId": 124140733387,
+  "artifactId": 12990737541,
+  "artifactSha256": "443bad429dc148c356e1b4f35a0557fd4bf57d0253478a7a9953bd116a6a8ff0",
+  "allExactHeadSourceFingerprintsVerified": true,
+  "exactHeadSourceCount": 123,
+  "inputSourceCount": 122,
+  "architecture": "aarch64",
+  "success": false,
+  "rootCauseEstablished": false,
+  "browserStages": 0,
+  "browserRpcCalls": 0,
+  "captures": 0,
+  "readinessError": "Steam's UI isn't answering on http://127.0.0.1:45183/json (timed out); is Steam running?",
+  "startupDiagnostics": {
+    "processAlive": true,
+    "returnCode": null,
+    "devToolsPortFilePresent": true,
+    "stderrBytes": 395,
+    "stderrTail": "\nDevTools listening on ws://127.0.0.1:45183/devtools/browser/b36a6c75-b0ff-434e-9003-1c774a71d2c5\n[876:876:1030/154710.746232:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.Properties.GetAll: object_path= /org/freedesktop/UPower/devices/DisplayDevice: org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.UPower was not provided by any .service files\n",
+    "targetsUnavailable": true
+  },
+  "guestTimeouts": {
+    "installSeconds": 900,
+    "userSeconds": 2400,
+    "unitSeconds": 2460,
+    "hostSeconds": 2520
+  },
+  "ownedBrowserReaped": true,
+  "bridgeStopped": true,
+  "ownedQemuReaped": true,
+  "browserSandboxDisabled": false,
+  "realFrameContacted": false,
+  "installerEnabled": false,
+  "actualSteamCef": false,
+  "physicalControllerVerified": false
+}
