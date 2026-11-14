@@ -172,6 +172,7 @@ def main():
                     (125, '--reproduce-localsend-unload-regression'),
                     (123, '--reproduce-steam-status-unload-regression'),
                     (18, '--reproduce-bluetooth-unload-regression'),
+                    (56, '--reproduce-mangopeel-unload-regression'),
                     (50, '--reproduce-storage-cleaner-unload-regression'),
                     (132, '--reproduce-suggestme-unload-regression'),
                     (79, '--reproduce-notifications-unload-regression'),
