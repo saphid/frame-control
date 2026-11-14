@@ -21,6 +21,11 @@
     "probe": "notebook-private-pages"
   },
   {
+    "id": 66,
+    "shim": null,
+    "probe": "playtime-private-sessions"
+  },
+  {
     "id": 75,
     "shim": "reshadeck-owned-shaders",
     "additionalShims": [

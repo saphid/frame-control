@@ -601,6 +601,14 @@ def main():
                 report['candidate']['loaderPythonAbi'] = abi
                 report['result'] = ('test-only adapted Terminal: private PTY input/output, resize, '
                     'remove/reload cleanup and config persistence passed; production/browser/Frame unverified')
+            elif case['probe'] == 'playtime-private-sessions':
+                import playtime_private
+                report['privateSessions'] = playtime_private.exercise(
+                    current, plugin, data, record, base, backend, loader, env, log,
+                    processes, until_ready, rpc)
+                report['result'] = ('published Decky API1 private session writes, pause/resume, '
+                    'per-user SQLite isolation and loader restart persistence passed; '
+                    'automatic recording, browser, real Frame and VR unverified')
             elif case['probe'] == 'reshadeck-private-x11':
                 import reshadeck_private
                 report['reshadeckRuntime'] = reshadeck_private.probe(backend, loader, env, log, processes,
