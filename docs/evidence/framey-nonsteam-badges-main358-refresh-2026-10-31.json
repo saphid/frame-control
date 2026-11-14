@@ -1,0 +1,275 @@
+{
+  "at": "2026-10-31T01:01:25.683028+00:00",
+  "sourceRevision": "372c75b0f099f4ef58697a6450829468163fefe2",
+  "normalMainMerge": "358e423a62300689543e2083d5213af763c03a46",
+  "previousQualifiedHead": "88b5af2fe35cc9eaba5759f8c57f595796825799",
+  "previousCiHistoricalOnly": true,
+  "allOriginalWorkflowsTerminalBeforeRefresh": true,
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "ab96a1b5c4cf1ae1105f141c537bfec217546e49d3c955eba4ad3e12fda453fe",
+    "tests/decky-runtime/check.py": "af84f7d5c0ea3775020556a2a1224e67e91b3cb6e5f61b13efd47d7382ea9979",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "3814b0f6109a20cebafaf7090bfd87e179a5fa69768cba80810512206b35c3e8",
+    "tests/framey_official.py": "1dd35709125be5c52815de83bad87a5e1b439c58ffd755042a0feaf33892a71e",
+    "ui/frame_decky_store.py": "18b3ead3d3799762c8a28c97bc0bb5f4a2940dd64064497ab6bbae7394ea654d",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "allSevenRuntimeInputsVerified": true,
+  "unit": {
+    "store": {
+      "passed": 59,
+      "skipped": 0,
+      "logSha256": "4d31427dbd082622d31b4f0145da89b736e7d19d995ed1217f0fcb3d91e32c68"
+    },
+    "compat": {
+      "passed": 17,
+      "skipped": 0,
+      "logSha256": "5c741bd2409baa3701c3a457ca62329ca2209f6924b82e47cb54c1c608eaf2b1"
+    },
+    "runtime": {
+      "passed": 3,
+      "skipped": 0,
+      "logSha256": "c71aa397a140024b55d17f1e1e102b51cb3e6a66d4d4831c471b43a79a50077c"
+    }
+  },
+  "privateNonsteamRpcs": [
+    5,
+    3
+  ],
+  "fourNonsteamParentOnlyStopsZeroExit": true,
+  "nonsteamNativeEvidence": "framey-nonsteam-badges-main358-native-2026-10-31.json",
+  "bluetoothNative": {
+    "decky": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "ab96a1b5c4cf1ae1105f141c537bfec217546e49d3c955eba4ad3e12fda453fe",
+      "tests/decky-runtime/check.py": "af84f7d5c0ea3775020556a2a1224e67e91b3cb6e5f61b13efd47d7382ea9979",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "3814b0f6109a20cebafaf7090bfd87e179a5fa69768cba80810512206b35c3e8",
+      "tests/framey_official.py": "1dd35709125be5c52815de83bad87a5e1b439c58ffd755042a0feaf33892a71e",
+      "ui/frame_decky_store.py": "18b3ead3d3799762c8a28c97bc0bb5f4a2940dd64064497ab6bbae7394ea654d",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "cases": [
+      {
+        "id": 18,
+        "name": "Bluetooth",
+        "version": "3.1.1",
+        "sha256": "f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_bluetooth_status",
+            "result": true
+          },
+          {
+            "method": "get_paired_devices_with_info",
+            "result": [
+              {
+                "mac": "42:00:00:00:00:01",
+                "name": "Private Controller",
+                "connected": true,
+                "icon": "input-gaming",
+                "battery": 73
+              },
+              {
+                "mac": "42:00:00:00:00:02",
+                "name": "Private Headphones",
+                "connected": false,
+                "icon": "audio-headphones",
+                "battery": null
+              }
+            ]
+          },
+          {
+            "method": "get_device_info",
+            "result": {
+              "mac": "42:00:00:00:00:01",
+              "name": "Private Alias",
+              "connected": true,
+              "icon": "input-gaming",
+              "original_name": "Private Controller",
+              "paired": true,
+              "trusted": true,
+              "blocked": false,
+              "address_type": "public",
+              "uuids": [
+                "private-uuid"
+              ],
+              "rssi": -42,
+              "tx_power": 4,
+              "device_class": 1288,
+              "appearance": 964,
+              "battery": 73
+            }
+          },
+          {
+            "method": "get_device_info",
+            "result": {
+              "mac": "42:00:00:00:00:FF",
+              "name": "Unnamed device",
+              "connected": false,
+              "icon": "",
+              "battery": null
+            }
+          },
+          {
+            "method": "toggle_device_connection",
+            "result": false
+          },
+          {
+            "method": "toggle_device_connection",
+            "result": true
+          },
+          {
+            "method": "get_device_info",
+            "result": {
+              "mac": "42:00:00:00:00:01",
+              "name": "Private Alias",
+              "connected": false,
+              "icon": "input-gaming",
+              "original_name": "Private Controller",
+              "paired": true,
+              "trusted": true,
+              "blocked": false,
+              "address_type": "public",
+              "uuids": [
+                "private-uuid"
+              ],
+              "rssi": -42,
+              "tx_power": 4,
+              "device_class": 1288,
+              "appearance": 964,
+              "battery": 73
+            }
+          },
+          {
+            "method": "toggle_device_connection",
+            "result": true
+          },
+          {
+            "method": "get_device_info",
+            "result": {
+              "mac": "42:00:00:00:00:01",
+              "name": "Private Alias",
+              "connected": true,
+              "icon": "input-gaming",
+              "original_name": "Private Controller",
+              "paired": true,
+              "trusted": true,
+              "blocked": false,
+              "address_type": "public",
+              "uuids": [
+                "private-uuid"
+              ],
+              "rssi": -42,
+              "tx_power": 4,
+              "device_class": 1288,
+              "appearance": 964,
+              "battery": 73
+            }
+          },
+          {
+            "method": "toggle_bluetooth",
+            "result": true
+          },
+          {
+            "method": "get_bluetooth_status",
+            "result": false
+          },
+          {
+            "method": "toggle_bluetooth",
+            "result": true
+          },
+          {
+            "method": "get_bluetooth_status",
+            "result": true
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Bluetooth",
+            "version": "3.1.1",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateBluez": {
+          "syntheticBluez": true,
+          "privateSystemBus": true,
+          "exactPublishedSourcesVerified": 31,
+          "pairedDeviceFiltering": true,
+          "owningAdapterSelected": true,
+          "aliasAndBatteryReplies": true,
+          "missingDeviceDefaults": true,
+          "privateConnectionRoundTrip": true,
+          "privatePowerRoundTrip": true,
+          "unselectedAdapterPreserved": true,
+          "syntheticWrites": [
+            [
+              "Disconnect",
+              "/org/bluez/hci1/dev_42_00_00_00_00_01"
+            ],
+            [
+              "Connect",
+              "/org/bluez/hci1/dev_42_00_00_00_00_01"
+            ],
+            [
+              "Set",
+              "/org/bluez/hci1",
+              "org.bluez.Adapter1",
+              "Powered",
+              false
+            ],
+            [
+              "Set",
+              "/org/bluez/hci1",
+              "org.bluez.Adapter1",
+              "Powered",
+              true
+            ]
+          ],
+          "retainedLoaderLogSha256": "8a802a530b1f488c46b63bcdc7b909f5b24cda6f965d7db1b14471879b7cecc0",
+          "loaderShutdownLogChecked": true,
+          "loaderExitStatus": 0,
+          "loaderStopSeconds": 0.214,
+          "privateBusAndServiceReaped": true,
+          "hostBusExposed": false,
+          "realRadioVerified": false,
+          "realPairingVerified": false,
+          "browserVerified": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API1 discovery and unmodified backend, private BlueZ paired-device filtering, adapter selection, alias/battery replies, connection/power round trips and clean shutdown passed; actual radio, pairing, browser and VR unverified"
+      }
+    ]
+  },
+  "bluetooth13RpcResultsMatchCurrentMain": true,
+  "bluetoothProbeAstAndOtherCasesPreserved": true,
+  "all116VersionDigestStatusInstallPoliciesPreserved": true,
+  "other115CompleteRecordsMatchCurrentMain": true,
+  "productionStoreRunnerOfficialFixtureAndE2eSourcesMatchPreviousHead": true,
+  "ownedCleanup": [
+    {
+      "image": "sha256:31177135e5d5e661130cf67850ccc8f1852f7ecf12881008bbf1cb1189aaf583",
+      "imageAbsent": true,
+      "ancestorContainersAbsent": true
+    },
+    {
+      "image": "sha256:3bf464b0520cd18d6785ccad5a8c499da43c6e4236cfa4678fdf052425395de0",
+      "imageAbsent": true,
+      "ancestorContainersAbsent": true
+    }
+  ],
+  "freshExactHeadCiRequired": true,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "limits": [
+    "Native refresh replay is AMD64 only; fresh ARM64 and full CI/e2e/package results required.",
+    "Private mappings do not prove active Steam account selection or badge UI integration.",
+    "Historical CI/artifact proofs never qualify the new head.",
+    "No real Frame/VR/controller or live search verification."
+  ]
+}

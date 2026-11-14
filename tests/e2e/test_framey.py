@@ -241,6 +241,13 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0], hashlib.sha256(prefix+original).hexdigest())
                     self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
                         hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if plugin['id'] == 133:
+                    self.assertEqual(found[0]['compatShims'], ['nonsteam-badges-user-paths', 'nonsteam-badges-ipc-eof'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     '049d990ca8351987f7c959a55ed96748ff7821a8ee04458b678114116ff48b62')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                        hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 135:
                     self.assertEqual(found[0]['compatShims'], ['deck-shelves-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
