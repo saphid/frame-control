@@ -236,7 +236,7 @@ class BrowserStartupEvidence(unittest.TestCase):
             log.write_bytes(b'x'*5000+b'\nprivate startup failure\x00\n')
             targets = [dict(type='page',title='Owned Syncthing actual backend',
                             url='http://127.0.0.1:12345/private?fixture-key=omitted')]*12
-            with patch.object(browser.frame_steam.urllib.request, 'urlopen',
+            with patch.object(browser.urllib.request, 'urlopen',
                               return_value=io.BytesIO(json.dumps(targets).encode())) as request:
                 result = browser.startup_diagnostics(process,profile,log)
             self.assertTrue(result['processAlive'])
@@ -261,7 +261,7 @@ class BrowserStartupEvidence(unittest.TestCase):
                 try:
                     raise failure
                 except AssertionError:
-                    with patch.object(browser.frame_steam.urllib.request,'urlopen',side_effect=OSError):
+                    with patch.object(browser.urllib.request,'urlopen',side_effect=OSError):
                         result = browser.startup_diagnostics(process,profile,profile/'absent.log')
                     raise
             except AssertionError as actual:

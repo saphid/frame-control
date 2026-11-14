@@ -17,6 +17,7 @@ import tempfile
 import threading
 import time
 import unittest
+import urllib.request
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -188,7 +189,7 @@ addEventListener('message',event=>{
                                      'allow-scripts')
                     # Large panel bytes never become target URLs returned by
                     # /json on every CDP readiness attempt.
-                    with cdp.urllib.request.urlopen(cdp.CDP, timeout=2) as response:
+                    with urllib.request.urlopen(cdp.CDP, timeout=2) as response:
                         targets = response.read(65537)
                     self.assertLessEqual(len(targets), 65536)
                     self.assertTrue(all(len(t['url']) < 256 for t in json.loads(targets)))

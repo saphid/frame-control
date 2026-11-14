@@ -11,6 +11,7 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.request
 
 sys.path.insert(0, '/input')
 import frame_steam
@@ -173,7 +174,7 @@ def startup_diagnostics(browser, profile, log):
         report['stderrUnavailable'] = True
     if report['devToolsPortFilePresent']:
         try:
-            with frame_steam.urllib.request.urlopen(frame_steam.CDP, timeout=2) as reply:
+            with urllib.request.urlopen(frame_steam.CDP, timeout=2) as reply:
                 encoded = reply.read(65537)
             if len(encoded) > 65536:
                 report['targetReportTooLarge'] = True
