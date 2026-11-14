@@ -168,6 +168,24 @@ registration/navigation. The fake Frame store flow is exercised by
 the repository's e2e suite. No worn-headset visibility or controller-input test
 has passed for this sample yet.
 
+The separate native gate runs the shipped archive in the digest-pinned published
+Decky 3.3.0 loader, without patching its backend. On native Linux with Docker:
+
+```sh
+python3 scripts/framey-test-sample-runtime.py --output /tmp/framey-sample-runtime.json
+```
+
+It saves and reads the real Decky-provided settings directory, stops and
+restarts the loader, verifies readback, and checks that invalid writes and
+malformed/future-schema settings are refused without replacing their bytes.
+All three parent-only stops require zero exit, no forced plugin kill or shutdown
+error, and no remaining recorded descendants. An unrelated private process
+must survive all stops. AMD64 and ARM64 CI run this gate separately from the
+mocked UI tests. Containers are nonroot, read-only and networkless, with private
+writable homes and no host session bus or hardware. This verifies native backend
+persistence; browser controls, real Frame persistence, worn visibility and the
+VR keyboard still need separate checks.
+
 The plugin needs no root access or system changes. Its settings remain after
 the managed plugin folder is removed, following Decky's settings behavior.
 For a production plugin, add explicit migrations for every supported schema,

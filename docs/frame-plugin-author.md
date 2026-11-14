@@ -378,7 +378,12 @@ Frame Control store; only paths registered by that same plugin can navigate.
 Optional route segments must be at the end. Framey accepts local path segments
 only; query strings, external URLs, Steam library routes and duplicate parameter
 names are rejected. `addRoute` replaces an existing registration at the same
-path and returns a disposer for that registration alone. Keep and call it during
+path. It accepts function/class component types, `React.memo` and
+`React.forwardRef` component types (including nested wrappers), or an existing
+React element. Element registrations retain their props and refs. These
+wrapper cases are covered with synthetic routes in real React/DOM; no
+published-plugin or worn-headset use is claimed.
+`addRoute` returns a disposer for that registration alone. Keep and call it during
 cleanup; an older disposer cannot remove a later registration, even if both use
 the same component. `removeRoute(path)` explicitly removes the current registration.
 Changing the active registration remounts its view and clears its render error;
