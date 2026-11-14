@@ -543,11 +543,13 @@
   const ButtonItem = ({label, description, icon, style, children, disabled, onClick}) => R.createElement(Field, {label, description, icon, style},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
-  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange, onClick, className, style}) =>
+  const DialogCheckbox = ({label, description, tooltip, checked, defaultChecked, disabled, onChange, onClick, className, style}) =>
     R.createElement('label', {className, style},
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
         onClick:event=>{if(!disabled)onClick?.(event);},
-        onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
+        onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label,
+      description != null && R.createElement('small', null, description),
+      tooltip != null && R.createElement('small', null, tooltip));
   const TextField = R.forwardRef(function TextField({label, description, tooltip, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
     rangeMin, rangeMax, maxLength, minLength, pattern, required,
