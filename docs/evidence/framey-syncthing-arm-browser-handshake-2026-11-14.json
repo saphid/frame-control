@@ -1,0 +1,171 @@
+{
+  "failedHead": "1f38e894a8194a0413a9b5a41bff2ce2d3058bb9",
+  "run": 43416515747,
+  "job": 131855674999,
+  "artifactId": 14033683896,
+  "artifactSha256": "8abe0030adc4aa96b9b6cbdf0d7b9e2e7b3ffcf2e7ef563cd655f968bd7f6298",
+  "sourceFingerprintsVerified": 137,
+  "actualPackageTwoWaySyncPassed": true,
+  "browserProgress": {
+    "success": false,
+    "syntheticInput": true,
+    "actualDeckyRpc": true,
+    "installerEnabled": false,
+    "realFrameContacted": false,
+    "hostBusExposed": false,
+    "browserSandboxDisabled": false,
+    "panelSha256": "87039308f193f4ba647c6306b79f389372f13ca52ebe2ac5751d9f26143f7150",
+    "lastReadinessError": "no Owned Syncthing actual backend page; Steam may still be starting",
+    "lastReadinessAttempt": {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 3.427
+    },
+    "readinessAttempts": [
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 5.026
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 4.549
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.331
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.056
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.284
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.543
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.007
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.662
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 13.86
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.616
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.731
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.441
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.385
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.439
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.37
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.385
+      }
+    ],
+    "startupErrors": [],
+    "readinessTraceOverflow": true,
+    "startupDiagnostics": {
+      "processAlive": true,
+      "returnCode": null,
+      "devToolsPortFilePresent": true,
+      "stderrBytes": 395,
+      "stderrTail": "\nDevTools listening on ws://127.0.0.1:39451/devtools/browser/67b4d0df-edc7-488d-bfb2-e825964f9913\n[911:911:1113/115905.349618:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.Properties.GetAll: object_path= /org/freedesktop/UPower/devices/DisplayDevice: org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.UPower was not provided by any .service files\n",
+      "targetCount": 3,
+      "targets": [
+        {
+          "type": "page",
+          "title": "Owned Syncthing actual backend",
+          "urlKind": "loopback-http"
+        },
+        {
+          "type": "browser_ui",
+          "title": "Omnibox Popup",
+          "urlKind": "other"
+        },
+        {
+          "type": "browser_ui",
+          "title": "Omnibox Popup",
+          "urlKind": "other"
+        }
+      ]
+    },
+    "failureUnitLookup": {
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Call failed: Unit frame-control-syncthing.service not loaded."
+    },
+    "failureSystemdProperties": {
+      "MainPID": "0",
+      "ActiveState": "inactive",
+      "SubState": "dead",
+      "Result": "success",
+      "ExecMainCode": "0",
+      "ExecMainStatus": "0",
+      "LoadState": "not-found"
+    },
+    "stages": [],
+    "calls": [],
+    "actualPackagedProcessObservations": [],
+    "ownedBrowserReaped": true,
+    "bridgeStopped": true
+  },
+  "followup": {
+    "testedSource": "f44668717b8e79ff551c6f3464b6b646ba735e70",
+    "main": "072e7284faecf42958a3e20f748751263de1c8fb",
+    "focusedTestsPassed": 78,
+    "realBrowserStartupCases": [
+      {
+        "parentDeliveryPauseSeconds": 0,
+        "passed": true
+      },
+      {
+        "parentDeliveryPauseSeconds": 7,
+        "passed": true
+      }
+    ],
+    "readinessDeadlineSeconds": 60,
+    "nativeArm64BrowserQualified": false,
+    "realFrameContacted": false
+  }
+}
