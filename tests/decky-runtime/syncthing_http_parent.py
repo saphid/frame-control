@@ -17,7 +17,8 @@ def command(page, method, params, session_id=None):
             return reply['result']
 
 
-def install_child_harness(page, panel_url, source):
+def install_child_harness(page, panel_url, source,
+                          ready_expression="typeof window.manualPortFallbackUsed==='boolean'"):
     # Sandboxed panels can be out-of-process iframes. A new-document script
     # registered on the parent does not install a driver in that target.
     targets = command(page, 'Target.getTargets', {})['targetInfos']
@@ -25,7 +26,7 @@ def install_child_harness(page, panel_url, source):
                if target['type'] == 'iframe' and target['url'] == panel_url]
     assert len(matches) <= 1
     session = None
-    params = dict(expression=source+";typeof window.manualPortFallbackUsed==='boolean'",
+    params = dict(expression=source+';('+ready_expression+')',
                   returnByValue=True, awaitPromise=True)
     try:
         if matches:

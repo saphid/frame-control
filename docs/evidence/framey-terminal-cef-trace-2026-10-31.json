@@ -1,0 +1,254 @@
+{
+  "at": "2026-10-31T14:12:35.858230+00:00",
+  "sourceRevision": "b591ce52b16baff8b37494d22221e8ba43b89f91",
+  "priorRemoteHead": "f9094fa6a2bb40609fa44d862aa8247549126538",
+  "runtimeInputChanges": [
+    "tests/decky-runtime/terminal_http.py"
+  ],
+  "all168SourceFingerprintsVerified": true,
+  "sourceArchiveReconstructed": true,
+  "bootstrapAndPublishedLoaderVerified": true,
+  "officialFrontendVerified": true,
+  "fullGuestPacketVerified": true,
+  "packetSha256": "d886fc301d48ad9d537f88168a0fe11942a167c6584a37123251da5ae4c46f6e",
+  "consoleSha256": "e4be1fc7e878ef59ff5601f76447e4b63f12cdeb2f89c3850e17f8cc7a2c9630",
+  "focusedTests": 34,
+  "fullServerTests": 1964,
+  "fullServerSkips": 16,
+  "fullServerSeconds": 259.733,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "productionHttpRequests": 20,
+  "methodRequests": 14,
+  "eventPolls": 6,
+  "cefTrace": {
+    "records": [
+      {
+        "requestId": 1,
+        "method": "discovery",
+        "startedAfterMilliseconds": 1720,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 452,
+        "elapsedMilliseconds": 667
+      },
+      {
+        "requestId": 2,
+        "method": "get_terminals",
+        "startedAfterMilliseconds": 2424,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 2,
+        "elapsedMilliseconds": 73
+      },
+      {
+        "requestId": 3,
+        "method": "create_terminal",
+        "startedAfterMilliseconds": 26524,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 1,
+        "elapsedMilliseconds": 600
+      },
+      {
+        "requestId": 4,
+        "method": "get_terminals",
+        "startedAfterMilliseconds": 26533,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 358
+      },
+      {
+        "requestId": 5,
+        "method": "get_terminals",
+        "startedAfterMilliseconds": 30021,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 18
+      },
+      {
+        "requestId": 6,
+        "method": "change_terminal_window_size",
+        "startedAfterMilliseconds": 33924,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 25
+      },
+      {
+        "requestId": 7,
+        "method": "get_config",
+        "startedAfterMilliseconds": 36673,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 32
+      },
+      {
+        "requestId": 8,
+        "method": "get_terminal",
+        "startedAfterMilliseconds": 40936,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 3,
+        "elapsedMilliseconds": 25
+      },
+      {
+        "requestId": 9,
+        "method": "unsubscribe_terminal",
+        "startedAfterMilliseconds": 41369,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 1,
+        "elapsedMilliseconds": 56
+      },
+      {
+        "requestId": 10,
+        "method": "subscribe_terminal",
+        "startedAfterMilliseconds": 49217,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 6,
+        "elapsedMilliseconds": 36
+      },
+      {
+        "requestId": 11,
+        "method": "send_terminal_buffer",
+        "startedAfterMilliseconds": 54284,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 63
+      },
+      {
+        "requestId": 12,
+        "method": "send_terminal_input",
+        "startedAfterMilliseconds": 61320,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 27
+      },
+      {
+        "requestId": 13,
+        "method": "unsubscribe_terminal",
+        "startedAfterMilliseconds": 68104,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 23
+      },
+      {
+        "requestId": 14,
+        "method": "get_terminals",
+        "startedAfterMilliseconds": 72356,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 14
+      },
+      {
+        "requestId": 15,
+        "method": "remove_terminal",
+        "startedAfterMilliseconds": 75111,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 107
+      },
+      {
+        "requestId": 16,
+        "method": "get_terminals",
+        "startedAfterMilliseconds": 77328,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 13
+      },
+      {
+        "requestId": 17,
+        "method": "get_terminals",
+        "startedAfterMilliseconds": 78440,
+        "outcome": "succeeded",
+        "openElapsedMilliseconds": 0,
+        "elapsedMilliseconds": 11
+      }
+    ],
+    "overflow": false,
+    "socketCount": 1,
+    "requestCount": 17,
+    "nativeEvents": [
+      {
+        "plugin": "Decky Terminal",
+        "event": "terminal_output#8b3879b3-026a-4fd6-b5c5-d78ae7234082",
+        "args": [
+          "$ "
+        ]
+      },
+      {
+        "plugin": "Decky Terminal",
+        "event": "terminal_output#8b3879b3-026a-4fd6-b5c5-d78ae7234082",
+        "args": [
+          "printf 'framey-browser-terminal\\n' > framey-browser-terminal-marker; stty size; printf 'framey-browser-output\\n'\r\n"
+        ]
+      },
+      {
+        "plugin": "Decky Terminal",
+        "event": "terminal_output#8b3879b3-026a-4fd6-b5c5-d78ae7234082",
+        "args": [
+          "18 125"
+        ]
+      },
+      {
+        "plugin": "Decky Terminal",
+        "event": "terminal_output#8b3879b3-026a-4fd6-b5c5-d78ae7234082",
+        "args": [
+          "\r\nframey-browser-output\r\n"
+        ]
+      },
+      {
+        "plugin": "Decky Terminal",
+        "event": "terminal_output#8b3879b3-026a-4fd6-b5c5-d78ae7234082",
+        "args": [
+          "$ "
+        ]
+      }
+    ],
+    "handlersDrained": true,
+    "beforeFailureDiagnostics": true
+  },
+  "deliveredEvents": 5,
+  "requestDrain": {
+    "drained": true,
+    "pendingHandlers": 0,
+    "timeoutSeconds": 35,
+    "productionDeadlineChanged": false
+  },
+  "ownedDeckyStop": {
+    "mainPidBefore": 338,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 7.959
+  },
+  "captures": {
+    "terminal": {
+      "sha256": "9f0c66b5a5e26d57047d575ff0e859b46ccd2f20e84f23538755639b29c1ff5f",
+      "visuallyInspected": true
+    },
+    "output": {
+      "sha256": "2f8d8899d9e7f89297d4a63a03d084f21b58bd8714cbf9d27b9a2b3c67f6696e",
+      "visuallyInspected": true
+    },
+    "removed": {
+      "sha256": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3",
+      "visuallyInspected": true
+    }
+  },
+  "ownedResourcesStoppedAndFixtureRestored": true,
+  "productionDeadlinesChanged": false,
+  "armFailureResolved": false,
+  "globalCleanRuntimeVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local AMD64 QEMU replay only; prior exact-head ARM64 subscribe_terminal failure remains unresolved.",
+    "Synthetic CEF, receipt and input do not prove real Steam CEF, official managed Terminal, wearer-visible behavior or physical controllers.",
+    "Pane overflow remains visible; no global clean-console or release qualification.",
+    "Fresh exact pushed-head and current-main CI/e2e/native/ownership/PC/package gates remain required."
+  ],
+  "rawJsonSha256": "1f834755dfdcd8f29e4064de70ed3c5057eeabea91fd682bc25f65991210259e",
+  "rawGzipSha256": "9d9d392d48ca45069fd2771618ea7ab311b842561bfc8059f6c7629d18d2cfa3"
+}

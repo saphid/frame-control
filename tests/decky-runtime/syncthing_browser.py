@@ -11,6 +11,7 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.request
 
 sys.path.insert(0, '/input')
 import frame_steam
@@ -66,21 +67,38 @@ addEventListener('message',async event=>{
 '''
 PARENT = r'''
 let ready=false;window.stage=null;window.startupErrors=[];
+window.startupState={parentInstalled:true,iframeLoads:0,cacheRequests:0,seedReplies:0,readyMessages:0};
+window.startupEvents=[];
+const startedAt=performance.now();
+const traceStartup=(type,method)=>{
+ if(startupEvents.length<32)startupEvents.push({type,method,atMs:Math.round(performance.now()-startedAt)});
+};
 addEventListener('error',event=>startupErrors.push(event.message));
 addEventListener('unhandledrejection',event=>startupErrors.push(String(event.reason)));
 const panel=()=>document.getElementById('panel').contentWindow;
 addEventListener('message',async event=>{
  if(event.source!==panel())return;
  const req=event.data||{};
- if(req.type==='framey:cache:init'){panel().postMessage({type:'framey:cache:seed',session:req.session,entries:{}},'*');return;}
- if(req.type==='framey:ready'){ready=true;return;}
+ traceStartup(String(req.type||'unknown').slice(0,64),
+   typeof req.method==='string'?req.method.slice(0,64):null);
+ if(req.type==='framey:cache:init'){
+  startupState.cacheRequests++;
+  panel().postMessage({type:'framey:cache:seed',session:req.session,entries:{}},'*');
+  startupState.seedReplies++;return;
+ }
+ if(req.type==='framey:ready'){startupState.readyMessages++;ready=true;return;}
+ if(req.type==='framey:error'){
+  if(startupErrors.length<16)startupErrors.push(String(req.message||'Panel startup failed').slice(0,1000));
+  return;
+ }
  if(req.type==='test:stage'){window.stage=req;return;}
  if(req.type==='test:failure'){window.failure=req.error;return;}
  if(req.type!=='framey:call')return;
  try{
   const response=await fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req)});
   const result=await response.json();panel().postMessage({type:'framey:reply',id:req.id,result},'*');
- }catch(e){window.failure='RPC bridge failed';}
+  traceStartup('rpc-reply',req.method);
+ }catch(e){traceStartup('rpc-failure',req.method);window.failure='RPC bridge failed';}
 });
 window.advance=action=>{if(!ready)throw Error('Panel not ready');window.stage=null;
  panel().postMessage({type:'test:advance',action},'*');};
@@ -97,22 +115,114 @@ def screenshot(page):
             return response['result']['data']
 
 
+def ready_page(report):
+    """Accept only a ready panel; close every rejected owned CDP candidate."""
+    candidate = None
+    accepted = False
+    phase = 'page-connect'
+    started = time.monotonic()
+    outcome = 'not-ready'
+    try:
+        candidate = frame_steam.Page('Owned Syncthing actual backend')
+        phase = 'panel-ready'
+        accepted = bool(candidate.eval("typeof ready !== 'undefined' && ready"))
+        if accepted:
+            outcome = 'ready'
+            return candidate
+        phase = 'panel-errors'
+        snapshot = candidate.eval("""({errors:window.startupErrors||[],
+            state:window.startupState||null,documentState:document.readyState,
+            iframeAssigned:!!document.getElementById('panel')?.getAttribute('src'),
+            events:window.startupEvents||[]})""")
+        report['startupErrors'] = snapshot['errors']
+        report['startupEvents'] = snapshot.get('events', [])
+        report['startupState'] = {key: snapshot[key] for key in
+                                  ('state', 'documentState', 'iframeAssigned')}
+    except (OSError, frame_steam.Fail) as error:
+        outcome = 'failure'
+        report['lastReadinessError'] = str(error)[:1500]
+    finally:
+        if candidate is not None and not accepted:
+            candidate.sock.close()
+        attempt = dict(phase=phase, outcome=outcome,
+                       elapsedSeconds=round(time.monotonic()-started, 3))
+        report['lastReadinessAttempt'] = attempt
+        attempts = report.setdefault('readinessAttempts', [])
+        if len(attempts) < 16:
+            attempts.append(attempt)
+        else:
+            report['readinessTraceOverflow'] = True
+    return None
+
+
+def startup_diagnostics(browser, profile, log):
+    """Bounded evidence from the owned fixture only; never change readiness."""
+    report = dict(processAlive=browser.poll() is None,
+                  returnCode=browser.returncode,
+                  devToolsPortFilePresent=(profile/'DevToolsActivePort').is_file())
+    try:
+        with log.open('rb') as stream:
+            stream.seek(0, 2)
+            report['stderrBytes'] = stream.tell()
+            stream.seek(max(0, stream.tell()-2048))
+            tail = stream.read(2048)
+        # The disposable browser has no user session, secrets or external
+        # network. Preserve its final diagnostic lines, with a strict bound.
+        report['stderrTail'] = ''.join(chr(value) if 32 <= value < 127 or value == 10
+                                       else '?' for value in tail)
+    except OSError:
+        report['stderrUnavailable'] = True
+    if report['devToolsPortFilePresent']:
+        try:
+            with urllib.request.urlopen(frame_steam.CDP, timeout=2) as reply:
+                encoded = reply.read(65537)
+            if len(encoded) > 65536:
+                report['targetReportTooLarge'] = True
+            else:
+                targets = json.loads(encoded)
+                assert isinstance(targets, list)
+                report['targetCount'] = len(targets)
+                report['targets'] = [dict(type=str(target.get('type', ''))[:32],
+                    title=str(target.get('title', ''))[:80],
+                    urlKind=('loopback-http' if str(target.get('url', '')).startswith('http://127.0.0.1:')
+                             else 'data' if str(target.get('url', '')).startswith('data:') else 'other'))
+                    for target in targets[:8] if isinstance(target, dict)]
+        except (OSError, ValueError, AssertionError):
+            report['targetsUnavailable'] = True
+    return report
+
+
+def browser_documents(panel):
+    """Serve the opaque child separately, with its receiver installed first.
+
+    A data URL repeats the entire encoded panel in Chromium's target metadata.
+    Use the same HTTP delivery as the production parent, while preserving the
+    child's opaque sandbox and its policy that denies network connections.
+    """
+    # The parent permits embedded runtime scripts; the opaque child separately
+    # denies every network connection, including the private parent's RPC URL.
+    policy = '''<meta http-equiv="Content-Security-Policy" content="default-src 'none';
+script-src 'unsafe-inline' data: blob:; connect-src 'none'; style-src 'unsafe-inline'; img-src data:">'''
+    panel = panel.replace('<html lang="en">', '<html lang="en">'+policy)
+    panel = panel.replace('</html>', '<script>'+PROBE+'</script></html>')
+    parent = '''<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy"
+content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; img-src data:">
+<title>Owned Syncthing actual backend</title><style>body{margin:0;background:#0d1925;color:white}iframe{width:1200px;height:1050px;border:0}</style>
+<iframe id="panel" sandbox="allow-scripts"></iframe><script>''' + PARENT + '''
+document.getElementById('panel').addEventListener('load',()=>startupState.iframeLoads++);
+document.getElementById('panel').src = '/panel#fixture';
+</script>'''
+    return {'/': parent, '/panel': panel}
+
+
 def exercise(legacy_rpc, runtime_identity, service):
     from syncthing_service import prop
     assert os.getuid() == 1100 and Path('/framey-owned-vm').read_text() == 'Frame Control Flatpak VM v1\n'
     assert not Path('/sys/class/net/eth0').exists()
     initial = json.loads(legacy_rpc('get_settings_json'))
     assert initial['is_setup'] is False and not initial['api_key']
-    # The parent permits embedded runtime scripts; the opaque child separately
-    # denies every network connection, including the private parent's RPC URL.
-    policy = '''<meta http-equiv="Content-Security-Policy" content="default-src 'none';
-script-src 'unsafe-inline' data: blob:; connect-src 'none'; style-src 'unsafe-inline'; img-src data:">'''
-    panel = Path('/input/browser-panel.html').read_text().replace('<html lang="en">', '<html lang="en">'+policy)
-    panel = panel.replace('</html>', '<script>'+PROBE+'</script></html>')
-    document = '''<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy"
-content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src data:; connect-src 'self'; style-src 'unsafe-inline'; img-src data:">
-<title>Owned Syncthing actual backend</title><style>body{margin:0;background:#0d1925;color:white}iframe{width:1200px;height:1050px;border:0}</style>
-<iframe id="panel" sandbox="allow-scripts" src="data:text/html;base64,''' + base64.b64encode(panel.encode()).decode() + '''#fixture"></iframe><script>''' + PARENT + '</script>'
+    documents = browser_documents(Path('/input/browser-panel.html').read_text())
+    document_requests = []
     calls, stages, screenshots, observations = [], [], {}, []
     rpc_lock = threading.Lock()
 
@@ -121,13 +231,17 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
             pass
 
         def do_GET(self):
-            if self.path != '/':
+            if self.path not in documents:
                 self.send_error(404)
                 return
+            data = documents[self.path].encode()
+            if len(document_requests) < 16:
+                document_requests.append(dict(path=self.path, bytes=len(data)))
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', str(len(data)))
             self.end_headers()
-            self.wfile.write(document.encode())
+            self.wfile.write(data)
 
         def do_POST(self):
             if self.path != '/rpc':
@@ -168,6 +282,9 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
     report = {'success': False, 'syntheticInput': True, 'actualDeckyRpc': True,
               'installerEnabled': False, 'realFrameContacted': False,
               'hostBusExposed': False, 'browserSandboxDisabled': False,
+              'documentDelivery': 'loopback-http-opaque-sandbox',
+              'documentSha256': {path: hashlib.sha256(text.encode()).hexdigest()
+                                 for path, text in documents.items()},
               'panelSha256': hashlib.sha256(Path('/input/browser-panel.html').read_bytes()).hexdigest()}
     try:
         profile = Path(temporary.name)
@@ -186,11 +303,9 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                 if port.is_file():
                     try:
                         frame_steam.CDP = 'http://127.0.0.1:'+port.read_text().splitlines()[0]+'/json'
-                        page = frame_steam.Page('Owned Syncthing actual backend')
-                        if page.eval("typeof ready !== 'undefined' && ready"): break
-                        report['startupErrors'] = page.eval('window.startupErrors')
-                        page.sock.close()
-                        page = None
+                        page = ready_page(report)
+                        if page is not None:
+                            break
                     except (OSError, IndexError, frame_steam.Fail) as error:
                         report['lastReadinessError'] = str(error)[:1500]
                 time.sleep(.2)
@@ -260,6 +375,8 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                           sandboxedRendererPids=renderers, actualPackagedProcessObservations=observations,
                           stages=stages, calls=calls, screenshots=screenshots, success=True)
     except BaseException:
+        if browser:
+            report['startupDiagnostics'] = startup_diagnostics(browser, profile, Path.home()/'browser.log')
         # GetUnit is read-only and does not load a collected inactive unit.
         lookup = subprocess.run(
             ['busctl', '--user', 'call', 'org.freedesktop.systemd1',
@@ -284,7 +401,8 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                 report['lastStageUnavailable'] = True
         raise
     finally:
-        report.update(stages=stages, calls=calls, actualPackagedProcessObservations=observations)
+        report.update(stages=stages, calls=calls, actualPackagedProcessObservations=observations,
+                      documentRequests=list(document_requests))
         if page:
             page.sock.close()
         if browser:

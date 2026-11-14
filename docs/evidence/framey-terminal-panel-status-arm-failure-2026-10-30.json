@@ -1,0 +1,457 @@
+{
+  "head": "f9301c93882765144b74f9effd73cce549107b8a",
+  "job": 124331191004,
+  "run": 41133819814,
+  "artifact": 13015902135,
+  "artifactSha256": "43527632020f093da45e9affc15b0a8834f6b5431f0946290c07f0ae1693b2bd",
+  "jobLogSha256": "da44cabd5e521ad8ecbcb6ca96722bad70a223b5c586f0aa23afd8f5db70de9a",
+  "failedExactJobAndCheckoutVerified": true,
+  "sourceFingerprintsVerified": 166,
+  "bootstrapVerified": true,
+  "fullGuestPacketVerified": true,
+  "guestPacketSha256": "0dc6fc9aa1f62fb2f51822c143d558bb421bc78ed3e2af8c4469d5aea30d0eea",
+  "productionFailureRetained": true,
+  "statusHttpRequests": [
+    {
+      "startedAfterSeconds": 88.055,
+      "elapsedSeconds": 15.46,
+      "httpStatus": 503,
+      "errorCategory": "ssh-timeout"
+    }
+  ],
+  "parentFailureState": {
+    "panel": "Loading plugin panel\u2026",
+    "deckyState": "Installed plugins unavailable: The Frame took too long to answer. It may be asleep or busy; try again.",
+    "installed": "Refresh to check installed plugins.",
+    "errors": [],
+    "failure": null,
+    "stage": null
+  },
+  "postFailureModifiedDiagnostic": {
+    "diagnosticOnly": true,
+    "invocationModified": true,
+    "productionReplayReplaced": false,
+    "productionDeadlineChanged": false,
+    "sourceSha256": "942f8e3bc83099ac35dfaffbe895b23fbc4fe5a24785b25898d401c6c9fbaeb7",
+    "timeoutSeconds": 35,
+    "timedOut": false,
+    "ownedProcessReaped": true,
+    "exitStatus": 0,
+    "elapsedSeconds": 7.732,
+    "outputLimitExceeded": false,
+    "importRecordCount": 118,
+    "slowestImports": [
+      {
+        "module": "http.client",
+        "selfMicroseconds": 602740,
+        "cumulativeMicroseconds": 5345155
+      },
+      {
+        "module": "email.parser",
+        "selfMicroseconds": 46270,
+        "cumulativeMicroseconds": 2877117
+      },
+      {
+        "module": "email.feedparser",
+        "selfMicroseconds": 170725,
+        "cumulativeMicroseconds": 2807178
+      },
+      {
+        "module": "email._policybase",
+        "selfMicroseconds": 92191,
+        "cumulativeMicroseconds": 2480066
+      },
+      {
+        "module": "email.utils",
+        "selfMicroseconds": 157065,
+        "cumulativeMicroseconds": 1536153
+      },
+      {
+        "module": "urllib.parse",
+        "selfMicroseconds": 454387,
+        "cumulativeMicroseconds": 1170507
+      },
+      {
+        "module": "email.header",
+        "selfMicroseconds": 200949,
+        "cumulativeMicroseconds": 851723
+      },
+      {
+        "module": "ipaddress",
+        "selfMicroseconds": 688842,
+        "cumulativeMicroseconds": 688842
+      },
+      {
+        "module": "ssl",
+        "selfMicroseconds": 547676,
+        "cumulativeMicroseconds": 662057
+      },
+      {
+        "module": "email.message",
+        "selfMicroseconds": 365473,
+        "cumulativeMicroseconds": 468966
+      },
+      {
+        "module": "encodings.idna",
+        "selfMicroseconds": 164331,
+        "cumulativeMicroseconds": 386351
+      },
+      {
+        "module": "socket",
+        "selfMicroseconds": 341349,
+        "cumulativeMicroseconds": 380277
+      },
+      {
+        "module": "http",
+        "selfMicroseconds": 144383,
+        "cumulativeMicroseconds": 354001
+      },
+      {
+        "module": "email.base64mime",
+        "selfMicroseconds": 29422,
+        "cumulativeMicroseconds": 233510
+      },
+      {
+        "module": "stringprep",
+        "selfMicroseconds": 219465,
+        "cumulativeMicroseconds": 222020
+      },
+      {
+        "module": "email.charset",
+        "selfMicroseconds": 95623,
+        "cumulativeMicroseconds": 212164
+      },
+      {
+        "module": "enum",
+        "selfMicroseconds": 69716,
+        "cumulativeMicroseconds": 209619
+      },
+      {
+        "module": "base64",
+        "selfMicroseconds": 195042,
+        "cumulativeMicroseconds": 204088
+      },
+      {
+        "module": "email.quoprimime",
+        "selfMicroseconds": 82784,
+        "cumulativeMicroseconds": 201164
+      },
+      {
+        "module": "email._parseaddr",
+        "selfMicroseconds": 192984,
+        "cumulativeMicroseconds": 192984
+      },
+      {
+        "module": "pathlib",
+        "selfMicroseconds": 6984,
+        "cumulativeMicroseconds": 165101
+      },
+      {
+        "module": "site",
+        "selfMicroseconds": 21266,
+        "cumulativeMicroseconds": 164021
+      },
+      {
+        "module": "subprocess",
+        "selfMicroseconds": 29193,
+        "cumulativeMicroseconds": 148137
+      },
+      {
+        "module": "functools",
+        "selfMicroseconds": 26505,
+        "cumulativeMicroseconds": 123535
+      },
+      {
+        "module": "string",
+        "selfMicroseconds": 116603,
+        "cumulativeMicroseconds": 118380
+      },
+      {
+        "module": "email.encoders",
+        "selfMicroseconds": 24478,
+        "cumulativeMicroseconds": 116541
+      },
+      {
+        "module": "_ssl",
+        "selfMicroseconds": 114382,
+        "cumulativeMicroseconds": 114382
+      },
+      {
+        "module": "os",
+        "selfMicroseconds": 25096,
+        "cumulativeMicroseconds": 112191
+      },
+      {
+        "module": "collections",
+        "selfMicroseconds": 53963,
+        "cumulativeMicroseconds": 94868
+      },
+      {
+        "module": "quopri",
+        "selfMicroseconds": 92063,
+        "cumulativeMicroseconds": 92063
+      }
+    ],
+    "lastImports": [
+      {
+        "module": "nt",
+        "selfMicroseconds": 3684,
+        "cumulativeMicroseconds": 3684
+      },
+      {
+        "module": "nt",
+        "selfMicroseconds": 3684,
+        "cumulativeMicroseconds": 3684
+      },
+      {
+        "module": "nt",
+        "selfMicroseconds": 3579,
+        "cumulativeMicroseconds": 3579
+      },
+      {
+        "module": "nt",
+        "selfMicroseconds": 3682,
+        "cumulativeMicroseconds": 3682
+      },
+      {
+        "module": "nt",
+        "selfMicroseconds": 3694,
+        "cumulativeMicroseconds": 3694
+      },
+      {
+        "module": "ntpath",
+        "selfMicroseconds": 21677,
+        "cumulativeMicroseconds": 51563
+      },
+      {
+        "module": "pathlib._local",
+        "selfMicroseconds": 24275,
+        "cumulativeMicroseconds": 79264
+      },
+      {
+        "module": "pathlib",
+        "selfMicroseconds": 6984,
+        "cumulativeMicroseconds": 165101
+      },
+      {
+        "module": "_locale",
+        "selfMicroseconds": 2797,
+        "cumulativeMicroseconds": 2797
+      },
+      {
+        "module": "locale",
+        "selfMicroseconds": 35348,
+        "cumulativeMicroseconds": 38144
+      },
+      {
+        "module": "signal",
+        "selfMicroseconds": 29932,
+        "cumulativeMicroseconds": 29932
+      },
+      {
+        "module": "_weakrefset",
+        "selfMicroseconds": 11895,
+        "cumulativeMicroseconds": 11895
+      },
+      {
+        "module": "threading",
+        "selfMicroseconds": 31696,
+        "cumulativeMicroseconds": 43590
+      },
+      {
+        "module": "fcntl",
+        "selfMicroseconds": 2277,
+        "cumulativeMicroseconds": 2277
+      },
+      {
+        "module": "msvcrt",
+        "selfMicroseconds": 3881,
+        "cumulativeMicroseconds": 3881
+      },
+      {
+        "module": "_posixsubprocess",
+        "selfMicroseconds": 1122,
+        "cumulativeMicroseconds": 1122
+      },
+      {
+        "module": "subprocess",
+        "selfMicroseconds": 29193,
+        "cumulativeMicroseconds": 148137
+      },
+      {
+        "module": "unicodedata",
+        "selfMicroseconds": 2556,
+        "cumulativeMicroseconds": 2556
+      },
+      {
+        "module": "stringprep",
+        "selfMicroseconds": 219465,
+        "cumulativeMicroseconds": 222020
+      },
+      {
+        "module": "encodings.idna",
+        "selfMicroseconds": 164331,
+        "cumulativeMicroseconds": 386351
+      }
+    ],
+    "sampledFrames": [
+      {
+        "file": "client.py",
+        "line": 1479,
+        "function": "<module>"
+      },
+      {
+        "file": "<decky-read-only-status>",
+        "line": 2,
+        "function": "<module>"
+      },
+      {
+        "file": "<stdin>",
+        "line": 4,
+        "function": "<module>"
+      }
+    ],
+    "statusSummary": {
+      "managed": true,
+      "running": true,
+      "cef": false,
+      "pluginCount": 1
+    },
+    "afterFailedProductionReplay": true,
+    "realFrameContacted": false,
+    "physicalControllerVerified": false
+  },
+  "statusProcessProfiles": {
+    "records": [
+      {
+        "samples": [
+          {
+            "processes": [
+              {
+                "pid": 494,
+                "parentPid": 291,
+                "command": "ssh",
+                "state": "S",
+                "cpuTicks": 13,
+                "residentPages": 762,
+                "waitChannel": "do_wait"
+              },
+              {
+                "pid": 498,
+                "parentPid": 494,
+                "command": "sh",
+                "state": "S",
+                "cpuTicks": 5,
+                "residentPages": 324,
+                "waitChannel": "do_wait"
+              },
+              {
+                "pid": 500,
+                "parentPid": 498,
+                "command": "python3",
+                "state": "R",
+                "cpuTicks": 12,
+                "residentPages": 932,
+                "waitChannel": "0"
+              }
+            ],
+            "truncated": false,
+            "elapsedSeconds": 2.527
+          },
+          {
+            "processes": [
+              {
+                "pid": 494,
+                "parentPid": 291,
+                "command": "ssh",
+                "state": "S",
+                "cpuTicks": 13,
+                "residentPages": 762,
+                "waitChannel": "do_wait"
+              },
+              {
+                "pid": 498,
+                "parentPid": 494,
+                "command": "sh",
+                "state": "S",
+                "cpuTicks": 5,
+                "residentPages": 324,
+                "waitChannel": "do_wait"
+              },
+              {
+                "pid": 500,
+                "parentPid": 498,
+                "command": "python3",
+                "state": "R",
+                "cpuTicks": 138,
+                "residentPages": 2221,
+                "waitChannel": "0"
+              }
+            ],
+            "truncated": false,
+            "elapsedSeconds": 8.764
+          },
+          {
+            "processes": [
+              {
+                "pid": 494,
+                "parentPid": 291,
+                "command": "ssh",
+                "state": "S",
+                "cpuTicks": 13,
+                "residentPages": 762,
+                "waitChannel": "do_wait"
+              },
+              {
+                "pid": 498,
+                "parentPid": 494,
+                "command": "sh",
+                "state": "S",
+                "cpuTicks": 5,
+                "residentPages": 324,
+                "waitChannel": "do_wait"
+              },
+              {
+                "pid": 500,
+                "parentPid": 498,
+                "command": "python3",
+                "state": "R",
+                "cpuTicks": 346,
+                "residentPages": 3110,
+                "waitChannel": "0"
+              }
+            ],
+            "truncated": false,
+            "elapsedSeconds": 15.037
+          }
+        ],
+        "unavailableSamples": 0,
+        "observerStopped": true,
+        "startedAfterSeconds": 88.122
+      }
+    ],
+    "overflow": false
+  },
+  "ownedDeckyStop": {
+    "mainPidBefore": 328,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 10.165
+  },
+  "ownedCleanupVerified": true,
+  "captureSha256": {
+    "failure": "5b1f38b8cc9b289681354e9a73d0b017ab9a645cbff53acc4302f24707a2892c"
+  },
+  "capturesVisuallyInspected": true,
+  "terminalBrowserRoundTripReached": false,
+  "diagnosticOverridesFailedGate": false,
+  "soleRootCauseEstablished": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "visualObservation": "Installed plugins unavailable after timed-out status; no Terminal panel or browser interaction reached."
+}

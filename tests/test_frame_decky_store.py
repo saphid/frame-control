@@ -238,6 +238,55 @@ class ArchiveTests(unittest.TestCase):
 
 @unittest.skipIf(os.name == 'nt', 'remote plugin transaction runs on Linux')
 class StoreTransaction(unittest.TestCase):
+    def test_bluetooth_ipc_repair_is_pinned_and_preserves_original_archive_files(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 18)
+        data = official_archive(record)
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        for plugin_id in (18, 42):
+            with self.subTest(plugin_id=plugin_id):
+                result = self.apply('install', data, plugin_id=plugin_id, folder=record['folder'])
+                self.assertEqual(result.returncode, 0, result.stderr)
+                folder = self.folder.parent/record['folder']
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for item in original.infolist():
+                        if item.is_dir():
+                            continue
+                        name = item.filename.split('/', 1)[1]
+                        expected = original.read(item)
+                        if plugin_id == 18 and name == 'main.py':
+                            expected = prefix + expected
+                        self.assertEqual((folder/name).read_bytes(), expected, name)
+                helper = folder/'py_modules/framey_decky_ipc.py'
+                if plugin_id == 18:
+                    self.assertEqual(helper.read_bytes(), Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+                else:
+                    self.assertFalse(helper.exists())
+                receipt = json.loads((folder/'.frame-control-store.json').read_text())
+                self.assertEqual(receipt.get('compatShims', []), ['bluetooth-ipc-eof'] if plugin_id == 18 else [])
+                self.assertEqual(self.apply('remove', plugin_id=plugin_id, folder=record['folder']).returncode, 0)
+        self.assertFalse(frame_decky_store.apply_script(18, '0'*64).startswith('FRAMEY_BLUETOOTH_IPC_SOURCE ='))
+
+    def test_bluetooth_missing_ipc_payload_preserves_installed_copy_and_service(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 18)
+        data = official_archive(record)
+        self.assertEqual(self.apply('install', data, plugin_id=18, folder=record['folder']).returncode, 0)
+        folder = self.folder.parent/record['folder']
+        (folder/'private-saved.txt').write_bytes(b'keep private data')
+        before = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+        calls = self.record_service_calls()
+        original = frame_decky_store.apply_script
+        def without_payload(plugin_id, digest):
+            return original(plugin_id, digest).replace('FRAMEY_BLUETOOTH_IPC_SOURCE =', 'FRAMEY_UNUSED_IPC_SOURCE =', 1)
+        with patch.object(frame_decky_store, 'apply_script', side_effect=without_payload):
+            result = self.apply('update', data, expected=record['sha256'], plugin_id=18, folder=record['folder'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Bluetooth child IPC EOF repair', result.stderr)
+        self.assertEqual({str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}, before)
+        self.assertEqual(calls.read_text(), '')
+
     def test_type_collisions_are_rejected_before_extraction_or_service_changes(self):
         original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
         self.assertEqual(self.apply('install', original).returncode, 0)
@@ -297,6 +346,126 @@ zipfile.ZipFile.extractall = forbidden_extract
                                   env=self.env, timeout=15)
         finally:
             source.unlink(missing_ok=True)
+
+    @unittest.skipUnless(sys.platform == 'linux', 'real Linux inotify is required')
+    def test_mangopeel_unload_joins_idle_and_active_watches(self):
+        import concurrent.futures
+        import ctypes
+        import struct
+        import threading
+        import time
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 56)
+        data = official_archive(record)
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']),
+                         record['folder'])
+        result = self.apply('install', data, plugin_id=56,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['mangopeel-watch-lifetime', 'mangopeel-ipc-eof'])
+        source = (folder/'main.py').read_text()
+        compile(source, str(folder/'main.py'), 'exec')
+        # Execute the installed watch class without the plugin's global logger
+        # or /proc discovery; these checks use real kernel events and threads.
+        node = next(n for n in ast.parse(source).body
+                    if isinstance(n, ast.ClassDef) and n.name == 'Inotify')
+        scope = dict(CDLL=ctypes.CDLL, get_errno=ctypes.get_errno, ctypes=ctypes,
+                     os=os, threading=threading, Thread=threading.Thread,
+                     struct=struct, logging=logging)
+        exec(compile(ast.Module(body=[node], type_ignores=[]), '<installed Inotify>', 'exec'), scope)
+        profile = Path(self.tmp.name)/'private-profile.conf'
+        profile.write_text('original')
+        watch = scope['Inotify']()
+        self.addCleanup(watch.stop)
+        called = threading.Event()
+        calls = []
+        def callback(path, mask):
+            calls.append((path, mask))
+            called.set()
+        watch.add_watch(str(profile), 2, callback)
+        watch.run()
+        reader, fd = watch._runThread, watch.fd
+        profile.write_text('changed')
+        self.assertTrue(called.wait(2), 'actual IN_MODIFY callback')
+        started = time.monotonic()
+        watch.stop()
+        self.assertLess(time.monotonic()-started, 1.5)
+        self.assertFalse(reader.is_alive())
+        with self.assertRaises(OSError):
+            os.fstat(fd)
+        before = len(calls)
+        profile.write_text('after unload')
+        time.sleep(.05)
+        self.assertEqual(len(calls), before)
+        watch.stop()  # Unload cleanup is idempotent.
+
+        pending = scope['Inotify']()
+        self.addCleanup(pending.stop)
+        entered, release = threading.Event(), threading.Event()
+        def active_callback(_path, _mask):
+            entered.set()
+            release.wait(2)
+        pending.add_watch(str(profile), 2, active_callback)
+        pending.run()
+        profile.write_text('active callback')
+        self.assertTrue(entered.wait(2))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(pending.stop)
+            try:
+                with self.assertRaises(concurrent.futures.TimeoutError):
+                    future.result(timeout=.05)
+            finally:
+                release.set()
+            future.result(timeout=2)
+        result = self.apply('remove', plugin_id=56, folder=record['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
+    def test_mangopeel_ipc_repair_is_scoped_to_exact_archive(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 56)
+        data = official_archive(record)
+        result = self.apply('install', data, plugin_id=56,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
+        prefix = ('# Frame Control: repair child IPC EOF for the exact MangoPeel 0.0.7 archive.\n'
+                  'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  '_framey_install_ipc_eof()\n'
+                  'del _framey_install_ipc_eof\n').encode()
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for member in original.infolist():
+                if member.is_dir():
+                    continue
+                name = member.filename.split('/', 1)[1]
+                actual = (folder/name).read_bytes()
+                if name == 'main.py':
+                    self.assertTrue(actual.startswith(prefix))
+                    old = original.read(member).decode()
+                    # The EOF prelude and watch class are the only changes.
+                    self.assertEqual(actual[len(prefix):].split(b'class Inotify:', 1)[0],
+                                     old.split('class Inotify:', 1)[0].encode())
+                    self.assertEqual(actual.split(b'class MangoPeel:', 1)[1],
+                                     old.split('class MangoPeel:', 1)[1].encode())
+                    compile(actual, str(folder/name), 'exec')
+                else:
+                    self.assertEqual(actual, original.read(member), name)
+        self.assertEqual(self.apply('remove', plugin_id=56, folder=record['folder']).returncode, 0)
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            bundle.writestr(record['folder']+'/new-version.txt', 'different archive')
+        result = self.apply('install', changed.getvalue(), plugin_id=56,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder/'main.py').read_bytes(), original.read(record['folder']+'/main.py'))
+        self.assertEqual(self.apply('remove', plugin_id=56, folder=record['folder']).returncode, 0)
 
     def test_non_utf8_manifest_cannot_install_or_replace_saved_plugin(self):
         original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
@@ -420,6 +589,59 @@ zipfile.ZipFile.extractall = forbidden_extract
         result = self.apply('remove')
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
+
+    def test_nonsteam_badges_repairs_only_pinned_paths_and_ipc_and_preserves_archive(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 133)
+        data = official_archive(record)
+        folder = self.folder.parent/record['folder']
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            backend = original.read(record['folder']+'/main.py')
+            for plugin_id in (42, 133):
+                with self.subTest(plugin_id=plugin_id):
+                    result = self.apply('install', data, plugin_id=plugin_id,
+                                        folder=record['folder'], version=record['version'])
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    expected = backend
+                    if plugin_id == 133:
+                        expected = expected.replace(b'Path("/home/deck/.steam/steam/userdata/")',
+                                                    b'(Path.home()/".steam/steam/userdata")')
+                        expected = expected.replace(b'base_path = "/home/deck/.steam/steam/userdata/"',
+                                                    b'base_path = str(Path.home()/".steam/steam/userdata")')
+                        expected = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                                    b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n') + expected
+                        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+                    self.assertEqual((folder/'main.py').read_bytes(), expected)
+                    for item in original.infolist():
+                        if not item.is_dir() and item.filename != record['folder']+'/main.py':
+                            self.assertEqual((folder/item.filename.split('/', 1)[1]).read_bytes(), original.read(item))
+                    receipt = json.loads((folder/'.frame-control-store.json').read_text())
+                    self.assertEqual(receipt.get('compatShims', []),
+                                     ['nonsteam-badges-user-paths', 'nonsteam-badges-ipc-eof'] if plugin_id == 133 else [])
+                    self.assertEqual(self.apply('remove', plugin_id=plugin_id,
+                                                folder=record['folder']).returncode, 0)
+                    self.assertFalse(folder.exists())
+
+    def test_nonsteam_badges_missing_ipc_payload_preserves_installed_copy(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 133)
+        data = official_archive(record)
+        folder = self.folder.parent/record['folder']
+        self.assertEqual(self.apply('install', data, plugin_id=133, folder=record['folder']).returncode, 0)
+        (folder/'private-saved.txt').write_bytes(b'keep private data')
+        before = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+        original = frame_decky_store.apply_script
+        def without_payload(plugin_id, digest):
+            return original(plugin_id, digest).replace('FRAMEY_NONSTEAM_BADGES_IPC_SOURCE =',
+                                                       'FRAMEY_UNUSED_IPC_SOURCE =', 1)
+        with patch.object(frame_decky_store, 'apply_script', side_effect=without_payload):
+            result = self.apply('update', data, expected=record['sha256'], plugin_id=133,
+                                folder=record['folder'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Non-Steam Badges child IPC EOF repair', result.stderr)
+        self.assertEqual({str(p.relative_to(folder)): p.read_bytes()
+                          for p in folder.rglob('*') if p.is_file()}, before)
 
     def test_prefix_manager_is_user_scoped_with_legacy_api_and_original_license(self):
         from framey_official import PLUGINS, archive as official_archive
@@ -1632,6 +1854,41 @@ zipfile.ZipFile.extractall = forbidden_extract
         self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
         self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
 
+    def test_alarme_restart_repair_is_limited_to_the_exact_published_archive(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 124)
+        data = official_archive(plugin)
+        args = dict(plugin_id=124, folder=plugin['folder'], version=plugin['version'])
+        result = self.apply('install', data, **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / plugin['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['alarme-paused-restart', 'alarme-ipc-eof'])
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder/'LICENSE').read_bytes(), original.read(plugin['folder']+'/LICENSE'))
+        self.assertEqual(json.loads((folder/'plugin.json').read_text())['api_version'], 1)
+        self.assertEqual(self.apply('remove', **args).returncode, 0)
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            original_main = bundle.read(plugin['folder']+'/main.py')
+            bundle.writestr(plugin['folder']+'/new-version.txt', 'unrecognized payload')
+        result = self.apply('install', changed.getvalue(), **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((folder/'main.py').read_bytes(), original_main)
+        self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
+
+    def test_alarme_missing_ipc_payload_cannot_publish_an_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 124)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=124,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing AlarMe child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
+
     def test_exact_simple_timer_gets_lifecycle_repair_and_keeps_api1_and_license(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 96)
@@ -2228,6 +2485,91 @@ pathlib.Path.rename = fail_staged_move
             'rejectedChangeDidNotStopService':True, 'regularReceiptRetrySucceeded':True,
             'applySha256':hashlib.sha256(frame_decky_store.APPLY.encode()).hexdigest(),
             'syntheticHome':True, 'realFrameContacted':False}, sort_keys=True))
+
+    def test_oversized_receipt_refuses_changes_before_service_and_recovers_after_repair(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        newer, _ = archive(extra=('Example/new.txt', 'new version'))
+        for action, data in [('update', newer), ('remove', None)]:
+            for unicode_padding in (False, True):
+                with self.subTest(action=action, unicode_padding=unicode_padding):
+                    if self.folder.exists():
+                        shutil.rmtree(self.folder)
+                    self.assertEqual(self.apply('install', original).returncode, 0)
+                    marker = self.folder/'.frame-control-store.json'
+                    valid = marker.read_bytes()
+                    if unicode_padding:
+                        record = json.loads(valid)
+                        record['note'] = '\u00e9' * 8200
+                        oversized = json.dumps(record, ensure_ascii=False).encode('utf-8')
+                        self.assertLess(len(oversized.decode('utf-8')), 16384)
+                    else:
+                        oversized = valid + b' ' * (16385-len(valid))
+                    self.assertGreater(len(oversized), 16384)
+                    marker.write_bytes(oversized)
+                    before = self.plugin_snapshot()
+                    calls = self.record_service_calls()
+                    result = self.apply(action, data, expected=digest)
+                    self.assertNotEqual(result.returncode, 0, result.stdout)
+                    self.assertIn('Only a Frame Control store plugin can be changed', result.stderr)
+                    self.assertEqual(self.plugin_snapshot(), before)
+                    self.assertEqual(calls.read_text(), '')
+                    self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+                    marker.write_bytes(valid)
+                    retry = self.apply(action, data, expected=digest)
+                    self.assertEqual(retry.returncode, 0, retry.stderr)
+                    if action == 'update':
+                        self.assertEqual((self.folder/'new.txt').read_text(), 'new version')
+                    else:
+                        self.assertFalse(self.folder.exists())
+
+    def test_receipt_at_byte_limit_can_authorize_update_and_remove(self):
+        original, digest = archive()
+        for action in ('update', 'remove'):
+            with self.subTest(action=action):
+                if self.folder.exists():
+                    shutil.rmtree(self.folder)
+                self.assertEqual(self.apply('install', original).returncode, 0)
+                marker = self.folder/'.frame-control-store.json'
+                valid = marker.read_bytes()
+                marker.write_bytes(valid + b' ' * (16384-len(valid)))
+                self.assertEqual(marker.stat().st_size, 16384)
+                result = self.apply(action, original if action == 'update' else None, expected=digest)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(self.folder.exists(), action == 'update')
+
+    def test_peer_receipt_scan_uses_bounded_reads_and_preserves_oversized_neighbor(self):
+        data, _ = archive()
+        peer = self.folder.parent/'Other'
+        peer.mkdir()
+        receipt = peer/'.frame-control-store.json'
+        payload = json.dumps({'storeId': 43, 'sha256': 'b'*64}).encode() + b' '*20000
+        receipt.write_bytes(payload)
+        # A receipt reader must request a finite byte budget, even when its
+        # size changes between admission and read. This guards I/O rather
+        # than relying on a particular parser or helper implementation.
+        guard = '''
+import pathlib
+receipt_open = pathlib.Path.open
+class ReceiptReadBudget:
+    def __init__(self, stream): self.stream = stream
+    def __enter__(self): return self
+    def __exit__(self, *args): self.stream.close()
+    def read(self, size=-1):
+        assert 0 <= size <= 16385, 'unbounded ownership receipt read'
+        return self.stream.read(size)
+def guarded_open(path, *args, **kwargs):
+    stream = receipt_open(path, *args, **kwargs)
+    mode = args[0] if args else kwargs.get('mode', 'r')
+    if path.name == '.frame-control-store.json' and 'r' in mode:
+        return ReceiptReadBudget(stream)
+    return stream
+pathlib.Path.open = guarded_open
+'''
+        with patch.object(frame_decky_store, 'APPLY', guard+frame_decky_store.APPLY):
+            result = self.apply('install', data)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(receipt.read_bytes(), payload)
+        self.assertTrue((self.folder/'dist/index.js').is_file())
 
     def test_malformed_receipt_refuses_changes_before_touching_service(self):
         original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))

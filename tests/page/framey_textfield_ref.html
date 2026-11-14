@@ -31,6 +31,9 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     const input=container.querySelector('input'), handle=ref.current;
     assert(handle?.element===input,'published search ref did not receive its native input');
     assert(typeof handle.Focus==='function','published Focus method is absent');
+    assert(handle.m_elInput===input,'Terminal input ref alias is absent');
+    handle.m_elInput.tabIndex=-1;
+    assert(input.tabIndex===-1,'Terminal ref alias does not reach native input');
     assert(document.activeElement===outside,'attaching a ref stole focus');
     let clicks=0;input.addEventListener('click',()=>clicks++);
     publishedAction({detail:{button:DFL.GamepadButton.INVALID}});
@@ -45,7 +48,7 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     assert(ref.current===handle&&handle.element===input,'ordinary input redraw replaced its ref handle');
     handle.element.blur();assert(document.activeElement!==input,'element.blur() did not reach the native input');
     outside.focus();render(null);
-    assert(ref.current===null&&handle.element===null,'unmount retained a live input ref');
+    assert(ref.current===null&&handle.element===null&&handle.m_elInput===null,'unmount retained a live input ref');
     handle.Focus();assert(document.activeElement===outside,'retired Focus moved focus');
 
     // Callback refs detach on replacement, remain stable through ordinary
@@ -70,12 +73,12 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     assert(DFL.findModuleByExport(value=>value===DFL.TextField)?.TextField===DFL.TextField,
       'ref-enabled TextField missing from local module registry');
     const retained=second[0];render(null);
-    assert(second.length===2&&second[1]===null&&retained.element===null,'callback unmount retained its input');
+    assert(second.length===2&&second[1]===null&&retained.element===null&&retained.m_elInput===null,'callback unmount retained its input');
     await new Promise(resolve=>setTimeout(resolve,20));
     assert(fixtureFailures.length===0,fixtureFailures.join('; '));
     ReactDOM.flushSync(()=>root.unmount());
     document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
-      publishedTabmasterSearch:true,publishedSyntheticSelectAction:true,nativeElementRef:true,
+      publishedTabmasterSearch:true,terminalInputAlias:true,publishedSyntheticSelectAction:true,nativeElementRef:true,
       focusMethod:true,nativeBlur:true,controlledQueryPreserved:true,stableHandle:true,
       callbackRefReplacement:true,unmountClearsRefs:true,retainedHandleInert:true,
       disabledFocusSuppressed:true,nativeFocusBlurCallbacks:true,moduleLookupPreserved:true,

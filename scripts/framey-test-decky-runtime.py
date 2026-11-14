@@ -102,7 +102,10 @@ def main():
     inputs = ['scripts/framey-test-decky-runtime.py', 'ui/framey_decky_ipc.py', 'tests/decky-runtime/check.py',
               'ui/framey_discord_lifecycle.py', 'tests/decky-runtime/discord_private.py',
               'tests/decky-runtime/runtime_console.py', 'tests/decky-runtime/timer_lifecycle.py',
+              'tests/decky-runtime/alarme_lifecycle.py',
               'tests/decky-runtime/download_all_private.py',
+              'tests/decky-runtime/bluetooth_bluez.py', 'tests/fixtures/framey-bluez/service.py',
+              'tests/decky-runtime/nonsteam_badges_private.py',
               'tests/decky-runtime/desktop_apps_private.py',
               'tests/decky-runtime/music_control_private.py',
               'tests/fixtures/framey-mpris/player.py',
@@ -132,8 +135,11 @@ def main():
               'tests/decky-runtime/volume_mixer_private.py',
               'tests/decky-runtime/animation_private.py', 'ui/framey_animation_overrides.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
+              'tests/decky-runtime/mangopeel.py',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
+              'tests/decky-runtime/playtime_private.py',
               'tests/decky-runtime/ludusavi_private.py',
+              'tests/decky-runtime/notebook_pages.py',
               'tests/decky-runtime/protondb_private.py',
               'tests/decky-runtime/game_sync_private.py',
               'tests/decky-runtime/steamgriddb_private.py',
@@ -159,12 +165,15 @@ def main():
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
             probes = [(case['id'], case.get('version'), None) for case in cases] + [
                 (plugin_id, None, negative) for plugin_id, negative in [
+                    (19, '--reproduce-notebook-unload-regression'),
                     (23, '--reproduce-animation-unload-regression'),
                     (143, '--reproduce-desktop-apps-unload-regression'),
                     (38, '--reproduce-volume-mixer-user-regression'),
                     (131, '--reproduce-download-all-unload-regression'),
                     (125, '--reproduce-localsend-unload-regression'),
                     (123, '--reproduce-steam-status-unload-regression'),
+                    (18, '--reproduce-bluetooth-unload-regression'),
+                    (56, '--reproduce-mangopeel-unload-regression'),
                     (50, '--reproduce-storage-cleaner-unload-regression'),
                     (132, '--reproduce-suggestme-unload-regression'),
                     (79, '--reproduce-notifications-unload-regression'),
@@ -179,6 +188,9 @@ def main():
                     (60, '--reproduce-fileserver-unload-regression'),
                     (93, '--reproduce-deck-settings-unload-regression'),
                     (65, '--reproduce-terminal-import-regression'),
+                    (124, '--reproduce-alarme-pause-regression'),
+                    (133, '--reproduce-nonsteam-path-regression'),
+                    (133, '--reproduce-nonsteam-unload-regression'),
                     (61, '--reproduce-tabmaster-restore-regression'),
                     (61, '--reproduce-tabmaster-unload-regression'),
                     (134, '--reproduce-deck-progress-unload-regression'),
@@ -206,7 +218,7 @@ def main():
                     '--mount', f'type=bind,source={ROOT},target=/repo,readonly',
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
                     ]
-                if plugin_id in (50, 79, 143) and negative:
+                if plugin_id in (19, 50, 79, 143) and negative:
                     # The original EOF spin allocates tasks without yielding.
                     # Keep this negative below OOM pressure until Decky's own
                     # five-second forced-stop deadline proves the regression.

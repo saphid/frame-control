@@ -129,8 +129,8 @@ pnpm exec tsc --noEmit
 ```
 
 The committed `dist/index.js` is the built frontend. For a Decky release ZIP,
-put `plugin.json`, `main.py`, and `dist/index.js` inside one top-level plugin
-folder. Publish it through the official Decky store if you want Frame Control's
+put `plugin.json`, `main.py`, `py_modules/framey_decky_ipc.py`, and `dist/index.js`
+inside one top-level plugin folder. Publish it through the official Decky store if you want Frame Control's
 managed installer to offer it. Framey deliberately opens only plugins that the
 official store installed and marked as owned; copying this example into the
 plugin directory does not enable its VR panel.
@@ -143,14 +143,14 @@ python3 scripts/framey-pack-sample.py /tmp/framey-settings-sample.zip
 ```
 
 The command packages the existing built frontend; run `pnpm build` first after
-editing its source. It includes only `plugin.json`, `main.py`, and `dist/index.js`
+editing its source. It includes `plugin.json`, `main.py`, the child IPC helper and `dist/index.js`
 under `framey-settings/`. Fixed file order, timestamps, permissions and uncompressed
 ZIP entries make unchanged input bytes produce the same ZIP and SHA-256,
 regardless of source modification times. The destination directory must exist.
 The command checks a temporary ZIP with the author archive checker before
 replacing the destination. A failed check leaves an existing ZIP untouched and
 removes the temporary file. Its JSON result includes the output path and SHA-256.
-For a renamed fork with this same three-file layout, use `--source path/to/sample
+For a renamed fork with this same four-file layout, use `--source path/to/sample
 --name 'Exact Decky store name'`. Plugins with extra assets or chunks need their
 own packaging step and `scripts/framey-check-archive.py`.
 
@@ -168,7 +168,63 @@ registration/navigation. The fake Frame store flow is exercised by
 the repository's e2e suite. No worn-headset visibility or controller-input test
 has passed for this sample yet.
 
+The separate native gate runs the shipped archive in the digest-pinned published
+Decky 3.3.0 loader, without patching its backend. On native Linux with Docker:
+
+```sh
+python3 scripts/framey-test-sample-runtime.py --output /tmp/framey-sample-runtime.json
+```
+
+It saves and reads the real Decky-provided settings directory, stops and
+restarts the loader, verifies readback, and checks that invalid writes and
+malformed/future-schema settings are refused without replacing their bytes.
+All three parent-only stops require zero exit, no forced plugin kill or shutdown
+error, and no remaining recorded descendants. An unrelated private process
+must survive all stops. AMD64 and ARM64 CI run this gate separately from the
+mocked UI tests. Containers are nonroot, read-only and networkless, with private
+writable homes and no host session bus or hardware. This verifies native backend
+persistence; browser controls, real Frame persistence, worn visibility and the
+VR keyboard still need separate checks.
+
 The plugin needs no root access or system changes. Its settings remain after
 the managed plugin folder is removed, following Decky's settings behavior.
 For a production plugin, add explicit migrations for every supported schema,
 explain how users can reset settings, and test every UI path in a worn headset.
+
+## Browser settings through real Decky
+
+On Linux with Docker and Chrome/Chromium available, run:
+
+```sh
+python3 scripts/framey-test-sample-browser.py \
+  --browser /path/to/chrome --output /tmp/framey-sample-browser
+```
+
+The replay loads this unchanged built frontend in the actual opaque Framey
+host. Its private test parent sends the rendered toggle and Reset confirmation's
+requests to published Decky 3.3.0 in a networkless container over stdin. It checks
+saved bytes and 0600 permissions, replaces the iframe to reopen the frontend,
+and repeats readback after two complete loader restarts. Seven screenshots,
+the real RPC transcript and recorded parent-only stops remain in the output.
+The Linux AMD64 CI job requires this replay; native backend-only restart tests
+continue to run on AMD64 and ARM64.
+
+The parent, ownership receipt and DOM input are synthetic. This does not test
+Frame's production HTTP/SSH parent, ARM64 browser behavior, a live headset,
+physical controllers, scrolling, the VR keyboard or visibility in worn VR.
+
+## Decky 3.3.0 child IPC lifetime
+
+The sample includes the same child IPC EOF repair used by managed Framey
+plugins. Decky 3.3.0 can spin in its child socket listener after a peer closes,
+preventing shutdown until the loader kills that plugin. The backend installs
+the bundled helper from its `_main` hook. It changes only this child process's
+private UnixSocket EOF handling, ends the closed connection loop and keeps the
+listener available for another RPC. It does not replace the loader parent or
+change authentication, message framing or normal error replies. This uses a
+private Decky 3.3.0 interface; qualify it again before changing loader versions.
+
+The native sample test sends a controlled peer EOF, requires a successful
+settings read through a new RPC and checks three parent-only clean shutdowns
+with no forced plugin kill. Its settings restart and damaged-state checks
+remain required. Native containers do not establish headset or VR behavior.

@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "sourceRevision": "dda4353d352810404b081ce8d03a16d04f747fd9",
+  "sourceFingerprintsVerified": 161,
+  "productionSourceUnchanged": true,
+  "packetBytes": 1584455,
+  "packetSha256": "403adc86dddb073005762157961d257d0470c7176088cca0c270956ecd6c0034",
+  "resultSha256": "11e46752efc74b7ee735bc17bb3c7b3c2ff7c9b2413a6ce913f3877091caeb21",
+  "productionMethodRequests": 14,
+  "productionEventRequests": 7,
+  "nativeEvents": 4,
+  "deliveredEvents": 4,
+  "captures": {
+    "terminal": "7387a97d0826db5c2b26afe8b739c07517535f588531fb52f998442b1ba027ce",
+    "output": "68c846eb581fb8a48573c0f0a7f9bdc87576fd84081b865cba509ed11eb87deb",
+    "removed": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3"
+  },
+  "syntheticCef": true,
+  "syntheticManagedReceipt": true,
+  "productionHttpVerified": true,
+  "productionEventsVerified": true,
+  "productionAdapterVerified": false,
+  "realSteamCef": false,
+  "arm64BrowserVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "allCapturesInspected": true,
+  "returnedOutputPixelsVerified": false,
+  "captureLimit": "The inspected output capture shows command echo; the returned output lines were verified in HTTP/native events but not visible at capture time. A later replay requires exact rendered DOM output before capture."
+}

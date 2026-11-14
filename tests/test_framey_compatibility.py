@@ -14,6 +14,15 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_bluetooth_copy_without_child_ipc_repair_requires_reinstall(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 18)
+        old = dict(storeId=18, version=record['version'], sha256=record['sha256'])
+        updated = dict(old, compatShims=['bluetooth-ipc-eof'])
+        plugins = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in plugins], ['partial', 'partial'])
+        self.assertIn('Update or reinstall', plugins[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', plugins[1]['compatibility']['reason'])
+
     def test_fileserver_old_receipt_requires_child_ipc_repair(self):
         record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 60)
         shims = ['deckyfileserver-user-native', 'deckyfileserver-https-address',
@@ -173,6 +182,17 @@ class Compatibility(unittest.TestCase):
         self.assertEqual([p['compatibility']['status'] for p in result], ['broken', 'partial'])
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
 
+    def test_old_nonsteam_badges_copy_requires_user_paths_and_child_ipc_repair(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 133)
+        old = dict(storeId=133, version=record['version'], sha256=record['sha256'])
+        paths_only = dict(old, compatShims=['nonsteam-badges-user-paths'])
+        updated = dict(old, compatShims=['nonsteam-badges-user-paths', 'nonsteam-badges-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, paths_only, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial']*3)
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[2]['compatibility']['reason'])
+
     def test_unpublished_prefix_manager_102_has_no_store_compatibility_claim(self):
         from framey_official import PREFIX_MANAGER_102
         release = PREFIX_MANAGER_102
@@ -228,6 +248,16 @@ class Compatibility(unittest.TestCase):
             self.assertIn('Update or reinstall', old['compatibility']['reason'])
         self.assertNotIn('Update or reinstall', result[2]['compatibility']['reason'])
         self.assertIn('worn VR unverified', result[2]['compatibility']['reason'])
+
+    def test_mangopeel_watch_only_copy_requires_ipc_repair_update(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 56)
+        old = dict(storeId=56, version=plugin['version'], sha256=plugin['sha256'],
+                   compatShims=['mangopeel-watch-lifetime'])
+        updated = dict(old, compatShims=['mangopeel-watch-lifetime', 'mangopeel-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
 
     def test_fileserver_old_copy_requires_current_panel_update(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 60)

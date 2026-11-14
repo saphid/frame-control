@@ -1,0 +1,169 @@
+{
+  "head": "44ff684e8b9b2a5f8448c52ab24816c9017ce00f",
+  "architecture": "x86_64",
+  "sourceFingerprintsVerified": 177,
+  "bootstrapVerified": true,
+  "resultPacketSha256": "ebf1bdec361876f247586f2f3678cc3d551813f571323ba6ecdf018b0f667010",
+  "resultPacketVerified": true,
+  "actualNativeLifecycleVerified": true,
+  "productionHttpAndEventRoundTripVerified": true,
+  "statusRequests": [
+    {
+      "startedAfterSeconds": 52.356,
+      "elapsedSeconds": 4.446,
+      "httpStatus": 200,
+      "running": true,
+      "pluginCount": 1
+    }
+  ],
+  "ownedDeckyStop": {
+    "mainPidBefore": 338,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "beforeStopDiagnostics": {
+      "unit": "frame-control-decky.service",
+      "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-decky.service",
+      "processes": [
+        {
+          "pid": 338,
+          "state": "S",
+          "parentPid": 279,
+          "userTicks": 286,
+          "systemTicks": 474,
+          "startTicks": 12105,
+          "threads": [
+            {
+              "tid": 338,
+              "wchan": "do_wait",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 340,
+          "state": "S",
+          "parentPid": 338,
+          "userTicks": 653,
+          "systemTicks": 771,
+          "startTicks": 12875,
+          "threads": [
+            {
+              "tid": 340,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 344,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 350,
+          "state": "S",
+          "parentPid": 340,
+          "userTicks": 227,
+          "systemTicks": 27,
+          "startTicks": 14379,
+          "threads": [
+            {
+              "tid": 350,
+              "wchan": "pipe_read",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 351,
+          "state": "S",
+          "parentPid": 340,
+          "userTicks": 209,
+          "systemTicks": 68,
+          "startTicks": 14380,
+          "threads": [
+            {
+              "tid": 351,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 352,
+          "state": "S",
+          "parentPid": 351,
+          "userTicks": 682,
+          "systemTicks": 92,
+          "startTicks": 14663,
+          "threads": [
+            {
+              "tid": 352,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 557,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 560,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 601,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        }
+      ],
+      "logs": [],
+      "processesTruncated": false
+    },
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 3.202
+  },
+  "allOwnedCleanupVerified": true,
+  "captureSha256": {
+    "terminal": "d0bfc71bf13d43be3e50f352f1a64177dd07f532f776eb9c1c49f5daccb0d89b",
+    "output": "74c705aaf655433e000aeff241ab4a5b00c446e27f8b9b7386faa75ad4c9feef",
+    "removed": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3"
+  },
+  "capturesVisuallyInspected": true,
+  "syntheticCef": true,
+  "syntheticManagedReceipt": true,
+  "syntheticInput": true,
+  "managedInstallVerified": false,
+  "productionAdaptationEnabled": false,
+  "realSteamCef": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "nativeArmVerified": false,
+  "horizontalOverflowRemains": true,
+  "completeNativeDescendantShutdownVerified": false,
+  "fullServerSuiteBeforeAlias": {
+    "tests": 2389,
+    "skipped": 65,
+    "passed": true
+  },
+  "afterAliasTextfieldBrowserTests": {
+    "tests": 9,
+    "skipped": 0,
+    "passed": true,
+    "regressionFailedBeforeFix": true
+  },
+  "nativePrimaryConsoleGatePassed": true,
+  "failureEvidence": "framey-terminal-main072e-http-failure-2026-11-14.json.gz"
+}

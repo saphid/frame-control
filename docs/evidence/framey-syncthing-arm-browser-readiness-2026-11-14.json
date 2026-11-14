@@ -1,0 +1,379 @@
+{
+  "head": "4cd4a4b1fd02d6c3f7c6adeb4de742b109517a05",
+  "job": "https://github.com/saphid/frame-control/actions/runs/43575448036/job/132388557088",
+  "artifactId": 14108296870,
+  "artifactBytes": 1476210,
+  "artifactSha256": "2e693b4014b3281529b7b02b292294953b85f6e6c0f2493a6048054f0506d45d",
+  "sourceBindings": {
+    "inputs": 132,
+    "exact": 137
+  },
+  "guestPacketSha256": "f3c547841b256fc1b120207cd03663cdaef67c6270d4db481e5eda9f4da272da",
+  "decodedPacketMatches": true,
+  "browserProgress": {
+    "success": false,
+    "syntheticInput": true,
+    "actualDeckyRpc": true,
+    "installerEnabled": false,
+    "realFrameContacted": false,
+    "hostBusExposed": false,
+    "browserSandboxDisabled": false,
+    "documentDelivery": "loopback-http-opaque-sandbox",
+    "documentSha256": {
+      "/": "e1b499dde45e80f3c9684c89612b8629d5e86756934e10b16c4d3e266d46211a",
+      "/panel": "6572d1a015dbbdfa0ab0bc2be3f1021654b5427efc7e295d4bcd9f6fd8598044"
+    },
+    "panelSha256": "383d11d68dd26c7521cadcb7ceaec1aa3878e54d01e31565fa73e00a5e310832",
+    "lastReadinessError": "no Owned Syncthing actual backend page; Steam may still be starting",
+    "lastReadinessAttempt": {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 0.212
+    },
+    "readinessAttempts": [
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 5.016
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 3.906
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.298
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 0.937
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.848
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 0.749
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.141
+      },
+      {
+        "phase": "page-connect",
+        "outcome": "failure",
+        "elapsedSeconds": 1.413
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 4.916
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.719
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.839
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.532
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.442
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.514
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.444
+      },
+      {
+        "phase": "panel-errors",
+        "outcome": "not-ready",
+        "elapsedSeconds": 0.384
+      }
+    ],
+    "startupErrors": [],
+    "startupState": {
+      "state": {
+        "parentInstalled": true,
+        "iframeLoads": 1,
+        "cacheRequests": 1,
+        "seedReplies": 1,
+        "readyMessages": 0
+      },
+      "documentState": "complete",
+      "iframeAssigned": true
+    },
+    "readinessTraceOverflow": true,
+    "startupDiagnostics": {
+      "processAlive": true,
+      "returnCode": null,
+      "devToolsPortFilePresent": true,
+      "stderrBytes": 395,
+      "stderrTail": "\nDevTools listening on ws://127.0.0.1:34377/devtools/browser/216498e5-151d-47ca-b34d-b7b702259e96\n[913:913:1114/092601.721627:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.Properties.GetAll: object_path= /org/freedesktop/UPower/devices/DisplayDevice: org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.UPower was not provided by any .service files\n",
+      "targetCount": 4,
+      "targets": [
+        {
+          "type": "page",
+          "title": "Owned Syncthing actual backend",
+          "urlKind": "loopback-http"
+        },
+        {
+          "type": "iframe",
+          "title": "http://127.0.0.1:44569/panel#fixture",
+          "urlKind": "loopback-http"
+        },
+        {
+          "type": "browser_ui",
+          "title": "Omnibox Popup",
+          "urlKind": "other"
+        },
+        {
+          "type": "browser_ui",
+          "title": "Omnibox Popup",
+          "urlKind": "other"
+        }
+      ]
+    },
+    "failureUnitLookup": {
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Call failed: Unit frame-control-syncthing.service not loaded."
+    },
+    "failureSystemdProperties": {
+      "MainPID": "0",
+      "ActiveState": "inactive",
+      "SubState": "dead",
+      "Result": "success",
+      "ExecMainCode": "0",
+      "ExecMainStatus": "0",
+      "LoadState": "not-found"
+    },
+    "stages": [],
+    "calls": [
+      {
+        "method": "get_settings_json"
+      },
+      {
+        "method": "get_settings_json"
+      }
+    ],
+    "actualPackagedProcessObservations": [],
+    "documentRequests": [
+      {
+        "path": "/",
+        "bytes": 2094
+      },
+      {
+        "path": "/panel",
+        "bytes": 582476
+      }
+    ],
+    "ownedBrowserReaped": true,
+    "bridgeStopped": true
+  },
+  "migrationOwnedDeckyStop": {
+    "mainPidBefore": 681,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "beforeStopDiagnostics": {
+      "unit": "frame-control-migration-decky-fixture.service",
+      "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-migration-decky-fixture.service",
+      "processes": [
+        {
+          "pid": 681,
+          "state": "S",
+          "parentPid": 268,
+          "userTicks": 201,
+          "systemTicks": 288,
+          "startTicks": 102170,
+          "threads": [
+            {
+              "tid": 681,
+              "wchan": "do_wait",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 684,
+          "state": "S",
+          "parentPid": 681,
+          "userTicks": 1012,
+          "systemTicks": 205,
+          "startTicks": 102681,
+          "threads": [
+            {
+              "tid": 684,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 688,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 694,
+          "state": "S",
+          "parentPid": 684,
+          "userTicks": 225,
+          "systemTicks": 70,
+          "startTicks": 103922,
+          "threads": [
+            {
+              "tid": 694,
+              "wchan": "pipe_read",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 695,
+          "state": "S",
+          "parentPid": 684,
+          "userTicks": 240,
+          "systemTicks": 68,
+          "startTicks": 103924,
+          "threads": [
+            {
+              "tid": 695,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 696,
+          "state": "S",
+          "parentPid": 695,
+          "userTicks": 668,
+          "systemTicks": 104,
+          "startTicks": 104246,
+          "threads": [
+            {
+              "tid": 696,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 701,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 697,
+          "state": "S",
+          "parentPid": 696,
+          "userTicks": 47,
+          "systemTicks": 104,
+          "startTicks": 104998,
+          "threads": [
+            {
+              "tid": 697,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 699,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 700,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 709,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        }
+      ],
+      "logs": [
+        {
+          "name": "migration-decky.log",
+          "bytes": 824,
+          "tail": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/decky-migration/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/decky-migration/plugins\n[loader][INFO]: found plugin: decky-syncthing\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[injector][WARNING]: The request to http://localhost:8080/json timed out\nLoaded.\nRunning settings migration to V2.\n[plugin][WARNING]: Plugin Syncthing (v0.2.7) is using legacy method calls. This will be removed in a future release.\nUpdated settings.\nUpdated settings.\nUpdated settings.\nUpdated settings.\n"
+        }
+      ],
+      "processesTruncated": false
+    },
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 10.821
+  },
+  "ownedQemuReaped": true,
+  "classification": "Browser fetched opaque panel and replied to cache seed but never received readiness; no setup stage. Outer package assertion wraps browser failure. Readiness cause remains unproven.",
+  "plainArmPackagePassed": true,
+  "managedInstallerEnabled": false,
+  "realFrameContacted": false,
+  "rawReportSha256": "1f52dbf2aaaa29be13c110947ba9ef0c76b177f6a1585d6dcf5e3e12706c843b",
+  "rawReport": "framey-syncthing-arm-browser-readiness-2026-11-14.json.gz",
+  "followup": {
+    "mainIntegration": "392a3a1faa7fe47d8a5ef3982530175aba4088b5",
+    "focusedTests": 85,
+    "focusedTestLogs": [
+      "/tmp/frame-coordinator-483-diagnostics-http.log",
+      "/tmp/frame-coordinator-483-diagnostics-package.log",
+      "/tmp/frame-coordinator-483-diagnostics-timeout.log",
+      "/tmp/frame-coordinator-483-diagnostics-lifecycle.log",
+      "/tmp/frame-coordinator-483-readiness-diagnostics.log"
+    ],
+    "actualLocalBrowserTests": 2,
+    "actualLocalBrowserConditions": [
+      "pinned candidate frontend with actual Framey runtime and synthetic settings RPC",
+      "minimal opaque child",
+      "7-second delayed parent delivery",
+      "2MiB child"
+    ],
+    "browserLog": "/tmp/frame-coordinator-483-full-startup.log",
+    "nativeArm64NotProven": true,
+    "shippedUiAndSharedNativeRunnerUnchangedFromMain": true,
+    "deadlinesAndSandboxUnchanged": true,
+    "changes": "Bounded parent message/RPC reply timestamps and optional full pinned frontend startup regression.",
+    "testLogHashes": {
+      "frame-coordinator-483-diagnostics-http.log": "48a8de115e05a62a9b9491fe5875420597ed48eac917936a22fb9ef3d004539a",
+      "frame-coordinator-483-diagnostics-package.log": "fd035d3f322ceca56d8f7d7d24b3d3ef572af5aa69a71f4ce97c6543be0ee337",
+      "frame-coordinator-483-diagnostics-timeout.log": "a4e057e87f3eb2fab40d0dece88b85cf4ac30c9db75bca3b67ead815e211013d",
+      "frame-coordinator-483-diagnostics-lifecycle.log": "68e03b0d0c3801f4a28dd15fee781ac63f59e7999f467de86c16d2cd559e5ffe",
+      "frame-coordinator-483-readiness-diagnostics.log": "2d3765bb0579ce33c13f9709af245108f0dd72047c183ebf03a37e672c4c921b",
+      "frame-coordinator-483-full-startup.log": "ff28b49e9cca0e0d1ba55bc52c1820b949c785b5ca8d649b5507c1b9e4d690d5"
+    }
+  }
+}

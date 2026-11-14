@@ -49,6 +49,19 @@ neither frontend can load, even if one copy is missing its frontend or both
 receipts have the same digest. Admission does not repair or delete either copy.
 This check is covered with disposable local plugin folders, not a live headset
 installation.
+Installed inventory reads store ownership receipts only up to 16 KiB, matching
+panel admission. An oversized receipt leaves its plugin visible without store
+ownership or receipt metadata; valid neighbors still appear. Scanning does not
+rewrite the receipt. After the receipt is repaired, a fresh scan can recognize
+its ownership again. This limit is tested with disposable local plugin folders.
+Install, Update and Remove transactions also bound each ownership receipt read
+to 16 KiB plus one byte used to detect overflow. An oversized target receipt
+cannot authorize Update or Remove: the operation preserves installed files and
+the receipt, releases its lock and does not stop Decky. Retrying after restoring
+a valid receipt works. A malformed or oversized unrelated peer receipt is
+ignored during the install identity scan and is not rewritten. The limit counts
+UTF-8 bytes, so a receipt with fewer than 16,384 characters can still exceed it.
+These transaction checks use synthetic homes and service commands, not a live Frame.
 For persistent backend settings, use Decky's `decky.DECKY_PLUGIN_SETTINGS_DIR` rather
 than assuming an environment variable or Steam Deck home path. Validate stored
 types when reading, write through a temporary file before replacing the old
@@ -95,6 +108,12 @@ quick action wait for the reply, then read the saved value after either success
 or failure. A retired waiting view sends no read. This prevents a pre-save
 snapshot from enabling a second edit; it does not cancel backend work or
 coordinate independent clients.
+
+The optional `framey-test-sample-browser.py` replay connects the built sample and
+real Framey host to published Decky in a networkless Linux container. It verifies
+rendered toggle/Reset saves, iframe reopen and two loader restarts against saved
+file hashes. Its parent bridge, receipt and DOM input are synthetic; it does not
+prove Frame HTTP/SSH, ARM64 browser or live-headset behavior.
 
 Give text fields a visible `label` or an explicit `aria-label`; Framey preserves
 the latter on the native input. This includes Wine Cellar 0.2.1's published
@@ -154,7 +173,9 @@ and run this checker before replacing the destination ZIP. It packages an
 existing build; plugins with extra assets or chunks need their own packaging
 step before using the checker above.
 The checker reads every file through its ZIP checksum, including large assets
-and backend files, before accepting the archive. A checksum error means the ZIP
+and backend files, before accepting the archive. Corrupt DEFLATE streams also
+return a JSON `ok: false` result and a failing exit status without changing the
+archive. A checksum or decompression error means the ZIP
 must be rebuilt or recovered from its source; it is not a frontend compatibility
 verdict. The store runs this same validation before transfer to the headset.
 
@@ -205,7 +226,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `TextField.defaultValue`, `onBlur`, `onFocus`, `onClick`, `onKeyDown`, `onKeyUp` | Uncontrolled input drafts and original React events reach the plugin callbacks; disabled fields suppress callbacks. A controlled `value` takes precedence over `defaultValue`. | Local host contracts and the exact Game Sync 1.0.4 text-dialog function: edited draft/OK and Cancel. No sync, backend, real input device or VR keyboard check. |
 | `TextField.rangeMin`, `rangeMax`; explicit Framey support for `maxLength`, `minLength`, `pattern`, `required` | Native input constraints and validity; invalid drafts still reach the plugin's original change handler. Changing or removing props updates the same input. Plugins own save validation. | Real React/DOM with synthetic controlled/uncontrolled drafts: maximum-length editing, minimum-length attribute, required/pattern and numeric-bound validity, clear action, disabled callbacks, prop removal and stable refs. Synthetic editing does not establish minimum-length validity for physical input. No backend, controller or VR keyboard proof. |
 | `TextField.focusOnMount` | Focuses an enabled native input when it mounts. A modal preserves focus already inside it, falling back to its shell when nothing inside has focus. Updating an existing field does not refocus it. | Exact RadiYo! 1.3 text dialog in real React/DOM with synthetic query input; opt-out, disabled, update, shell fallback and focus restoration checks. No radio backend, physical controller or VR keyboard proof. |
-| `TextField` refs | Object and callback refs receive a local handle with `.element` pointing to the native input and `Focus()` using its native focus. Ordinary redraws preserve the handle; ref replacement and unmount detach the old ref. Retained handles expose a null element after unmount. Disabled inputs cannot receive focus. | Exact TabMaster 2.15.1 search control and SELECT handler in real React/DOM with explicitly synthetic event detail. Query editing, native focus/blur, callback replacement, cleanup and module lookup checked. No Steam library changes, backend, physical controller, worn visibility or VR keyboard proof. |
+| `TextField` refs | Object and callback refs receive a local handle with `.element` and the published Terminal alias `.m_elInput` pointing to the same native input, and `Focus()` using its native focus. Ordinary redraws preserve the handle; ref replacement and unmount detach the old ref. Retained handles expose null through both input properties after unmount. Disabled inputs cannot receive focus. | Exact TabMaster 2.15.1 search control and SELECT handler in real React/DOM with explicitly synthetic event detail. Query editing, native focus/blur, callback replacement, cleanup and module lookup checked. No Steam library changes, backend, physical controller, worn visibility or VR keyboard proof. |
 | `TextField.bShowClearAction`, `bAlwaysShowClearAction` | An opt-in Clear button empties the input through its native React change event. It hides when empty unless always-visible is requested; disabled fields stay inert. | Pinned Wine Cellar 0.2.1 search-control fixture; automated React/DOM check requires Linux Chrome. Worn VR remains unverified. |
 | `TextField.inlineControls` | Renders the plugin's supplied React controls after the input and built-in actions. Supplied controls retain their own callbacks, styles and disabled state. | Exact Web Browser 1.4.3 favorite-folder component in real React/DOM with an in-memory favorites stub: empty-name disabled action, edited draft/parent path, existing-folder guard and nested-dialog callback. No real favorites, browser tabs, backend, physical input or VR keyboard proof. |
 | `Field.style`, `TextField.style` | Applies the plugin's React style object to the native field wrapper, including its description and built-in actions. Styles update with the current props. | Exact DeckyFileServer 1.2.0 port control in real React/DOM with synthetic port state: red validation border, dimensions, callback and border removal. A local fixture also checks hidden fields/actions and ordinary unstyled fields. No server, settings save, physical input or VR keyboard proof. |
@@ -226,6 +247,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `GameSessions.RegisterForAppLifetimeNotifications` | Actual Steam callbacks, bounded queue and disposable `.unregister()` handle; no events inferred from snapshot changes; lease cleanup after lost panels | Real Frame registration/poll/close; launch/exit, retry, expiry and duplicate tests use explicit fixtures. Real game transitions unverified. |
 | Other `SteamClient` subscriptions | Explicit inert registration methods return disposable handles; no fabricated power/input/game-action events. Mutating Steam/power methods are unavailable. | Host contract tests; safe fallbacks only |
 | `DialogCheckbox`, `DialogButtonPrimary` | Native checkbox and button controls in the panel. Checkbox wrapper classes/styles are preserved; `onClick` receives the native input's React event, while `onChange` receives its checked boolean. Disabled inputs suppress both. | Host unit test; exact SteamGridDB 1.8.1 multiselect item and published pointer-routing CSS in real React/DOM with synthetic filter selection. No artwork, backend, controller or worn VR proof. |
+| `DialogCheckbox.description`, `tooltip` | Shows the React description and string tooltip as visible help under the native checkbox, including when disabled. Updating or removing help preserves the input and its state. | Declared `@decky/ui` 4.16.0 props with synthetic help in real React/DOM: native description-label activation, original events, boolean changes, disabled suppression, escaped text, help updates/removal, focus and controlled/uncontrolled state retention. The existing published SteamGridDB pointer-routing check still runs. No published-plugin help usage, backend, saved settings, physical input or worn VR proof. |
 | `Button` | Renders a native button without a field wrapper, preserving React children, classes and styles. Uses `onClick` first, otherwise `onOKButton`; disabled controls suppress activation and do not submit enclosing forms. `ButtonItem` remains a labeled field with a button. | Exact Simple Timer 1.0.0 minute-button component in real React/DOM with synthetic callbacks: layout, enabled/disabled colors, callback priority, OK fallback, original event, form behavior and style removal. No timer, backend, settings save, physical input or worn VR proof. |
 | `DialogButton`, `DialogButtonPrimary`, `DialogButtonSecondary` with `onOKButton` | Native activation calls `onClick` when present, otherwise `onOKButton`, once. The callback receives the original React click event, not a Steam `GamepadEvent`. Disabled buttons stay inert; buttons do not submit an enclosing form. Classes, styles and other native props are retained. | Exact SteamGridDB 1.8.1 tab-settings actions in real React/DOM with synthetic callbacks: default tab, hide/show and last-visible-tab guard. All three variants, callback priority and disabled behavior checked. No saved settings, artwork, backend, controller or worn VR proof. |
 | Optional `settings`, `frameyQuickActions` | Separate settings tab when content also exists; settings-only plugins have no empty Panel tab; up to eight actions with result text | Host unit test; these fields are Framey additions |
@@ -240,7 +262,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `localStorage.name`, `localStorage['name']`, `delete localStorage.name` | Direct string-property writes, reads and deletion use the same bounded snapshot as `setItem`, `getItem` and `removeItem`. Values become strings, including empty strings and zero; a missing property is `undefined`. `Object.keys`, `Object.entries`, object spread, `for...in` and JSON serialization expose saved non-reserved names and values; API methods and `length` are not enumerable. API/prototype members remain available; use `getItem` and `length`/`key(index)` for saved keys with those reserved names, which are omitted from named enumeration. | Real parent/iframe scripts with synthetic storage: export and reopen, own descriptors, empty/numeric names, method/property interoperability, deletion/clear, plugin isolation, quota rejection and denied-write fallback/recovery. No live-headset persistence proof. |
 | `SteamClient.Storage.GetJSON` / `SetObject` | Uses the same bounded per-plugin cache; a missing key rejects with `Not found`. It cannot read Steam account or global storage. | Host contract tests and local Chromium settings views; headset persistence after reopen remains unverified. |
 | IndexedDB / localForage | IndexedDB is deliberately absent inside the opaque iframe so feature detection chooses the bounded localStorage driver. Plugins requiring IndexedDB directly remain unsupported. | HLTB official frontend in local Chromium: its previous `IDBFactory.open` SecurityError disappeared. No live HLTB data request was run. |
-| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values. Back walks up to 32 local page transitions and skips routes removed since navigation. | Host unit test; VR navigation unverified |
+| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values. Replacing a registration refreshes the active view. Each returned disposer removes only its own registration. Back walks up to 32 local page transitions and skips routes removed since navigation. | Host contract tests and real React/DOM with synthetic registrations: replacement, stale cleanup, same-component re-registration, exact/pattern fallback, parameter refresh, state retention, history and render-error recovery. No backend, physical controller or worn VR proof. |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
 | `findModule`, `findModuleChild`, `findModuleExport`, class lookup and module mapping | Searches a finite registry of Framey controls and CSS maps. Unknown Steam modules return `undefined` or an empty mapping. The optional UI-audio export cannot play sound. | Host contract tests; pinned TabMaster 2.15.1 QAM and documentation render in local Chromium. Steam library editing and worn VR remain unverified. |
 | `findInTree`, `findInReactTree` | Searches objects and arrays supplied by the plugin, returning the first matching object. `walkable` restricts object keys and `ignore` skips them; React search follows only `props`, `children`, `child` and `sibling`. Cycles terminate. `getReactRoot()` still returns `null`. | Exact published Emuchievements 2.0.5 settings migration and reopen with synthetic legacy RPC replies; nested values, including empty strings, survive. No real account, backend, Steam-tree access or worn VR proof. |
@@ -369,7 +391,20 @@ plugin that calls `Navigation.Navigate('/decky/store')` will not open the
 Frame Control store; only paths registered by that same plugin can navigate.
 Optional route segments must be at the end. Framey accepts local path segments
 only; query strings, external URLs, Steam library routes and duplicate parameter
-names are rejected. Removing an active route returns to the plugin panel.
+names are rejected. `addRoute` replaces an existing registration at the same
+path. It accepts function/class component types, `React.memo` and
+`React.forwardRef` component types (including nested wrappers), or an existing
+React element. Element registrations retain their props and refs. These
+wrapper cases are covered with synthetic routes in real React/DOM; no
+published-plugin or worn-headset use is claimed.
+`addRoute` returns a disposer for that registration alone. Keep and call it during
+cleanup; an older disposer cannot remove a later registration, even if both use
+the same component. `removeRoute(path)` explicitly removes the current registration.
+Changing the active registration remounts its view and clears its render error;
+unrelated route changes preserve the current view's state. Registration changes
+refresh `useParams()` without adding history entries. Removing the active match
+uses another registered match for the same URL if one exists, or returns to the
+plugin panel otherwise.
 `Navigation.NavigateBack()` returns to the preceding local page, then the
 plugin root. `Navigation.CloseSideMenus()` returns directly to the root and
 clears that panel's history. Neither operation navigates Steam's own UI.

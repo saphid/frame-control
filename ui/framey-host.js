@@ -57,6 +57,7 @@
   const routes = new Map();
   const routeListeners = new Set();
   const routeHistory = [];
+  let routeId = 0;
   let currentRoute = null;
   let currentParams = {};
   let nextId = 0;
@@ -542,11 +543,13 @@
   const ButtonItem = ({label, description, icon, style, children, disabled, onClick}) => R.createElement(Field, {label, description, icon, style},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
-  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange, onClick, className, style}) =>
+  const DialogCheckbox = ({label, description, tooltip, checked, defaultChecked, disabled, onChange, onClick, className, style}) =>
     R.createElement('label', {className, style},
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
         onClick:event=>{if(!disabled)onClick?.(event);},
-        onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
+        onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label,
+      description != null && R.createElement('small', null, description),
+      tooltip != null && R.createElement('small', null, tooltip));
   const TextField = R.forwardRef(function TextField({label, description, tooltip, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
     rangeMin, rangeMax, maxLength, minLength, pattern, required,
@@ -557,6 +560,8 @@
     // The getter also retires retained handles when the native input unmounts.
     R.useImperativeHandle(ref, () => ({
       get element() {return input.current;},
+      // Published Terminal initializes its hidden input through this alias.
+      get m_elInput() {return input.current;},
       Focus:() => input.current?.focus(),
     }), []);
     const [draft, setDraft] = R.useState(defaultValue ?? '');
@@ -925,10 +930,10 @@
     return params;
   }
   function activeRoute(path) {
-    if (routes.has(path)) return {component:routes.get(path), params:{}};
-    for (const [pattern, component] of routes) {
+    if (routes.has(path)) return {...routes.get(path), params:{}};
+    for (const [pattern, registration] of routes) {
       const params = matchRoute(pattern, path);
-      if (params) return {component, params};
+      if (params) return {...registration, params};
     }
     return null;
   }
@@ -957,15 +962,29 @@
     }
     return navigate(null);
   }
+  function refreshRoute() {
+    if (currentRoute === null) return;
+    const match = activeRoute(currentRoute);
+    if (match) showRoute(currentRoute, match);
+    else navigate(null);
+  }
   const routerHook = {
     addRoute(path, component) {
+      // React wrappers are valid component types but are objects rather than
+      // functions or already-created elements. Render them through React too.
+      const wrapped = component?.$$typeof === Symbol.for('react.memo') ||
+        component?.$$typeof === Symbol.for('react.forward_ref');
       if (!routePattern(path) ||
-          (typeof component !== 'function' && !R.isValidElement(component)))
+          (typeof component !== 'function' && !R.isValidElement(component) && !wrapped))
         throw Error('Framey route needs a local path and React component');
-      routes.set(path, component);
-      return () => routerHook.removeRoute(path);
+      const registration = {component, id:++routeId};
+      routes.set(path, registration);
+      refreshRoute();
+      // Cleanup belongs to this registration, even when the next one uses
+      // the same path and component. An older disposer cannot remove it.
+      return () => {if (routes.get(path) === registration) routerHook.removeRoute(path);};
     },
-    removeRoute(path) {routes.delete(path); if(currentRoute && !activeRoute(currentRoute)) navigate(null);},
+    removeRoute(path) {if (routes.delete(path)) refreshRoute();},
     // Steam routes and global components have no equivalent in the isolated panel.
     addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{},
   };
@@ -1420,8 +1439,14 @@
   }
   function PluginSurface({plugin}) {
     const [view, setView] = R.useState(plugin.content ? 'panel' : 'settings');
-    const [route, setRoute] = R.useState(currentRoute);
-    R.useEffect(() => {routeListeners.add(setRoute); return () => routeListeners.delete(setRoute);}, []);
+    const [, redrawRoute] = R.useState(0);
+    const route = currentRoute, match = route ? activeRoute(route) : null;
+    R.useEffect(() => {
+      // A registry update can change the component/params at the same path.
+      const refresh = () => redrawRoute(revision => revision+1);
+      routeListeners.add(refresh);
+      return () => routeListeners.delete(refresh);
+    }, []);
     const [running, setRunning] = R.useState(null);
     const runningRef = R.useRef(false);
     const [message, setMessage] = R.useState('');
@@ -1454,11 +1479,11 @@
           disabled:running !== null, onClick:()=>runAction(action,index)}, action.label))),
       message && R.createElement('p', {role:'status'}, message),
       // A broken content view must not remove the controls that can leave it.
-      // Reset only when navigation selects another view; ordinary redraws
+      // Reset when navigation or registration selects another view; ordinary redraws
       // preserve healthy child state and do not retry a failing render.
-      R.createElement('div', null, R.createElement(PanelBoundary, {key:route ? `route:${route}` : `view:${view}`},
-        route ? (typeof activeRoute(route)?.component === 'function' ?
-          R.createElement(activeRoute(route).component) : activeRoute(route)?.component) :
+      R.createElement('div', null, R.createElement(PanelBoundary, {key:route ? `route:${route}:${match?.id}` : `view:${view}`},
+        route ? match && (R.isValidElement(match.component) ?
+          match.component : R.createElement(match.component)) :
           (view === 'settings' ? plugin.settings : plugin.content))));
   }
   window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit = {

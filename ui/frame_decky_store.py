@@ -280,6 +280,18 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 19 and digest == 'c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_NOTEBOOK_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 56 and digest == '71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_MANGOPEEL_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 18 and digest == 'f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_BLUETOOTH_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 133 and digest == '9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_NONSTEAM_BADGES_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 50 and digest == STORAGE_CLEANER_DIGEST:
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_STORAGE_CLEANER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -358,6 +370,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 24 and digest == RADIYO_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_RADIYO_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 124 and digest == '17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_ALARME_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 96 and digest == '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_SIMPLE_TIMER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -467,12 +482,18 @@ backup=base/('.frame-control-old-'+token)
 marker='.frame-control-store.json'
 STORAGE_CLEANER_FRONTEND='8252cfcd2182546f715cc0e4116a887fcf40af1b8b9d132bd1761c8b9ff46fdb'
 transaction_lock=None
+def read_receipt(receipt):
+    if receipt.is_symlink() or not receipt.is_file(): return None
+    try:
+        # Keep the transaction's ownership reads within the same byte limit
+        # as inventory/panel admission, even if a file grows before reading.
+        with receipt.open('rb') as source: data=source.read(16385)
+        if len(data)>16384: return None
+        return json.loads(data.decode('utf-8'))
+    except (OSError,ValueError): return None
 def owned_receipt():
     if target.is_symlink() or not target.is_dir(): return None
-    receipt=target/marker
-    if receipt.is_symlink() or not receipt.is_file(): return None
-    try: record=json.loads(receipt.read_text())
-    except (OSError,ValueError): return None
+    record=read_receipt(target/marker)
     if (isinstance(record,dict) and type(record.get('storeId')) is int
             and record['storeId']==int(plugin_id)):
         return record
@@ -496,10 +517,7 @@ try:
         # Names and folders may change between store versions; identity cannot.
         for peer in base.iterdir():
             if peer.is_symlink() or not peer.is_dir(): continue
-            receipt=peer/marker
-            if receipt.is_symlink() or not receipt.is_file(): continue
-            try: record=json.loads(receipt.read_text())
-            except (OSError,ValueError,UnicodeError): continue
+            record=read_receipt(peer/marker)
             if isinstance(record,dict) and type(record.get('storeId')) is int and record['storeId']==int(plugin_id):
                 raise RuntimeError('This store plugin is already installed; refresh installed plugins and use Update or Remove')
     # Match inventory's refusal to follow receipt symlinks. Read the receipt
@@ -873,6 +891,31 @@ try:
                 frontend.write_bytes(managed)
                 compat_shims.append('download-all-local-queue')
                 compat_shims.append('download-all-ipc-eof')
+            # Repair the exact backend's three Deck-user paths and child-only
+            # IPC EOF handling. Keep its API, frontend, search and parser intact.
+            if int(plugin_id)==133 and digest=='9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131' and folder=='decky-nonsteam-badges':
+                main=unpacked/'main.py'
+                source=main.read_bytes()
+                if hashlib.sha256(source).hexdigest()!='af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704':
+                    raise RuntimeError('Non-Steam Badges Python source mismatch')
+                if source.count(b'Path("/home/deck/.steam/steam/userdata/")')!=2 or source.count(b'base_path = "/home/deck/.steam/steam/userdata/"')!=1:
+                    raise RuntimeError('Non-Steam Badges userdata paths differ from pinned archive')
+                source=source.replace(b'Path("/home/deck/.steam/steam/userdata/")',
+                    b'(Path.home()/".steam/steam/userdata")')
+                source=source.replace(b'base_path = "/home/deck/.steam/steam/userdata/"',
+                    b'base_path = str(Path.home()/".steam/steam/userdata")')
+                ipc=globals().get('FRAMEY_NONSTEAM_BADGES_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Non-Steam Badges child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Non-Steam Badges child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('nonsteam-badges-user-paths')
+                compat_shims.append('nonsteam-badges-ipc-eof')
             if prefix_manager:
                 main=unpacked/'main.py'
                 data=main.read_bytes()
@@ -1397,6 +1440,31 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 main.write_bytes(prefix+source.replace(old,new))
                 compat_shims.append('tabmaster-json-file-restore')
                 compat_shims.append('tabmaster-ipc-eof')
+            # AlarMe 1.6.3 restarts tasks (or deletes elapsed deadlines) even
+            # for paused timers. Keep frozen timers untouched at startup.
+            if int(plugin_id)==124 and digest=='17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe' and folder=='alarme-decky-plugin':
+                main=unpacked/'main.py'
+                source=main.read_bytes()
+                if hashlib.sha256(source).hexdigest()!='ff456c2620b5b85473b4ca642551df49b490a2770e0af5c2706c6069c9f73d27':
+                    raise RuntimeError('AlarMe backend differs from pinned archive')
+                old=b'        for timer_id, timer in timers.items():\r\n            remaining = timer["end_time"] - current_time\r\n'
+                if source.count(old)!=1: raise RuntimeError('AlarMe paused timer startup changed')
+                new=old.replace(b'            remaining =', b'            if timer.get("paused", False):\r\n                continue\r\n            remaining =')
+                ipc=globals().get('FRAMEY_ALARME_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing AlarMe child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('AlarMe child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                source=prefix+source.replace(old,new)
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('alarme-paused-restart')
+                compat_shims.append('alarme-ipc-eof')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.
@@ -1503,6 +1571,106 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('simple-timer-lifecycle')
                 compat_shims.append('simple-timer-ipc-eof')
+            # MangoPeel's non-daemon reader used to outlive unload while blocked
+            # in os.read. Join its callback thread before closing its owned fd.
+            if int(plugin_id)==56 and digest=='71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1' and folder=='MangoPeel':
+                main=unpacked/'main.py'
+                source=main.read_text(encoding='utf-8')
+                if hashlib.sha256(source.encode()).hexdigest()!='cb80b8563e4d1a0b58e2b35a16189db9f41a4dc1da563811353a56dd495fa976':
+                    raise RuntimeError('MangoPeel compatibility source mismatch')
+                a=source.index('class Inotify:')
+                b=source.index('class MangoPeel:',a)
+                source=source[:a]+"""class Inotify:
+    def __init__(self):
+        self._libc = CDLL(None, use_errno=True)
+        self._libc.inotify_init1.argtypes = [ctypes.c_int]
+        self._libc.inotify_init1.restype = ctypes.c_int
+        self._libc.inotify_add_watch.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_uint32]
+        self._libc.inotify_add_watch.restype = ctypes.c_int
+        self._libc.inotify_rm_watch.argtypes = [ctypes.c_int, ctypes.c_int]
+        self._libc.inotify_rm_watch.restype = ctypes.c_int
+        self.fd = self._libc.inotify_init1(os.O_NONBLOCK | os.O_CLOEXEC)
+        if self.fd < 0:
+            raise OSError(get_errno(), 'MangoPeel inotify initialization failed')
+        self._wdMap = {}
+        self._stop = threading.Event()
+        self._runThread = None
+
+    def _process(self):
+        import select
+        while not self._stop.is_set():
+            ready, _, _ = select.select([self.fd], [], [], 0.1)
+            if not ready or self._stop.wait(0.002):
+                continue
+            try:
+                buf = os.read(self.fd, 4096)
+            except BlockingIOError:
+                continue
+            pos = 0
+            events = {}
+            while pos < len(buf):
+                wd, mask, _cookie, name_len = struct.unpack('iIII', buf[pos:pos+16])
+                pos += 16 + name_len
+                events[wd] = events.get(wd, 0) | mask
+            for wd, mask in events.items():
+                item = self._wdMap.get(wd)
+                if item and not self._stop.is_set():
+                    try:
+                        # Callbacks belong to this thread. No detached Timer
+                        # may write a profile after stop has returned.
+                        item['callback'](item['path'], mask)
+                    except Exception:
+                        logging.exception('MangoPeel watch callback failed')
+
+    def add_watch(self, path, mask, callback):
+        if self.fd < 0:
+            raise RuntimeError('MangoPeel watch is closed')
+        wd = self._libc.inotify_add_watch(self.fd, os.fsencode(path), mask)
+        if wd < 0:
+            raise OSError(get_errno(), 'Cannot watch MangoPeel profile', path)
+        self._wdMap[wd] = dict(path=path, callback=callback)
+        return wd
+
+    def remove_watch(self, path):
+        for wd, item in list(self._wdMap.items()):
+            if item['path'] == path:
+                if self._libc.inotify_rm_watch(self.fd, wd) < 0:
+                    raise OSError(get_errno(), 'Cannot remove MangoPeel watch', path)
+                self._wdMap.pop(wd)
+
+    def run(self):
+        if self.fd < 0:
+            raise RuntimeError('MangoPeel watch is closed')
+        if self._runThread is None:
+            self._runThread = Thread(target=self._process, name='MangoPeel-inotify')
+            self._runThread.start()
+
+    def stop(self):
+        self._stop.set()
+        if self._runThread is not None:
+            self._runThread.join(timeout=1)
+            if self._runThread.is_alive():
+                raise RuntimeError('MangoPeel watch did not stop')
+            self._runThread = None
+        if self.fd >= 0:
+            # Close only after the reader/callback has exited: a reused file
+            # descriptor must never be consumed by an old watch thread.
+            os.close(self.fd)
+            self.fd = -1
+        self._wdMap.clear()
+
+
+"""+source[b:]
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                (modules/'framey_decky_ipc.py').write_text(FRAMEY_MANGOPEEL_IPC_SOURCE)
+                source=('# Frame Control: repair child IPC EOF for the exact MangoPeel 0.0.7 archive.\n'
+                        'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\n'
+                        'del _framey_install_ipc_eof\n')+source
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('mangopeel-watch-lifetime')
+                compat_shims.append('mangopeel-ipc-eof')
             # Game Sync's selection count must stay inside its configured root,
             # including when a selected file or walked directory is a symlink.
             if int(plugin_id)==104 and digest=='65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd' and folder=='SDH-GameSync':
@@ -2165,6 +2333,42 @@ def split_by_app(data):
                 crypto.write_bytes(crypto_data.replace(env_dump,b''))
                 compat_shims.append('notifications-private-logs')
                 compat_shims.append('notifications-ipc-eof')
+            if (int(plugin_id)==19 and digest=='c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c'
+                    and folder=='SDH-Notebook'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='d7c403c28f0d848bea3d1a927bf6ef32ceddfb486a97edad4e9ed147aba4dc67':
+                    raise RuntimeError('Notebook backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_NOTEBOOK_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing Notebook child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Notebook child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+original
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('notebook-ipc-eof')
+            if (int(plugin_id)==18 and digest=='f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5'
+                    and folder=='Bluetooth'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='7a24a0fb9e52eb7c0c57abc83b49ff52cb7095a780757628a4ad567eb2f13806':
+                    raise RuntimeError('Bluetooth backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_BLUETOOTH_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing Bluetooth child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Bluetooth child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+original
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('bluetooth-ipc-eof')
             # The exact published backend awaits synchronous shutil.rmtree:
             # it deletes the cache then reports TypeError. Restrict deletion
             # to the two directories selected by its UI and their numeric app IDs.

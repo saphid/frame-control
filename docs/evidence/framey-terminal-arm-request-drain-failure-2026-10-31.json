@@ -1,0 +1,663 @@
+{
+  "at": "2026-10-31T14:01:54.484307+00:00",
+  "head": "f9094fa6a2bb40609fa44d862aa8247549126538",
+  "job": 124552480830,
+  "run": 41206484346,
+  "artifact": 13044907459,
+  "artifactZipSha256": "1ee91e8d9affa0c8b868dbee1f263b51625275b57f3375c259f04197a5dfc722",
+  "jobLogSha256": "89d313cb94c7826ebdc373d9f547ac5d95125af98a2437e0987ce7f8ce3c0b3c",
+  "exactFailedJobAndCheckoutVerified": true,
+  "sourceFingerprintsVerified": 168,
+  "bootstrapVerified": true,
+  "fullGuestPacketVerified": true,
+  "packetSha256": "e8e8647a5ad5c4f06c97b92483c6dd93ad7537662b414137360a5b4cd0731db3",
+  "consoleSha256": "316492f833d7c5c9f1b4c520e5c3f7712aa2a19054633d6068346e4b27311df7",
+  "requestDrainVerified": {
+    "drained": true,
+    "pendingHandlers": 0,
+    "timeoutSeconds": 35,
+    "productionDeadlineChanged": false
+  },
+  "requests": [
+    {
+      "route": "/api/framey/method",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "method": "create_terminal",
+        "args": [],
+        "legacy": false
+      },
+      "httpStatus": 200,
+      "response": {
+        "result": true
+      }
+    },
+    {
+      "route": "/api/framey/method",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "method": "get_terminals",
+        "args": [],
+        "legacy": false
+      },
+      "httpStatus": 200,
+      "response": {
+        "result": []
+      }
+    },
+    {
+      "route": "/api/framey/method",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "method": "get_terminals",
+        "args": [],
+        "legacy": false
+      },
+      "httpStatus": 200,
+      "response": {
+        "result": [
+          {
+            "is_started": true,
+            "is_completed": false,
+            "pid": 591,
+            "title": "NinerFourZeroFive",
+            "id": "9405e8e5-655c-4c59-84d9-f3a32d50f5d9"
+          }
+        ]
+      }
+    },
+    {
+      "route": "/api/framey/method",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "method": "change_terminal_window_size",
+        "args": [
+          "9405e8e5-655c-4c59-84d9-f3a32d50f5d9",
+          18,
+          125
+        ],
+        "legacy": false
+      },
+      "httpStatus": 200,
+      "response": {
+        "result": true
+      }
+    },
+    {
+      "route": "/api/framey/method",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "method": "get_config",
+        "args": [],
+        "legacy": false
+      },
+      "httpStatus": 200,
+      "response": {
+        "result": {
+          "__version__": 1,
+          "default_shell": "/bin/sh"
+        }
+      }
+    },
+    {
+      "route": "/api/framey/method",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "method": "unsubscribe_terminal",
+        "args": [
+          "9405e8e5-655c-4c59-84d9-f3a32d50f5d9"
+        ],
+        "legacy": false
+      },
+      "httpStatus": 200,
+      "response": {
+        "result": true
+      }
+    },
+    {
+      "route": "/api/framey/method",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "method": "get_terminal",
+        "args": [
+          "9405e8e5-655c-4c59-84d9-f3a32d50f5d9"
+        ],
+        "legacy": false
+      },
+      "httpStatus": 200,
+      "response": {
+        "result": {
+          "is_started": true,
+          "is_completed": false,
+          "pid": 591,
+          "title": "NinerFourZeroFive"
+        }
+      }
+    },
+    {
+      "route": "/api/framey/events",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "session": "1793454811489-0.833406307178312",
+        "events": [
+          "terminal_output#9405e8e5-655c-4c59-84d9-f3a32d50f5d9"
+        ],
+        "cursor": 0
+      },
+      "httpStatus": 200,
+      "response": {
+        "events": [],
+        "cursor": 0
+      }
+    },
+    {
+      "route": "/api/framey/method",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "method": "subscribe_terminal",
+        "args": [
+          "9405e8e5-655c-4c59-84d9-f3a32d50f5d9"
+        ],
+        "legacy": false
+      },
+      "httpStatus": 503,
+      "response": {
+        "error": "The Frame took too long to answer. It may be asleep or busy; try again.",
+        "offline": true,
+        "detail": "Timed out talking to frame"
+      }
+    },
+    {
+      "route": "/api/framey/events",
+      "request": {
+        "id": 65,
+        "receipt": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "session": "1793454811489-0.833406307178312",
+        "events": [
+          "terminal_output#9405e8e5-655c-4c59-84d9-f3a32d50f5d9"
+        ],
+        "cursor": 0
+      },
+      "httpStatus": 200,
+      "response": {
+        "events": [],
+        "cursor": 0
+      }
+    }
+  ],
+  "failedSshRequest": {
+    "kind": "panel-method",
+    "startedAfterSeconds": 251.378,
+    "outcome": "failure",
+    "errorCategory": "ssh-timeout",
+    "elapsedSeconds": 25.098
+  },
+  "failedRequestProcessProfile": {
+    "samples": [
+      {
+        "processes": [
+          {
+            "pid": 764,
+            "parentPid": 292,
+            "command": "ssh",
+            "state": "S",
+            "cpuTicks": 12,
+            "residentPages": 778,
+            "waitChannel": "do_wait"
+          },
+          {
+            "pid": 767,
+            "parentPid": 764,
+            "command": "sh",
+            "state": "S",
+            "cpuTicks": 5,
+            "residentPages": 325,
+            "waitChannel": "do_wait"
+          },
+          {
+            "pid": 768,
+            "parentPid": 767,
+            "command": "python3",
+            "state": "R",
+            "cpuTicks": 69,
+            "residentPages": 1948,
+            "waitChannel": "0"
+          }
+        ],
+        "truncated": false,
+        "elapsedSeconds": 2.148
+      },
+      {
+        "processes": [
+          {
+            "pid": 764,
+            "parentPid": 292,
+            "command": "ssh",
+            "state": "S",
+            "cpuTicks": 12,
+            "residentPages": 778,
+            "waitChannel": "do_wait"
+          },
+          {
+            "pid": 767,
+            "parentPid": 764,
+            "command": "sh",
+            "state": "S",
+            "cpuTicks": 5,
+            "residentPages": 325,
+            "waitChannel": "do_wait"
+          },
+          {
+            "pid": 768,
+            "parentPid": 767,
+            "command": "python3",
+            "state": "R",
+            "cpuTicks": 284,
+            "residentPages": 3315,
+            "waitChannel": "0"
+          }
+        ],
+        "truncated": false,
+        "elapsedSeconds": 8.77
+      },
+      {
+        "processes": [
+          {
+            "pid": 764,
+            "parentPid": 292,
+            "command": "ssh",
+            "state": "S",
+            "cpuTicks": 12,
+            "residentPages": 778,
+            "waitChannel": "do_wait"
+          },
+          {
+            "pid": 767,
+            "parentPid": 764,
+            "command": "sh",
+            "state": "S",
+            "cpuTicks": 5,
+            "residentPages": 325,
+            "waitChannel": "do_wait"
+          },
+          {
+            "pid": 768,
+            "parentPid": 767,
+            "command": "python3",
+            "state": "R",
+            "cpuTicks": 463,
+            "residentPages": 3457,
+            "waitChannel": "0"
+          }
+        ],
+        "truncated": false,
+        "elapsedSeconds": 14.905
+      }
+    ],
+    "unavailableSamples": 0,
+    "observerStopped": true,
+    "startedAfterSeconds": 251.378,
+    "kind": "panel-method"
+  },
+  "readOnlyPostFailureDiagnostic": {
+    "diagnosticOnly": true,
+    "invocationModified": true,
+    "productionReplayReplaced": false,
+    "productionDeadlineChanged": false,
+    "sourceSha256": "51b5f1f3b945cac7a5d553925cccd707544851f33dca57fd32aecc747f5f753b",
+    "resultKind": "method",
+    "timeoutSeconds": 35,
+    "timedOut": false,
+    "ownedProcessReaped": true,
+    "exitStatus": 0,
+    "elapsedSeconds": 7.398,
+    "outputLimitExceeded": false,
+    "importRecordCount": 118,
+    "slowestImports": [
+      {
+        "module": "frame_steam",
+        "selfMicroseconds": 168201,
+        "cumulativeMicroseconds": 5237570
+      },
+      {
+        "module": "http.client",
+        "selfMicroseconds": 505422,
+        "cumulativeMicroseconds": 4684696
+      },
+      {
+        "module": "email.parser",
+        "selfMicroseconds": 47640,
+        "cumulativeMicroseconds": 2581117
+      },
+      {
+        "module": "email.feedparser",
+        "selfMicroseconds": 173835,
+        "cumulativeMicroseconds": 2509702
+      },
+      {
+        "module": "email._policybase",
+        "selfMicroseconds": 95744,
+        "cumulativeMicroseconds": 2260806
+      },
+      {
+        "module": "email.utils",
+        "selfMicroseconds": 156282,
+        "cumulativeMicroseconds": 1520896
+      },
+      {
+        "module": "urllib.parse",
+        "selfMicroseconds": 452768,
+        "cumulativeMicroseconds": 1158817
+      },
+      {
+        "module": "ipaddress",
+        "selfMicroseconds": 694036,
+        "cumulativeMicroseconds": 694036
+      },
+      {
+        "module": "ssl",
+        "selfMicroseconds": 551532,
+        "cumulativeMicroseconds": 651792
+      },
+      {
+        "module": "email.header",
+        "selfMicroseconds": 198050,
+        "cumulativeMicroseconds": 644166
+      },
+      {
+        "module": "email.message",
+        "selfMicroseconds": 365697,
+        "cumulativeMicroseconds": 460015
+      },
+      {
+        "module": "socket",
+        "selfMicroseconds": 342061,
+        "cumulativeMicroseconds": 381331
+      },
+      {
+        "module": "encodings.idna",
+        "selfMicroseconds": 162915,
+        "cumulativeMicroseconds": 377908
+      },
+      {
+        "module": "json",
+        "selfMicroseconds": 12127,
+        "cumulativeMicroseconds": 377426
+      },
+      {
+        "module": "json.decoder",
+        "selfMicroseconds": 19089,
+        "cumulativeMicroseconds": 347635
+      },
+      {
+        "module": "re",
+        "selfMicroseconds": 26917,
+        "cumulativeMicroseconds": 310135
+      },
+      {
+        "module": "base64",
+        "selfMicroseconds": 210095,
+        "cumulativeMicroseconds": 223094
+      },
+      {
+        "module": "email.charset",
+        "selfMicroseconds": 93863,
+        "cumulativeMicroseconds": 218813
+      },
+      {
+        "module": "stringprep",
+        "selfMicroseconds": 212903,
+        "cumulativeMicroseconds": 214994
+      },
+      {
+        "module": "enum",
+        "selfMicroseconds": 71382,
+        "cumulativeMicroseconds": 211560
+      },
+      {
+        "module": "email.quoprimime",
+        "selfMicroseconds": 83060,
+        "cumulativeMicroseconds": 198378
+      },
+      {
+        "module": "email._parseaddr",
+        "selfMicroseconds": 189649,
+        "cumulativeMicroseconds": 189649
+      },
+      {
+        "module": "pathlib",
+        "selfMicroseconds": 7130,
+        "cumulativeMicroseconds": 180790
+      },
+      {
+        "module": "subprocess",
+        "selfMicroseconds": 28697,
+        "cumulativeMicroseconds": 161581
+      },
+      {
+        "module": "site",
+        "selfMicroseconds": 20687,
+        "cumulativeMicroseconds": 157112
+      },
+      {
+        "module": "functools",
+        "selfMicroseconds": 27400,
+        "cumulativeMicroseconds": 127105
+      },
+      {
+        "module": "email.encoders",
+        "selfMicroseconds": 24033,
+        "cumulativeMicroseconds": 124951
+      },
+      {
+        "module": "string",
+        "selfMicroseconds": 113711,
+        "cumulativeMicroseconds": 115319
+      },
+      {
+        "module": "os",
+        "selfMicroseconds": 25245,
+        "cumulativeMicroseconds": 105354
+      },
+      {
+        "module": "http",
+        "selfMicroseconds": 105022,
+        "cumulativeMicroseconds": 105022
+      }
+    ],
+    "lastImports": [
+      {
+        "module": "_socket",
+        "selfMicroseconds": 8325,
+        "cumulativeMicroseconds": 8325
+      },
+      {
+        "module": "select",
+        "selfMicroseconds": 1928,
+        "cumulativeMicroseconds": 1928
+      },
+      {
+        "module": "array",
+        "selfMicroseconds": 2931,
+        "cumulativeMicroseconds": 2931
+      },
+      {
+        "module": "socket",
+        "selfMicroseconds": 342061,
+        "cumulativeMicroseconds": 381331
+      },
+      {
+        "module": "_ssl",
+        "selfMicroseconds": 100260,
+        "cumulativeMicroseconds": 100260
+      },
+      {
+        "module": "ssl",
+        "selfMicroseconds": 551532,
+        "cumulativeMicroseconds": 651792
+      },
+      {
+        "module": "http.client",
+        "selfMicroseconds": 505422,
+        "cumulativeMicroseconds": 4684696
+      },
+      {
+        "module": "_locale",
+        "selfMicroseconds": 14994,
+        "cumulativeMicroseconds": 14994
+      },
+      {
+        "module": "locale",
+        "selfMicroseconds": 34685,
+        "cumulativeMicroseconds": 49679
+      },
+      {
+        "module": "signal",
+        "selfMicroseconds": 29556,
+        "cumulativeMicroseconds": 29556
+      },
+      {
+        "module": "_weakrefset",
+        "selfMicroseconds": 14324,
+        "cumulativeMicroseconds": 14324
+      },
+      {
+        "module": "threading",
+        "selfMicroseconds": 31309,
+        "cumulativeMicroseconds": 45632
+      },
+      {
+        "module": "fcntl",
+        "selfMicroseconds": 2154,
+        "cumulativeMicroseconds": 2154
+      },
+      {
+        "module": "msvcrt",
+        "selfMicroseconds": 4736,
+        "cumulativeMicroseconds": 4736
+      },
+      {
+        "module": "_posixsubprocess",
+        "selfMicroseconds": 1130,
+        "cumulativeMicroseconds": 1130
+      },
+      {
+        "module": "subprocess",
+        "selfMicroseconds": 28697,
+        "cumulativeMicroseconds": 161581
+      },
+      {
+        "module": "frame_steam",
+        "selfMicroseconds": 168201,
+        "cumulativeMicroseconds": 5237570
+      },
+      {
+        "module": "unicodedata",
+        "selfMicroseconds": 2091,
+        "cumulativeMicroseconds": 2091
+      },
+      {
+        "module": "stringprep",
+        "selfMicroseconds": 212903,
+        "cumulativeMicroseconds": 214994
+      },
+      {
+        "module": "encodings.idna",
+        "selfMicroseconds": 162915,
+        "cumulativeMicroseconds": 377908
+      }
+    ],
+    "sampledFrames": [
+      {
+        "file": "__init__.py",
+        "line": 444,
+        "function": "namedtuple"
+      },
+      {
+        "file": "selectors.py",
+        "line": 46,
+        "function": "<module>"
+      },
+      {
+        "file": "socket.py",
+        "line": 55,
+        "function": "<module>"
+      },
+      {
+        "file": "client.py",
+        "line": 77,
+        "function": "<module>"
+      },
+      {
+        "file": "frame_steam.py",
+        "line": 16,
+        "function": "<module>"
+      },
+      {
+        "file": "<decky-read-only-method>",
+        "line": 4,
+        "function": "<module>"
+      },
+      {
+        "file": "<stdin>",
+        "line": 5,
+        "function": "<module>"
+      }
+    ],
+    "fatalError": null,
+    "fatalFrames": [],
+    "methodResultSummary": {
+      "terminalCount": 1
+    },
+    "afterFailedProductionReplay": true,
+    "readOnlyMethod": "get_terminals",
+    "productionTemplateSha256": "9e93be5767c958be90023c3cf7f345906d54f7e2d48efc8df141b562bdf1b1ae",
+    "realFrameContacted": false,
+    "physicalControllerVerified": false
+  },
+  "ownedDeckyStop": {
+    "mainPidBefore": 329,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 9.026
+  },
+  "ownedResourcesStoppedAndFixtureRestored": true,
+  "completeConsoleErrorFree": false,
+  "terminalBrowserRoundTripReached": false,
+  "diagnosticOverridesFailedGate": false,
+  "soleRootCauseEstablished": false,
+  "productionDeadlineChanged": false,
+  "captures": {
+    "failure": {
+      "path": "/tmp/framey-pr492-arm340-failure.png",
+      "sha256": "13d33c88578873e45d8854df7f03528b1f2ab78d858e29495841671b9a5021ff",
+      "visuallyInspected": true,
+      "observation": "Actual plugin terminal route is rendered in the synthetic VM parent, but terminal output area is blank; no successful round trip is visible."
+    }
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "limits": [
+    "Production subscribe_terminal times out after25.098s; no buffer request or input/output round trip.",
+    "Post-failure modified get_terminals profiling exits zero in7.398s and spends5.238s cumulatively importing frame_steam; this is not a passing production replay or proof of sole cause.",
+    "Service stop reaches inactive with exit0, but retained stderr includes PTY EIO and loader shutdown CancelledError; no clean-console/runtime-release qualification."
+  ],
+  "capturesVisuallyInspected": true,
+  "evidenceOwnedUncommitted": true,
+  "rawJsonSha256": "4fd7546d6bdc805db78840ac36781998e9ddf9fe12c38e0c62c4ac6ae9f36f77",
+  "rawGzipSha256": "e9c56fe20df0a7b5526c806e2eee3db58f942be57945f77bf4dfb37459024c3b"
+}

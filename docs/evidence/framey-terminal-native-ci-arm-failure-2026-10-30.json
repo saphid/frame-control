@@ -1,0 +1,26 @@
+{
+  "success": false,
+  "head": "391095ba02ee6d4b9a2e9eb39580503e723d9b0c",
+  "architecture": "aarch64",
+  "artifact": 12999809974,
+  "artifactSha256": "618783ce79c1c9a75bdd3ba66a8aeb5b3a23f54615f80206ddf9122202c3d886",
+  "exactSourceFingerprintsVerified": 164,
+  "packetBytes": 258896,
+  "packetSha256": "dbc86c1b12f2aef4d8fe33f7ad2d47914006d3eb53e84024649abe5967e13de8",
+  "error": "Production installed plugin list did not become ready within 90 seconds",
+  "parentFailureState": {
+    "panel": "Loading plugin panel\u2026",
+    "installed": "Refresh to check installed plugins.",
+    "errors": [],
+    "failure": null,
+    "stage": null
+  },
+  "productionPanelRequests": 0,
+  "completedBrowserStages": 0,
+  "ownedQemuReaped": true,
+  "cleanupReported": true,
+  "gracefulDeckyStopVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "limit": "Backend discovery succeeded but the production installed list remained unpopulated. No Terminal panel or controller claim is supported. Captured cleanup flags do not prove a clean Decky exit status."
+}

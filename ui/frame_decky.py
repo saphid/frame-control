@@ -26,7 +26,10 @@ def plugins(folder):
                 if not isinstance(data, dict): continue
                 marker = child / '.frame-control-store.json'
                 try:
-                    owned = json.loads(marker.read_text()) if marker.is_file() and not marker.is_symlink() else {}
+                    # Match the panel's metadata limit before reading bytes.
+                    # An oversized receipt does not hide the plugin or peers.
+                    owned = json.loads(marker.read_text()) if (marker.is_file() and not marker.is_symlink()
+                                                              and marker.stat().st_size <= 16384) else {}
                 except (OSError, ValueError): owned = {}
                 # Valid JSON can still be a list or scalar. A bad receipt
                 # cannot claim ownership or abort the remaining inventory.
@@ -51,8 +54,27 @@ print(json.dumps({'plugins':plugins(pathlib.Path.home()/'.local/share/frame-cont
 '''
 
 
+# The installed-panel view needs service state and receipts, not CEF/OS
+# diagnostics. Keep it independent of those cold imports and network probes.
+PANEL_STATUS_PROBE = 'import json, pathlib, subprocess\n' + PLUGIN_SCAN + r'''
+home = pathlib.Path.home()
+managed = home / '.local/share/frame-control/decky'
+service = home / '.config/systemd/user/frame-control-decky.service'
+release = managed / '.frame-control/receipt.json'
+legacy = managed / 'settings/release.json'
+try:
+    metadata = json.loads((release if release.exists() else legacy).read_text())
+    version = metadata.get('version') if metadata.get('managedBy') == 'Frame Control' else None
+except (OSError, ValueError): version = None
+running = subprocess.run(['systemctl', '--user', 'is-active', 'frame-control-decky.service'],
+    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2).returncode == 0
+print(json.dumps({'managed':service.is_file() and version is not None,
+    'running':running, 'version':version, 'plugins':plugins(managed/'plugins')}))
+'''
+
+
 PROBE = r'''
-import json, os, pathlib, platform, subprocess, urllib.request
+import http.client, json, os, pathlib, subprocess
 ''' + PLUGIN_SCAN + r'''
 home = pathlib.Path.home()
 managed = home / '.local/share/frame-control/decky'
@@ -66,16 +88,22 @@ os_release = {}
 for line in pathlib.Path('/etc/os-release').read_text().splitlines():
     if '=' in line:
         k,v = line.split('=',1); os_release[k] = v.strip('"')
+connection = http.client.HTTPConnection('127.0.0.1', 8080, timeout=2)
 try:
-    with urllib.request.urlopen('http://127.0.0.1:8080/json/list', timeout=2) as reply:
-        targets = json.load(reply)
+    # This fixed loopback endpoint needs neither URL/proxy handling nor TLS.
+    # Avoid their cold imports on the bounded remote status path.
+    connection.request('GET', '/json/list')
+    reply = connection.getresponse()
+    if reply.status != 200: raise ValueError('CEF targets unavailable')
+    targets = json.load(reply)
     cef = any(x.get('title') == 'SharedJSContext' and 'steamloopback.host' in x.get('url','') for x in targets)
-except (OSError, ValueError): cef = False
+except (OSError, ValueError, http.client.HTTPException): cef = False
+finally: connection.close()
 try:
     metadata = json.loads((release if release.exists() else legacy).read_text())
     version = metadata.get('version') if metadata.get('managedBy') == 'Frame Control' else None
 except (OSError, ValueError): version = None
-print(json.dumps({'arch':platform.machine(), 'frameOS':os_release.get('VERSION_ID'),
+print(json.dumps({'arch':os.uname().machine, 'frameOS':os_release.get('VERSION_ID'),
     'variant':os_release.get('VARIANT_ID'), 'build':os_release.get('BUILD_ID'), 'cef':cef,
     'managed':service.is_file() and version is not None, 'running':active('frame-control-decky.service', True),
     'version':version, 'upstreamInstall':pathlib.Path('/etc/systemd/system/plugin_loader.service').exists(),
@@ -189,7 +217,15 @@ def plugin_status(ssh):
 
 
 def status(ssh):
-    result = json.loads(ssh('python3 -', stdin=PROBE, timeout=15))
+    return _with_compatibility(json.loads(ssh('python3 -', stdin=PROBE, timeout=15)))
+
+
+def panel_status(ssh):
+    """Fresh service/ownership/inventory state without OS or CEF diagnostics."""
+    return _with_compatibility(json.loads(ssh('python3 -', stdin=PANEL_STATUS_PROBE, timeout=15)))
+
+
+def _with_compatibility(result):
     for plugin in result.get('plugins', []):
         plugin['compatibility'] = framey_compatibility.lookup(
             plugin.get('storeId'), plugin.get('sha256'), plugin.get('version'),

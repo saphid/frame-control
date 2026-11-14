@@ -1,0 +1,47 @@
+{
+  "head": "ca945552e1b69afb6e0cfd6b1dd94bf47a2c8238",
+  "architecture": "x86_64",
+  "sourceFingerprintsVerified": 166,
+  "bootstrapVerified": true,
+  "resultPacketSha256": "99ce0cdaf6cd057d1dfbff5452ed9d6b019686ec0912a5d9eedf30cc7c146b30",
+  "resultPacketVerified": true,
+  "actualNativeLifecycleVerified": true,
+  "productionHttpAndEventRoundTripVerified": true,
+  "statusRequests": [
+    {
+      "startedAfterSeconds": 36.096,
+      "elapsedSeconds": 6.849,
+      "httpStatus": 200,
+      "running": true,
+      "pluginCount": 1
+    }
+  ],
+  "ownedDeckyStop": {
+    "mainPidBefore": 338,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 2.674
+  },
+  "allOwnedCleanupVerified": true,
+  "captureSha256": {
+    "terminal": "d5c81f993d92503fc5543e06ceaf282e750d88af6f7341b49d82ba3fbd078dc5",
+    "output": "83f41520c3bb5f3f77fb3b2149d86aa4fc2dbe9a1fc96937599384b99d320845",
+    "removed": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3"
+  },
+  "capturesVisuallyInspected": true,
+  "syntheticCef": true,
+  "syntheticManagedReceipt": true,
+  "syntheticInput": true,
+  "managedInstallVerified": false,
+  "productionAdaptationEnabled": false,
+  "realSteamCef": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "nativeArmVerified": false,
+  "visualObservation": "Private adapted Terminal panel visible, actual framey-browser-output row visible after command echo, and no active terminal after removal. Production partial-support warning remains visible; synthetic CEF/receipt/input only."
+}

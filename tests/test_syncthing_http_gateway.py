@@ -3,12 +3,58 @@ import importlib.util
 import copy
 import io
 import json
+import sys
 from pathlib import Path
 import tarfile
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT/'ui'))
+
+
+class TerminalDomFailure(unittest.TestCase):
+    def test_successful_create_without_list_update_retains_child_timeout_and_does_not_retry(self):
+        import ast
+        import shutil
+        import subprocess
+        node = shutil.which('node')
+        if node is None:
+            self.skipTest('Node is unavailable')
+        tree = ast.parse((ROOT/'tests/decky-runtime/terminal_browser.py').read_text())
+        probe = next(ast.literal_eval(n.value) for n in tree.body if isinstance(n, ast.Assign)
+                     and any(isinstance(t, ast.Name) and t.id == 'PROBE' for t in n.targets))
+        script = r'''
+const assert=require('node:assert/strict'),vm=require('node:vm');
+const handlers=new Map(),messages=[];let now=0,creates=0;
+const button={textContent:'Add Terminal',click:()=>{creates++;}};
+const parent={postMessage:value=>messages.push(value)};
+const context=vm.createContext({parent,Date:{now:()=>now},
+ addEventListener:(name,fn)=>handlers.set(name,fn),
+ setTimeout:fn=>{now+=100;fn();},
+ document:{getElementById:()=>({innerText:'Active Terminals'}),
+  querySelectorAll:selector=>selector==='button'?[button]:[],querySelector:()=>null}});
+vm.runInContext(PROBE,context);
+for(let n=0;n<25;n++)handlers.get('unhandledrejection')({reason:'Decky backend timed out '+'x'.repeat(2000)});
+(async()=>{
+ await handlers.get('message')({source:parent,data:{type:'test:advance',action:'create'}});
+ assert.equal(creates,1,'a completed mutation must not be retried');
+ assert.equal(messages.length,1);const failure=messages[0];
+ assert.equal(failure.type,'test:failure');assert.match(failure.error,/Terminal DOM timed out/);
+ assert.equal(failure.diagnostic.phase,'created-terminal-button');
+ assert.equal(failure.diagnostic.errors.length,20);
+ assert(failure.diagnostic.errors.every(value=>value.length===1000&&value.startsWith('Decky backend timed out')));
+ assert.equal(failure.diagnostic.text,'Active Terminals');
+ assert.deepEqual(Array.from(failure.diagnostic.buttons),['Add Terminal']);
+ assert.equal(failure.diagnostic.textareaPresent,false);
+ assert.equal(now,60000,'the existing DOM deadline must remain unchanged');
+ console.log(JSON.stringify(failure));
+})().catch(error=>{console.error(error);process.exitCode=1;});
+'''.replace('vm.runInContext(PROBE,context)', 'vm.runInContext('+json.dumps(probe)+',context)')
+        result = subprocess.run([node, '-e', script], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['type'], 'test:failure')
 
 
 def load(name, path):
@@ -93,6 +139,137 @@ class GatewayIsolation(unittest.TestCase):
                 self.assertNotIn('..', Path(member.name).parts)
                 self.assertEqual(archive.extractfile(member).read(), (ROOT/member.name).read_bytes())
             self.assertEqual(archive.getmember('ui/local-bin/ssh').mode, 0o700)
+
+
+class BrowserReadyCandidate(unittest.TestCase):
+    def browser(self):
+        return load('browser_ready_candidate', ROOT/'tests/decky-runtime/syncthing_browser.py')
+
+    def test_unready_or_failed_candidate_is_closed_and_never_accepted(self):
+        browser = self.browser()
+        snapshot = dict(errors=[], state=dict(parentInstalled=True, iframeLoads=1,
+                        cacheRequests=0, seedReplies=0, readyMessages=0),
+                        documentState='complete', iframeAssigned=True)
+        for replies, outcome, phase in [([False, snapshot], 'not-ready', 'panel-errors'),
+                ([OSError('owned CDP timeout')], 'failure', 'panel-ready'),
+                ([False, OSError('owned errors timeout')], 'failure', 'panel-errors')]:
+            with self.subTest(outcome=outcome, phase=phase):
+                page = Mock(); page.eval.side_effect = replies; report = {}
+                with patch.object(browser.frame_steam, 'Page', return_value=page):
+                    self.assertIsNone(browser.ready_page(report))
+                page.sock.close.assert_called_once_with()
+                self.assertEqual(report['readinessAttempts'][0]['phase'], phase)
+                self.assertEqual(report['readinessAttempts'][0]['outcome'], outcome)
+                if outcome == 'not-ready':
+                    self.assertEqual(report['startupState']['state']['cacheRequests'], 0)
+                    self.assertTrue(report['startupState']['iframeAssigned'])
+
+    def test_ready_page_remains_owned_by_caller_and_trace_is_bounded(self):
+        browser = self.browser(); page = Mock(); page.eval.return_value = True
+        report = dict(readinessAttempts=[{} for _ in range(16)])
+        with patch.object(browser.frame_steam, 'Page', return_value=page):
+            self.assertIs(browser.ready_page(report), page)
+        page.sock.close.assert_not_called()
+        self.assertEqual(len(report['readinessAttempts']), 16)
+        self.assertTrue(report['readinessTraceOverflow'])
+
+    def test_failed_connection_records_phase_without_a_stale_page(self):
+        browser = self.browser(); report = {}
+        with patch.object(browser.frame_steam, 'Page', side_effect=OSError('owned timeout')):
+            self.assertIsNone(browser.ready_page(report))
+        self.assertEqual(report['readinessAttempts'][0]['phase'], 'page-connect')
+        self.assertEqual(report['readinessAttempts'][0]['outcome'], 'failure')
+
+
+class BrowserParentErrors(unittest.TestCase):
+    def test_shipped_panel_error_is_retained_only_from_owned_iframe_and_is_bounded(self):
+        import shutil
+        import subprocess
+        browser = load('owned_browser_parent_errors', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        node = shutil.which('node')
+        if node is None:
+            self.skipTest('Node is required for fixture JavaScript behavior')
+        harness = r"""
+const assert=require('node:assert/strict'),vm=require('node:vm');
+const replies=[],owned={postMessage:message=>replies.push(message)},handlers=[];
+const context={document:{getElementById:()=>({contentWindow:owned})},
+ performance:require('node:perf_hooks').performance,
+ addEventListener:(type,handler)=>handlers.push({type,handler})};
+context.window=context;vm.createContext(context);vm.runInContext(SOURCE,context);
+const message=handlers.find(v=>v.type==='message').handler;
+(async()=>{
+ await message({source:{},data:{type:'framey:error',message:'foreign'}});
+ assert.equal(context.startupErrors.length,0);
+ await message({source:{},data:{type:'framey:cache:init',session:'foreign'}});
+ assert.equal(context.startupState.cacheRequests,0);
+ await message({source:owned,data:{type:'framey:cache:init',session:'owned'}});
+ assert.equal(context.startupState.cacheRequests,1);
+ assert.equal(context.startupState.seedReplies,1);
+ assert.equal(replies[0].type,'framey:cache:seed');
+ assert.equal(replies[0].session,'owned');
+ await message({source:owned,data:{type:'framey:error',message:'module startup failed'}});
+ assert.deepEqual(Array.from(context.startupErrors),['module startup failed']);
+ for(let i=0;i<25;i++)await message({source:owned,data:{type:'framey:error',message:'x'.repeat(2000)}});
+ assert.equal(context.startupErrors.length,16);
+ assert.equal(context.startupErrors.at(-1).length,1000);
+ assert.equal(vm.runInContext('ready',context),false);
+ assert.equal(context.startupState.readyMessages,0);
+ await message({source:owned,data:{type:'framey:ready'}});
+ assert.equal(context.startupState.readyMessages,1);
+ assert.equal(vm.runInContext('ready',context),true);
+})().catch(error=>{console.error(error);process.exitCode=1;});
+"""
+        result = subprocess.run([node, '-e', harness.replace('SOURCE', json.dumps(browser.PARENT))],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+
+
+class BrowserStartupEvidence(unittest.TestCase):
+    def test_diagnostics_bound_logs_and_targets_without_retaining_target_urls(self):
+        browser = load('owned_browser_diagnostics', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        process = Mock(returncode=None)
+        process.poll.return_value = None
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = Path(temporary)
+            (profile/'DevToolsActivePort').write_text('12345\n')
+            log = profile/'browser.log'
+            log.write_bytes(b'x'*5000+b'\nprivate startup failure\x00\n')
+            targets = [dict(type='page',title='Owned Syncthing actual backend',
+                            url='http://127.0.0.1:12345/private?fixture-key=omitted')]*12
+            with patch.object(browser.urllib.request, 'urlopen',
+                              return_value=io.BytesIO(json.dumps(targets).encode())) as request:
+                result = browser.startup_diagnostics(process,profile,log)
+            self.assertTrue(result['processAlive'])
+            self.assertEqual(result['stderrBytes'],log.stat().st_size)
+            self.assertEqual(len(result['stderrTail']),2048)
+            self.assertTrue(result['stderrTail'].endswith('private startup failure?\n'))
+            self.assertEqual(result['targetCount'],12)
+            self.assertEqual(len(result['targets']),8)
+            self.assertEqual(result['targets'][0]['urlKind'],'loopback-http')
+            self.assertNotIn('fixture-key',json.dumps(result))
+            self.assertEqual(request.call_args.kwargs,{'timeout':2})
+
+    def test_unavailable_diagnostics_do_not_replace_the_original_failure(self):
+        browser = load('owned_browser_diagnostics_failure', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        process = Mock(returncode=7)
+        process.poll.return_value = 7
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = Path(temporary)
+            (profile/'DevToolsActivePort').write_text('12345\n')
+            failure = AssertionError('original readiness failure')
+            try:
+                try:
+                    raise failure
+                except AssertionError:
+                    with patch.object(browser.urllib.request,'urlopen',side_effect=OSError):
+                        result = browser.startup_diagnostics(process,profile,profile/'absent.log')
+                    raise
+            except AssertionError as actual:
+                self.assertIs(actual,failure)
+            self.assertFalse(result['processAlive'])
+            self.assertEqual(result['returnCode'],7)
+            self.assertTrue(result['stderrUnavailable'])
+            self.assertTrue(result['targetsUnavailable'])
 
 
 class ProductionBrowserParent(unittest.TestCase):
@@ -264,6 +441,22 @@ class PrivateSshDiagnostics(unittest.TestCase):
                           'detail':'private-fixture-key', 'offline':True}), 'ssh-timeout')
         self.assertEqual(module.safe_error_category({'error':'unknown private-fixture-key'}), 'other')
 
+    def test_shipped_method_and_event_templates_with_common_preamble_have_distinct_kinds(self):
+        import sys
+        with patch.object(sys, 'path', [str(ROOT/'ui'), *sys.path]):
+            import framey_panel
+        module = self.gateway()
+        method = framey_panel.METHOD_SCRIPT.replace('__FRAMEY_METHOD_PAYLOAD__', repr('{}'))
+        event = framey_panel.EVENT_SCRIPT.replace('__FRAMEY_EVENTS_SOURCE__', repr('fixture'))
+        # The earlier prefix-only observer incorrectly called both a method.
+        prefix = framey_panel.METHOD_SCRIPT.partition('__FRAMEY_METHOD_PAYLOAD__')[0]
+        self.assertTrue(method.startswith(prefix) and event.startswith(prefix))
+        self.assertEqual(module.panel_command_kind(method, framey_panel), 'panel-method')
+        self.assertEqual(module.panel_command_kind(event, framey_panel), 'panel-events')
+        for unrelated in (None, b'private-fixture-credential', framey_panel.STEAM_READ_SCRIPT,
+                          prefix+'private-fixture-credential'):
+            self.assertIsNone(module.panel_command_kind(unrelated, framey_panel))
+
 
 class StatusProcessDiagnostics(unittest.TestCase):
     def gateway(self):
@@ -345,7 +538,8 @@ class StatusProcessDiagnostics(unittest.TestCase):
     def test_profiled_observer_preserves_exact_call_result_error_and_arguments(self):
         import threading
         module = self.gateway()
-        for error in (None, RuntimeError('private-fixture-credential')):
+        for kind, error in ((kind, error) for kind in ('decky-status', 'panel-method', 'panel-events')
+                            for error in (None, RuntimeError('private-fixture-credential'))):
             records = []; profiles = dict(records=[], overflow=False); result = object()
             call = Mock(return_value=result, side_effect=error)
             sampler = Mock(); sampler.finish.return_value = dict(samples=[], unavailableSamples=0,
@@ -353,7 +547,7 @@ class StatusProcessDiagnostics(unittest.TestCase):
             with patch.object(module, 'StatusProcessSampler', return_value=sampler):
                 def run():
                     return module.observe_ssh(call, records, threading.Lock(), module.time.monotonic(),
-                        'decky-status', 'python3 -', stdin='private-fixture-credential', timeout=15,
+                        kind, 'python3 -', stdin='private-fixture-credential', timeout=15,
                         process_profiles=profiles)
                 if error:
                     with self.assertRaises(RuntimeError) as caught:
@@ -365,6 +559,7 @@ class StatusProcessDiagnostics(unittest.TestCase):
             sampler.start.assert_called_once_with(); sampler.finish.assert_called_once_with()
             self.assertEqual(len(profiles['records']), 1)
             self.assertTrue(profiles['records'][0]['observerStopped'])
+            self.assertEqual(profiles['records'][0]['kind'], kind)
             self.assertNotIn('private', json.dumps(profiles))
 
     def test_profile_overflow_never_drops_an_actual_ssh_call(self):
@@ -421,7 +616,7 @@ class AuthenticatedRuntimeReadiness(unittest.TestCase):
 
 
 class PrivateCefDiagnostics(unittest.TestCase):
-    def run_fixture(self, scenario):
+    def run_fixture(self, scenario, document=None):
         import re
         import shutil
         import subprocess
@@ -429,7 +624,7 @@ class PrivateCefDiagnostics(unittest.TestCase):
         if executable is None:
             self.skipTest('Node is required for fixture JavaScript behavior')
         gateway = load('private_cef_diagnostics', ROOT/'tests/decky-runtime/syncthing_http.py')
-        source = re.search(r'<script>(.*)</script>', gateway.CEF, re.S).group(1)
+        source = re.search(r'<script>(.*)</script>', document or gateway.CEF, re.S).group(1)
         source = source.replace('__FIXTURE_TOKEN__', json.dumps('private-fixture-auth'))
         harness = r'''
 const assert=require('node:assert/strict'),vm=require('node:vm');
@@ -463,6 +658,40 @@ console.log(JSON.stringify({records:context.fixtureRpcTrace,overflow:context.fix
                                 timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr[-4000:])
         return json.loads(result.stdout)
+
+    def test_terminal_timeout_keeps_rpc_stage_without_private_arguments(self):
+        import ast
+        gateway = load('terminal_trace_cef', ROOT/'tests/decky-runtime/syncthing_http.py')
+        path = ROOT/'tests/decky-runtime/terminal_http.py'
+        tree = ast.parse(path.read_text())
+        tree.body = [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                     and node.name == 'cef_document']
+        scope = {'RPC_CEF': gateway.CEF, 'json': json}
+        exec(compile(tree, str(path), 'exec'), scope)
+        result = self.run_fixture(r'''
+const subscription=context.DeckyBackend.call('loader/call_plugin_method',
+ 'Decky Terminal','subscribe_terminal','private-fixture-argument');
+now=10;open(sockets[0]);
+const sent=sockets[0].sent.find(message=>message.type===0);
+assert.equal(sent.args[1],'subscribe_terminal');
+assert.equal(context.fixtureRpcTrace[0].outcome,'pending');
+// The backend did receive this call but never replied. A pre-Decky SSH
+// startup timeout would leave no subscribe_terminal record at all.
+now=20000;timers[0].callback();
+await assert.rejects(subscription,/Fixture Decky RPC timeout/);
+const unknown=context.DeckyBackend.call('loader/call_plugin_method',
+ 'Decky Terminal','private-fixture-argument','private-fixture-argument');
+const next=sockets[0].sent.filter(message=>message.type===0).at(-1);
+now=20005;answer(sockets[0],next.id,1,'private-response');
+assert.equal(await unknown,'private-response');
+''', document=scope['cef_document']('private-fixture-auth'))
+        self.assertEqual([row['method'] for row in result['records']],
+                         ['subscribe_terminal', 'other'])
+        self.assertEqual([row['outcome'] for row in result['records']],
+                         ['timed-out', 'succeeded'])
+        self.assertEqual(result['records'][0]['elapsedMilliseconds'], 20000)
+        self.assertEqual(result['socketCount'], 1)
+        self.assertFalse(result['overflow'])
 
     def test_one_socket_multiplexes_concurrent_requests_with_unique_ids(self):
         result = self.run_fixture(r'''
