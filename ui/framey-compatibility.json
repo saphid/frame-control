@@ -12275,7 +12275,7 @@
         "https://github.com/user-attachments/assets"
       ],
       "status": "partial",
-      "reason": "Exact managed 0.1.0 maps Steam userdata paths to the actual user home. Published Decky 3.3.0 x86_64 verifies private GOG/Epic/Amazon/Luna and unknown-store shortcut mappings, signed app IDs, missing-ID and malformed-file handling, unchanged private files and loader-restart persistence. A separate unchanged-original case reproduces the hardcoded Deck-home failure. Existing copies need Update/reinstall. Active Steam account selection, browser/backend integration, Steam page badges, live search, ARM64, managed Frame use and worn/controller usability remain unverified.",
+      "reason": "Exact managed 0.1.0 maps Steam userdata paths to the actual user home and installs the shared child-only IPC EOF repair. Existing copies need Update/reinstall. Native Decky 3.3.0 AMD64 verifies synthetic shortcut mappings, RPC after peer closure, restart persistence and two clean loader stops. Active-account selection, rendered badges, live Steam search, ARM64 integration, managed Frame installation and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -12310,7 +12310,8 @@
         "result": "installed-removed"
       },
       "requiredShims": [
-        "nonsteam-badges-user-paths"
+        "nonsteam-badges-user-paths",
+        "nonsteam-badges-ipc-eof"
       ],
       "missingShimStatus": "partial"
     },

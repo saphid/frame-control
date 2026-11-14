@@ -173,14 +173,16 @@ class Compatibility(unittest.TestCase):
         self.assertEqual([p['compatibility']['status'] for p in result], ['broken', 'partial'])
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
 
-    def test_old_nonsteam_badges_copy_requires_user_path_reinstall(self):
+    def test_old_nonsteam_badges_copy_requires_user_paths_and_child_ipc_repair(self):
         record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 133)
         old = dict(storeId=133, version=record['version'], sha256=record['sha256'])
-        updated = dict(old, compatShims=['nonsteam-badges-user-paths'])
-        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
-        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        paths_only = dict(old, compatShims=['nonsteam-badges-user-paths'])
+        updated = dict(old, compatShims=['nonsteam-badges-user-paths', 'nonsteam-badges-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, paths_only, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial']*3)
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
-        self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[2]['compatibility']['reason'])
 
     def test_unpublished_prefix_manager_102_has_no_store_compatibility_claim(self):
         from framey_official import PREFIX_MANAGER_102

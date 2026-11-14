@@ -87,6 +87,7 @@ def main():
     parser.add_argument('--reproduce-deck-shelves-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
     parser.add_argument('--reproduce-nonsteam-path-regression', action='store_true')
+    parser.add_argument('--reproduce-nonsteam-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-unload-regression', action='store_true')
@@ -311,6 +312,15 @@ def main():
         assert record['id'] == 133
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+    if args.reproduce_nonsteam_unload_regression:
+        assert record['id'] == 133
+        source = (plugin/'main.py').read_bytes()
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        assert source.startswith(prefix)
+        previous = source[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '17c2880823cc0683f887fe95c419b64ba39fe18671eab4257ffecb7422ea1970'
+        (plugin/'main.py').write_bytes(previous)
     if args.reproduce_deck_progress_unload_regression:
         assert record['id'] == 134
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -1263,41 +1273,41 @@ def main():
                     assert shortcuts.read_bytes() == b'invalid private binary vdf'
                     shortcuts.write_bytes(payload)
                     assert current('get_all_store_mappings') == expected
+                from nonsteam_badges_private import stop as stop_badges
                 stops = []
+                sibling = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(90)'],
+                                           start_new_session=True)
+                processes.append(sibling)
+                def mappings_after_eof():
+                    assert current('get_all_store_mappings') == expected
                 def stop_shortcut_loader():
-                    def identity(pid):
-                        try:
-                            fields = Path('/proc/'+str(pid)+'/stat').read_text().rsplit(')', 1)[1].split()
-                            return int(fields[1]), int(fields[19])
-                        except (FileNotFoundError, ProcessLookupError):
-                            return None
-                    snapshot = {int(p.name): identity(int(p.name)) for p in Path('/proc').iterdir() if p.name.isdigit()}
-                    owned = {backend.pid}
-                    while True:
-                        children = {pid for pid,value in snapshot.items() if value and value[0] in owned}
-                        if children <= owned:
-                            break
-                        owned |= children
-                    identities = {pid: snapshot[pid] for pid in owned}
-                    assert all(identities.values()) and len(identities) >= 2
-                    started = time.monotonic()
-                    backend.send_signal(signal.SIGTERM)
-                    assert backend.wait(timeout=8) == 0
-                    assert all(identity(pid) != value for pid,value in identities.items())
-                    stops.append(dict(returncode=backend.returncode, elapsedSeconds=time.monotonic()-started,
-                        signaledOnlyOwnedLoader=True, ownedProcessIdentitiesReaped=True,
-                        ownedProcessCount=len(identities)))
+                    observation = stop_badges(backend, log,
+                        disconnect=not stops and not args.reproduce_nonsteam_path_regression,
+                        after_disconnect=(mappings_after_eof if not stops and not (
+                            args.reproduce_nonsteam_path_regression or args.reproduce_nonsteam_unload_regression) else None))
+                    stops.append(observation)
+                    assert observation['loaderReturncode'] == 0 and not observation['exactDescendantsRemaining'], observation
+                    assert sibling.poll() is None, 'unrelated private process must survive loader stop'
+                    if args.reproduce_nonsteam_unload_regression:
+                        assert observation['forcedPluginKills'] == 1 and not observation['cleanShutdownVerified'], observation
+                        assert 5 <= observation['seconds'] < 8, observation
+                    elif not args.reproduce_nonsteam_path_regression:
+                        assert observation['cleanShutdownVerified'], observation
                 stop_shortcut_loader()
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
-                processes.append(backend)
-                restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Non-Steam Badges discovery')
-                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
-                assert current('get_all_store_mappings') == ({} if args.reproduce_nonsteam_path_regression else expected)
-                assert shortcuts.read_bytes() == payload
-                stop_shortcut_loader()
+                if not args.reproduce_nonsteam_unload_regression:
+                    backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
+                    processes.append(backend)
+                    restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Non-Steam Badges discovery')
+                    assert len(restarted) == 1 and restarted[0]['name'] == record['name']
+                    assert current('get_all_store_mappings') == ({} if args.reproduce_nonsteam_path_regression else expected)
+                    assert shortcuts.read_bytes() == payload
+                    stop_shortcut_loader()
+                assert sibling.poll() is None
+                sibling.terminate()
+                sibling.wait(timeout=5)
                 log.flush()
                 console = (home/'runtime.log').read_text()
-                assert console.count('Starting Decky version v3.3.0') == console.count('[main][INFO]: Shutdown finished.') == 2
+                assert console.count('Starting Decky version v3.3.0') == console.count('[main][INFO]: Shutdown finished.') == (1 if args.reproduce_nonsteam_unload_regression else 2)
                 for marker in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
                                'Task was destroyed but it is pending', 'Bad file descriptor'):
                     assert marker not in console, marker
@@ -1309,17 +1319,21 @@ def main():
                     storeClassification=not args.reproduce_nonsteam_path_regression,
                     missingAppIdSkipped=not args.reproduce_nonsteam_path_regression,
                     malformedVdfRefused=not args.reproduce_nonsteam_path_regression,
-                    mappingsPreservedAcrossLoaderRestart=not args.reproduce_nonsteam_path_regression,
+                    mappingsPreservedAcrossLoaderRestart=not (args.reproduce_nonsteam_path_regression or args.reproduce_nonsteam_unload_regression),
                     originalHardcodedHomeFailureReproduced=args.reproduce_nonsteam_path_regression,
                     privateShortcutsPreserved=True, unchangedArchiveFiles=unchanged,
                     payloadSha256=hashlib.sha256(payload).hexdigest(),
                     ownedLoaderStops=stops, loaderConsole=console,
                     loaderConsoleSha256=hashlib.sha256(console.encode()).hexdigest(),
-                    loaderConsoleErrorFree=False,
+                    loaderConsoleErrorFree=all(s['cleanShutdownVerified'] for s in stops),
+                    controlledEofForcedKillReproduced=args.reproduce_nonsteam_unload_regression,
+                    unrelatedSiblingPreserved=True,
                     browserVerified=False, steamPageBadgesVerified=False,
                     steamSearchVerified=False, activeSteamAccountSelectionVerified=False,
                     realFrameContacted=False, physicalControllerVerified=False)
-                report['result'] = (('original hardcoded-home empty mapping failure reproduced' if args.reproduce_nonsteam_path_regression
+                if args.reproduce_nonsteam_unload_regression:
+                    report['expectedRegression'] = dict(previousHomeOnlySourceRestored=True, forcedPluginKills=1, qualifiedCompatibilityPass=False)
+                report['result'] = (('previous home-only backend forced-kill after controlled child EOF reproduced' if args.reproduce_nonsteam_unload_regression else 'original hardcoded-home empty mapping failure reproduced' if args.reproduce_nonsteam_path_regression
                                     else 'published Decky API1 private shortcut mappings and restart persistence passed')+
                                     '; browser badges, active Steam account, Steam search, Frame and VR unverified')
             elif case['probe'] == 'tabmaster-private-settings':
