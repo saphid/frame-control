@@ -404,6 +404,16 @@ refuses ids with a hyphen (`missing/invalid arguments`), which the fake had
 accepted. The fake now refuses them the same way, and Frame Control makes ids
 Steam accepts.
 
+## Tracking protocols and fake BlueZ
+
+`tests/test_tracking.py` exercises our gaze conversion, OSC sender, HRS parser
+and BlueZ lifecycle with an in-memory fake object tree. It runs in the normal
+unit suite without Bluetooth, GTK or OpenXR. Real Frame results and the absent
+strap/tracker boundaries are recorded in [tracking](tracking.md).
+`tests/test_pulse.py` also checks that competing, unidentified, pre-existing
+and replaced capture directories are never read or removed. Those synthetic
+lifecycle checks do not prove line buffering or worn capture safety on SteamVR.
+
 ## PC panel host tests
 
 PC in the headset (Experimental, Windows only). `tests/test_pcview.py` checks
