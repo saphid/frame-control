@@ -968,8 +968,12 @@
   }
   const routerHook = {
     addRoute(path, component) {
+      // React wrappers are valid component types but are objects rather than
+      // functions or already-created elements. Render them through React too.
+      const wrapped = component?.$$typeof === Symbol.for('react.memo') ||
+        component?.$$typeof === Symbol.for('react.forward_ref');
       if (!routePattern(path) ||
-          (typeof component !== 'function' && !R.isValidElement(component)))
+          (typeof component !== 'function' && !R.isValidElement(component) && !wrapped))
         throw Error('Framey route needs a local path and React component');
       const registration = {component, id:++routeId};
       routes.set(path, registration);
@@ -1476,8 +1480,8 @@
       // Reset when navigation or registration selects another view; ordinary redraws
       // preserve healthy child state and do not retry a failing render.
       R.createElement('div', null, R.createElement(PanelBoundary, {key:route ? `route:${route}:${match?.id}` : `view:${view}`},
-        route ? (typeof match?.component === 'function' ?
-          R.createElement(match.component) : match?.component) :
+        route ? match && (R.isValidElement(match.component) ?
+          match.component : R.createElement(match.component)) :
           (view === 'settings' ? plugin.settings : plugin.content))));
   }
   window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit = {

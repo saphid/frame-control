@@ -65,11 +65,48 @@
     change(()=>{repaired=router.addRoute('/fixture/broken',Replacement);});
     assert(container.textContent.includes('Replacement')&&!container.textContent.includes('Synthetic route failure'),'replacement inherited retired render failure');
     change(brokenDisposer);change(repaired);router.removeRoute('/fixture/unrelated');
+    // React.memo and forwardRef return component types, not element instances.
+    const Memo=React.memo(function MemoRoute(){
+      const [count,setCount]=React.useState(0);
+      return React.createElement('button',{onClick:()=>setCount(count+1)},'Memo '+DFL.useParams().id+' '+count);
+    });
+    const removeMemo=router.addRoute('/fixture/memo/:id',Memo);
+    change(()=>DFL.Navigation.Navigate('/fixture/memo/12'));
+    assert(container.textContent.includes('Memo 12 0'),'memo component type did not render');
+    change(()=>container.querySelector('button:last-child').click());
+    change(()=>DFL.Navigation.Navigate('/fixture/memo/12'));
+    assert(container.textContent.includes('Memo 12 1'),'same-route redraw reset memo state');
+    const Forward=React.forwardRef(function ForwardRoute({label='Forward'},ref){
+      return React.createElement('p',{ref},label+' '+DFL.useParams().id);
+    });
+    const removeForward=router.addRoute('/fixture/forward/:id',Forward);
+    change(()=>DFL.Navigation.Navigate('/fixture/forward/34'));
+    assert(container.textContent.includes('Forward 34'),'forwardRef component type did not render');
+    change(()=>DFL.Navigation.NavigateBack());
+    assert(container.textContent.includes('Memo 12 0'),'Back did not restore memo route and params');
+    let removeNested;
+    change(()=>{removeNested=router.addRoute('/fixture/memo/:id',React.memo(Forward));});
+    change(removeMemo);
+    assert(container.textContent.includes('Forward 12'),'nested memo/forwardRef replacement or old cleanup failed');
+    const elementRef=React.createRef();
+    let removeElement;
+    change(()=>{removeElement=router.addRoute('/fixture/memo/:id',React.createElement(Forward,{ref:elementRef,label:'Element'}));});
+    assert(container.textContent.includes('Element 12')&&elementRef.current?.tagName==='P',
+      'existing element registrations lost props or forwarded refs');
+    for(const invalid of [null,{},[],42,'div']) {
+      let rejected=false;
+      try{router.addRoute('/fixture/memo/:id',invalid);}catch(error){rejected=true;}
+      assert(rejected&&container.textContent.includes('Element 12'),'invalid type replaced the active registration');
+    }
+    change(removeNested);change(removeElement);change(removeForward);
+    assert(container.textContent==='Plugin home'&&elementRef.current===null,'wrapped route cleanup did not return home and retire ref');
     change(()=>root.unmount());
     document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
       staleDisposerSafe:true,sameComponentOwnership:true,removeReaddSafe:true,
       activeReplacementRedrawn:true,oldViewUnmounted:true,unrelatedStatePreserved:true,
       exactPatternFallback:true,paramsRefreshed:true,historyPreserved:true,failedReplacementRecovered:true,
+      memoTypeRendered:true,forwardRefTypeRendered:true,nestedWrappedReplacement:true,
+      wrappedHistoryAndState:true,elementPropsAndRefPreserved:true,invalidTypesRejected:true,
       syntheticRoutes:true,realFrameContacted:false,wornVisibilityVerified:false});
   } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
 })();
