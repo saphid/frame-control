@@ -109,11 +109,54 @@ assert.equal(calls.at(-1).method,'get_setting');reply(calls.at(-1),undefined,tru
 assert.equal(toggle(peer.tree).props.checked,true);assert.equal(toggle(peer.tree).props.disabled,false);
 unmount(view);unmount(peer);
 
+// A read can start before another surface saves, then reply with its old
+// snapshot during that save or after it settles. Neither settings nor quick
+// reads may use that reply as the current saved value.
+for(const failure of [undefined,'Reply lost after commit']) {
+  for(const settleFirst of [false,true]) {
+    const reader=mount(),oldRead=calls.at(-1);
+    const writer=mount();reply(calls.at(-1),undefined,false);await tick();writer.tree=render(writer);
+    const quick=plugin.frameyQuickActions[0].onClick(),oldQuick=calls.at(-1);
+    toggle(writer.tree).props.onChange(true);const write=calls.at(-1);
+    assert.equal(write.method,'set_setting');count=calls.length;
+    if(settleFirst) {reply(write,failure,true);await tick();}
+    reply(oldRead,undefined,false);reply(oldQuick,undefined,false);await tick();
+    reader.tree=render(reader);
+    assert.equal(toggle(reader.tree).props.disabled,true,'an overlapping read must not authorize editing');
+    assert.equal(toggle(reader.tree).props.checked,false,'discard the old snapshot until reconciliation');
+    if(!settleFirst) {
+      assert.equal(calls.length,count,'new reads must wait for the overlapping save to settle');
+      reply(write,failure,true);await tick();
+    }
+    const reads=calls.slice(count);
+    assert.equal(reads.length,2,'settings and quick action must both read again after the save');
+    assert.ok(reads.every(call=>call.method==='get_setting'));
+    for(const read of reads)reply(read,undefined,true);
+    assert.equal(await quick,'Saved setting is on','quick action must discard its old snapshot');
+    await tick();reader.tree=render(reader);
+    assert.equal(toggle(reader.tree).props.checked,true);
+    assert.equal(toggle(reader.tree).props.disabled,false);
+    unmount(reader);unmount(writer);
+  }
+}
+
+// Leaving while the old read is in flight must not dispatch reconciliation
+// requests or update state when that read eventually arrives.
+const retiredReader=mount(),retiredRead=calls.at(-1);
+view=mount();reply(calls.at(-1),undefined,false);await tick();view.tree=render(view);
+toggle(view.tree).props.onChange(true);const overlappingWrite=calls.at(-1);
+unmount(retiredReader);updates=retiredReader.updates;count=calls.length;
+reply(retiredRead,undefined,false);await tick();
+assert.equal(calls.length,count);assert.equal(retiredReader.updates,updates);
+reply(overlappingWrite,undefined,true);await tick();
+assert.equal(calls.length,count);assert.equal(retiredReader.updates,updates);
+unmount(view);
+
 // A reset dialog belongs to its settings view; retiring it closes without saving.
 view=mount();reply(calls.at(-1),undefined,true);await tick();view.tree=render(view);
 button(view.tree,'Reset example setting').props.onClick();
 const modal=roots.get(elements.get('framey-modal'));assert.equal(modal.tree.length,1);
-const staleOK=modal.tree[0].children[1].props.onOK;count=calls.length;
+const staleOK=modal.tree[0].children[1].children[0].props.onOK;count=calls.length;
 unmount(view);await tick();assert.equal(modal.tree,null,'retired settings must close their reset dialog');
 await staleOK();assert.equal(calls.length,count,'retired Reset must not save');
 
@@ -133,4 +176,6 @@ console.log('Framey sample reopen-save proof: '+JSON.stringify({passed:true,
   pendingSaveDelaysReopenRead:true, rejectedSaveReconciles:true,
   quickReadWaits:true, retiredWaiterSendsNoRead:true, freshReadEnablesEditing:true,
   sharedWriteGuard:true, retiredWriterSilent:true, effectReplayPreserved:true,
+  overlappingReadsReconciled:true, settledSaveDetected:true, quickReadReconciled:true,
+  retiredReaderSilent:true,
   syntheticBackendReplies:true, realFrameContacted:false}));

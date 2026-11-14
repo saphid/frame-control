@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-11-13T02:00:09.819512+00:00",
+  "pullRequest": 679,
+  "head": "d9934d34d53ed5d06540fccd93c7ac292e261b47",
+  "workflowRun": 43340252384,
+  "nativeActualMigrationResults": [
+    {
+      "architecture": "x86_64",
+      "artifact": 14000079080,
+      "archiveSha256": "adaac35ef28098c73db07569f9d25f7b239ff6e1b7b4fd40d4f650940ac8cfa8",
+      "observerError": "org.freedesktop.DBus.Error.NoReply",
+      "runningBaselineCaptured": false,
+      "stopResult": "success",
+      "stopElapsedSeconds": 1.17
+    },
+    {
+      "architecture": "aarch64",
+      "artifact": 14002074143,
+      "archiveSha256": "d9ceeaa76b6a38593fef12135ed59defdbf81fed9aeedb8a99fed1a176875f7e",
+      "observerError": "org.freedesktop.DBus.Error.NoReply",
+      "runningBaselineCaptured": false,
+      "stopResult": "success",
+      "stopElapsedSeconds": 11.067
+    }
+  ],
+  "localTransportMatrix": {
+    "architecture": "x86_64",
+    "actualMigrationExecuted": false,
+    "fixedUnit": "frame-control-migration-decky-fixture.service",
+    "serviceExecutable": "/usr/bin/sleep",
+    "uid": 1100,
+    "gid": 1100,
+    "supplementaryGroups": [],
+    "directPrivatePythonWithoutDestinationPassed": true,
+    "directPrivatePythonWithDestinationPassed": true,
+    "sessionPythonPassed": true,
+    "userBusctlPassed": true,
+    "privateBusctlPassed": false,
+    "systemctlPassed": true,
+    "ownedQemuReaped": true,
+    "bootArtifactsRetained": false,
+    "rawArchiveSha256": "575948ac7bd7cffa572360d3852c905c5581fdefaa9c49f6254fe4a7e06ee37f",
+    "bootstrapSha256": "a119118ef6579f66c7eeda33130d5864e093ead946ac2fd4209a0b9e24000e18",
+    "userProbeSha256": "5a3947afe0f868935a96b6598203701b7d7913e5159a29bef8bcfc7b80a40cdc"
+  },
+  "interpretation": "Basic Python GetAll and destination choice work against a running unit. This does not reproduce or resolve the persistent observer failure. Clean stops do not establish the cause of the historical timeout.",
+  "localContextRegressionTests": 98,
+  "contextSourceSha256": "254af3afb155eb753f286c64bc6cf946170fa1487d9f6938ad16f0a7d7c92575",
+  "contextNativeVmVerified": false,
+  "failedHarnessAttempt": {
+    "reason": "Missing guest_result import path before any transport ran",
+    "suppliesPassingEvidence": false,
+    "ownedQemuReaped": true
+  },
+  "historicalCauseEstablished": false,
+  "releaseHoldCleared": false,
+  "realFrameContacted": false,
+  "exactReleaseSmokePerformed": false,
+  "contextRegressionLogSha256": "642ced10506d56cc2071db95f772f2e977a343d107e890d66c9c653462292278",
+  "helperErrorConnectionFlagsRetained": true
+}

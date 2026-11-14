@@ -1,0 +1,68 @@
+test_local_field_refs_preserve_labels_actions_and_native_lifetimes (test_framey_field_refs_browser.FieldRefsBrowser.test_local_field_refs_preserve_labels_actions_and_native_lifetimes) ... ok
+test_published_achievement_field_keeps_its_action_and_progress (test_framey_field_activation_browser.FieldActivationBrowser.test_published_achievement_field_keeps_its_action_and_progress) ... ok
+test_failed_routes_and_views_keep_local_recovery_controls (test_framey_view_recovery_browser.ViewRecoveryBrowser.test_failed_routes_and_views_keep_local_recovery_controls) ... ok
+test_published_qr_string_failure_and_falsy_throws_keep_recovery_available (test_framey_view_recovery_browser.ViewRecoveryBrowser.test_published_qr_string_failure_and_falsy_throws_keep_recovery_available) ... ok
+test_published_toolbar_focus_and_native_button_ref_lifetimes (test_framey_button_refs_browser.ButtonRefsBrowser.test_published_toolbar_focus_and_native_button_ref_lifetimes) ... ok
+test_suggestme_back_control_receives_native_ref_and_restores_focus (test_framey_focusable_ref_browser.FocusableRefBrowser.test_suggestme_back_control_receives_native_ref_and_restores_focus) ... ok
+test_backend_method_is_scoped_to_store_receipt (test_framey_panel.Panel.test_backend_method_is_scoped_to_store_receipt) ... ok
+test_chunked_frontend_serves_only_owned_javascript (test_framey_panel.Panel.test_chunked_frontend_serves_only_owned_javascript) ... ok
+test_chunked_panel_rejects_modules_from_a_replaced_store_receipt (test_framey_panel.Panel.test_chunked_panel_rejects_modules_from_a_replaced_store_receipt) ... ok
+test_decky_event_queue_scope_bounds_expiry_and_reconnect (test_framey_panel.Panel.test_decky_event_queue_scope_bounds_expiry_and_reconnect) ... ok
+test_desktop_store_discards_stale_status_and_catalog_replies (test_framey_panel.Panel.test_desktop_store_discards_stale_status_and_catalog_replies) ... ok
+test_event_action_has_same_headset_boundary_as_methods (test_framey_panel.Panel.test_event_action_has_same_headset_boundary_as_methods) ... ok
+test_events_validate_before_ssh_and_resolve_name_from_store_receipt (test_framey_panel.Panel.test_events_validate_before_ssh_and_resolve_name_from_store_receipt) ... ok
+test_headset_bundle_contains_runtime_and_licenses (test_framey_panel.Panel.test_headset_bundle_contains_runtime_and_licenses) ... ok
+test_http_panel_is_sandboxable_and_missing_plugin_is_404 (test_framey_panel.Panel.test_http_panel_is_sandboxable_and_missing_plugin_is_404) ... GET "GET /framey/panel/14 HTTP/1.1" 200 -
+GET "GET /framey/panel/15 HTTP/1.1" 404 -
+GET "GET /framey/panel/14 HTTP/1.1" 404 -
+GET "GET /framey/module/14/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/index.js HTTP/1.1" 404 -
+GET "GET /framey/panel/14 HTTP/1.1" 200 -
+GET "GET /framey/module/14/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/index.js HTTP/1.1" 200 -
+GET "GET /framey/module/14/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/chunks/view.js HTTP/1.1" 200 -
+GET "GET /framey/module/14/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/chunks/../plugin.json HTTP/1.1" 404 -
+GET "GET /framey/module/15/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/chunks/view.js HTTP/1.1" 404 -
+GET "GET /framey/module/14/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/chunks/view.js HTTP/1.1" 404 -
+GET "GET /framey/module/14/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/chunks/view.js HTTP/1.1" 200 -
+ok
+test_invalid_receipt_alias_does_not_mask_valid_plugin (test_framey_panel.Panel.test_invalid_receipt_alias_does_not_mask_valid_plugin) ... ok
+test_legacy_iife_is_admitted_without_api_manifest (test_framey_panel.Panel.test_legacy_iife_is_admitted_without_api_manifest) ... ok
+test_legacy_keyword_rpc_is_scoped_and_validated (test_framey_panel.Panel.test_legacy_keyword_rpc_is_scoped_and_validated) ... ok
+test_library_sized_plugin_arguments_remain_bounded (test_framey_panel.Panel.test_library_sized_plugin_arguments_remain_bounded) ... ok
+test_library_snapshot_copies_only_bounded_scalar_fields (test_framey_panel.Panel.test_library_snapshot_copies_only_bounded_scalar_fields) ... ok
+test_only_exact_syncthing_panel_loads_http_facade (test_framey_panel.Panel.test_only_exact_syncthing_panel_loads_http_facade) ... ok
+test_only_exact_wine_cellar_panel_loads_the_socket_facade (test_framey_panel.Panel.test_only_exact_wine_cellar_panel_loads_the_socket_facade) ... ok
+test_opaque_origin_plugin_cache_is_scoped_and_bounded (test_framey_panel.Panel.test_opaque_origin_plugin_cache_is_scoped_and_bounded) ... ok
+test_owned_api_v2_bundle_is_embedded_without_ui_key (test_framey_panel.Panel.test_owned_api_v2_bundle_is_embedded_without_ui_key) ... ok
+test_panel_and_modules_require_integer_receipt_ids (test_framey_panel.Panel.test_panel_and_modules_require_integer_receipt_ids) ... ok
+test_plugin_quick_actions_and_settings (test_framey_panel.Panel.test_plugin_quick_actions_and_settings) ... ok
+test_published_battery_lookback_slider_reset (test_framey_panel.Panel.test_published_battery_lookback_slider_reset) ... ok
+test_running_bridge_is_installed_scoped_bounded_and_headset_only (test_framey_panel.Panel.test_running_bridge_is_installed_scoped_bounded_and_headset_only) ... ok
+test_running_queue_and_host_contract (test_framey_panel.Panel.test_running_queue_and_host_contract) ... ok
+test_running_rejects_stale_or_missing_receipt_after_plugin_replacement (test_framey_panel.Panel.test_running_rejects_stale_or_missing_receipt_after_plugin_replacement) ... ok
+test_steam_read_response_limit_and_socket_cleanup (test_framey_panel.Panel.test_steam_read_response_limit_and_socket_cleanup) ... ok
+test_steam_reads_are_allowlisted_and_installed_only (test_framey_panel.Panel.test_steam_reads_are_allowlisted_and_installed_only) ... ok
+test_steam_reads_have_the_headset_service_boundary (test_framey_panel.Panel.test_steam_reads_have_the_headset_service_boundary) ... ok
+test_syncthing_http_calls_require_exact_receipt_shim_and_legacy_envelope (test_framey_panel.Panel.test_syncthing_http_calls_require_exact_receipt_shim_and_legacy_envelope) ... ok
+test_syncthing_http_facade_uses_receipt_bound_legacy_rpc (test_framey_panel.Panel.test_syncthing_http_facade_uses_receipt_bound_legacy_rpc) ... ok
+test_terminal_output_event_keeps_exact_name_and_receipt_owned_plugin (test_framey_panel.Panel.test_terminal_output_event_keeps_exact_name_and_receipt_owned_plugin) ... ok
+test_unsupported_root_symlink_and_unmanaged_are_refused (test_framey_panel.Panel.test_unsupported_root_symlink_and_unmanaged_are_refused) ... ok
+test_vr_store_browsing_and_search (test_framey_panel.Panel.test_vr_store_browsing_and_search) ... ok
+test_wine_cellar_socket_facade_uses_only_receipt_bound_calls (test_framey_panel.Panel.test_wine_cellar_socket_facade_uses_only_receipt_bound_calls) ... ok
+test_wine_cellar_socket_methods_require_exact_managed_receipt (test_framey_panel.Panel.test_wine_cellar_socket_methods_require_exact_managed_receipt) ... ok
+test_wine_cellar_steam_tool_read_is_exact_receipt_scoped (test_framey_panel.Panel.test_wine_cellar_steam_tool_read_is_exact_receipt_scoped) ... ok
+test_retry_saves_latest_panel_cache_across_real_page_reload (test_framey_cache_browser.CacheBrowser.test_retry_saves_latest_panel_cache_across_real_page_reload) ... ok
+test_unreadable_cache_never_becomes_an_empty_saved_snapshot (test_framey_cache_browser.CacheBrowser.test_unreadable_cache_never_becomes_an_empty_saved_snapshot) ... ok
+
+----------------------------------------------------------------------
+Ran 43 tests in 19.689s
+
+OK
+Framey Field refs browser proof: {"actionAndFocusableRows": true, "controllerInputVerified": false, "disabledActivationSuppressed": true, "hostSha256": "0c4266f0ba8ca73a116611bf7ca4a0c4b5b1ef17fd32744565cbae8e38bf99ca", "labelAssociationAndChildCallback": true, "localModuleLookup": true, "nativeLabelAndDivRefs": true, "nativeLayoutMeasurement": true, "objectAndCallbackReplacement": true, "passed": true, "realBackendContacted": false, "realFrameContacted": false, "realPluginUsageVerified": false, "realReactDOM": true, "stableNodeOnRedraw": true, "syntheticFieldProps": true, "unmountClearsRefs": true, "vrKeyboardVerified": false, "wornVisibilityVerified": false, "wrapperModeReplacement": true}
+Framey Field activation browser proof: {"archiveSha256": "98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89", "classStyleAndContentPreserved": true, "controllerInputVerified": false, "disabledFieldInert": true, "focusableOnlyTabStop": true, "fullPluginInitialized": false, "hostSha256": "0c4266f0ba8ca73a116611bf7ca4a0c4b5b1ef17fd32744565cbae8e38bf99ca", "nativeActivationOnce": true, "ordinaryLabelTogglePreserved": true, "originalEventsPreserved": true, "passed": true, "progressPreserved": true, "publishedAchievementField": true, "publishedCallbackArgumentsPreserved": true, "realBackendContacted": false, "realFrameContacted": false, "realReactDOM": true, "realSteamNavigation": false, "syntheticNavigation": true, "updatedCallbackUsed": true, "vrKeyboardVerified": false, "wornVisibilityVerified": false}
+Framey view error recovery browser proof: {"activeRouteRemovalRecovery": true, "effectCleanup": true, "healthyStatePreserved": true, "historyBackRecovery": true, "hostSha256": "0c4266f0ba8ca73a116611bf7ca4a0c4b5b1ef17fd32744565cbae8e38bf99ca", "passed": true, "realBackendContacted": false, "realFrameContacted": false, "realReactDOM": true, "repairedViewReentry": true, "routeBackRecovery": true, "settingsAndPanelRecovery": true, "syntheticQuickActions": 1, "syntheticRenderFailures": true, "titleAndQuickActionsPreserved": true}
+Framey render error values browser proof: {"archiveSha256": "7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8", "controllerInputVerified": false, "falsyAndOtherThrownValues": 9, "hostSha256": "0c4266f0ba8ca73a116611bf7ca4a0c4b5b1ef17fd32744565cbae8e38bf99ca", "ordinaryErrorPreserved": true, "passed": true, "publishedStringDiagnostic": "code length overflow. (32020>23648)", "publishedWineCellarEncoder": true, "realBackendContacted": false, "realFrameContacted": false, "realPluginFailureObserved": false, "realReactDOM": true, "recoveryNavigationPreserved": true, "repairedViewReentry": true, "sameViewDoesNotRetry": true, "syntheticOversizedInput": true, "vrKeyboardVerified": false, "wornVisibilityVerified": false}
+Framey dialog button refs browser proof: {"allButtonAliases": true, "archiveSha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0", "controllerInputVerified": false, "disabledFocusAndClickSuppressed": true, "hostSha256": "0c4266f0ba8ca73a116611bf7ca4a0c4b5b1ef17fd32744565cbae8e38bf99ca", "legacyArchiveSha256": "90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358", "localModuleLookup": true, "nativeFocusAndClick": true, "objectAndCallbackRefReplacement": true, "passed": true, "propsPreserved": true, "publishedFilterCallback": true, "publishedProtonDBButtonType": true, "publishedSteamGridDBToolbarFocus": true, "realArtworkChanged": false, "realFrameContacted": false, "realReactDOM": true, "stableNativeNode": true, "syntheticArtworkSize": true, "unmountClearsRefs": true, "vrKeyboardVerified": false, "wornVisibilityVerified": false}
+Framey Focusable ref browser proof: {"archiveSha256": "248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4", "callbackRefReplacement": true, "controllerInputVerified": false, "disabledControlInert": true, "focusAndBlurCallbacks": true, "fullPluginInitialized": false, "hostSha256": "0c4266f0ba8ca73a116611bf7ca4a0c4b5b1ef17fd32744565cbae8e38bf99ca", "localModuleLookupPreserved": true, "nativeActivationPreserved": true, "nativeRef": true, "passed": true, "publishedBackControl": true, "publishedFocusEffect": true, "realBackendContacted": false, "realFrameContacted": false, "realReactDOM": true, "spacerOptOutPreserved": true, "unmountClearsRefs": true, "vrKeyboardVerified": false, "wornVisibilityVerified": false}
+Framey cache enumeration proof: {"deletionAndClear": true, "deniedWriteFallback": true, "emptyAndNumericNames": true, "entriesAndSpread": true, "hostSha256": "0c4266f0ba8ca73a116611bf7ca4a0c4b5b1ef17fd32744565cbae8e38bf99ca", "jsonExport": true, "ownDescriptors": true, "passed": true, "pluginIsolation": true, "realFrameContacted": false, "reopenReadback": true, "reservedAPIPreserved": true, "savedKeysOnly": true, "syntheticStorage": true}
+Framey cache retry browser proof: {"failedRetryRetained": true, "failedWriteVisible": true, "falseAndEmptyPreserved": true, "headsetSourceSha256": "8e22c33e0105b5679153c02bc52af6628e2108676266e1e7758703011506d7e5", "nativeBrowserStorage": true, "passed": true, "realDOM": true, "realFrameContacted": false, "realPageReloadReadback": true, "retrySavedWithoutEdit": true, "syntheticSnapshots": true, "wornVRVerified": false}
+Framey cache read browser proof: {"absentCacheAccepted": true, "failedReadPreservedSavedBytes": true, "falseAndEmptyRecovered": true, "headsetSourceSha256": "8e22c33e0105b5679153c02bc52af6628e2108676266e1e7758703011506d7e5", "invalidReadPreservedSavedBytes": true, "knownFallbackPreserved": true, "nativeBrowserStorage": true, "otherPluginUnaffected": true, "passed": true, "realDOM": true, "realFrameContacted": false, "retrySavedLatest": true, "syntheticFailures": true, "wornVRVerified": false}

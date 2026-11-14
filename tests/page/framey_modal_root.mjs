@@ -34,7 +34,7 @@ const submitted=[];
 const handle=window.DFL.showModal(React.createElement(window.publishedModal,{
   onClosed:text=>submitted.push(text),label:'Search',placeholder:'Station name'}));
 const modalRoot=roots.get(elements.get('framey-modal'));
-const published=()=>modalRoot.tree.at(-1).children.at(-1);
+const published=()=>modalRoot.tree.at(-1).children.at(-1).children[0];
 const state=[];
 let modal=render(published(),state);
 const text=nodes(modal,window.DFL.TextField)[0];
