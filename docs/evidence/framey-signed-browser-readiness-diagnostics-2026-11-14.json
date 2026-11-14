@@ -1,0 +1,141 @@
+{
+  "baseCommit": "d4d0c3d46e2aa4b7c9df45297f26ec1aefd80518",
+  "sourceRunWasDirty": true,
+  "sourceBindings": {
+    "tests/decky-runtime/syncthing_browser.py": "3375d85c215f5498e8545c8d00a62d880181fc6c957aba16ff11109eb9ab9a9d",
+    "tests/test_syncthing_browser_readiness.py": "a2972e1392e0f33db40c7ec3ec9e516331e0b5d927bc456c95d6b01eba65241c",
+    "tests/test_syncthing_browser_startup.py": "3f207e07984867b97797ea43df1ae88eae52ba63f7499b8fbe73abbce73fd4e8",
+    "tests/test_syncthing_http_gateway.py": "952b344a18f9c1b93ccce34e05117b79ac6921926eb60d981ef28f77eaebd1f9",
+    "ui/frame_steam.py": "7662a9fa60c6b263b96ad84d63d83ee3e8d299b04e34fe5af37c441e3e2a73e3",
+    "scripts/framey-test-syncthing-flatpak-package.py": "6849e4eddee91ee5414526e68c3ad48d4d4104611d00c63be8092fd100c5427b",
+    "ui/framey_panel.py": "1fe2afcdd7a8bc88322ebe8588aa0429a2b31fb26e1c178f3e5370a713161ad4",
+    "ui/framey-host.js": "6ca012eccdf5c7c9219fc87a5707afec37b44f2f84513c892fa790c8c27e76ba",
+    "ui/vendor/syncthing-0.2.7/frontend.patch": "3c92e2e391af1b3bafbda77dd5852f0d1e9145c7f1bf59e70b49fd7f9e9c31cd"
+  },
+  "retainedFailures": {
+    "708": {
+      "head": "d4d0c3d46e2aa4b7c9df45297f26ec1aefd80518",
+      "artifactId": 14115985672,
+      "jobId": 132448116134,
+      "workflowRun": 43595204783,
+      "zipDigestAndSizeVerified": true,
+      "sourceBindingsVerified": {
+        "exact": 137,
+        "inputs": 132,
+        "httpGateway": 114
+      },
+      "guestResultPacketSha256": "0b300a2b67469d69fee2254e8a3142c18ff66d8acb9718d1e71339c88f88def5",
+      "guestResultPacketVerified": true,
+      "retainedConsoleSha256": "1056d98441bfa767db5dc8e655395632f9ff657e0a695fed67cfb46444b0e4ea",
+      "browserProgressDuplicatesMatch": true,
+      "failure": "Browser CDP/panel readiness unavailable",
+      "readinessBudgetSeconds": 60,
+      "browserAliveWithCdpPortAndExpectedTargets": true,
+      "lastReadyMessageCount": 0,
+      "lastSeedRequestAndReplyCount": 1,
+      "completedRpcCallsBeforeCleanup": 2,
+      "lastStartupSnapshotMayBeStaleRelativeToRpcRecords": true,
+      "uiStagesCompleted": 0,
+      "fullSignedPackageGatePassed": false,
+      "partialSignedInstallAndSyncVerified": true,
+      "ownedDeckyStops": [
+        {
+          "pid": 676,
+          "seconds": 10.562,
+          "clean": true
+        },
+        {
+          "pid": 885,
+          "seconds": 9.898,
+          "clean": true
+        }
+      ],
+      "ownedBrowserAndBridgeReaped": true,
+      "ownedQemuReaped": true,
+      "shutdownFailureObserved": false,
+      "historicalArm64CauseEstablished": false,
+      "realFrameContacted": false
+    },
+    "492": {
+      "head": "b51e5b63e95a3ad6036236e50eee62b21f148c98",
+      "artifactId": 14116400226,
+      "jobId": 132449338385,
+      "workflowRun": 43595590468,
+      "zipDigestAndSizeVerified": true,
+      "sourceBindingsVerified": {
+        "exact": 137,
+        "inputs": 132,
+        "httpGateway": 114
+      },
+      "guestResultPacketSha256": "889d2028984b2c5974ed2077b4bde37da5e4f0e17d1b7b07e978b838e7fd2846",
+      "guestResultPacketVerified": true,
+      "retainedConsoleSha256": "1b0ee4eb5c4ecfa2e8c149f58cb05cd09bb28af1761677b7c81a101ae92e67f1",
+      "browserProgressDuplicatesMatch": true,
+      "failure": "Browser CDP/panel readiness unavailable",
+      "readinessBudgetSeconds": 60,
+      "browserAliveWithCdpPortAndExpectedTargets": true,
+      "lastReadyMessageCount": 0,
+      "lastSeedRequestAndReplyCount": 1,
+      "completedRpcCallsBeforeCleanup": 2,
+      "lastStartupSnapshotMayBeStaleRelativeToRpcRecords": true,
+      "uiStagesCompleted": 0,
+      "fullSignedPackageGatePassed": false,
+      "partialSignedInstallAndSyncVerified": true,
+      "ownedDeckyStops": [
+        {
+          "pid": 677,
+          "seconds": 10.635,
+          "clean": true
+        },
+        {
+          "pid": 887,
+          "seconds": 10.411,
+          "clean": true
+        }
+      ],
+      "ownedBrowserAndBridgeReaped": true,
+      "ownedQemuReaped": true,
+      "shutdownFailureObserved": false,
+      "historicalArm64CauseEstablished": false,
+      "realFrameContacted": false
+    }
+  },
+  "failureRootCauseEstablished": false,
+  "historicalArm64CauseEstablished": false,
+  "readinessBudgetSeconds": 60,
+  "readinessConditionChanged": false,
+  "newFinalDiagnostic": {
+    "hardTimeoutSeconds": 8,
+    "perSocketTimeoutSeconds": 2,
+    "targetMetadataMaximumBytes": 65536,
+    "maximumSnapshots": 2,
+    "maximumSnapshotLineBytes": 8192,
+    "onlyOwnedLoopbackTargets": true,
+    "readOnly": true,
+    "universalAccessGranted": false,
+    "failureCannotBecomePass": true
+  },
+  "rpcTimings": [
+    "receivedAfterSeconds",
+    "backendStartedAfterSeconds",
+    "backendFinishedAfterSeconds",
+    "responseWrittenAfterSeconds"
+  ],
+  "recordsRequestsBeforeBackendCompletes": true,
+  "perAttemptErrorsRetained": true,
+  "focusedTestsPassed": 91,
+  "realBrowserTestsPassed": 2,
+  "realBrowserSnapshotsPassed": 4,
+  "skips": 0,
+  "exactPublishedFrontendUsed": true,
+  "officialArchiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+  "syntheticRpcReplies": true,
+  "rawEvidence": "framey-signed-browser-readiness-diagnostics-2026-11-14.json.gz",
+  "rawEvidenceSha256": "50228e925e1a21b0f3de62b44bae7be4f966acbc1128b729273315f2fff427cf",
+  "compressedEvidenceSha256": "34d0a5a07362ada0091e12523f54042a335214ea8977148cc6399c9d7e169907",
+  "freshHostedQualificationRequired": true,
+  "fullSignedPackageGateCleared": false,
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "physicalControllerVerified": false
+}

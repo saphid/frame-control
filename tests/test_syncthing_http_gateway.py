@@ -1,4 +1,5 @@
 """The optional HTTP gateway must stay inside its marked disposable VM."""
+import ast
 import importlib.util
 import copy
 import io
@@ -227,6 +228,109 @@ class BrowserStartupEvidence(unittest.TestCase):
             self.assertEqual(result['returnCode'],7)
             self.assertTrue(result['stderrUnavailable'])
             self.assertTrue(result['targetsUnavailable'])
+
+
+class FinalBrowserEvidence(unittest.TestCase):
+    def browser(self):
+        return load('final_browser_evidence', ROOT/'tests/decky-runtime/syncthing_browser.py')
+
+    def test_pending_parent_and_opaque_child_are_read_and_closed_without_advancing(self):
+        from contextlib import redirect_stdout
+        browser = self.browser()
+        targets = [dict(type='page', title='Owned Syncthing actual backend', url='http://127.0.0.1:12/'),
+                   dict(type='iframe', title='owned child', url='http://127.0.0.1:12/panel#fixture'),
+                   dict(type='iframe', title='unrelated', url='https://example.com/panel#fixture')]
+        parent, child = Mock(), Mock()
+        parent.eval.return_value = dict(ready=False, state=dict(readyMessages=0))
+        child.eval.return_value = dict(documentState='complete', rootText='Loading', errorText='')
+        output = io.StringIO()
+        with patch.object(browser.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(targets).encode())), \
+                patch.object(browser.frame_steam, 'Page', side_effect=[parent, child]) as connect, \
+                redirect_stdout(output):
+            browser.print_final_browser_state()
+        snapshots = [json.loads(line) for line in output.getvalue().splitlines()]
+        self.assertFalse(snapshots[0]['state']['ready'])
+        self.assertEqual(snapshots[1]['state']['rootText'], 'Loading')
+        self.assertEqual([call.args[0] for call in connect.call_args_list],
+                         ['Owned Syncthing actual backend', 'owned child'])
+        for page in (parent, child):
+            page.sock.settimeout.assert_called_once_with(2)
+            page.sock.close.assert_called_once()
+            self.assertEqual(page.eval.call_count, 1)
+            self.assertNotIn('advance(', page.eval.call_args.args[0])
+
+    def test_hard_timeout_preserves_completed_parent_snapshot(self):
+        browser = self.browser()
+        partial = b'{"target":"parent","state":{"ready":false}}\n{"target":'
+        failure = browser.subprocess.TimeoutExpired('owned reader', 8, output=partial)
+        with patch.object(browser.subprocess, 'run', side_effect=failure) as run:
+            report = browser.final_browser_state()
+        self.assertTrue(report['timedOut'])
+        self.assertEqual(report['snapshots'], [dict(target='parent', state=dict(ready=False))])
+        self.assertTrue(report['incompleteSnapshot'])
+        self.assertEqual(run.call_args.kwargs['timeout'], 8)
+
+    def test_iframe_read_error_closes_connection_and_retains_parent(self):
+        from contextlib import redirect_stdout
+        browser = self.browser()
+        targets = [dict(type='page', title='Owned Syncthing actual backend', url='http://127.0.0.1:12/'),
+                   dict(type='iframe', title='child', url='http://127.0.0.1:12/panel#fixture')]
+        parent, child = Mock(), Mock()
+        parent.eval.return_value = dict(ready=False)
+        child.eval.side_effect = OSError('fixture socket closed')
+        output = io.StringIO()
+        with patch.object(browser.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(targets).encode())), \
+                patch.object(browser.frame_steam, 'Page', side_effect=[parent, child]), redirect_stdout(output):
+            browser.print_final_browser_state()
+        snapshots = [json.loads(line) for line in output.getvalue().splitlines()]
+        self.assertEqual(snapshots[0]['state'], dict(ready=False))
+        self.assertEqual(snapshots[1], dict(target='iframe', errorType='OSError'))
+        child.sock.close.assert_called_once()
+
+
+class BrowserRpcTimings(unittest.TestCase):
+    def dispatch(self, fail=False):
+        browser = load('browser_rpc_timing', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        tree = ast.parse((ROOT/'tests/decky-runtime/syncthing_browser.py').read_text())
+        exercise = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name=='exercise')
+        handler = next(node for node in exercise.body if isinstance(node, ast.ClassDef) and node.name=='Handler')
+        calls = []
+        def backend(method, **kwargs):
+            self.assertEqual(method, 'get_settings_json')
+            self.assertEqual(calls, [dict(method=method, id=7, receivedAfterSeconds=1,
+                                         backendStartedAfterSeconds=3)])
+            if fail:
+                raise RuntimeError('fixture backend unavailable')
+            return 'fixture reply not copied into timings'
+        scope = dict(http=browser.http, json=json, time=Mock(monotonic=Mock(side_effect=[11,13,17,19])),
+                     calls=calls, calls_lock=browser.threading.Lock(), rpc_lock=browser.threading.Lock(),
+                     bridge_started=10, legacy_rpc=backend)
+        exec(compile(ast.Module(body=[handler], type_ignores=[]), 'actual-bridge-handler', 'exec'), scope)
+        instance = object.__new__(scope['Handler'])
+        body = json.dumps(dict(id=7, legacy=True, method='get_settings_json', args=[])).encode()
+        instance.path='/rpc'; instance.headers={'Content-Length':str(len(body))}
+        instance.rfile=io.BytesIO(body); instance.wfile=io.BytesIO()
+        instance.send_response=Mock(); instance.send_header=Mock(); instance.end_headers=Mock()
+        if fail:
+            with self.assertRaisesRegex(RuntimeError, 'fixture backend unavailable'):
+                instance.do_POST()
+        else:
+            instance.do_POST()
+            self.assertTrue(json.loads(instance.wfile.getvalue())['success'])
+        self.assertNotIn('fixture reply', json.dumps(calls))
+        return calls[0]
+
+    def test_actual_handler_records_arrival_backend_and_reply_times(self):
+        entry = self.dispatch()
+        self.assertEqual(entry['backendFinishedAfterSeconds'], 7)
+        self.assertEqual(entry['responseWrittenAfterSeconds'], 9)
+        self.assertNotIn('failureType', entry)
+
+    def test_failed_backend_keeps_pending_record_without_success_timestamps(self):
+        entry = self.dispatch(fail=True)
+        self.assertEqual(entry['failureType'], 'RuntimeError')
+        self.assertNotIn('backendFinishedAfterSeconds', entry)
+        self.assertNotIn('responseWrittenAfterSeconds', entry)
 
 
 class ProductionBrowserParent(unittest.TestCase):

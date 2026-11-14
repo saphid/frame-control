@@ -83,13 +83,19 @@ class BrowserReadiness(unittest.TestCase):
         pending.eval.side_effect = [False, dict(errors=['loading'], state=None,
                                                documentState='loading', iframeAssigned=False)]
         ready.eval.return_value = True
-        self.backend.Page.side_effect = [pending, ready]
+        self.backend.Page.side_effect = [RuntimeError('page not listed yet'), pending, ready]
         self.assertIs(self.wait(self.browser, self.profile, self.report), ready)
         pending.sock.close.assert_called_once()
         ready.sock.close.assert_not_called()
         self.assertEqual(self.report['startupErrors'], ['loading'])
         self.assertEqual(self.report['startupState'], dict(state=None,
                          documentState='loading', iframeAssigned=False))
+        attempts = self.report['readinessAttempts']
+        self.assertEqual(attempts[0]['error'], 'page not listed yet')
+        self.assertEqual(attempts[1]['outcome'], 'not-ready')
+        self.assertNotIn('error', attempts[1])
+        self.assertEqual(self.report['lastReadinessAttempt']['outcome'], 'ready')
+        self.assertNotIn('error', self.report['lastReadinessAttempt'])
 
 
 if __name__ == '__main__':

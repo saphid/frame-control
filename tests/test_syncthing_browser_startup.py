@@ -192,6 +192,23 @@ addEventListener('message',event=>{
                         targets = response.read(65537)
                     self.assertLessEqual(len(targets), 65536)
                     self.assertTrue(all(len(t['url']) < 256 for t in json.loads(targets)))
+                    # The failure-only reader must inspect the opaque child
+                    # directly without changing its sandbox or driving the UI.
+                    spec = importlib.util.spec_from_file_location('startup_final_reader',
+                        ROOT / 'tests/decky-runtime/syncthing_browser.py')
+                    reader = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(reader)
+                    reader.frame_steam.CDP = cdp.CDP
+                    final = reader.final_browser_state()
+                    self.assertFalse(final['timedOut'], final)
+                    self.assertEqual(final['returnCode'], 0, final)
+                    self.assertEqual([s['target'] for s in final['snapshots']], ['parent', 'iframe'])
+                    self.assertTrue(final['snapshots'][0]['state']['ready'], final)
+                    self.assertEqual(final['snapshots'][1]['state']['documentState'], 'complete')
+                    if full_frontend:
+                        self.assertIn('Start Setup', final['snapshots'][1]['state']['rootText'])
+                        self.assertNotIn('.syncthing-identicon', final['snapshots'][1]['state']['rootText'])
+                    print('Framey final browser state proof: '+json.dumps(final, sort_keys=True))
             finally:
                 if page is not None:
                     page.sock.close()
