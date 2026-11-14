@@ -159,7 +159,9 @@ and run this checker before replacing the destination ZIP. It packages an
 existing build; plugins with extra assets or chunks need their own packaging
 step before using the checker above.
 The checker reads every file through its ZIP checksum, including large assets
-and backend files, before accepting the archive. A checksum error means the ZIP
+and backend files, before accepting the archive. Corrupt DEFLATE streams also
+return a JSON `ok: false` result and a failing exit status without changing the
+archive. A checksum or decompression error means the ZIP
 must be rebuilt or recovered from its source; it is not a frontend compatibility
 verdict. The store runs this same validation before transfer to the headset.
 

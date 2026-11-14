@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 import re
 import sys
 import zipfile
+import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'ui'))
@@ -94,7 +95,7 @@ def main(argv=None):
     try:
         result = check(args.archive, args.name)
     except (OSError, ValueError, UnicodeError, RuntimeError, NotImplementedError,
-            zipfile.BadZipFile) as exc:
+            zipfile.BadZipFile, zlib.error) as exc:
         print(json.dumps({'ok': False, 'error': str(exc)}))
         return 1
     print(json.dumps(result))
