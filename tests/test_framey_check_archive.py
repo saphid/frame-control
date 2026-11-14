@@ -26,10 +26,10 @@ class ArchiveChecker(unittest.TestCase):
 
     def run_check(self, manifest=None, extra=None, frontend=True, bundle=None,
                   name='Framey Settings Sample', damage=None, members=(), expected_runtime=None,
-                  manifest_bytes=None):
+                  manifest_bytes=None, compression=zipfile.ZIP_STORED, damage_deflate=False):
         with tempfile.TemporaryDirectory() as folder:
             archive = Path(folder) / 'plugin.zip'
-            with zipfile.ZipFile(archive, 'w') as output:
+            with zipfile.ZipFile(archive, 'w', compression=compression) as output:
                 output.writestr('framey-settings/plugin.json',
                                 manifest_bytes if manifest_bytes is not None else
                                 json.dumps(manifest or json.loads((SAMPLE / 'plugin.json').read_text())))
@@ -49,10 +49,19 @@ class ArchiveChecker(unittest.TestCase):
                 offset = entry.header_offset
                 start = (offset + 30 + int.from_bytes(data[offset+26:offset+28], 'little')
                          + int.from_bytes(data[offset+28:offset+30], 'little'))
-                data[start + entry.file_size - 1] ^= 1
+                if damage_deflate:
+                    # Keep ZIP headers and declared CRC intact, but use the
+                    # reserved DEFLATE block type so zlib rejects the stream.
+                    self.assertEqual(entry.compress_type, zipfile.ZIP_DEFLATED)
+                    data[start] = (data[start] & ~6) | 6
+                else:
+                    data[start + entry.file_size - 1] ^= 1
                 archive.write_bytes(data)
+            original = archive.read_bytes()
             run = subprocess.run([sys.executable, str(CHECKER), str(archive), '--name', name],
                                  capture_output=True, text=True, timeout=15)
+            self.assertEqual(run.stderr, '', 'The checker must report errors as JSON, without a traceback')
+            self.assertEqual(archive.read_bytes(), original, 'The checker must preserve the source archive')
             if expected_runtime is not None:
                 plugins = Path(folder)/'plugins'
                 with zipfile.ZipFile(archive) as output:
@@ -113,6 +122,22 @@ class ArchiveChecker(unittest.TestCase):
         self.assertEqual(code, 1, result)
         self.assertFalse(result['ok'])
         self.assertIn('CRC', result['error'])
+
+    def test_damaged_deflate_stream_returns_json_without_changing_the_archive(self):
+        for member in ('framey-settings/plugin.json', 'framey-settings/dist/index.js',
+                       'framey-settings/assets/large.bin'):
+            with self.subTest(member=member):
+                code, result = self.run_check(extra=('framey-settings/assets/large.bin', b'x' * 150_000),
+                                              compression=zipfile.ZIP_DEFLATED,
+                                              damage=member, damage_deflate=True)
+                self.assertEqual(code, 1, result)
+                self.assertFalse(result['ok'])
+                self.assertIn('decompressing data', result['error'])
+        # An intact compressed archive remains accepted after a failed check.
+        code, result = self.run_check(compression=zipfile.ZIP_DEFLATED)
+        self.assertEqual(code, 0, result)
+        self.assertTrue(result['installerAccepted'])
+        self.assertTrue(result['panelCandidate'])
 
 
     def test_large_manifest_passes_installer_but_not_panel_admission(self):

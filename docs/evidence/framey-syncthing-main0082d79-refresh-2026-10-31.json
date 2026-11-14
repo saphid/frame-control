@@ -1,0 +1,259 @@
+{
+  "at": "2026-10-31T10:55:19.932085+00:00",
+  "sourceRevision": "6e1d94310e9a9512e5bf08b6252844a60f681e04",
+  "baseMain": "0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4",
+  "priorHead": "47c54283993ed8bddd365788572b168f4469962d",
+  "normalMergeParentsVerified": true,
+  "strictRuntimeRepairBytesUnchanged": true,
+  "productionAndCatalogEqualToMain": true,
+  "mainNativeProbeAndTabMasterPreserved": true,
+  "currentMainFilesAdded": 20,
+  "focusedTests": 38,
+  "unitLogSha256": "4d23c748118f91901c3444ac5c85cf18e4004f8c5c42d5f78076bf711f7bc7a4",
+  "localArchitecture": "x86_64",
+  "localRuntimeSourceSha256": {
+    "scripts/framey-test-syncthing-runtime.py": "343622c00a68c2adc94ff92749909c3aa723a59159c36025cb684b14c87e4a08",
+    "tests/decky-runtime/syncthing_runtime.py": "5e339016029da74e80548e56ef6bbe35b8825fbd9191365e06db9cfd49d34747",
+    "ui/vendor/syncthing-0.2.7/main.py": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+    "ui/vendor/syncthing-0.2.7/watchdog.patch": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+    "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+  },
+  "localLoaderConsoleSha256": "67b6b3f4e952e431f83228c915fd9fae47144b3ee1fe1d842882e4aca1492d42",
+  "localOuterConsoleSha256": "b3a1b33fa94a445597336e2b224abcc8284285b6e8e6338c6cb04cd966adb57d",
+  "actualTwoWayTransferAndRestartVerified": true,
+  "nineProxy200AndWrongKey403Verified": true,
+  "strictZeroExitShutdownSourceBound": true,
+  "rawLoaderExitSeparatelyRetained": false,
+  "ownedHelperAndPeersReaped": true,
+  "newOwnedContainers": 0,
+  "newOwnedImageTags": 0,
+  "oldHeadChecks": {
+    "checks": {
+      "at": "2026-10-31T10:51:54.754111+00:00",
+      "head": "47c54283993ed8bddd365788572b168f4469962d",
+      "base": "d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f",
+      "run": 41189142879,
+      "job": 124502115417,
+      "checkoutCommit": "b51c6bbd7aae200e0f594256d59f800745e7eefa",
+      "checkoutTree": "817f22fbe2ad38f086f3a7540bba1eeae3e625a2",
+      "checkoutTreeMatchesExactHead": true,
+      "additionalFilesFromMain": [],
+      "exactMergeCheckoutIndependentlyVerified": true,
+      "allJobStepsSuccessful": true,
+      "wholeWorkflowSuccessful": true,
+      "logSha256": "bd2623879ab50761c8cf8a03102022084122c9c2ff210dbb7a8315b5f42dd95c",
+      "realFrameContacted": false,
+      "python": "3.9.25",
+      "serverTests": 1947,
+      "serverSkips": 27,
+      "seconds": 242.501,
+      "appTests": 50,
+      "websiteTests": 18
+    },
+    "e2e": {
+      "at": "2026-10-31T10:51:54.384482+00:00",
+      "head": "47c54283993ed8bddd365788572b168f4469962d",
+      "base": "d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f",
+      "run": 41189142879,
+      "job": 124502115467,
+      "checkoutCommit": "b51c6bbd7aae200e0f594256d59f800745e7eefa",
+      "checkoutTree": "817f22fbe2ad38f086f3a7540bba1eeae3e625a2",
+      "checkoutTreeMatchesExactHead": true,
+      "additionalFilesFromMain": [],
+      "exactMergeCheckoutIndependentlyVerified": true,
+      "allJobStepsSuccessful": true,
+      "wholeWorkflowSuccessful": true,
+      "logSha256": "4feeca1338e87032807380a36b7822eb9164257abfd0b5ffb05050545b16c223",
+      "realFrameContacted": false,
+      "actualE2ePassed": true,
+      "e2eTests": 53,
+      "e2eSkips": 1,
+      "skipScope": "optional catalog-cache; not full116 qualification",
+      "e2eSeconds": 235,
+      "includingBuildsSeconds": 314
+    }
+  },
+  "historicalNativeRun": 41189142910,
+  "historicalNativeCasesPerArchitecture": 40,
+  "historicalNativeArchivePins": 33,
+  "historicalNativeSourceFingerprints": 15,
+  "historicalNativeCompleteConsoleHashesAudited": 80,
+  "historicalNativeForcedKillObservations": [
+    {
+      "architecture": "x86_64",
+      "id": 96,
+      "version": "1.0.0",
+      "forcedPluginKillMarkers": 1,
+      "caseIndex": 34,
+      "expectedNegative": true
+    },
+    {
+      "architecture": "x86_64",
+      "id": 134,
+      "version": "1.3.6",
+      "forcedPluginKillMarkers": 2,
+      "caseIndex": 37,
+      "expectedNegative": true
+    },
+    {
+      "architecture": "x86_64",
+      "id": 68,
+      "version": "0.2.1",
+      "forcedPluginKillMarkers": 1,
+      "caseIndex": 38,
+      "expectedNegative": true
+    },
+    {
+      "architecture": "x86_64",
+      "id": 53,
+      "version": "0.1.0",
+      "forcedPluginKillMarkers": 1,
+      "caseIndex": 39,
+      "expectedNegative": true
+    },
+    {
+      "architecture": "aarch64",
+      "id": 36,
+      "version": "1.8.1",
+      "forcedPluginKillMarkers": 1,
+      "caseIndex": 2,
+      "expectedNegative": false
+    },
+    {
+      "architecture": "aarch64",
+      "id": 96,
+      "version": "1.0.0",
+      "forcedPluginKillMarkers": 1,
+      "caseIndex": 30,
+      "expectedNegative": false
+    },
+    {
+      "architecture": "aarch64",
+      "id": 96,
+      "version": "1.0.0",
+      "forcedPluginKillMarkers": 1,
+      "caseIndex": 34,
+      "expectedNegative": true
+    },
+    {
+      "architecture": "aarch64",
+      "id": 134,
+      "version": "1.3.6",
+      "forcedPluginKillMarkers": 2,
+      "caseIndex": 37,
+      "expectedNegative": true
+    },
+    {
+      "architecture": "aarch64",
+      "id": 68,
+      "version": "0.2.1",
+      "forcedPluginKillMarkers": 1,
+      "caseIndex": 38,
+      "expectedNegative": true
+    },
+    {
+      "architecture": "aarch64",
+      "id": 53,
+      "version": "0.1.0",
+      "forcedPluginKillMarkers": 1,
+      "caseIndex": 39,
+      "expectedNegative": true
+    }
+  ],
+  "historicalOwnershipRun": 41189142860,
+  "historicalRawPeerCompleteConsolesAuditedOnBothArchitectures": true,
+  "historicalRawPeerZeroExitSourceBound": true,
+  "historicalPackageRun": 41189142866,
+  "historicalPackages": {
+    "amd": {
+      "run": 41189142866,
+      "job": 124502115298,
+      "artifactId": 13038714159,
+      "artifactSha256": "f530583a469733640c046afbc35c0b981bd1f3b8107397c3094e8847784ec5f2",
+      "jobLogSha256": "307012d46c2632dec1afa9559c5d85e419ad160927e5feaa73362c280f16e310",
+      "sourceCount": 13,
+      "exactSourceCount": 26,
+      "fullGuestResultVerified": true,
+      "sourceBoundGuestShutdownLogCheckPassed": true,
+      "rawDeckyConsoleRetainedInArtifact": false,
+      "sourceDifferencesFromCurrentMerge": []
+    },
+    "arm": {
+      "run": 41189142866,
+      "job": 124502115252,
+      "artifactId": 13039241291,
+      "artifactSha256": "01a409436da866fb9901bdf05761cd6ceac0e2eca91ee26b5a4acd95180facf8",
+      "jobLogSha256": "fb36fc9d4377bbb35bde465cc290af2cc3a018383778ea4cd5a6e63b2c71d103",
+      "sourceCount": 13,
+      "exactSourceCount": 26,
+      "fullGuestResultVerified": true,
+      "sourceBoundGuestShutdownLogCheckPassed": true,
+      "rawDeckyConsoleRetainedInArtifact": false,
+      "sourceDifferencesFromCurrentMerge": []
+    },
+    "http": {
+      "run": 41189142866,
+      "job": 124502115446,
+      "artifactId": 13039649169,
+      "artifactSha256": "d4548f2f15c7d61a729d8490da297fe116c18159dd67689737c2f07be008a92a",
+      "jobLogSha256": "506e52a0dcffb4d6c0d1fd4287eb630e44386787ba579931c7c85761e1eace9d",
+      "sourceCount": 124,
+      "exactSourceCount": 127,
+      "fullGuestResultVerified": true,
+      "sourceBoundGuestShutdownLogCheckPassed": true,
+      "rawDeckyConsoleRetainedInArtifact": false,
+      "sourceDifferencesFromCurrentMerge": [
+        "ui/framey-compatibility.json"
+      ]
+    },
+    "parent": {
+      "run": 41189142866,
+      "job": 124502115082,
+      "artifactId": 13038961488,
+      "artifactSha256": "a682e7ce198600d3718e2c980b554a48b79d7168215bd9f7d9b8220980545e90",
+      "jobLogSha256": "7a499a7456ef682421e1d97845e66399fa25f0c86a5ca703567dfb13974f9a3d",
+      "sourceCount": 125,
+      "exactSourceCount": 128,
+      "fullGuestResultVerified": true,
+      "sourceBoundGuestShutdownLogCheckPassed": true,
+      "rawDeckyConsoleRetainedInArtifact": false,
+      "sourceDifferencesFromCurrentMerge": [
+        "ui/framey-compatibility.json"
+      ]
+    }
+  },
+  "historicalCapturePayloads": 12,
+  "historicalUniqueImagesVisuallyInspected": 5,
+  "visualObservations": [
+    "Both standalone running captures show Private service sync and the two owned fixture devices; their running/restarted payloads match.",
+    "Stopped captures show Stopped without folder/device rows.",
+    "Production-parent running capture shows Running and Private service sync, while device rows are clipped by the iframe.",
+    "Production-parent stopped capture shows Stopped.",
+    "Both parent states retain the broken/non-ARM64 published-plugin warning. These are private AMD64 fixture captures, not Steam CEF or Frame proof."
+  ],
+  "reviewsAndThreads": 0,
+  "rulesets": [],
+  "expectedFreshNative": {
+    "probes": 41,
+    "archivePins": 34,
+    "sourceFingerprints": 15
+  },
+  "rawJsonSha256": "6dd66a3fad3e4898c4ca225d35f5501eab30169e58191f80c21e9a98f2af9c43",
+  "rawGzipSha256": "55321c14d04a6ac2ea4ad0a0e872996bad37c529d2818598577ffd209495e17a",
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "globalCleanPluginShutdownVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Old-head hosted results do not qualify this current-main merge or the later evidence-only commit; every final-head triggered gate remains required.",
+    "Main 0082d79 package workflow was unfinished at this audit, so no merge is qualified.",
+    "The old e2e suite ran 53 tests with one optional catalog-cache skip; it is not full116 qualification.",
+    "Native general consoles include unrelated positive plugin forced kills and intentional original-source regression failures; a green workflow does not establish global clean unload.",
+    "Raw-peer fixtures retain complete loader and outer consoles, but raw loader exit status is asserted in source rather than stored separately.",
+    "Package and separate systemd fixture shutdown results are source-bound; those artifacts do not separately retain a Decky loader console.",
+    "Production-parent private browser captures clip device rows and retain the broken/non-ARM64 warning.",
+    "Syncthing stays blocked and unselected; no managed Frame install, real Steam CEF, wearer-visible UI or controller usability is verified."
+  ]
+}
