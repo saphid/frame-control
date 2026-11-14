@@ -1,0 +1,50 @@
+{
+  "head": "6a27c960d8deedca8cedabffd55758c46dd750ad",
+  "run": 43590847908,
+  "job": 132435025143,
+  "artifact": 14112546148,
+  "sourceBindingsVerified": 19,
+  "compressedArtifactSha256": "2bcdf9b025fac11400b06e5fc4929763482cc5343a973ad9c8d01423ec226b90",
+  "rawArtifactSha256": "79406bcb923beb9af0209997ba6c55fcf4cdc2867d197e459d2032afe983783c",
+  "architecture": "aarch64",
+  "success": false,
+  "persistedSnapshots": [
+    {
+      "cycle": 0,
+      "value": {
+        "schema": 1,
+        "enabled": true
+      },
+      "sha256": "d307e1d0bc9eaf274ae4a0d262ba65bcc0e4297dbc74ffc4da689fa077bc2568",
+      "mode": "0o600"
+    },
+    {
+      "cycle": 1,
+      "value": {
+        "schema": 1,
+        "enabled": false
+      },
+      "sha256": "ef9c969af3fd2708ad467cf5da26e012c7f268a54759946be44f14e04ec8c91d",
+      "mode": "0o600"
+    },
+    {
+      "cycle": 2,
+      "value": {
+        "schema": 1,
+        "enabled": false
+      },
+      "sha256": "ef9c969af3fd2708ad467cf5da26e012c7f268a54759946be44f14e04ec8c91d",
+      "mode": "0o600"
+    }
+  ],
+  "cleanStopSequence": [
+    true,
+    true,
+    false
+  ],
+  "remainingDescendantsAfterFailedStop": {},
+  "settingsSampleCodeUnchangedByReceiptFix": true,
+  "historicalArmCauseEstablished": false,
+  "nativeContainerOnly": true,
+  "realFrameContacted": false
+}
