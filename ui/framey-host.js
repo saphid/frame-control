@@ -404,9 +404,11 @@
   // Some published buttons expose only Decky's OK action. Native activation
   // uses it as a fallback; keep an explicit click handler authoritative and
   // pass the original click event rather than fabricating gamepad input.
-  const DialogButton = ({children, disabled, onClick, onOKButton, ...props}) =>
-    R.createElement('button', {...props, type:'button', disabled:!!disabled,
+  // The real forwardRef render also supports legacy render({}).type lookup.
+  const DialogButton = R.forwardRef(function DialogButton({children, disabled, onClick, onOKButton, ...props}, ref) {
+    return R.createElement('button', {...props, ref, type:'button', disabled:!!disabled,
       onClick:event=>{if(!disabled)(onClick || onOKButton)?.(event);}}, children);
+  });
   const Focusable = R.forwardRef(function Focusable(
     {children, onActivate, onCancel, onClick, onKeyDown, disabled, tabIndex, role, ...props}, ref) {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
@@ -438,18 +440,18 @@
         }
       }}, children);
   });
-  const Field = ({label, description, icon, style, className, children, disabled,
-    focusable=false, onActivate, onClick}) => {
+  const Field = R.forwardRef(function Field({label, description, icon, style, className, children, disabled,
+    focusable=false, onActivate, onClick}, ref) {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
     // Action rows need a local focus target. Ordinary setting labels retain
     // their native input association instead of gaining another tab stop.
-    const props={style,className};
+    const props={style,className,ref};
     if (actionable || focusable) Object.assign(props,{disabled,onActivate,onClick,
       tabIndex:focusable ? (disabled ? -1 : 0) : undefined});
     return R.createElement(actionable || focusable ? Focusable : 'label', props,
       icon != null && R.createElement('span', null, icon),
       R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
-  };
+  });
   // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
   // standalone control separate so persisted true settings render correctly.
   const Toggle = ({value, disabled, onChange}) => R.createElement('input', {
@@ -545,7 +547,7 @@
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
         onClick:event=>{if(!disabled)onClick?.(event);},
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
-  const TextField = R.forwardRef(function TextField({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
+  const TextField = R.forwardRef(function TextField({label, description, tooltip, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
     rangeMin, rangeMax, maxLength, minLength, pattern, required,
     bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls, style,
@@ -578,7 +580,7 @@
       bShowClearAction && (bAlwaysShowClearAction || String(value ?? draft).length>0) &&
         R.createElement('button', {type:'button', disabled:!!disabled, onClick:clear,
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
-      inlineControls);
+      inlineControls, tooltip != null && R.createElement('small', null, tooltip));
   });
   const SliderField = ({label, description, icon, className, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, notchCount, notchLabels, notchTicksVisible, onChange}) => {
@@ -751,7 +753,7 @@
     label != null && R.createElement('h3', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
-    bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
+    bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, bDestructiveWarning, children}) => {
     const inFlight = R.useRef(false);
     const mounted = R.useRef(true);
     const [busy, setBusy] = R.useState(false);
@@ -798,7 +800,9 @@
       R.createElement('h2', null, strTitle),
       strDescription && R.createElement('div', null, strDescription), children,
       error && R.createElement('p', {role:'alert'}, error),
+      bDestructiveWarning && R.createElement('p', {className:'framey-destructive-note'}, 'Destructive action'),
       R.createElement('button', {type:'button', disabled:!!bOKDisabled || busy,
+        className:bDestructiveWarning ? 'framey-destructive' : undefined,
         onClick:action(onOK, bOKDisabled)}, strOKButtonText || 'OK'),
       onMiddleButton && R.createElement('button', {type:'button', disabled:!!bMiddleDisabled || busy,
         onClick:action(onMiddleButton, bMiddleDisabled)}, strMiddleButtonText || 'More'),
@@ -861,7 +865,8 @@
         'aria-label':title},
         !props.bHideCloseIcon && R.createElement('button', {
           type:'button', disabled:!!modal.running || modalCancelDisabled(modal),
-          onClick:()=>dismissModal(modal)}, cancelText), modal.element);
+          onClick:()=>dismissModal(modal)}, cancelText),
+        R.createElement(DialogBoundary, {close:modal.close}, modal.element));
     }) : null);
   };
   function modalCallback(modal, name) {
@@ -986,6 +991,7 @@
       const failed = failure => {error.textContent='Dialog close callback failed: '+String(failure?.message || failure);};
       try {Promise.resolve(onClosed?.()).catch(failed);} catch (failure) {failed(failure);}
     };
+    modal.close = Close;
     modal.dismiss = () => {
       if (!modals.includes(modal)) return;
       const callback=modal.source?.props?.closeModal;
@@ -1231,7 +1237,7 @@
   };
   localModules.set('framey/components', Object.freeze(Object.fromEntries(
     Object.entries(DFL).filter(([name,value])=>/^[A-Z]/.test(name) &&
-      (typeof value==='function' || [Focusable,TextField,ScrollPanel,ScrollPanelGroup].includes(value))))));
+      (typeof value==='function' || [DialogButton,Field,Focusable,TextField,ScrollPanel,ScrollPanelGroup].includes(value))))));
   // Some panels eagerly look up the optional Steam UI sound player. Allow the
   // lookup, but never claim playback or expose Steam's mutable audio store.
   localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({
@@ -1336,7 +1342,6 @@
     };
     addEventListener('pagehide',() => {closed = true; listeners.clear(); close();});
   }
-  DFL.DialogButton.render = () => ({type: DFL.DialogButton});
   const toaster = {toast: ({title, body, subtext, icon, logo, duration, showToast=true, onClick}={}) => {
     const data = {title, body, subtext, icon, logo};
     if (!showToast) return {data, dismiss(){}};
@@ -1349,7 +1354,7 @@
       if (R.isValidElement(value) || Array.isArray(value)) {
         const root = window.ReactDOM.createRoot(node);
         roots.push(root);
-        root.render(value);
+        root.render(R.createElement(ToastBoundary, null, value));
       } else if (typeof value === 'string' || typeof value === 'number') {
         node.textContent = String(value);
       } else return;
@@ -1380,9 +1385,32 @@
   }};
   class PanelBoundary extends R.Component {
     constructor(props) { super(props); this.state = {failure:null}; }
-    static getDerivedStateFromError(failure) { return {failure}; }
+    static getDerivedStateFromError(failure) {
+      // Published render helpers also throw strings. Capture a nonempty text
+      // diagnostic so falsy thrown values cannot bypass this boundary.
+      return {failure:String(failure?.message || failure) || 'Unknown render failure'};
+    }
     render() { return this.state.failure ? R.createElement('p', {role:'alert'},
-      `This Decky panel is not compatible with Framey: ${this.state.failure.message}`) : this.props.children; }
+      `This Decky panel is not compatible with Framey: ${this.state.failure}`) : this.props.children; }
+  }
+  // Toast fields mount in separate React roots, outside the plugin surface.
+  // Keep failures local so healthy fields and the native dismissal survive.
+  class ToastBoundary extends PanelBoundary {
+    render() { return this.state.failure ? R.createElement('span', {role:'alert'},
+      `This notification content could not be displayed: ${this.state.failure}`) : this.props.children; }
+  }
+  class DialogBoundary extends PanelBoundary {
+    static getDerivedStateFromProps(props, state) {
+      // Only an explicit handle.Update supplies a new decorated element.
+      // Stack/busy redraws keep a failed view retired and healthy state intact.
+      return props.children === state.content ? null : {content:props.children, failure:null};
+    }
+    render() {
+      return this.state.failure ? R.createElement(R.Fragment, null, super.render(),
+        // Match handle.Close: broken plugin cancellation handlers, hidden
+        // close icons or disabled Cancel cannot strand the panel behind inert.
+        R.createElement('button', {type:'button', onClick:this.props.close}, 'Close failed dialog')) : this.props.children;
+    }
   }
   function PluginSurface({plugin}) {
     const [view, setView] = R.useState(plugin.content ? 'panel' : 'settings');

@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-13T03:20:24.132894+00:00",
+  "integratedMain": "b7fa4e0e3f8df904de9fdd5e3ba365f5d069f370",
+  "sourceHead": "152777610ef53c7e2b040fabd8474f17c4c14048",
+  "testSummary": [
+    "Ran 91 tests in 3.862s"
+  ],
+  "zeroSkips": true,
+  "logSha256": "c44238f4cf2ff8447351de47852a171151982ded2853e798864c24ef227983d7",
+  "sourceSha256": {
+    "tests/decky-runtime/syncthing_migration_stacks.py": "77412f91a6d964560f362f36284f7f59ddb077495e6ca9d7725c94dff3d5dab0",
+    "tests/test_syncthing_flatpak_migration_stacks.py": "180a664d6b20fcb85449ad9624d813522d1179e2324d6d6b109a78b7d68f22df",
+    "scripts/framey-test-syncthing-flatpak-package.py": "ae4bfbecd29d872629a7c92b227b80980ec8d75332ee8d25f2a6a1869ea4da2c"
+  },
+  "releaseQualified": false,
+  "realFrameContacted": false
+}
