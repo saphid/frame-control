@@ -1,0 +1,64 @@
+name: Framey sample browser persistence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'examples/framey-settings/**'
+      - 'scripts/framey-test-sample*.py'
+      - 'scripts/framey-test-decky-runtime.py'
+      - 'scripts/framey-pack-sample.py'
+      - 'scripts/framey-check-archive.py'
+      - 'tests/decky-runtime/**'
+      - 'tests/framey_official.py'
+      - 'ui/framey*'
+      - 'ui/frame_decky*.py'
+      - 'ui/frame_steam.py'
+      - 'ui/vendor/react*.js'
+      - '.github/actions/framey-runtime-inputs/**'
+      - '.github/workflows/framey-sample-browser.yml'
+  pull_request:
+    paths:
+      - 'examples/framey-settings/**'
+      - 'scripts/framey-test-sample*.py'
+      - 'scripts/framey-test-decky-runtime.py'
+      - 'scripts/framey-pack-sample.py'
+      - 'scripts/framey-check-archive.py'
+      - 'tests/decky-runtime/**'
+      - 'tests/framey_official.py'
+      - 'ui/framey*'
+      - 'ui/frame_decky*.py'
+      - 'ui/frame_steam.py'
+      - 'ui/vendor/react*.js'
+      - '.github/actions/framey-runtime-inputs/**'
+      - '.github/workflows/framey-sample-browser.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  sample-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: ./.github/actions/framey-runtime-inputs
+      - name: Actual sample UI, saved bytes and loader restarts
+        run: |
+          browser=$(command -v google-chrome || command -v chromium)
+          python3 scripts/framey-test-sample-browser.py \
+            --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" \
+            --browser "$browser" --output "$RUNNER_TEMP/framey-sample-browser"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: framey-sample-browser-ubuntu-latest
+          path: ${{ runner.temp }}/framey-sample-browser
+          if-no-files-found: error
