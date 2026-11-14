@@ -89,6 +89,9 @@ os._exit(0 if saved is True else 2)
         self.assertTrue(result.stdout.startswith(marker), result.stdout)
         report = json.loads(result.stdout[len(marker):])
         self.assertIs(report['passed'], True, report)
+        for field in ('overlappingReadsReconciled', 'settledSaveDetected',
+                      'quickReadReconciled', 'retiredReaderSilent'):
+            self.assertIs(report[field], True, report)
         report['bundleSha256'] = hashlib.sha256((EXAMPLE.parent/'dist/index.js').read_bytes()).hexdigest()
         print(marker+json.dumps(report, sort_keys=True))
 
