@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 assert.notEqual(host,source);
-const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
+const React={Fragment:'fragment',Component:class {constructor(props){this.props=props;}},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:{...props,
     ...(children.length?{children:children.length===1?children[0]:children}:{})},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
@@ -28,7 +28,8 @@ assert.equal(DFL.findModuleExport(value=>value?.SteamPortalManager),undefined);
 context.deckyFrontendLib=DFL;
 vm.runInContext(readFileSync(0,'utf8')+'\nwindow.publishedModal=UsageWarningModal;',context);
 const expand=tree=>Array.isArray(tree)?tree.map(expand):!tree||typeof tree!=='object'?tree:
-  typeof tree.type==='function'?expand(tree.type(tree.props)):
+  typeof tree.type==='function'?expand(tree.type.prototype instanceof React.Component
+    ? new tree.type(tree.props).render() : tree.type(tree.props)):
   {...tree,children:tree.children.map(expand)};
 const nodes=(tree,type)=>Array.isArray(tree)?tree.flatMap(child=>nodes(child,type)):
   [...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];

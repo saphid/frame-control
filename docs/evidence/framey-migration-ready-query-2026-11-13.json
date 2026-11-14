@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-11-13T02:17:31.138329+00:00",
+  "sourceSha256": {
+    "tests/decky-runtime/syncthing_migration_stacks.py": "23bfc545bb3ece66b0e0e95ddb4e659cc9bd0b31bfeee407589bac8b648bff9a",
+    "tests/test_syncthing_flatpak_migration_stacks.py": "a05d3973ecd6d2f86195ab5748cff6ea97e7ca0483873aaa54578b2695f0e781",
+    "scripts/framey-test-syncthing-flatpak-package.py": "a1fa3f299b93652a57cf49040b4c8123ff917fe803b1eb0b6d4f18938782dca3",
+    "scripts/framey-test-syncthing-service.py": "33aa463ee9e10fdf2067987d3676b4071c7a212d3c632911e35d726cab6dd3ee"
+  },
+  "rawArchiveSha256": "e64d03a02d2b42e897895ae0f97b3c47d311d56e10cda63e5f81b80280e5a3ee",
+  "queryHelperJoined": true,
+  "queryTransport": "persistent-user-manager",
+  "queryScope": "python-ready-migration-cgroup",
+  "preparationDelaySeconds": 110,
+  "unrelatedManagerReloads": 3,
+  "absentCgroupPolls": 634,
+  "unitQueries": 23,
+  "observerErrors": [],
+  "observationErrorCount": 0,
+  "stopSeconds": 3.126,
+  "localTests": 100,
+  "skips": 0,
+  "testLogSha256": "74068a00b4463745d23901faae1e319201c014fd5b43aa354cb96750814d1358",
+  "actualMigrationExecuted": false,
+  "nativeArm64Executed": false,
+  "historicalCauseEstablished": false,
+  "releaseHoldCleared": false,
+  "realFrameContacted": false
+}

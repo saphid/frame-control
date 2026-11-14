@@ -19,12 +19,12 @@ const window={React,ReactDOM:{createRoot:node=>{
   const root={render(value){this.value=value;},unmount(){this.unmounted=true;}};
   roots.set(node,root);return root;
 }},addEventListener(){}};
-const listeners=[];const messages=[];const parent={postMessage:message=>messages.push(message)};
+const listeners=[];const messages=[];const toastTimers=[];const parent={postMessage:message=>messages.push(message)};
 const context=vm.createContext({window,document:{getElementById:id=>{
   if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:()=>new Element()},
   navigator:{language:'en'}, parent,DOMException,getComputedStyle:node=>({overflowY:node.overflowY||'visible'}),
   addEventListener:(type,handler)=>listeners.push({type,handler}),
-  setTimeout:()=>1,clearTimeout(){}});
+  setTimeout:callback=>{toastTimers.push(callback);return toastTimers.length;},clearTimeout(){}});
 vm.runInContext(testSource,context);
 // No Steam React tree exists inside the isolated Framey iframe.
 assert.equal(window.DFL.getReactRoot({}),null);
@@ -187,9 +187,9 @@ const icon=React.createElement('svg',null);
 const rich=api.toaster.toast({title:heading,body:[detail,' again'],icon,
   subtext:'Open settings',showToast:true});
 const richNode=elements.get('framey-toasts').children[1];
-assert.equal(roots.get(richNode.children[0]).value,icon);
-assert.equal(roots.get(richNode.children[1]).value,heading);
-assert.deepEqual(Array.from(roots.get(richNode.children[2]).value),[detail,' again']);
+assert.equal(roots.get(richNode.children[0]).value.children[0],icon);
+assert.equal(roots.get(richNode.children[1]).value.children[0],heading);
+assert.deepEqual(Array.from(roots.get(richNode.children[2]).value.children[0]),[detail,' again']);
 assert.equal(richNode.children[3].textContent,'Open settings');
 rich.dismiss();rich.dismiss();
 assert.equal(richNode.removed,true);
@@ -204,6 +204,42 @@ actionable.dismiss();
 const hidden=api.toaster.toast({title:heading,showToast:false});
 assert.equal(elements.get('framey-toasts').children.length,3);
 hidden.dismiss();
+
+// Dismissed notifications must retire retained actions. This covers API
+// dismissal, the native button, expiration and an already-completed Open.
+for(const dismissal of ['api','button','expiration','open']) {
+  let calls=0;
+  const notice=api.toaster.toast({title:'Lifetime',onClick:()=>calls++});
+  const node=elements.get('framey-toasts').children.at(-1);
+  const open=node.children.at(-1).onclick;
+  if(dismissal==='api')notice.dismiss();
+  else if(dismissal==='button')node.children.at(-2).onclick();
+  else if(dismissal==='expiration')toastTimers.at(-1)();
+  else open();
+  const expected=dismissal==='open'?1:0;
+  assert.equal(calls,expected);
+  open();open();
+  assert.equal(calls,expected,'retained Open ran after '+dismissal+' dismissal');
+  assert.equal(node.removed,true);
+}
+let reentries=0,reenter;
+const reentrant=api.toaster.toast({title:'Reentrant',onClick:()=>{
+  reentries++;if(reentries===1)reenter();
+}});
+const reentrantNode=elements.get('framey-toasts').children.at(-1);
+reenter=reentrantNode.children.at(-1).onclick;reenter();
+assert.equal(reentries,1,'Open must lock before invoking plugin callback');
+assert.equal(reentrantNode.removed,true);reentrant.dismiss();
+let failures=0;
+const failed=api.toaster.toast({title:'Throwing action',onClick:()=>{failures++;throw Error('Synthetic toast action failure');}});
+const failedNode=elements.get('framey-toasts').children.at(-1),failedOpen=failedNode.children.at(-1).onclick;
+assert.throws(failedOpen,/Synthetic toast action failure/);
+assert.equal(failedNode.removed,true,'throwing action must still retire and dismiss');
+failedOpen();assert.equal(failures,1);failed.dismiss();
+console.log('Framey toast action lifetime proof: '+JSON.stringify({passed:true,
+  apiDismissalRetires:true,buttonDismissalRetires:true,expirationRetires:true,
+  successfulOpenRetires:true,synchronousReentryBlocked:true,throwingActionRetires:true,
+  syntheticCallbacks:true,realFrameContacted:false}));
 
 function LocalRoute(){return React.createElement('p',null,'Route content');}
 const undo=api.routerHook.addRoute('/plugin/details',LocalRoute);
@@ -430,7 +466,7 @@ const modalHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmMod
   strTitle:'Remove preset?',strDescription:'Only this private preset will be removed.',
   strOKButtonText:'Remove',strCancelButtonText:'Keep',
   onOK:()=>confirmed++,onCancel:()=>cancelled++,closeModal:()=>dismissed++}));
-let modal=modalRoot.value.at(-1).children.at(-1);
+let modal=modalRoot.value.at(-1).children.at(-1).children[0];
 let confirm=modal.type(modal.props);
 assert.equal(nodes(confirm,'div')[0].children[0],'Only this private preset will be removed.');
 assert.deepEqual(nodes(confirm,'button').map(button=>button.children[0]),['Remove','Keep']);
@@ -446,7 +482,7 @@ const childModal=window.DFL.showModal(React.createElement(window.DFL.ConfirmModa
   strTitle:'Confirm',bOKDisabled:true,bCancelDisabled:true,bMiddleDisabled:true,
   onOK:()=>confirmed++,onCancel:()=>cancelled++,onMiddleButton:()=>confirmed++}));
 assert.equal(modalRoot.value.length,2);assert.equal(modalRoot.value[0].props.hidden,true);
-modal=modalRoot.value.at(-1).children.at(-1);confirm=modal.type(modal.props);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];confirm=modal.type(modal.props);
 for(const button of nodes(confirm,'button')){assert.equal(button.props.disabled,true);button.props.onClick();}
 assert.equal(confirmed,0);assert.equal(cancelled,1);
 let prevented=0;
@@ -458,11 +494,11 @@ childModal.Close();await childModal.ClosedPromise;assert.equal(modalRoot.value,n
 let replacement;
 const first=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
   onOK:()=>{replacement=window.DFL.showModal(React.createElement('p',null,'Next dialog'));}}));
-modal=modalRoot.value.at(-1).children.at(-1);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];
 nodes(modal.type(modal.props),'button')[0].props.onClick();
 await first.ClosedPromise;assert.equal(modalRoot.value.length,1);
 replacement.Update(React.createElement('p',null,'Updated'));
-assert.equal(modalRoot.value[0].children.at(-1).children[0],'Updated');
+assert.equal(modalRoot.value[0].children.at(-1).children[0].children[0],'Updated');
 replacement.Close();await replacement.ClosedPromise;
 const alert=window.DFL.ConfirmModal({bAlertDialog:true,onCancel:()=>cancelled++});
 assert.equal(nodes(alert,'button').length,1);
@@ -476,7 +512,7 @@ for (const actionIndex of [0,1]) for (const withCallback of [false,true]) {
   updated.Update(React.createElement(window.DFL.ConfirmModal,{
     strTitle:'Updated confirmation',onOK:()=>updatedActions++,onCancel:()=>updatedActions++,
     ...(withCallback ? {closeModal:()=>updatedCloses++} : {})}));
-  const updatedElement=modalRoot.value.at(-1).children.at(-1);
+  const updatedElement=modalRoot.value.at(-1).children.at(-1).children[0];
   nodes(updatedElement.type(updatedElement.props),'button')[actionIndex].props.onClick();
   assert.equal(modalRoot.value,null,'Updated OK/Cancel must close its own dialog');
   await updated.ClosedPromise;
@@ -491,7 +527,7 @@ for (const actionIndex of [0,1]) for (const withCallback of [false,true]) {
 let completeAction, asyncCalls=0;
 const asyncHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
   strTitle:'Private action',onOK:()=>{asyncCalls++;return new Promise(resolve=>{completeAction=resolve;});}}));
-modal=modalRoot.value.at(-1).children.at(-1);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];
 confirm=modal.type(modal.props);
 const asyncButton=nodes(confirm,'button')[0];
 const firstAction=asyncButton.props.onClick();
@@ -507,7 +543,7 @@ assert.equal(modalRoot.value,null);
 let rejectAction, failedCalls=0;
 const failedHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
   strTitle:'Private failure',onOK:()=>{failedCalls++;return new Promise((resolve,reject)=>{rejectAction=reject;});}}));
-modal=modalRoot.value.at(-1).children.at(-1);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];
 confirm=modal.type(modal.props);
 const failureButton=nodes(confirm,'button')[0];
 const failedAction=failureButton.props.onClick();

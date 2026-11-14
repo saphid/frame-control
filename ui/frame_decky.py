@@ -26,7 +26,10 @@ def plugins(folder):
                 if not isinstance(data, dict): continue
                 marker = child / '.frame-control-store.json'
                 try:
-                    owned = json.loads(marker.read_text()) if marker.is_file() and not marker.is_symlink() else {}
+                    # Match the panel's metadata limit before reading bytes.
+                    # An oversized receipt does not hide the plugin or peers.
+                    owned = json.loads(marker.read_text()) if (marker.is_file() and not marker.is_symlink()
+                                                              and marker.stat().st_size <= 16384) else {}
                 except (OSError, ValueError): owned = {}
                 # Valid JSON can still be a list or scalar. A bad receipt
                 # cannot claim ownership or abort the remaining inventory.
