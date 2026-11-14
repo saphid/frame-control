@@ -54,6 +54,14 @@ panel admission. An oversized receipt leaves its plugin visible without store
 ownership or receipt metadata; valid neighbors still appear. Scanning does not
 rewrite the receipt. After the receipt is repaired, a fresh scan can recognize
 its ownership again. This limit is tested with disposable local plugin folders.
+Install, Update and Remove transactions also bound each ownership receipt read
+to 16 KiB plus one byte used to detect overflow. An oversized target receipt
+cannot authorize Update or Remove: the operation preserves installed files and
+the receipt, releases its lock and does not stop Decky. Retrying after restoring
+a valid receipt works. A malformed or oversized unrelated peer receipt is
+ignored during the install identity scan and is not rewritten. The limit counts
+UTF-8 bytes, so a receipt with fewer than 16,384 characters can still exceed it.
+These transaction checks use synthetic homes and service commands, not a live Frame.
 For persistent backend settings, use Decky's `decky.DECKY_PLUGIN_SETTINGS_DIR` rather
 than assuming an environment variable or Steam Deck home path. Validate stored
 types when reading, write through a temporary file before replacing the old
