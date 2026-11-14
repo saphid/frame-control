@@ -12,6 +12,7 @@ replay = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(replay)
 
 
+@unittest.skipUnless(sys.platform.startswith('linux'), 'Native Linux pipe bridge')
 class SampleBrowserBridge(unittest.TestCase):
     def run_bridge(self, code, exercise):
         process = subprocess.Popen([sys.executable, '-u', '-c', code], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
