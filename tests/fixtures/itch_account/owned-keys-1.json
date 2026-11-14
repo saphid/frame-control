@@ -1,0 +1,22 @@
+{
+ "page": 1,
+ "per_page": 500,
+ "owned_keys": [
+  {"id": 9001, "game_id": 341190, "purchase_id": 3923754, "downloads": 6,
+   "created_at": "2026-03-10T23:46:36Z", "updated_at": "2026-03-10T23:46:36Z",
+   "game": {"id": 341190, "title": "Orbit Garden VR", "url": "https://maker.itch.io/orbit-garden",
+            "cover_url": "https://img.itch.zone/aW1nLzE2OTA3NTIuanBn/315x250%23c/Ihj7Wa.jpg",
+            "short_text": "Grow plants in zero gravity.", "type": "default", "classification": "game",
+            "min_price": 1299, "traits": ["p_windows", "p_android", "can_be_bought"],
+            "created_at": "2025-12-04T16:18:04Z", "published_at": "2026-01-03T17:28:47Z",
+            "user": {"id": 46531, "username": "maker", "display_name": "Maker Studio",
+                     "url": "https://maker.itch.io"}}},
+  {"id": 9002, "game_id": 3, "purchase_id": null, "downloads": 0,
+   "created_at": "2026-02-01T10:00:00Z", "updated_at": "2026-02-01T10:00:00Z",
+   "game": {"id": 3, "title": "Desk Only", "url": "https://leafo.itch.io/x-moon",
+            "cover_url": "https://img.itch.zone/aW1hZ2UvMy8xODM3LnBuZw==/315x250%23/y2uYQI.png",
+            "type": "default", "classification": "game", "min_price": 0,
+            "traits": ["p_windows", "p_linux", "p_osx"], "published_at": "2013-03-03T23:02:14Z",
+            "user": {"id": 1, "username": "leafo", "display_name": "leafo", "url": "https://leafo.itch.io"}}}
+ ]
+}

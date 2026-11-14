@@ -19,7 +19,7 @@ function grab(name) {
   fail(`unbalanced ${name}`);
 }
 const names = ["esc", "storeName", "storeHue", "storeInitial", "storeText", "storeOpenSource", "sourcePage", "storeImage",
-               "GLYPH_VR", "GLYPH_APP", "RUNS", "storeRuns", "storeReportDetails", "storePickEligible", "STORE_CATS", "storeCat", "storeCard", "storeRow", "storeKind", "storeArt", "storeIcon", "sourceMark", "currentOffer", "detailBadges", "renderAppDetail", "renderAppDetailBody",
+               "GLYPH_VR", "GLYPH_APP", "RUNS", "storeRuns", "storeReportDetails", "storePickEligible", "STORE_CATS", "storeCat", "storeCard", "storeRow", "storeKind", "storeArt", "storeIcon", "sourceMark", "storePrice", "currentOffer", "detailBadges", "renderAppDetail", "renderAppDetailBody",
                "updateInstall", "openStoreApp", "loadOfferDetails", "installStoreApp"];
 const code = names.map(grab).join("");
 
@@ -54,6 +54,28 @@ const offer = { source: "fdroid", id: "org.example.brush", source_name: "F-Droid
   if (!html.includes('id="detailTitle">Open Brush<')) fail("app page has no title: " + html.slice(0, 200));
   if (!html.includes('id="detailInstall"') || !html.includes("Get it from")) fail("app page has no install panel");
   if (html.includes('role="alert"')) fail("a good listing showed the error state");
+}
+
+// A game the user owns on itch.io says so instead of "Free".
+{
+  const p = page();
+  p.sourceState.detail = { app: { name: "Orbit Garden", offers: [{ ...offer, source: "itch-owned", source_name: "itch.io (my purchases)",
+                                                                    owned: true, owned_label: "Owned on itch.io", free: false }] }, choice: 0 };
+  if (p.renderAppDetail() !== true) fail("an owned listing reported a render failure");
+  const html = p.els.detailBody.innerHTML;
+  if (!html.includes('<div class="detail-price">Owned on itch.io</div>')) fail("owned listing has no Owned on itch.io label");
+  if (html.includes("No purchase needed")) fail("owned listing claims no purchase is needed");
+}
+
+// Owned Android archives link to the creator, with the format limitation visible.
+{
+  const p = page();
+  const note = "This game has no Android download in APK format. Open its itch.io page for other files.";
+  p.sourceState.detail = { app: { name: "Orbit Garden", offers: [{ ...offer, source: "itch-owned", owned: true,
+    free: false, downloadable: false, page: "https://maker.itch.io/orbit-garden", download_note: note }] }, choice: 0 };
+  if (p.renderAppDetail() !== true) fail("page-only owned listing did not render");
+  if (p.els.detailInstall.textContent !== "Get from the creator ↗" || p.els.detailInstall.disabled) fail("archive offered an install instead of its creator page");
+  if (p.els.detailInstallNote.textContent !== note) fail("archive format limitation is missing");
 }
 
 // A catalogue listing that is already installed offers its management page.
