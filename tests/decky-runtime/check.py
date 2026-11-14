@@ -87,6 +87,7 @@ def main():
     parser.add_argument('--reproduce-deck-shelves-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
+    parser.add_argument('--terminal-candidate', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-unload-regression', action='store_true')
     parser.add_argument('--reproduce-prefix-manager-102-unload-regression', action='store_true')
@@ -103,12 +104,15 @@ def main():
     parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
     parser.add_argument('--reproduce-storage-cleaner-unload-regression', action='store_true')
     args = parser.parse_args()
+    if args.terminal_candidate:
+        assert args.id == 65 and args.version == '-' and not args.reproduce_terminal_import_regression
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
     assert os.getuid() == 1100 and ROOT.is_dir(), 'Run through framey-test-decky-runtime.py'
     record = (PREFIX_MANAGER_102 if args.id == 130 and args.version == '1.0.2'
               else next(p for p in PLUGINS if p['id'] == args.id))
-    case = (dict(id=65, shim=None, probe='terminal-import-regression')
+    case = (dict(id=65, shim=None, probe='terminal-private-pty') if args.terminal_candidate else
+            dict(id=65, shim=None, probe='terminal-import-regression')
             if args.reproduce_terminal_import_regression else
             next(p for p in json.loads((ROOT/'tests/decky-runtime/cases.json').read_text())
                  if p['id'] == args.id and p.get('version', '-') == args.version))
@@ -400,6 +404,10 @@ def main():
             source = source.replace(old, new)
         (plugin/'main.py').write_text(source)
 
+    candidate = None
+    if args.terminal_candidate:
+        from terminal_candidate import apply
+        candidate = apply(plugin, record)
     if args.reproduce_suggestme_unload_regression:
         assert record['id'] == 132
         main = plugin/'main.py'
@@ -498,6 +506,8 @@ def main():
     processes = []
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
+    if candidate is not None:
+        report['candidate'] = candidate
     with (home/'runtime.log').open('w+') as log:
         with ExitStack() as fixtures, capture_runtime(log, report, processes, loader=loader):
             if case['probe'] == 'discord-private-activity':
@@ -550,7 +560,18 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'reshadeck-private-x11':
+            if case['probe'] == 'terminal-private-pty':
+                from terminal_lifecycle import probe
+                report['terminalLifecycle'] = probe(record['name'], home, backend, processes)
+                abi = json.loads((home/'terminal-candidate-abi.json').read_text())
+                assert abi['versionInfo'][:2] == [3, 14] and abi['cacheTag'] == 'cpython-314', abi
+                assert abi['architecture'] == os.uname().machine, abi
+                assert abi['termiosPath'] == str(plugin/'py_modules/framey_terminal_stdlib'/
+                    f"termios.cpython-314-{os.uname().machine}-linux-gnu.so"), abi
+                report['candidate']['loaderPythonAbi'] = abi
+                report['result'] = ('test-only adapted Terminal: private PTY input/output, resize, '
+                    'remove/reload cleanup and config persistence passed; production/browser/Frame unverified')
+            elif case['probe'] == 'reshadeck-private-x11':
                 import reshadeck_private
                 report['reshadeckRuntime'] = reshadeck_private.probe(backend, loader, env, log, processes,
                     legacy, until_ready, reshade_fixture, plugin)

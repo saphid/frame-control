@@ -85,7 +85,11 @@ def main():
     parser.add_argument('--loader', type=Path, help='Optional cached, digest-verified native Decky 3.3.0 binary')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--case', type=int, help='Run one official plugin case locally; CI runs all cases')
+    parser.add_argument('--terminal-candidate', action='store_true',
+                        help='Test-only adapted Terminal in an isolated container; requires --case 65')
     args = parser.parse_args()
+    if args.terminal_candidate and args.case != 65:
+        parser.error('--terminal-candidate requires --case 65')
     if sys.platform != 'linux' or not shutil.which('docker'):
         parser.error('Linux with Docker is required')
     cases = check_coverage()
@@ -139,6 +143,11 @@ def main():
               'tests/fixtures/framey-wine-cellar-pre-ipc.py.gz',
               'ui/vendor/wine-cellar-0.2.1/main.py.gz',
               '.github/workflows/decky-runtime.yml']
+    if args.terminal_candidate:
+        inputs += ['tests/decky-runtime/terminal_candidate.py',
+                   'tests/decky-runtime/terminal_lifecycle.py']
+        inputs += [str(p.relative_to(ROOT)) for p in sorted(
+            (ROOT/'tests/fixtures').glob('framey-terminal-python314-*/*')) if p.is_file()]
     report = {'decky': RELEASE, 'architecture': platform.machine(), 'loaderSha256': digest,
               'sourceSha256': {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest()
                                for name in inputs}, 'cases': []}
@@ -185,6 +194,8 @@ def main():
                     (24, '--reproduce-radiyo-unload-regression'),
                     (117, '--reproduce-deckyparty-unload-regression')]
                 if args.case is None or args.case == plugin_id]
+            if args.terminal_candidate:
+                probes = [(65, None, '--terminal-candidate')]
             if args.case is None or args.case == 130:
                 probes.append((130, '1.0.2', '--reproduce-prefix-manager-102-unload-regression'))
             for plugin_id, version, negative in probes:
@@ -220,7 +231,7 @@ def main():
                         raise RuntimeError(f'Decky runtime case {plugin_id} {version or "store"} failed:\n{result.stdout}\n{result.stderr}')
                     observation = json.loads(result.stdout)
                     report['cases'].append(observation)
-                    if not negative:
+                    if not negative or args.terminal_candidate:
                         verify_primary_shutdown(observation)
                     print(f"PASS {plugin_id} {version or 'store'}: {observation['result']}", flush=True)
                 finally:
