@@ -129,8 +129,8 @@ pnpm exec tsc --noEmit
 ```
 
 The committed `dist/index.js` is the built frontend. For a Decky release ZIP,
-put `plugin.json`, `main.py`, and `dist/index.js` inside one top-level plugin
-folder. Publish it through the official Decky store if you want Frame Control's
+put `plugin.json`, `main.py`, `py_modules/framey_decky_ipc.py`, and `dist/index.js`
+inside one top-level plugin folder. Publish it through the official Decky store if you want Frame Control's
 managed installer to offer it. Framey deliberately opens only plugins that the
 official store installed and marked as owned; copying this example into the
 plugin directory does not enable its VR panel.
@@ -143,14 +143,14 @@ python3 scripts/framey-pack-sample.py /tmp/framey-settings-sample.zip
 ```
 
 The command packages the existing built frontend; run `pnpm build` first after
-editing its source. It includes only `plugin.json`, `main.py`, and `dist/index.js`
+editing its source. It includes `plugin.json`, `main.py`, the child IPC helper and `dist/index.js`
 under `framey-settings/`. Fixed file order, timestamps, permissions and uncompressed
 ZIP entries make unchanged input bytes produce the same ZIP and SHA-256,
 regardless of source modification times. The destination directory must exist.
 The command checks a temporary ZIP with the author archive checker before
 replacing the destination. A failed check leaves an existing ZIP untouched and
 removes the temporary file. Its JSON result includes the output path and SHA-256.
-For a renamed fork with this same three-file layout, use `--source path/to/sample
+For a renamed fork with this same four-file layout, use `--source path/to/sample
 --name 'Exact Decky store name'`. Plugins with extra assets or chunks need their
 own packaging step and `scripts/framey-check-archive.py`.
 
@@ -212,3 +212,19 @@ continue to run on AMD64 and ARM64.
 The parent, ownership receipt and DOM input are synthetic. This does not test
 Frame's production HTTP/SSH parent, ARM64 browser behavior, a live headset,
 physical controllers, scrolling, the VR keyboard or visibility in worn VR.
+
+## Decky 3.3.0 child IPC lifetime
+
+The sample includes the same child IPC EOF repair used by managed Framey
+plugins. Decky 3.3.0 can spin in its child socket listener after a peer closes,
+preventing shutdown until the loader kills that plugin. The backend installs
+the bundled helper from its `_main` hook. It changes only this child process's
+private UnixSocket EOF handling, ends the closed connection loop and keeps the
+listener available for another RPC. It does not replace the loader parent or
+change authentication, message framing or normal error replies. This uses a
+private Decky 3.3.0 interface; qualify it again before changing loader versions.
+
+The native sample test sends a controlled peer EOF, requires a successful
+settings read through a new RPC and checks three parent-only clean shutdowns
+with no forced plugin kill. Its settings restart and damaged-state checks
+remain required. Native containers do not establish headset or VR behavior.

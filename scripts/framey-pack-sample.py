@@ -11,7 +11,7 @@ import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-FILES = ('plugin.json', 'main.py', 'dist/index.js')
+FILES = ('plugin.json', 'main.py', 'py_modules/framey_decky_ipc.py', 'dist/index.js')
 
 spec = importlib.util.spec_from_file_location('framey_check_archive', ROOT / 'scripts/framey-check-archive.py')
 checker = importlib.util.module_from_spec(spec)

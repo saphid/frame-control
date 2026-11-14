@@ -1,0 +1,50 @@
+{
+  "decky-runtime-ubuntu-latest": {
+    "head": "e09bc740fed04720590b8ade76f0251d54eda951",
+    "artifactId": 14113583032,
+    "zipSha256": "1f5767dede46898dbb37d4343035cb60791866aa32e32b40cfb3fb2e1dd3bc4d",
+    "sourceHashesVerified": 61,
+    "primaryCases": 45,
+    "controls": 40,
+    "consoleDigestsVerified": 85,
+    "allPrimaryConsolesPassGate": true,
+    "fullDescendantCleanupNotInferred": true,
+    "report": "/tmp/frame-resume-audit-706-native-decky-runtime-ubuntu-latest.json"
+  },
+  "terminal-candidate-ubuntu-latest": {
+    "head": "e09bc740fed04720590b8ade76f0251d54eda951",
+    "artifactId": 14113511938,
+    "zipSha256": "dcc13e92c7ee7b29b4377471c1d6cf9f4c7aeea6c548c6f72c7b6412ed779f22",
+    "sourceHashesVerified": 73,
+    "primaryCases": 1,
+    "controls": 0,
+    "consoleDigestsVerified": 1,
+    "allPrimaryConsolesPassGate": true,
+    "fullDescendantCleanupNotInferred": true,
+    "report": "/tmp/frame-resume-audit-706-native-terminal-candidate-ubuntu-latest.json"
+  },
+  "terminal-candidate-ubuntu-24.04-arm": {
+    "head": "e09bc740fed04720590b8ade76f0251d54eda951",
+    "artifactId": 14113276607,
+    "zipSha256": "9b9ebdfa8ed2fd098b26fb8286c4d1b47aac66283e797fb04ad0a7f21f1fd748",
+    "sourceHashesVerified": 73,
+    "primaryCases": 1,
+    "controls": 0,
+    "consoleDigestsVerified": 1,
+    "allPrimaryConsolesPassGate": true,
+    "fullDescendantCleanupNotInferred": true,
+    "report": "/tmp/frame-resume-audit-706-native-terminal-candidate-ubuntu-24.04-arm.json"
+  },
+  "decky-runtime-ubuntu-24.04-arm": {
+    "head": "e09bc740fed04720590b8ade76f0251d54eda951",
+    "artifactId": 14112629902,
+    "zipSha256": "cc2ed5291bb7bed1fa639af4179b687b8c57f7b58943e49a1142d19ba57d6a81",
+    "sourceHashesVerified": 61,
+    "primaryCases": 45,
+    "controls": 40,
+    "consoleDigestsVerified": 85,
+    "allPrimaryConsolesPassGate": true,
+    "fullDescendantCleanupNotInferred": true,
+    "report": "/tmp/frame-resume-audit-706-native-decky-runtime-ubuntu-24.04-arm.json"
+  }
+}

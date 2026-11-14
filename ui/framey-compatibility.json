@@ -1037,7 +1037,9 @@
         "https://github.com/popsUlfr/SDH-Notebook.git"
       ],
       "status": "works",
-      "reason": "Default notebook drawing, save and reopen were verified in Chromium with real Decky 3.3.0 ARM64, including backend restart. Separately, the unmodified official backend passes private default/two-app page isolation, selected-page and stroke persistence across restart, and selected deletion with independent file readbacks under isolated Decky 3.3.0 AMD64 and ARM64. A private AMD64 browser replay verifies drawing, per-app selection, restart and selected deletion using synthetic app contexts. Production HTTP parent, actual Steam game transitions, background artwork and worn-VR/controller input remain unverified.",
+      "requiredShims": ["notebook-ipc-eof"],
+      "missingShimStatus": "partial",
+      "reason": "Default notebook drawing, save and reopen were verified in Chromium with real Decky 3.3.0 ARM64, including backend restart. Earlier isolated runs of the unmodified official backend passed private default/two-app page isolation, selected-page and stroke persistence across restart, and selected deletion with independent file readbacks under isolated Decky 3.3.0 AMD64 and ARM64. A private AMD64 browser replay verifies drawing, per-app selection, restart and selected deletion using synthetic app contexts. Production HTTP parent, actual Steam game transitions, background artwork and worn-VR/controller input remain unverified. A later full-suite run found an intermittent forced-kill shutdown. Exact managed 0.1.5 now receives the shared child-only IPC EOF repair; existing copies need Update/reinstall. Native AMD64 now verifies page and selection persistence, RPC after controlled peer EOF, and two clean parent-only stops with all recorded descendants reaped. The original backend deterministically requires forced kills under the same EOF control. Fresh ARM64 qualification is pending; this repair does not establish the historical ARM64 shutdown trigger.",
       "blockInstall": false,
       "verification": [
         "static archive",
