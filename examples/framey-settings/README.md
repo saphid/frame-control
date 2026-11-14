@@ -190,3 +190,25 @@ The plugin needs no root access or system changes. Its settings remain after
 the managed plugin folder is removed, following Decky's settings behavior.
 For a production plugin, add explicit migrations for every supported schema,
 explain how users can reset settings, and test every UI path in a worn headset.
+
+## Browser settings through real Decky
+
+On Linux with Docker and Chrome/Chromium available, run:
+
+```sh
+python3 scripts/framey-test-sample-browser.py \
+  --browser /path/to/chrome --output /tmp/framey-sample-browser
+```
+
+The replay loads this unchanged built frontend in the actual opaque Framey
+host. Its private test parent sends the rendered toggle and Reset confirmation's
+requests to published Decky 3.3.0 in a networkless container over stdin. It checks
+saved bytes and 0600 permissions, replaces the iframe to reopen the frontend,
+and repeats readback after two complete loader restarts. Seven screenshots,
+the real RPC transcript and recorded parent-only stops remain in the output.
+The Linux AMD64 CI job requires this replay; native backend-only restart tests
+continue to run on AMD64 and ARM64.
+
+The parent, ownership receipt and DOM input are synthetic. This does not test
+Frame's production HTTP/SSH parent, ARM64 browser behavior, a live headset,
+physical controllers, scrolling, the VR keyboard or visibility in worn VR.
