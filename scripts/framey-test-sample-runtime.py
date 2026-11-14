@@ -34,7 +34,7 @@ def main():
               'tests/decky-runtime/check.py', 'tests/decky-runtime/runtime_console.py',
               'tests/decky-runtime/timer_lifecycle.py', 'tests/decky-runtime/deck_settings_private.py',
               'tests/framey_official.py', 'ui/frame_decky_store.py', 'ui/frame_decky.py',
-              'ui/framey_compatibility.py', 'ui/framey-compatibility.json',
+              'ui/framey_compatibility.py', 'ui/framey-compatibility.json', 'ui/framey_decky_ipc.py',
               '.github/workflows/framey-sample-runtime.yml']
     inputs += ['examples/framey-settings/'+p for p in packer.FILES]
     report = dict(success=False, architecture=platform.machine(), decky=native.RELEASE,
