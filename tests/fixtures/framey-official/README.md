@@ -28,8 +28,13 @@ A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
 `134.zip` was downloaded from the official CDN on 2026-10-31 and matched the existing catalog digest. This is not a fresh full-store metadata claim.
 
+`19.zip` was downloaded from the official CDN on 2026-10-30 and matches
+Notebook 0.1.5's digest in the saved publisher catalog. The live catalog refresh
+returned HTTP 403; no new listing/version claim follows from that download.
+
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `19.zip` | Notebook | 0.1.5 | `c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c` |
 | `37.zip` | Discord Status | 1.5.0 | `00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45` |
 | `133.zip` | Non-Steam Badges | 0.1.0 | `9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131` |
 | `23.zip` | Animation Changer | 1.3.2 | `f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133` |

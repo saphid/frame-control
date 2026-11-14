@@ -1,0 +1,362 @@
+{
+  "sourceRevision": "85ae9528e867cf202b03216bf235e41dbd1f7a69",
+  "historicalExactHeadCi": true,
+  "freshExactHeadCiRequired": true,
+  "architectures": {
+    "amd": {
+      "notebookNativePages": {
+        "defaultAndTwoAppNamespaces": true,
+        "samePageNumberIsolated": true,
+        "strokeBytesIndependentlyReadBack": true,
+        "emptyPageMetadata": true,
+        "perAppSelectionPersistedAcrossRestart": true,
+        "pageBytesPersistedAcrossRestart": true,
+        "selectedDeletePreservedOtherPages": true,
+        "retainedFilesSha256": {
+          "434343/page": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "434343/2.json": "3e1961448dfe6c8262f4119190f9d7d94a97f331708515cc80837c9646aaadc9",
+          "424242/page": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+          "424242/7.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "0/page": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+          "0/0.json": "91e7fcc79739b7f58b24ff8f3835fb6603ad595db62152caa91cb0309e2e8b98"
+        },
+        "publishedBackendUnmodified": true,
+        "syntheticAppIds": [
+          0,
+          424242,
+          434343
+        ],
+        "browserVerified": false,
+        "realSteamGameSelectionVerified": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false,
+        "ownedLoaderStops": [
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.214
+          },
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.214
+          }
+        ],
+        "completeLoaderShutdownLogged": true,
+        "unchangedPublishedFiles": [
+          "main.py",
+          "plugin.json",
+          "dist/index.js",
+          "LICENSE"
+        ]
+      },
+      "head": "85ae9528e867cf202b03216bf235e41dbd1f7a69",
+      "runId": 41124678718,
+      "jobId": 124299978058,
+      "architecture": "x86_64",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "archiveSha256": "6847954953cf6d02702e6f8a077e5a127b6adf8b7ebae8adbdd9e0f6e7331850",
+      "nativeCasesCompleted": 34,
+      "officialArchiveDigestsVerified": 31,
+      "exactCompletedJobVerified": true,
+      "exactWorkflowRunVerified": true,
+      "caseInventoryAndDiscoveryVerified": true,
+      "expectedNegativeRegressionsVerified": true,
+      "steamgriddbPrivateArtwork": {
+        "id": 36,
+        "name": "SteamGridDB",
+        "version": "1.8.1",
+        "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          },
+          {
+            "method": "read_file_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "get_setting",
+            "result": false
+          },
+          {
+            "method": "set_setting",
+            "result": null
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "set_shortcut_icon_from_path",
+            "result": true
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": "icon_is_same_path"
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_path",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/777/private-icon.jpg"
+          },
+          {
+            "method": "download_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "set_shortcut_icon_from_url",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_url",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/888/private-download.jpg"
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          }
+        ],
+        "discovered": [
+          {
+            "name": "SteamGridDB",
+            "version": "1.8.1",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateArtwork": {
+          "settingsPersistedAcrossLoaderRestart": true,
+          "settingsSha256": "284e7567f60b0df8ed029ebbeeb425327048e0b4d6ff0a949907550cd6a7083a",
+          "artworkSha256": "10c748c65ed61863df4836499e79764b3506929f28a5e29065f8682cafaf8ea6",
+          "localFileRoundTrip": true,
+          "signedShortcutIdNormalized": true,
+          "shortcutSetSamePathClear": true,
+          "unselectedShortcutPreserved": true,
+          "cacheTempFilesReplaced": true,
+          "loopbackDownloads": 3,
+          "ownedHttpServerStopped": true,
+          "noProductionChanges": true,
+          "externalArtworkServiceVerified": false,
+          "steamContextMenuVerified": false,
+          "browserVerified": false,
+          "realSteamCef": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API1 discovery, private settings/restart, local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID normalization passed; Steam context menu, external service, browser and VR unverified"
+      },
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "workflowEvent": "pull_request",
+      "workflowRunAttempt": 1,
+      "workflowConclusionAtAudit": "success",
+      "workflowStatusAtAudit": "completed",
+      "githubArtifactDigestVerified": true,
+      "artifactId": 13010372856,
+      "checkoutCommit": "53034590ee9fba01b28c41cfa305741d7f81f6cd",
+      "checkoutTree": "6ca9b59dbf28bbd5425cab63683f25e11c95eae5",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "098e2feff615b1a76b564da9a425a5fdf1c26aa7bef9d8586c2a8f4a1d8c8de4"
+    },
+    "arm": {
+      "notebookNativePages": {
+        "defaultAndTwoAppNamespaces": true,
+        "samePageNumberIsolated": true,
+        "strokeBytesIndependentlyReadBack": true,
+        "emptyPageMetadata": true,
+        "perAppSelectionPersistedAcrossRestart": true,
+        "pageBytesPersistedAcrossRestart": true,
+        "selectedDeletePreservedOtherPages": true,
+        "retainedFilesSha256": {
+          "434343/page": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+          "434343/2.json": "3e1961448dfe6c8262f4119190f9d7d94a97f331708515cc80837c9646aaadc9",
+          "424242/page": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+          "424242/7.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "0/page": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+          "0/0.json": "91e7fcc79739b7f58b24ff8f3835fb6603ad595db62152caa91cb0309e2e8b98"
+        },
+        "publishedBackendUnmodified": true,
+        "syntheticAppIds": [
+          0,
+          424242,
+          434343
+        ],
+        "browserVerified": false,
+        "realSteamGameSelectionVerified": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false,
+        "ownedLoaderStops": [
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.164
+          },
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.164
+          }
+        ],
+        "completeLoaderShutdownLogged": true,
+        "unchangedPublishedFiles": [
+          "main.py",
+          "plugin.json",
+          "dist/index.js",
+          "LICENSE"
+        ]
+      },
+      "head": "85ae9528e867cf202b03216bf235e41dbd1f7a69",
+      "runId": 41124678718,
+      "jobId": 124299978325,
+      "architecture": "aarch64",
+      "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+      "archiveSha256": "060a6b8a614320c4590c67b1612ee4fdb4cea728f0aae99001c2af360fbcd99b",
+      "nativeCasesCompleted": 34,
+      "officialArchiveDigestsVerified": 31,
+      "exactCompletedJobVerified": true,
+      "exactWorkflowRunVerified": true,
+      "caseInventoryAndDiscoveryVerified": true,
+      "expectedNegativeRegressionsVerified": true,
+      "steamgriddbPrivateArtwork": {
+        "id": 36,
+        "name": "SteamGridDB",
+        "version": "1.8.1",
+        "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          },
+          {
+            "method": "read_file_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "get_setting",
+            "result": false
+          },
+          {
+            "method": "set_setting",
+            "result": null
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "set_shortcut_icon_from_path",
+            "result": true
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": "icon_is_same_path"
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_path",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/777/private-icon.jpg"
+          },
+          {
+            "method": "download_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "set_shortcut_icon_from_url",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_url",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/888/private-download.jpg"
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          }
+        ],
+        "discovered": [
+          {
+            "name": "SteamGridDB",
+            "version": "1.8.1",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateArtwork": {
+          "settingsPersistedAcrossLoaderRestart": true,
+          "settingsSha256": "284e7567f60b0df8ed029ebbeeb425327048e0b4d6ff0a949907550cd6a7083a",
+          "artworkSha256": "10c748c65ed61863df4836499e79764b3506929f28a5e29065f8682cafaf8ea6",
+          "localFileRoundTrip": true,
+          "signedShortcutIdNormalized": true,
+          "shortcutSetSamePathClear": true,
+          "unselectedShortcutPreserved": true,
+          "cacheTempFilesReplaced": true,
+          "loopbackDownloads": 3,
+          "ownedHttpServerStopped": true,
+          "noProductionChanges": true,
+          "externalArtworkServiceVerified": false,
+          "steamContextMenuVerified": false,
+          "browserVerified": false,
+          "realSteamCef": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API1 discovery, private settings/restart, local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID normalization passed; Steam context menu, external service, browser and VR unverified"
+      },
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "workflowEvent": "pull_request",
+      "workflowRunAttempt": 1,
+      "workflowConclusionAtAudit": "success",
+      "workflowStatusAtAudit": "completed",
+      "githubArtifactDigestVerified": true,
+      "artifactId": 13010637767,
+      "checkoutCommit": "53034590ee9fba01b28c41cfa305741d7f81f6cd",
+      "checkoutTree": "6ca9b59dbf28bbd5425cab63683f25e11c95eae5",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "8c9e9930bff8ce82fbad7b15314e363aa1e5c4cd2d9447868f0c911968e2d889"
+    }
+  },
+  "limit": "Native backend fixtures only. Original artifacts retain no raw loader console or embedded source fingerprints; source identity is verified through the actual logged checkout tree. Browser evidence is separate."
+}

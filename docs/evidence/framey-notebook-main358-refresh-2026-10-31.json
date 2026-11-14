@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-31T00:42:14.977852+00:00",
+  "sourceRevision": "5ebd73eaa5d673ae85cc295ab65a4813ddddc819",
+  "mergedMain": "358e423a62300689543e2083d5213af763c03a46",
+  "priorHead": "c415b0fbbe7d640acc2294e812e905323a74b243",
+  "notebookAndBluetoothBranchBodiesRetained": true,
+  "all116PoliciesVersionsDigestsRatingsPreserved": true,
+  "notebookFullRecordRetained": true,
+  "other115FullCatalogRecordsMatchMain": true,
+  "productionStoreSourceUnchanged": true,
+  "focusedTestsPassed": 154,
+  "localNativeEvidence": "docs/evidence/framey-notebook-main358-native-2026-10-31.json",
+  "exactHeadCiPending": true,
+  "olderEvidenceHistoricalOnly": true
+}
