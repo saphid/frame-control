@@ -1,0 +1,10 @@
+[Unit]
+Description=Poll private Frame Control queue without waking an agent when empty
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=60s
+Unit=frame-bug-dispatch.service
+
+[Install]
+WantedBy=timers.target
