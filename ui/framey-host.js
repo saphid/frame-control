@@ -57,6 +57,7 @@
   const routes = new Map();
   const routeListeners = new Set();
   const routeHistory = [];
+  let routeId = 0;
   let currentRoute = null;
   let currentParams = {};
   let nextId = 0;
@@ -440,18 +441,18 @@
         }
       }}, children);
   });
-  const Field = ({label, description, icon, style, className, children, disabled,
-    focusable=false, onActivate, onClick}) => {
+  const Field = R.forwardRef(function Field({label, description, icon, style, className, children, disabled,
+    focusable=false, onActivate, onClick}, ref) {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
     // Action rows need a local focus target. Ordinary setting labels retain
     // their native input association instead of gaining another tab stop.
-    const props={style,className};
+    const props={style,className,ref};
     if (actionable || focusable) Object.assign(props,{disabled,onActivate,onClick,
       tabIndex:focusable ? (disabled ? -1 : 0) : undefined});
     return R.createElement(actionable || focusable ? Focusable : 'label', props,
       icon != null && R.createElement('span', null, icon),
       R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
-  };
+  });
   // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
   // standalone control separate so persisted true settings render correctly.
   const Toggle = ({value, disabled, onChange}) => R.createElement('input', {
@@ -547,7 +548,7 @@
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
         onClick:event=>{if(!disabled)onClick?.(event);},
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
-  const TextField = R.forwardRef(function TextField({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
+  const TextField = R.forwardRef(function TextField({label, description, tooltip, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
     rangeMin, rangeMax, maxLength, minLength, pattern, required,
     bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls, style,
@@ -580,7 +581,7 @@
       bShowClearAction && (bAlwaysShowClearAction || String(value ?? draft).length>0) &&
         R.createElement('button', {type:'button', disabled:!!disabled, onClick:clear,
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
-      inlineControls);
+      inlineControls, tooltip != null && R.createElement('small', null, tooltip));
   });
   const SliderField = ({label, description, icon, className, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, notchCount, notchLabels, notchTicksVisible, onChange}) => {
@@ -753,7 +754,7 @@
     label != null && R.createElement('h3', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
-    bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
+    bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, bDestructiveWarning, children}) => {
     const inFlight = R.useRef(false);
     const mounted = R.useRef(true);
     const [busy, setBusy] = R.useState(false);
@@ -800,7 +801,9 @@
       R.createElement('h2', null, strTitle),
       strDescription && R.createElement('div', null, strDescription), children,
       error && R.createElement('p', {role:'alert'}, error),
+      bDestructiveWarning && R.createElement('p', {className:'framey-destructive-note'}, 'Destructive action'),
       R.createElement('button', {type:'button', disabled:!!bOKDisabled || busy,
+        className:bDestructiveWarning ? 'framey-destructive' : undefined,
         onClick:action(onOK, bOKDisabled)}, strOKButtonText || 'OK'),
       onMiddleButton && R.createElement('button', {type:'button', disabled:!!bMiddleDisabled || busy,
         onClick:action(onMiddleButton, bMiddleDisabled)}, strMiddleButtonText || 'More'),
@@ -863,7 +866,8 @@
         'aria-label':title},
         !props.bHideCloseIcon && R.createElement('button', {
           type:'button', disabled:!!modal.running || modalCancelDisabled(modal),
-          onClick:()=>dismissModal(modal)}, cancelText), modal.element);
+          onClick:()=>dismissModal(modal)}, cancelText),
+        R.createElement(DialogBoundary, {close:modal.close}, modal.element));
     }) : null);
   };
   function modalCallback(modal, name) {
@@ -922,10 +926,10 @@
     return params;
   }
   function activeRoute(path) {
-    if (routes.has(path)) return {component:routes.get(path), params:{}};
-    for (const [pattern, component] of routes) {
+    if (routes.has(path)) return {...routes.get(path), params:{}};
+    for (const [pattern, registration] of routes) {
       const params = matchRoute(pattern, path);
-      if (params) return {component, params};
+      if (params) return {...registration, params};
     }
     return null;
   }
@@ -954,15 +958,25 @@
     }
     return navigate(null);
   }
+  function refreshRoute() {
+    if (currentRoute === null) return;
+    const match = activeRoute(currentRoute);
+    if (match) showRoute(currentRoute, match);
+    else navigate(null);
+  }
   const routerHook = {
     addRoute(path, component) {
       if (!routePattern(path) ||
           (typeof component !== 'function' && !R.isValidElement(component)))
         throw Error('Framey route needs a local path and React component');
-      routes.set(path, component);
-      return () => routerHook.removeRoute(path);
+      const registration = {component, id:++routeId};
+      routes.set(path, registration);
+      refreshRoute();
+      // Cleanup belongs to this registration, even when the next one uses
+      // the same path and component. An older disposer cannot remove it.
+      return () => {if (routes.get(path) === registration) routerHook.removeRoute(path);};
     },
-    removeRoute(path) {routes.delete(path); if(currentRoute && !activeRoute(currentRoute)) navigate(null);},
+    removeRoute(path) {if (routes.delete(path)) refreshRoute();},
     // Steam routes and global components have no equivalent in the isolated panel.
     addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{},
   };
@@ -988,6 +1002,7 @@
       const failed = failure => {error.textContent='Dialog close callback failed: '+String(failure?.message || failure);};
       try {Promise.resolve(onClosed?.()).catch(failed);} catch (failure) {failed(failure);}
     };
+    modal.close = Close;
     modal.dismiss = () => {
       if (!modals.includes(modal)) return;
       const callback=modal.source?.props?.closeModal;
@@ -1233,7 +1248,7 @@
   };
   localModules.set('framey/components', Object.freeze(Object.fromEntries(
     Object.entries(DFL).filter(([name,value])=>/^[A-Z]/.test(name) &&
-      (typeof value==='function' || [DialogButton,Focusable,TextField,ScrollPanel,ScrollPanelGroup].includes(value))))));
+      (typeof value==='function' || [DialogButton,Field,Focusable,TextField,ScrollPanel,ScrollPanelGroup].includes(value))))));
   // Some panels eagerly look up the optional Steam UI sound player. Allow the
   // lookup, but never claim playback or expose Steam's mutable audio store.
   localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({
@@ -1350,7 +1365,7 @@
       if (R.isValidElement(value) || Array.isArray(value)) {
         const root = window.ReactDOM.createRoot(node);
         roots.push(root);
-        root.render(value);
+        root.render(R.createElement(ToastBoundary, null, value));
       } else if (typeof value === 'string' || typeof value === 'number') {
         node.textContent = String(value);
       } else return;
@@ -1373,7 +1388,13 @@
     close.onclick=dismiss; item.append(close);
     if (typeof onClick === 'function') {
       const open = document.createElement('button'); open.type='button'; open.textContent='Open';
-      open.onclick=()=>{onClick(); dismiss();}; item.append(open);
+      let opening = false;
+      open.onclick=()=>{
+        if (dismissed || opening) return;
+        // Retire the action before plugin code can synchronously reenter it.
+        opening = true;
+        try {onClick();} finally {dismiss();}
+      }; item.append(open);
     }
     toastRoot.append(item);
     const timer = setTimeout(dismiss, Math.min(30000,Math.max(3000,Number(duration)||5000)));
@@ -1389,10 +1410,35 @@
     render() { return this.state.failure ? R.createElement('p', {role:'alert'},
       `This Decky panel is not compatible with Framey: ${this.state.failure}`) : this.props.children; }
   }
+  // Toast fields mount in separate React roots, outside the plugin surface.
+  // Keep failures local so healthy fields and the native dismissal survive.
+  class ToastBoundary extends PanelBoundary {
+    render() { return this.state.failure ? R.createElement('span', {role:'alert'},
+      `This notification content could not be displayed: ${this.state.failure}`) : this.props.children; }
+  }
+  class DialogBoundary extends PanelBoundary {
+    static getDerivedStateFromProps(props, state) {
+      // Only an explicit handle.Update supplies a new decorated element.
+      // Stack/busy redraws keep a failed view retired and healthy state intact.
+      return props.children === state.content ? null : {content:props.children, failure:null};
+    }
+    render() {
+      return this.state.failure ? R.createElement(R.Fragment, null, super.render(),
+        // Match handle.Close: broken plugin cancellation handlers, hidden
+        // close icons or disabled Cancel cannot strand the panel behind inert.
+        R.createElement('button', {type:'button', onClick:this.props.close}, 'Close failed dialog')) : this.props.children;
+    }
+  }
   function PluginSurface({plugin}) {
     const [view, setView] = R.useState(plugin.content ? 'panel' : 'settings');
-    const [route, setRoute] = R.useState(currentRoute);
-    R.useEffect(() => {routeListeners.add(setRoute); return () => routeListeners.delete(setRoute);}, []);
+    const [, redrawRoute] = R.useState(0);
+    const route = currentRoute, match = route ? activeRoute(route) : null;
+    R.useEffect(() => {
+      // A registry update can change the component/params at the same path.
+      const refresh = () => redrawRoute(revision => revision+1);
+      routeListeners.add(refresh);
+      return () => routeListeners.delete(refresh);
+    }, []);
     const [running, setRunning] = R.useState(null);
     const runningRef = R.useRef(false);
     const [message, setMessage] = R.useState('');
@@ -1425,11 +1471,11 @@
           disabled:running !== null, onClick:()=>runAction(action,index)}, action.label))),
       message && R.createElement('p', {role:'status'}, message),
       // A broken content view must not remove the controls that can leave it.
-      // Reset only when navigation selects another view; ordinary redraws
+      // Reset when navigation or registration selects another view; ordinary redraws
       // preserve healthy child state and do not retry a failing render.
-      R.createElement('div', null, R.createElement(PanelBoundary, {key:route ? `route:${route}` : `view:${view}`},
-        route ? (typeof activeRoute(route)?.component === 'function' ?
-          R.createElement(activeRoute(route).component) : activeRoute(route)?.component) :
+      R.createElement('div', null, R.createElement(PanelBoundary, {key:route ? `route:${route}:${match?.id}` : `view:${view}`},
+        route ? (typeof match?.component === 'function' ?
+          R.createElement(match.component) : match?.component) :
           (view === 'settings' ? plugin.settings : plugin.content))));
   }
   window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit = {

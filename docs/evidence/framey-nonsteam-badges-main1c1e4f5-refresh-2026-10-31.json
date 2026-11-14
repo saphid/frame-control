@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-31T07:49:27.078374+00:00",
+  "oldHead": "392b81162d6d0ec9842d5c0f5cb4823601403804",
+  "main": "1c1e4f588735dc3119f67f90ca8c33d3a90563cd",
+  "sourceCommit": "3e4e5f93451de458a1a1f5c7f472dee428d4d30e",
+  "tree": "c61575c88fdcc7c4bba8e030a42cb150a63fb89c",
+  "normalMerge": true,
+  "nonsteamImplementationDiffUnchanged": true,
+  "implementationDiffSha256": "5bc70c628e620cb104988d4ee17d807ab18d8c6053a10e19b350036f76643832",
+  "focusedHostTests": 79,
+  "focusedTestCounts": [
+    18,
+    61
+  ],
+  "focusedLogSha256": "05f6f6ae1d3a943ae9b1b5e69edd3e630a08d3b3ff93ab4865fb830825ff8dab",
+  "other115FullCatalogRecordsUnchanged": true,
+  "nonsteamRemainsPartial": true,
+  "mainProbeBodiesUnchanged": 31,
+  "additionalNativeProbe": "nonsteam-private-shortcuts",
+  "declaredNativeCases": 34,
+  "mainWineShottyIpcAndArchiveBytesUnchanged": true,
+  "generatedDocsPassed": true,
+  "diffCheckPassed": true,
+  "newHeadHostedQualificationPending": true,
+  "localNewNativeRun": false,
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "previousHeadChecksPassed": 18,
+  "previousHeadWorkflowsPassed": 5,
+  "previousHeadPackages": {
+    "amd": {
+      "head": "392b81162d6d0ec9842d5c0f5cb4823601403804",
+      "run": 41179294147,
+      "job": 124473213650,
+      "artifactId": 13034144920,
+      "artifactDigestMatchesGitHub": true,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "jobLogSha256": "18b558004e5c1c8008bd481e66ad8da73582f2580b830665b120ef6d53246e94",
+      "fullGuestResultVerified": true
+    },
+    "arm": {
+      "head": "392b81162d6d0ec9842d5c0f5cb4823601403804",
+      "run": 41179294147,
+      "job": 124473213510,
+      "artifactId": 13035012713,
+      "artifactDigestMatchesGitHub": true,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "jobLogSha256": "adfca0e5ca08068252bde2f7dcd45b59877449e7243fdb6acc8ff72312bde069",
+      "fullGuestResultVerified": true
+    },
+    "http": {
+      "head": "392b81162d6d0ec9842d5c0f5cb4823601403804",
+      "run": 41179294147,
+      "job": 124473213613,
+      "artifactId": 13035520164,
+      "artifactDigestMatchesGitHub": true,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "jobLogSha256": "5a2b27bd6d179304e857ea862cd1210b0e439c03c482e4180465061aa3802c3e",
+      "fullGuestResultVerified": true
+    },
+    "parent": {
+      "head": "392b81162d6d0ec9842d5c0f5cb4823601403804",
+      "run": 41179294147,
+      "job": 124473213675,
+      "artifactId": 13035021437,
+      "artifactDigestMatchesGitHub": true,
+      "exactCompletedJobVerified": true,
+      "exactHeadCheckoutVerified": true,
+      "jobLogSha256": "7d5961416d93f2a696d6d8bcd215e4c038010411d7f97f35da40a5129624f05a",
+      "fullGuestResultVerified": true
+    }
+  },
+  "previousHeadPackageAuditSha256": "907d0c787dce2da3aced8400ca3ff4a3e2246b16dae309fcd92e6ba910efccdb",
+  "previousHeadCapturesVisuallyInspected": 12,
+  "previousHeadVisualAuditSha256": "68a19e61ea53c89e349ee6509dfbc4e5bb058bdfb360cf85595d45677a6b6329",
+  "auditPreparationCorrection": "An initial assertion assumed six workflows and stopped before writes; the actual complete five-workflow inventory was read and verified before recording success."
+}

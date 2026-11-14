@@ -57,7 +57,7 @@ try:
         sys.path.insert(0, '/input')
         from syncthing_migration_stacks import guest_observer
         assert not browser
-        observer = guest_observer(stack_inputs, user)
+        observer = guest_observer(stack_inputs)
         report['migrationStacks'] = observer.report
     with observer:
         result = subprocess.run(
