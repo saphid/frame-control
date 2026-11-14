@@ -1,0 +1,104 @@
+{
+  "pr": 509,
+  "head": "3d52a115d6d5a73a5852609e6845a2d3546017e3",
+  "mainBefore": "c764040d4e35910bd89e19e7b5f36970e70b2148",
+  "merge": "07c953b266bcb9b6ea24e1fcbba7e91e0de614ea",
+  "testedIntegration": "ac5cd3642084b99cfc1495b8143b004d0ad03801",
+  "testedTree": "109bce8a4d7717316c2b5cf02e8a426b0ee6db37",
+  "actualTreeAndParentsVerified": true,
+  "hostedChecksPassed": 25,
+  "nativeArtifactAudit": {
+    "decky-runtime-ubuntu-24.04-arm": {
+      "head": "3d52a115d6d5a73a5852609e6845a2d3546017e3",
+      "artifactId": 14110020477,
+      "zipSha256": "0b1ead2b1838010cc2666010b33a0979ad381313ec9ec0371a5e11ca73d2e563",
+      "sourceHashesVerified": 61,
+      "primaryCases": 45,
+      "controls": 40,
+      "consoleDigestsVerified": 85,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-509-exact3d52-native-decky-runtime-ubuntu-24.04-arm.json"
+    },
+    "decky-runtime-ubuntu-latest": {
+      "head": "3d52a115d6d5a73a5852609e6845a2d3546017e3",
+      "artifactId": 14109756312,
+      "zipSha256": "fdd5275baa1c84098d667083df720a1dfcb232298fefe02aced12d96c313a543",
+      "sourceHashesVerified": 61,
+      "primaryCases": 45,
+      "controls": 40,
+      "consoleDigestsVerified": 85,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-509-exact3d52-native-decky-runtime-ubuntu-latest.json"
+    },
+    "terminal-candidate-ubuntu-latest": {
+      "head": "3d52a115d6d5a73a5852609e6845a2d3546017e3",
+      "artifactId": 14109561824,
+      "zipSha256": "64cd194c80328f46fb3660ff40a45a543a86f7861125958c655c30f6dd49f5a9",
+      "sourceHashesVerified": 73,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-509-exact3d52-native-terminal-candidate-ubuntu-latest.json"
+    },
+    "terminal-candidate-ubuntu-24.04-arm": {
+      "head": "3d52a115d6d5a73a5852609e6845a2d3546017e3",
+      "artifactId": 14109123181,
+      "zipSha256": "ea77c08fb275e7c1570dce7a7efdd079a023ceff6c44d04e40322acbc9d9f979",
+      "sourceHashesVerified": 73,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-509-exact3d52-native-terminal-candidate-ubuntu-24.04-arm.json"
+    }
+  },
+  "rawReport": "framey-mangopeel-merge-07c953b2-2026-11-14.json.gz",
+  "rawReportSha256": "9ac2a317855d0532bb4d30fdae278cc6e1cf1400c427c233b8a7169b770abe9b",
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "physicalInputVerified": false,
+  "focusedTests": 160,
+  "strictMangoPeelAudit": {
+    "/tmp/frame-coordinator-509-mainc764-native.json": {
+      "head": "ac5cd3642084b99cfc1495b8143b004d0ad03801",
+      "sourceHashesVerified": 61,
+      "positiveStopSeconds": 0.214,
+      "negativeStopSeconds": 5.223,
+      "negativeForcedKills": 1,
+      "controlledEofAndLaterRpc": true,
+      "exactDescendantsReaped": true,
+      "unrelatedProcessAndProfilePreserved": true,
+      "consoleDigestsVerified": 4,
+      "noHardwareOrOverlayClaim": true
+    },
+    "/tmp/frame-coordinator-509-exact3d52-native-decky-runtime-ubuntu-latest.json": {
+      "head": "3d52a115d6d5a73a5852609e6845a2d3546017e3",
+      "sourceHashesVerified": 61,
+      "positiveStopSeconds": 0.186,
+      "negativeStopSeconds": 5.194,
+      "negativeForcedKills": 1,
+      "controlledEofAndLaterRpc": true,
+      "exactDescendantsReaped": true,
+      "unrelatedProcessAndProfilePreserved": true,
+      "consoleDigestsVerified": 4,
+      "noHardwareOrOverlayClaim": true
+    },
+    "/tmp/frame-coordinator-509-exact3d52-native-decky-runtime-ubuntu-24.04-arm.json": {
+      "head": "3d52a115d6d5a73a5852609e6845a2d3546017e3",
+      "sourceHashesVerified": 61,
+      "positiveStopSeconds": 0.185,
+      "negativeStopSeconds": 5.213,
+      "negativeForcedKills": 1,
+      "controlledEofAndLaterRpc": true,
+      "exactDescendantsReaped": true,
+      "unrelatedProcessAndProfilePreserved": true,
+      "consoleDigestsVerified": 4,
+      "noHardwareOrOverlayClaim": true
+    }
+  }
+}
