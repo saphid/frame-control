@@ -1354,7 +1354,7 @@
       if (R.isValidElement(value) || Array.isArray(value)) {
         const root = window.ReactDOM.createRoot(node);
         roots.push(root);
-        root.render(value);
+        root.render(R.createElement(ToastBoundary, null, value));
       } else if (typeof value === 'string' || typeof value === 'number') {
         node.textContent = String(value);
       } else return;
@@ -1392,6 +1392,12 @@
     }
     render() { return this.state.failure ? R.createElement('p', {role:'alert'},
       `This Decky panel is not compatible with Framey: ${this.state.failure}`) : this.props.children; }
+  }
+  // Toast fields mount in separate React roots, outside the plugin surface.
+  // Keep failures local so healthy fields and the native dismissal survive.
+  class ToastBoundary extends PanelBoundary {
+    render() { return this.state.failure ? R.createElement('span', {role:'alert'},
+      `This notification content could not be displayed: ${this.state.failure}`) : this.props.children; }
   }
   class DialogBoundary extends PanelBoundary {
     static getDerivedStateFromProps(props, state) {

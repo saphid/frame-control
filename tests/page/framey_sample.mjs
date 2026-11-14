@@ -79,7 +79,7 @@ assert.deepEqual(Array.from(calls.find(call=>call.method==='set_setting').args),
 const toast=elements.get('framey-toasts').children[0];
 assert.equal(toast.attributes.role,'status');
 assert.equal(toast.children[0].textContent,'Framey sample');
-const toastBody=roots.get(toast.children[1]).value;
+const toastBody=roots.get(toast.children[1]).value.children[0];
 assert.equal(toastBody.type,'span');
 assert.match(JSON.stringify(toastBody),/Setting saved/);
 assert.match(JSON.stringify(toastBody),/on/);
