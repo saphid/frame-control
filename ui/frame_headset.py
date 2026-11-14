@@ -13,7 +13,7 @@ import tarfile
 
 
 ROOT = Path(__file__).resolve().parent.parent
-ARCHIVE_DIRS = ('ui', 'apk-catalog', 'frame/android', 'frame/devkit-utils', 'frame/openxr-compat', 'scripts')
+ARCHIVE_DIRS = ('ui', 'apk-catalog', 'frame/android', 'frame/nxnative', 'frame/love', 'frame/devkit-utils', 'frame/openxr-compat', 'scripts')
 MAX_ARCHIVE = 32 * 1024 * 1024
 
 
@@ -108,7 +108,7 @@ try:
         with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
             members = archive.getmembers()
             if not members or any(not m.isfile() or not m.name.startswith(('ui/','apk-catalog/','frame/android/',
-                   'frame/devkit-utils/','frame/openxr-compat/','scripts/')) or '..' in pathlib.PurePosixPath(m.name).parts
+                   'frame/nxnative/','frame/love/','frame/devkit-utils/','frame/openxr-compat/','scripts/')) or '..' in pathlib.PurePosixPath(m.name).parts
                    or m.size > 8*1024*1024 for m in members):
                 raise RuntimeError('Invalid headset bundle member')
             archive.extractall(stage, members=members, filter='data')
@@ -163,10 +163,26 @@ def bundle():
             for path in sorted(folder.rglob('*')):
                 if not path.is_file() or path.is_symlink() or '__pycache__' in path.parts:
                     continue
+                # Game outputs and user sources never belong in the app bundle.
+                # Match the desktop/iOS helper and profile resource boundary.
+                if dirname in ('frame/nxnative', 'frame/love'):
+                    rel = path.relative_to(folder)
+                    helper = (len(rel.parts) == 1 and
+                              (path.suffix == '.py' or path.name == 'README.md' or
+                               (dirname == 'frame/nxnative' and
+                                (path.suffix == '.patch' or path.name == 'LICENSE.nxnative')) or
+                               (dirname == 'frame/love' and
+                                (path.suffix == '.java' or path.name == 'LICENSE.SDL.txt'))))
+                    profile = (dirname == 'frame/nxnative' and len(rel.parts) >= 3 and
+                               rel.parts[0] == 'profiles' and path.suffix in ('.tsv', '.h', '.md'))
+                    if not helper and not profile:
+                        continue
                 native_dependency = path.relative_to(ROOT).as_posix() in (
                     'ui/vendor/psutil-7.2.2/aarch64.whl', 'ui/vendor/psutil-7.2.2/x86_64.whl')
-                if (path.suffix not in ('.py', '.html', '.js', '.css', '.json', '.sh', '.gz', '.zst', '.so', '.txt', '.md')
-                        and path.name != 'ssh' and not native_dependency):
+                game_profile = (path.is_relative_to(ROOT / 'frame/nxnative/profiles')
+                                and path.suffix in ('.tsv', '.h'))
+                if (path.suffix not in ('.py', '.html', '.js', '.css', '.json', '.sh', '.gz', '.zst', '.so', '.txt', '.md', '.patch', '.java')
+                        and path.name not in ('ssh', 'LICENSE.nxnative') and not native_dependency and not game_profile):
                     continue
                 data = path.read_bytes()
                 info = tarfile.TarInfo(path.relative_to(ROOT).as_posix())

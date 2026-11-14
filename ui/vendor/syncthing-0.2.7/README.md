@@ -21,6 +21,15 @@ reserve the fixed listener before settings/PID/log/systemd activity, and remove
 PID/executable-name discovery. A private Unix listener shares the original HTTP
 handler and uses a socket in the Python owner's temporary directory (0700),
 with socket mode 0600. It requires Rust 1.89 or later; builds use 1.98.1.
+The helper also binds its lifetime to the spawning plugin with Linux
+`PR_SET_PDEATHSIG`: Decky's five-second forced termination cannot leave a helper
+holding the ownership lock. Python supplies its PID before fork/exec, and the
+helper rejects a changed parent before touching the lock, PID, settings or log.
+A lock handoff uses a 500 ms retry budget and still refuses an unrelated owner. The
+isolated native fixture tests three normal reloads plus Decky's forced-kill path;
+its init process reaps orphaned children. The fixture cleans the temporary
+socket directory of the deliberately killed Python owner; the death guard itself
+does not promise filesystem cleanup after SIGKILL.
 The service-file follow-up adds `owned_unit.rs` and uses a separate
 `frame-control-syncthing.service` in the actual user's home. A matching header
 and exact-byte sidecar are required for updates, removal and managed control.

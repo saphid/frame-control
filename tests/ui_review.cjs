@@ -31,10 +31,11 @@ test('helper starts and status reads name the headset shown when requested',asyn
 });
 test('a late input failure cannot replay A keystrokes on B',async()=>{
   const f=connectionFixture(),c=f.context,writes=[];let rejectA;
-  Object.assign(c,{pad:{state:'ready',queue:[],sending:false},fetch:(path,opts)=>{writes.push({device:opts.headers['X-Frame-Device'],events:JSON.parse(opts.body).events});return writes.length===1?new Promise((_,reject)=>rejectA=reject):Promise.resolve({ok:true,json:async()=>({state:'ready',sent:true})});}});
+  Object.assign(c,{pad:{state:'ready',queue:[],sending:false,keys:new Set([29])},fetch:(path,opts)=>{writes.push({device:opts.headers['X-Frame-Device'],events:JSON.parse(opts.body).events});return writes.length===1?new Promise((_,reject)=>rejectA=reject):Promise.resolve({ok:true,json:async()=>({state:'ready',sent:true})});}});
   f.run(pick(html,'const isMove = e =>','function padKey('));f.run('padSend({key:"for A"})');
   f.run('onConnection({phase:"connected",device:{id:"b",name:"B"},devices_rev:1,now:0})');
   assert.equal(c.pad.state,'off');assert.equal(c.pad.queue.length,0);
+  assert.equal(c.pad.keys.size,0,'old modifier state must not follow the headset switch');
   rejectA(Error('lost A'));await tick();c.pad.state='ready';f.run('padSend({key:"for B"})');await tick();
   assert.equal(writes.length,2);assert.equal(writes[1].device,'b');assert.equal(writes[1].events[0].key,'for B');
 });
@@ -72,12 +73,15 @@ test('only a preview matching current diagnostics consent can be sent or copied'
   pending[2].resolve({text:'LATE SECRET'});await late;
   assert.doesNotMatch(vm.runInContext('bugReportText().body',c),/SECRET/);
 });
-test('clearing Steam search invalidates a pending query and pending country lookup',async()=>{
-  const el={value:'Portal'},gm={country:'US',src:'store',store:[],storeQ:null,seq:0,shownBySource:{}};let resolve;
-  const c={$:()=>el,gm,api:()=>new Promise(r=>resolve=r),renderChips(){},filterGames(){},encodeURIComponent};vm.createContext(c);
-  vm.runInContext(pick(html,'async function searchStore() {','function setGameSource('),c);
-  const a=vm.runInContext('searchStore()',c);el.value='';await vm.runInContext('searchStore()',c);resolve({results:[{name:'Portal'}]});await a;
-  assert.equal(gm.storeQ,null);assert.equal(gm.store.length,0);
+test('clearing Steam search invalidates a pending query and loads browse instead',async()=>{
+  const el={value:'Portal'},gm={country:'US',src:'store',tags:[],store:[],storeQ:null,seq:0,shownBySource:{}};const pending=[];
+  const c={$:()=>el,gm,api:path=>new Promise(resolve=>pending.push({path,resolve})),renderChips(){},filterGames(){},encodeURIComponent};vm.createContext(c);
+  vm.runInContext(pick(html,'async function searchStore(','function setGameSource('),c);
+  const a=vm.runInContext('searchStore()',c);el.value='';const b=vm.runInContext('searchStore()',c);
+  assert.match(pending[1].path,/\/browse\?cc=US/);
+  pending[1].resolve({results:[{name:'VR starting point'}]});await b;
+  pending[0].resolve({results:[{name:'Portal'}]});await a;
+  assert.equal(gm.storeQ,null);assert.equal(gm.store[0].name,'VR starting point');assert.equal(gm.loading,false);
 });
 test('failed installed reads remain unknown or stale with retry, never successful empty',async()=>{
   const els=new Map(),$=id=>{if(!els.has(id))els.set(id,{textContent:'',innerHTML:'',setAttribute(){}});return els.get(id);};

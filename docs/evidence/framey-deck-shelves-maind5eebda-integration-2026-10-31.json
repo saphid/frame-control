@@ -1,0 +1,43 @@
+{
+  "at": "2026-10-31T22:28:42.922236+00:00",
+  "pr": 528,
+  "testedSource": "63c69fa308c8ed2e4dbbf4799d58bb611baffd8a",
+  "integratedMain": "d5eebdac850bdedaf0472dc1bbc93afede17c710",
+  "normalMergeParents": [
+    "19860eea731c3b28548e1a20e50295b6a579c342",
+    "d5eebdac850bdedaf0472dc1bbc93afede17c710"
+  ],
+  "sourceInputs": 22,
+  "serverTests": 1964,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 10,
+  "localNativePluginIds": [
+    135,
+    61,
+    96,
+    117
+  ],
+  "deckShelvesRpcs": [
+    4,
+    3
+  ],
+  "allSettingsAndBackupSnapshotsIndependentlyVerified": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 400.91,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "partial",
+  "officialPluginUiUnverified": true,
+  "genericCleanRuntimeClaim": false,
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "27c5249d08f78f0b9eb04fc1ca13d4adfbf10b418f2116ea5cdd4224c7214bef",
+  "rawBytes": 66623
+}

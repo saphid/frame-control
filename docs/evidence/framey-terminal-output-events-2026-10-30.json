@@ -1,0 +1,41 @@
+{
+  "officialPlugin": {
+    "id": 65,
+    "name": "Decky Terminal",
+    "version": "0.5.3",
+    "archiveSha256": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+    "frontendSha256": "5f3484cff34e56d5e76dff0124037572a92f406a385056ccb5042936dc0aadca",
+    "terminalSourceSha256": "6324d71bfd1d74c06f8c45f4592eca16e84a0b8e2dd23de594353097d5b99238"
+  },
+  "eventName": "terminal_output#<terminal-id>",
+  "before": "Published event syntax rejected by iframe, production parent and Python dispatcher",
+  "red": {
+    "tests": 31,
+    "failures": 2,
+    "errors": 1,
+    "logSha256": "69a83733ece0adb5793f54116302c29671e3c0cc1f4c1d2d967ccde7bf4d4182"
+  },
+  "green": {
+    "tests": 31,
+    "failed": 0,
+    "logSha256": "fc2fcc1e8fe05c9f8e60a7b509a221b02b7011228c8340e5cf5df4166a2657af"
+  },
+  "verified": [
+    "iframe callback receives private output and can unsubscribe",
+    "production parent retains exact event and receipt",
+    "Python dispatcher derives actual plugin name from receipt-owned inventory",
+    "event queue excludes other plugins and other terminal IDs"
+  ],
+  "nativeTerminalBrowserVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "compatibilityPromotion": false,
+  "newRelease": false,
+  "fullRegression": {
+    "tests": 1857,
+    "failures": 0,
+    "skips": 16,
+    "seconds": 226.157,
+    "logSha256": "b4e57f1d90e73f8a915acd7e9b3622ba949a4d31d336d0daebcdc7f3d4e4e018"
+  }
+}

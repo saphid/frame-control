@@ -6,10 +6,12 @@ only offline signature and fsck verification establish payload integrity.
 """
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+import errno
 import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import ssl
 import threading
 import time
 import urllib.error
@@ -48,7 +50,14 @@ def download(url, limit):
                 transient = error.code in (429, 500, 502, 503, 504)
             else:
                 reason = error.reason if isinstance(error, urllib.error.URLError) else error
-                transient = isinstance(reason, (TimeoutError, ConnectionError))
+                transient = isinstance(reason, (TimeoutError, ConnectionError)) or (
+                    isinstance(reason, OSError) and reason.errno == errno.ENETUNREACH
+                ) or (
+                    # A misrouted CDN response can present the wrong hostname.
+                    # Retry the request, validating TLS afresh on every attempt.
+                    isinstance(reason, ssl.SSLCertVerificationError)
+                    and getattr(reason, 'verify_code', None) == 62
+                )
             if not transient or attempt == 2:
                 raise RuntimeError('Public fetch failed for ' + url + ': ' + str(error)) from error
             time.sleep(attempt + 1)

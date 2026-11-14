@@ -1,0 +1,97 @@
+{
+  "at": "2026-10-31T19:37:46.195856+00:00",
+  "sourceRevision": "1bf649bb2c3363bd9afadc72f927d87fc25409b5",
+  "baseMain": "13360b13017bbb1a16c5ee6472bb15b5ea996586",
+  "priorHead": "44ba8459e382ce2afbd5b7b6d9b0b89296b21264",
+  "normalMerge": true,
+  "conflicts": [
+    "scripts/framey-test-decky-runtime.py"
+  ],
+  "bothRuntimeHelpersAndNegativeControlsRetained": true,
+  "nativeInputs": 21,
+  "nativeArchitecture": "x86_64",
+  "radiyoRpcs": [
+    9,
+    7
+  ],
+  "radiyoRepairedStopSeconds": [
+    0.215,
+    0.214
+  ],
+  "radiyoPreviousForcedStopSeconds": 5.274,
+  "tabmasterRpcs": [
+    47,
+    48,
+    47
+  ],
+  "tabmasterRepairedStopSeconds": [
+    0.1636990108527243,
+    0.16374964592978358
+  ],
+  "tabmasterOriginalAndPreviousNegativesRetained": true,
+  "timerRpcs": [
+    31,
+    10,
+    18
+  ],
+  "timerRepairedStopSeconds": [
+    0.214,
+    0.215,
+    0.215,
+    0.214
+  ],
+  "unit": {
+    "name": "unit",
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-q"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 249.285,
+    "logSha256": "eb3e48ef74d17d17dfb4e3a4187c45f716f1a2c7238edc6a73d08c1fa6c1e778",
+    "tests": 1953,
+    "testSeconds": 248.889,
+    "skips": 15
+  },
+  "website": {
+    "name": "site",
+    "argv": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "site/test/onboarding.test.mjs",
+      "site/test/feedback.test.mjs"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 0.128,
+    "logSha256": "7caa679b7b6dfe82e6eac2492ae1abb6a69706b3c2445b6886dd5a4c0cafb38b",
+    "tests": 18,
+    "pass": 18,
+    "fail": 0,
+    "skipped": 0
+  },
+  "fullE2e": {
+    "tests": 53,
+    "skips": 0,
+    "catalog": 116,
+    "installRemove": 69,
+    "expectedRefusals": 47,
+    "officialBackendsExecuted": false
+  },
+  "ownedCleanupIndependentlyVerified": true,
+  "e2eSocketResourceWarningsRetained": true,
+  "hostedFinalHeadPending": true,
+  "arm64CombinedSourcePending": true,
+  "globalCleanRuntimeVerified": false,
+  "compatibility": "partial",
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "6ff11b72ece3ab271735f77749ec0cc1ac748a9a3a2e523cffe73d1824fe4aed",
+  "rawBytes": 48068
+}

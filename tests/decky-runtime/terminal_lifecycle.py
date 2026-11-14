@@ -16,9 +16,10 @@ def probe(name, home, backend, processes):
     marker = home/'framey-terminal-marker'
     assert not marker.exists()
     observed = []
+    transcript = []
 
     async def exercise():
-        async with Client(name) as client:
+        async with Client(name, transcript) as client:
             async def call(method, *args):
                 result = await client.call(method, *args)
                 observed.append(dict(method=method, result=result))
@@ -96,7 +97,7 @@ def probe(name, home, backend, processes):
     assert rpc('loader/call_plugin_method',name,'get_config') == report['config']
     assert unrelated.poll() is None
     unrelated.terminate(); unrelated.wait(timeout=3)
-    report.update(calls=observed, privateInputOutput=True, resizeVerified=True,
+    report.update(calls=observed, transcript=transcript, privateInputOutput=True, resizeVerified=True,
                   explicitRemoveReaped=True, reloadReaped=True, unrelatedProcessPreserved=True,
                   configPersistedAcrossPluginReload=True, realFrameContacted=False,
                   browserVerified=False, physicalControllerVerified=False)

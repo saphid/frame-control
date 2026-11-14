@@ -338,7 +338,12 @@ class FinalLaunchTests(unittest.TestCase):
             worker = threading.Thread(target=self.agent._launch, args=(self.agent.generation,))
             worker.start()
             try:
-                self.assertTrue(entered.wait(3))
+                # Stamp, mkdir and copy each run a shell bounded at 3 seconds.
+                # Allow their combined budget plus scheduling overhead, including
+                # Git Bash startup on Windows. This is coordination, not a
+                # production delivery-latency assertion.
+                self.assertTrue(entered.wait(12),
+                                (boundary, self.agent.status, self.calls))
                 if cancel:
                     self.agent.stop()
                 else:

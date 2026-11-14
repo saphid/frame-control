@@ -8,7 +8,7 @@
  mod settings;
  mod util;
  mod watch_gamescope;
-@@ -27,16 +28,16 @@
+@@ -27,16 +28,17 @@
  use log4rs::encode::pattern::PatternEncoder;
  use log4rs::filter::threshold::ThresholdFilter;
  use std::convert::Infallible;
@@ -27,11 +27,12 @@
 -use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt};
 -use tokio::time::sleep;
 +use std::sync::Arc;
++use std::time::{Duration, Instant};
 +use tokio::net::UnixListener;
  
  const LOGFILE_WATCHDOG_ROLLING: &str = "watchdog.{}.log";
  const LOGFILE_WATCHDOG: &str = "watchdog.log";
-@@ -49,18 +50,32 @@
+@@ -49,18 +51,57 @@
      let watchdog_pid_path = PathBuf::from(args_iter.next().unwrap());
      let watchdog_log_dir_path = PathBuf::from(args_iter.next().unwrap());
  
@@ -40,6 +41,10 @@
 -        return ExitCode::SUCCESS;
 -    }
 -
++    if let Err(err) = bind_owner_lifetime() {
++        eprintln!("Watchdog parent unavailable: {err}");
++        return ExitCode::FAILURE;
++    }
 +    // Hold the same inode for the whole process lifetime. Never discover or
 +    // signal another process using a stale PID or an executable-name match.
 +    let _ownership = match acquire_ownership(&watchdog_pid_path) {
@@ -51,11 +56,32 @@
 +    };
 +    // Reserve the listener before touching the PID, settings, logs or systemd.
 +    // An unrelated listener must survive and no configured service may change.
-+    let listener = match Server::try_bind(&BIND_ADDR.parse().unwrap()) {
-+        Ok(listener) => listener,
-+        Err(err) => {
-+            eprintln!("Watchdog listener unavailable: {err}");
-+            return ExitCode::FAILURE;
++    // This fixed port is inside Linux's usual ephemeral client range. A
++    // recently closed outbound client can prevent binding for about a minute.
++    // Wait only for unambiguous TIME_WAIT rows; never attach to another owner
++    // or change settings/services while the listener remains unavailable.
++    let bind_started = Instant::now();
++    let mut waiting_reported = false;
++    let listener = loop {
++        match Server::try_bind(&BIND_ADDR.parse().unwrap()) {
++            Ok(listener) => break listener,
++            Err(err) => {
++                let transient = match (std::fs::read_to_string("/proc/net/tcp"),
++                                       std::fs::read_to_string("/proc/net/tcp6")) {
++                    (Ok(tcp), Ok(tcp6)) => only_loopback_time_wait(&tcp, &tcp6),
++                    _ => false,
++                };
++                if address_in_use(&err) && transient && bind_started.elapsed() < Duration::from_secs(70) {
++                    if !waiting_reported {
++                        eprintln!("Watchdog waiting for loopback TCP TIME_WAIT on {BIND_ADDR} (at most 70s)");
++                        waiting_reported = true;
++                    }
++                    tokio::time::sleep(Duration::from_millis(250)).await;
++                    continue;
++                }
++                eprintln!("Watchdog listener unavailable: {err}");
++                return ExitCode::FAILURE;
++            }
 +        }
 +    };
 +    let private_listener = match owned_listener() {
@@ -75,7 +101,7 @@
  
      setup_self_logging(&watchdog_log_dir_path);
      register_panic_hook(&watchdog_log_dir_path);
-@@ -84,13 +99,36 @@
+@@ -84,13 +125,123 @@
          }
      });
  
@@ -91,6 +117,93 @@
 +
 +    error!("server exited with: {r1:?} & {r2:?} & {r3:?}");
      ExitCode::FAILURE
++}
++
++// Parse only the read-only kernel socket tables. Unknown data fails closed.
++// Any IPv6 use of this port is ambiguous (a dual-stack listener may own IPv4).
++fn conflicting_states(table: &str, ipv6: bool) -> Option<Vec<&str>> {
++    let mut lines = table.lines();
++    if !lines.next()?.split_whitespace().any(|field| field == "local_address") {
++        return None;
++    }
++    let mut states = Vec::new();
++    for row in lines {
++        let fields: Vec<_> = row.split_whitespace().collect();
++        if fields.len() < 4 { return None; }
++        let (address, port) = fields[1].split_once(':')?;
++        let port = u16::from_str_radix(port, 16).ok()?;
++        if address.len() != (if ipv6 { 32 } else { 8 }) || u128::from_str_radix(address, 16).is_err() {
++            return None;
++        }
++        if port == 58384 && (ipv6 || address == "0100007F" || address == "00000000") {
++            states.push(fields[3]);
++        }
++    }
++    Some(states)
++}
++
++fn only_loopback_time_wait(tcp: &str, tcp6: &str) -> bool {
++    match (conflicting_states(tcp, false), conflicting_states(tcp6, true)) {
++        (Some(states), Some(v6)) => !states.is_empty() && v6.is_empty()
++            && states.iter().all(|state| *state == "06"),
++        _ => false,
++    }
++}
++
++fn address_in_use(error: &(dyn std::error::Error + 'static)) -> bool {
++    if let Some(error) = error.downcast_ref::<std::io::Error>() {
++        return error.kind() == std::io::ErrorKind::AddrInUse;
++    }
++    error.source().is_some_and(address_in_use)
++}
++
++#[cfg(test)]
++mod listener_retry_tests {
++    use super::*;
++    const HEADER: &str = "  sl  local_address rem_address st\n";
++    fn row(address: &str, port: &str, state: &str) -> String {
++        format!("0: {address}:{port} 0100007F:8000 {state} 0 0\n")
++    }
++    #[test]
++    fn closed_client_can_retry_but_unrelated_ports_do_not_count() {
++        let tcp = format!("{HEADER}{}{}", row("0100007F", "E410", "06"), row("0100007F", "0539", "0A"));
++        assert!(only_loopback_time_wait(&tcp, HEADER));
++        assert!(!only_loopback_time_wait(HEADER, HEADER));
++        assert!(!only_loopback_time_wait(&format!("{HEADER}{}", row("0100007F", "0539", "06")), HEADER));
++    }
++    #[test]
++    fn listeners_and_live_clients_are_refused_even_with_time_wait() {
++        for address in ["0100007F", "00000000"] {
++            for state in ["01", "02", "08", "0A", "unknown"] {
++                let tcp = format!("{HEADER}{}{}", row("0100007F", "E410", "06"), row(address, "E410", state));
++                assert!(!only_loopback_time_wait(&tcp, HEADER));
++            }
++        }
++    }
++    #[test]
++    fn ipv6_port_ownership_is_never_assumed_safe() {
++        let tcp = format!("{HEADER}{}", row("0100007F", "E410", "06"));
++        for state in ["01", "06", "0A"] {
++            let tcp6 = format!("{HEADER}{}", row("00000000000000000000000000000000", "E410", state));
++            assert!(!only_loopback_time_wait(&tcp, &tcp6));
++        }
++    }
++    #[test]
++    fn malformed_or_missing_tables_never_authorize_retry() {
++        let tcp = format!("{HEADER}{}", row("0100007F", "E410", "06"));
++        for bad in ["", "not a socket table", "local_address\ntruncated", "local_address\n0: no:port x 06", "local_address\n0: XXXXXXXX:E410 x 06"] {
++            assert!(!only_loopback_time_wait(bad, HEADER));
++            assert!(!only_loopback_time_wait(&tcp, bad));
++        }
++    }
++    #[test]
++    fn only_address_in_use_errors_can_retry() {
++        use std::io::{Error, ErrorKind};
++        assert!(address_in_use(&Error::from(ErrorKind::AddrInUse)));
++        for kind in [ErrorKind::PermissionDenied, ErrorKind::AddrNotAvailable, ErrorKind::ConnectionRefused] {
++            assert!(!address_in_use(&Error::from(kind)));
++        }
++    }
 +}
 +
 +fn owned_listener() -> std::io::Result<UnixListener> {
@@ -116,7 +229,7 @@
  }
  
  async fn handle<S>(
-@@ -121,36 +159,15 @@
+@@ -121,35 +272,56 @@
      write(pid_file_path, process::id().to_string()).unwrap();
  }
  
@@ -149,7 +262,38 @@
 -        .is_some()
 -    } else {
 -        false
--    }
++// Linux PR_SET_PDEATHSIG binds this helper to the spawning plugin thread.
++// Decky's five-second SIGKILL fallback cannot run Python's _unload callback.
++// This is a lifetime guard for our child, not PID-file/name-based discovery.
++unsafe extern "C" {
++    fn prctl(option: std::ffi::c_int, ...) -> std::ffi::c_int;
++    fn getppid() -> std::ffi::c_int;
++}
++
++fn bind_owner_lifetime() -> std::io::Result<()> {
++    use std::io::{Error, ErrorKind};
++    let parent = match std::env::var("FRAMEY_SYNCTHING_OWNER_PID") {
++        Ok(value) => value.parse::<i32>()
++            .map_err(|_| Error::new(ErrorKind::InvalidInput, "Invalid owning plugin PID"))?,
++        Err(std::env::VarError::NotPresent) => unsafe { getppid() },
++        Err(error) => return Err(Error::new(ErrorKind::InvalidInput, error)),
++    };
++    if parent <= 1 {
++        return Err(Error::other("Owning plugin is unavailable"));
++    }
++    // PR_SET_PDEATHSIG=1, SIGKILL=9 are Linux ABI constants on both targets.
++    if unsafe { prctl(1, 9 as std::ffi::c_ulong, 0 as std::ffi::c_ulong,
++                     0 as std::ffi::c_ulong, 0 as std::ffi::c_ulong) } != 0 {
++        return Err(Error::last_os_error());
++    }
++    // The expected PID comes from Python before fork/exec: a subreaper must
++    // not become our apparent owner if the plugin died before this guard ran.
++    if unsafe { getppid() } != parent {
++        return Err(Error::other("Owning plugin exited before helper startup"));
++    }
++    Ok(())
++}
++
 +fn acquire_ownership(pid_file_path: &Path) -> Result<File, Box<dyn std::error::Error>> {
 +    let file = OpenOptions::new()
 +        .read(true)
@@ -157,11 +301,20 @@
 +        .create(true)
 +        .truncate(false)
 +        .open(pid_file_path.with_extension("framey-lock"))?;
-+    file.try_lock()?;
-+    Ok(file)
++    // A killed predecessor receives its parent-death signal asynchronously.
++    // Allow a bounded handoff, but never bypass another owner's lock.
++    let deadline = Instant::now() + Duration::from_millis(500);
++    loop {
++        match file.try_lock() {
++            Ok(()) => return Ok(file),
++            Err(std::fs::TryLockError::WouldBlock) if Instant::now() < deadline => {
++                std::thread::sleep(Duration::from_millis(25));
++            }
++            Err(error) => return Err(error.into()),
++        }
+     }
  }
  
- fn setup_self_logging(dir: &Path) {
 --- a/backend/decky-syncthing-watchdog/src/lib.rs
 +++ b/backend/decky-syncthing-watchdog/src/lib.rs
 @@ -6,6 +6,7 @@

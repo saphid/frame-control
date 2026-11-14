@@ -1,16 +1,19 @@
 """Framey hosts store-owned modern Decky frontends and scopes backend calls."""
 import sandbox  # noqa: F401
 import gzip
+import hashlib
 import http.client
 import io
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
 import tarfile
 import threading
 import unittest
+import zipfile
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'ui'))
@@ -32,7 +35,7 @@ class Panel(unittest.TestCase):
         installed = {'storeId':64, 'name':'Syncthing', 'sha256':digest,
                      'compatShims':['syncthing-owned-native-http']}
         args = [{'method':'GET', 'path':'/rest/system/status', 'headers':{}}]
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[installed]}):
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={'plugins':[installed]}):
             self.assertEqual(framey_panel.call_method(lambda *_a, **_k:'{"success":true,"result":{}}',
                 64,'framey_http_fetch',args,True,digest), {'success':True,'result':{}})
             for method,legacy in [('framey_http_escape',True),('framey_http_fetch',False)]:
@@ -69,7 +72,7 @@ class Panel(unittest.TestCase):
             self.assertIn('262144', stdin)
             self.assertNotIn('__FRAMEY_STEAM_', stdin)
             return '{"result":{"apps":[],"events":[],"cursor":0}}'
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[{'storeId':13,'sha256':'a'*64}]}):
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={'plugins':[{'storeId':13,'sha256':'a'*64}]}):
             self.assertEqual(framey_panel.poll_running(fake_ssh,13,'test-1',True,receipt='a'*64)['result']['cursor'],0)
             for plugin_id,session,active,cursor in [(True,'test',True,0),(0,'test',True,0),
                     (14,'test',True,0),(13,'bad session',True,0),(13,'test',1,0),
@@ -91,7 +94,7 @@ class Panel(unittest.TestCase):
             self.assertEqual(command,'python3 -')
             compile(stdin,'<running read>','exec')
             return '{"result":null}'
-        with patch.object(framey_panel.frame_decky,'status',side_effect=lambda _: {'plugins':[installed]}):
+        with patch.object(framey_panel.frame_decky,'plugin_status',side_effect=lambda _: {'plugins':[installed]}):
             framey_panel.poll_running(safe_ssh,13,'old-panel',True,receipt='a'*64)
             installed['sha256'] = 'b'*64  # Another manager replaces the installed plugin.
             for active in (True,False):
@@ -105,7 +108,7 @@ class Panel(unittest.TestCase):
             framey_panel.poll_running(safe_ssh,13,'new-panel',False,receipt='b'*64)
 
     def test_steam_reads_are_allowlisted_and_installed_only(self):
-        with patch.object(framey_panel.frame_decky, 'status', return_value={
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
                 'plugins':[{'storeId':81,'name':'IsThereAnyDeal for Deck','sha256':RECEIPT}]}):
             for method, expression in framey_panel.STEAM_READS.items():
                 if method == 'GetGlobalCompatTools':
@@ -131,7 +134,7 @@ class Panel(unittest.TestCase):
         digest = framey_panel.frame_decky_store.WINE_CELLAR_DIGEST
         installed = {'storeId':68, 'name':'Wine Cellar', 'sha256':digest,
                      'compatShims':['wine-cellar-native-bridge']}
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={'plugins':[
                 installed, {'storeId':81, 'name':'Other', 'sha256':digest}]}):
             self.assertEqual(framey_panel.read_steam(lambda *_a, **_k:'{"result":[]}',
                                                      68,'GetGlobalCompatTools',digest), {'result':[]})
@@ -146,7 +149,7 @@ class Panel(unittest.TestCase):
         digest = framey_panel.frame_decky_store.WINE_CELLAR_DIGEST
         installed = {'storeId':68, 'name':'Wine Cellar', 'sha256':digest,
                      'compatShims':['wine-cellar-native-bridge']}
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[installed]}):
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={'plugins':[installed]}):
             self.assertEqual(framey_panel.call_method(lambda *_a, **_k:'{"result":"token"}',
                                                       68,'framey_ws_open',[],receipt=digest), {'result':'token'})
             for method in ('framey_ws_escape', 'framey_ws_open_other'):
@@ -224,7 +227,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
                 any(isinstance(t,ast.Name) and t.id=='payload' for t in n.targets))
             self.assertEqual(json.loads(ast.literal_eval(assignment.value.args[0]))['args'],args)
             return '{"result":null}'
-        with patch.object(framey_panel.frame_decky,'status',return_value={
+        with patch.object(framey_panel.frame_decky,'plugin_status',return_value={
                 'plugins':[{'storeId':53,'name':'Shotty','sha256':RECEIPT}]}):
             self.assertEqual(framey_panel.call_method(fake_ssh,
                 53,'set_id_map_fronend',args,True,RECEIPT),{'result':None})
@@ -240,7 +243,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             read.assert_called_once_with(server.ssh,81,'GetIPCountry',RECEIPT)
 
     def test_decky_event_queue_scope_bounds_expiry_and_reconnect(self):
-        for name in ('framey_events.mjs', 'framey_event_parent.mjs'):
+        for name in ('framey_events.mjs', 'framey_event_parent.mjs', 'framey_terminal_events.mjs'):
             with self.subTest(script=name):
                 result = subprocess.run(['node', str(Path(__file__).parent/'page'/name)],
                                         capture_output=True, text=True, timeout=10)
@@ -255,7 +258,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             compile(stdin, '<event poll>', 'exec')
             self.assertIn('loader/plugin_event', stdin)
             return json.dumps({'events':[{'event':'timer:tick', 'args':[42]}], 'cursor':6})
-        with patch.object(framey_panel.frame_decky, 'status', return_value={
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
             'plugins':[{'storeId':96,'name':'Simple Timer','sha256':RECEIPT}]}):
             self.assertEqual(framey_panel.poll_events(fake_ssh, 96, 'test-123.45', ['timer:tick'], 5, RECEIPT)['cursor'], 6)
             with self.assertRaisesRegex(framey_panel.PanelError, 'changed'):
@@ -273,6 +276,19 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
                         framey_panel.poll_events(lambda *a, **k:self.fail('Unexpected SSH'),
                                                 plugin_id, session, events, cursor, RECEIPT)
 
+    def test_terminal_output_event_keeps_exact_name_and_receipt_owned_plugin(self):
+        event = 'terminal_output#private-pty'
+        def fake_ssh(command, stdin=None, **_):
+            import shlex
+            payload = json.loads(shlex.split(command)[2])
+            self.assertEqual(payload, dict(name='Decky Terminal', session='private-session',
+                                          events=[event], cursor=0))
+            return json.dumps(dict(events=[dict(event=event, args=['private output'])], cursor=1))
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
+                'plugins':[dict(storeId=65, name='Decky Terminal', sha256=RECEIPT)]}):
+            result = framey_panel.poll_events(fake_ssh, 65, 'private-session', [event], 0, RECEIPT)
+        self.assertEqual(result['events'], [dict(event=event, args=['private output'])])
+
     def test_event_action_has_same_headset_boundary_as_methods(self):
         with patch.object(server, 'HEADSET_RUNTIME', False), patch.dict(server.os.environ, {'FRAME_E2E_CONTAINER':'0'}):
             with self.assertRaises(server.Failure):
@@ -283,18 +299,60 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             poll.assert_called_once_with(server.ssh, 96, 'test', ['tick'], 0, RECEIPT)
 
     def test_opaque_origin_plugin_cache_is_scoped_and_bounded(self):
-        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs')],
-                                capture_output=True, text=True, timeout=10)
-        self.assertEqual(result.returncode, 0, result.stderr)
+        import hashlib
+        import zipfile
+        from framey_official import PLUGINS, archive
+        record = next(plugin for plugin in PLUGINS if plugin['id'] == 104)
+        data = archive(record)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), record['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as official, tempfile.TemporaryDirectory() as folder:
+            bundle = Path(folder)/'game-sync.js'
+            bundle.write_bytes(official.read(record['folder']+'/dist/index.js'))
+            result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs'), str(bundle)],
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            proof = 'Framey cache enumeration proof: '
+            self.assertTrue(result.stdout.startswith(proof), result.stdout)
+            report = json.loads(result.stdout[len(proof):])
+            self.assertIs(report['passed'], True, report)
+            report['hostSha256'] = hashlib.sha256((Path(__file__).resolve().parents[1]/'ui/framey-host.js').read_bytes()).hexdigest()
+            print(proof+json.dumps(report, sort_keys=True))
 
     def test_vr_store_browsing_and_search(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_store.mjs')],
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_desktop_store_discards_stale_status_and_catalog_replies(self):
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_desktop_store.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_plugin_quick_actions_and_settings(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_actions.mjs')],
                                 capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        marker = 'Framey toast action lifetime proof: '
+        line = next(line for line in result.stdout.splitlines() if line.startswith(marker))
+        report = json.loads(line[len(marker):])
+        self.assertIs(report['passed'], True, report)
+        report['hostSha256'] = hashlib.sha256((Path(__file__).resolve().parents[1]/'ui/framey-host.js').read_bytes()).hexdigest()
+        print(marker+json.dumps(report, sort_keys=True))
+
+    def test_published_battery_lookback_slider_reset(self):
+        from framey_official import PLUGINS, archive
+        plugin = next(p for p in PLUGINS if p['id'] == 67)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            source = original.read(plugin['folder']+'/dist/index.js').decode()
+        # Evaluate only the published control and its callback. Do not run the
+        # plugin initializer, backend, real history request or monitoring loop.
+        control = re.search(r'window\.SP_REACT\.createElement\(deckyFrontendLib\.SliderField, '
+                            r'\{ label: "Lookback in days",[\s\S]*?\n\s+\} \}\)', source)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_slider_reset.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_wine_cellar_socket_facade_uses_only_receipt_bound_calls(self):
@@ -324,6 +382,97 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         self.assertNotIn('SP_REACT.createElement', page)  # bundled code is base64, not executable HTML.
         with self.assertRaises(FileNotFoundError):
             framey_panel.panel(15)
+
+    def test_panel_and_modules_require_integer_receipt_ids(self):
+        receipt = self.folder/'.frame-control-store.json'
+        bundle = (self.folder/'dist/index.js').read_bytes()
+        chunks = self.folder/'dist/chunks'
+        chunks.mkdir()
+        (chunks/'view.js').write_text('export const title = "Settings";')
+        for store_id, requested in [(True, 1), (False, 14), (14.0, 14),
+                                    ('14', 14), (None, 14), (0, 14), (-14, 14)]:
+            with self.subTest(storeId=store_id):
+                receipt.write_text(json.dumps({'storeId':store_id, 'sha256':RECEIPT}))
+                for read in (lambda: framey_panel.local_bundle(requested),
+                             lambda: framey_panel.panel(requested),
+                             lambda: framey_panel.local_module(requested, RECEIPT, 'index.js'),
+                             lambda: framey_panel.local_module(requested, RECEIPT, 'chunks/view.js')):
+                    with self.assertRaises(FileNotFoundError):
+                        read()
+        receipt.write_text(json.dumps({'storeId':14, 'sha256':RECEIPT}))
+        self.assertEqual(framey_panel.local_bundle(14), bundle)
+        self.assertIn('framey-bundle', framey_panel.panel(14).decode())
+        self.assertEqual(framey_panel.local_module(14, RECEIPT, 'chunks/view.js'),
+                         b'export const title = "Settings";')
+
+    def test_invalid_receipt_alias_does_not_mask_valid_plugin(self):
+        other = self.plugins/'malformed-peer'
+        (other/'dist').mkdir(parents=True)
+        (other/'plugin.json').write_text('{"name":"Wrong plugin","api_version":2}')
+        (other/'dist/index.js').write_text('export default () => "wrong plugin";')
+        # Make the malformed folder come first independently of filesystem order.
+        with patch.object(Path, 'iterdir', return_value=iter([other, self.folder])):
+            (other/'.frame-control-store.json').write_text(json.dumps({
+                'storeId':14.0, 'sha256':RECEIPT}))
+            self.assertEqual(framey_panel.local_bundle(14),
+                             (self.folder/'dist/index.js').read_bytes())
+
+    def test_duplicate_owned_ids_cannot_choose_frontend_by_folder_order(self):
+        other = self.plugins/'copied-plugin'
+        (other/'dist/chunks').mkdir(parents=True)
+        (other/'plugin.json').write_text('{"name":"Copied plugin","api_version":2}')
+        (other/'dist/index.js').write_text('export default () => "copied frontend";')
+        (other/'dist/chunks/view.js').write_text('export const title = "Copied settings";')
+        chunks = self.folder/'dist/chunks'
+        chunks.mkdir()
+        (chunks/'view.js').write_text('export const title = "Original settings";')
+        for digest in (RECEIPT, 'b'*64):
+            (other/'.frame-control-store.json').write_text(json.dumps({'storeId':14,'sha256':digest}))
+            for order in ([other,self.folder],[self.folder,other]):
+                for label,read in (
+                        ('bundle',lambda: framey_panel.local_bundle(14)),
+                        ('panel',lambda: framey_panel.panel(14)),
+                        ('entry',lambda: framey_panel.local_module(14,RECEIPT,'index.js')),
+                        ('chunk',lambda: framey_panel.local_module(14,RECEIPT,'chunks/view.js'))):
+                    with self.subTest(digest=digest,first=order[0].name,read=label), \
+                            patch.object(Path,'iterdir',return_value=iter(order)):
+                        with self.assertRaisesRegex(FileNotFoundError,'multiple|ambiguous'):
+                            read()
+
+    def test_duplicate_receipt_blocks_before_bundle_read_and_recovers_without_rewriting_files(self):
+        other = self.plugins/'copied-plugin'
+        other.mkdir()
+        receipt = other/'.frame-control-store.json'
+        receipt.write_text(json.dumps({'storeId':14,'sha256':'b'*64}))
+        # A stale valid ownership receipt is ambiguous even if that folder's
+        # frontend is absent. Do not select the usable copy and start its JS.
+        original = {p:p.read_bytes() for p in self.plugins.rglob('*') if p.is_file()}
+        with patch.object(Path,'read_bytes',side_effect=AssertionError('Frontend read before unique ownership')):
+            with self.assertRaisesRegex(FileNotFoundError,'multiple|ambiguous'):
+                framey_panel.panel(14)
+        self.assertEqual({p:p.read_bytes() for p in self.plugins.rglob('*') if p.is_file()},original)
+        # Repair only this disposable peer receipt; admission must re-read it.
+        receipt.unlink()
+        self.assertEqual(framey_panel.local_bundle(14),original[self.folder/'dist/index.js'])
+        receipt.write_text(json.dumps({'storeId':15,'sha256':'b'*64}))
+        self.assertIn(b'framey-bundle',framey_panel.panel(14))
+
+    def test_panel_ambiguity_agrees_with_existing_backend_identity_guard(self):
+        other = self.plugins/'copied-plugin'
+        (other/'dist').mkdir(parents=True)
+        (other/'plugin.json').write_text('{"name":"Copied plugin","api_version":2}')
+        (other/'dist/index.js').write_text('export default () => "copied frontend";')
+        (other/'.frame-control-store.json').write_text(json.dumps({'storeId':14,'sha256':RECEIPT}))
+        namespace = {'json':json}
+        exec(framey_panel.frame_decky.PLUGIN_SCAN,namespace)
+        found = namespace['plugins'](self.plugins)
+        self.assertEqual([p['storeId'] for p in found],[14,14])
+        with patch.object(framey_panel.frame_decky,'plugin_status',return_value={'plugins':found}):
+            with self.assertRaises(framey_panel.PanelError):
+                framey_panel.call_method(lambda *a,**k:self.fail('Ambiguous backend call reached SSH'),
+                                         14,'get_setting',[],receipt=RECEIPT)
+        with self.assertRaisesRegex(FileNotFoundError,'multiple|ambiguous'):
+            framey_panel.local_bundle(14)
 
     def test_legacy_iife_is_admitted_without_api_manifest(self):
         (self.folder/'plugin.json').write_text(json.dumps({'name':'Legacy', 'flags':[]}))
@@ -384,7 +533,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
                                       'args':[{'key':'mode'}], 'legacy':True})
             self.assertIn('loader/call_legacy_plugin_method', stdin)
             return json.dumps({'result':{'success':True, 'result':'dark'}})
-        with patch.object(framey_panel.frame_decky, 'status', return_value={
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
             'plugins':[{'storeId':14,'name':'Legacy','sha256':RECEIPT}]}):
             self.assertEqual(framey_panel.call_method(fake_ssh, 14, 'read_setting', [{'key':'mode'}], True, RECEIPT),
                              {'result':{'success':True, 'result':'dark'}})
@@ -419,7 +568,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             compile(stdin, '<remote method>', 'exec')
             self.assertNotIn('__FRAMEY_METHOD_PAYLOAD__',stdin)
             return json.dumps({'result':{'theme':'dark'}})
-        with patch.object(framey_panel.frame_decky, 'status', return_value={
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
             'plugins':[{'storeId':14,'name':'ProtonDB Badges','sha256':RECEIPT}]}):
             self.assertEqual(framey_panel.call_method(fake_ssh,14,'get_setting',['theme','dark'],receipt=RECEIPT),
                              {'result':{'theme':'dark'}})
@@ -461,6 +610,16 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         self.assertIn('blob:', headers['Content-Security-Policy'])
         self.assertIn(b'framey-bundle', body)
         self.assertEqual(get('/framey/panel/15')[0], 404)
+
+        entry = self.folder/'dist/index.js'
+        bundle = entry.read_bytes()
+        entry.write_bytes(b'')
+        self.assertEqual(get('/framey/panel/14')[0], 404)
+        self.assertEqual(get(f'/framey/module/14/{RECEIPT}/index.js')[0], 404)
+        self.assertEqual(entry.read_bytes(), b'', 'Admission must not repair plugin files')
+        entry.write_bytes(bundle)
+        self.assertEqual(get('/framey/panel/14')[0], 200)
+        self.assertEqual(get(f'/framey/module/14/{RECEIPT}/index.js')[2], bundle)
 
         (self.folder/'dist/chunks').mkdir()
         (self.folder/'dist/chunks/view.js').write_text('export const value = 1;')

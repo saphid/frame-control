@@ -1,0 +1,337 @@
+{
+  "sourceRevision": "6e8f0f9291be2db99862ab1e38b9e9edc1c8f745",
+  "sourceSha256": {
+    "tests/decky-runtime/check.py": "3ffe2e4c890400cc95bc6e6be1d67df0919105fb6ce809495b89508d46ddd71e",
+    "tests/decky-runtime/cases.json": "c818ae7e83b701aec0d3bb5c3a60395c74e8fc433ad24e7037d03b3e06d99165",
+    "tests/framey_official.py": "0a5503f471187fd8ff0917ab10a11f951fa7961ada2d466d54d0f8cbfc02b419",
+    "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+    "tests/fixtures/framey-official/143.zip": "33fb674993c9b2bd119f0c6118c465e379f166ec1539c8183fcf7580f1d89577",
+    "tests/fixtures/framey-official/131.zip": "0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da"
+  },
+  "audits": [
+    {
+      "architecture": "x86_64",
+      "runId": 41112855329,
+      "jobId": 124259415794,
+      "artifactZipSha256": "d828f3fa4bdd8994bad83c3f98f1cf8c003e4a291b720c3690cc01a012eda285",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "checkoutCommit": "cfbefcc8aa8ef5ec921632113045f9f4ff9d1b29",
+      "checkoutTreeMatchesExactHead": true,
+      "desktopApps": {
+        "id": 143,
+        "name": "Desktop Apps",
+        "version": "0.1.0",
+        "sha256": "33fb674993c9b2bd119f0c6118c465e379f166ec1539c8183fcf7580f1d89577",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_apps",
+            "result": {
+              "framey-private": {
+                "id": "framey-private",
+                "name": "Private Desktop App",
+                "bin": "/home/tester/fixture-desktop-app",
+                "cmd": "--name 'Private Desktop App' --file /home/tester/desktop-primary/applications/framey-private.desktop",
+                "workdir": "/home/tester",
+                "flatpak": false
+              },
+              "nested-framey-flatpak": {
+                "id": "nested-framey-flatpak",
+                "name": "Private Flatpak",
+                "bin": "/usr/bin/flatpak",
+                "cmd": "run org.framey.Private",
+                "workdir": "/home/tester/private-workdir",
+                "flatpak": true
+              }
+            }
+          },
+          {
+            "method": "set_app_setting",
+            "result": null
+          },
+          {
+            "method": "set_app_setting",
+            "result": null
+          },
+          {
+            "method": "set_app_setting",
+            "result": null
+          },
+          {
+            "method": "get_temporary_shortcuts",
+            "result": []
+          },
+          {
+            "method": "save_temporary_shortcut",
+            "result": null
+          },
+          {
+            "method": "save_temporary_shortcut",
+            "result": null
+          },
+          {
+            "method": "get_temporary_shortcuts",
+            "result": [
+              424242
+            ]
+          },
+          {
+            "method": "get_apps",
+            "result": {
+              "framey-private": {
+                "favorite": true,
+                "hidden": true,
+                "lastOpened": 424242,
+                "id": "framey-private",
+                "name": "Private Desktop App",
+                "bin": "/home/tester/fixture-desktop-app",
+                "cmd": "--name 'Private Desktop App' --file /home/tester/desktop-primary/applications/framey-private.desktop",
+                "workdir": "/home/tester",
+                "flatpak": false
+              },
+              "nested-framey-flatpak": {
+                "id": "nested-framey-flatpak",
+                "name": "Private Flatpak",
+                "bin": "/usr/bin/flatpak",
+                "cmd": "run org.framey.Private",
+                "workdir": "/home/tester/private-workdir",
+                "flatpak": true
+              }
+            }
+          },
+          {
+            "method": "get_temporary_shortcuts",
+            "result": [
+              424242
+            ]
+          },
+          {
+            "method": "forget_temporary_shortcut",
+            "result": null
+          },
+          {
+            "method": "forget_temporary_shortcut",
+            "result": null
+          },
+          {
+            "method": "get_temporary_shortcuts",
+            "result": []
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Desktop Apps",
+            "version": "0.1.0",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "desktopEntries": {
+          "discovery": true,
+          "xdgPrecedence": true,
+          "filteredEntries": 7,
+          "fieldCodes": true,
+          "flatpakMetadata": true,
+          "privateSettingsPersisted": true,
+          "temporaryShortcutBookkeeping": true,
+          "loaderRestart": true,
+          "noApplicationLaunched": true,
+          "actualFlatpakDiscovery": false,
+          "actualSteamShortcutChanges": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky discovery, private desktop-entry parsing/filtering, settings and temporary-shortcut bookkeeping across restart passed; actual Flatpak installation, Steam shortcut changes, app launch, real Frame and VR unverified"
+      },
+      "downloadAll": {
+        "id": 131,
+        "name": "Download All",
+        "version": "1.1.0",
+        "sha256": "0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da",
+        "shim": "download-all-local-queue",
+        "calls": [
+          {
+            "method": "log_from_ui",
+            "result": {
+              "success": true
+            }
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Download All",
+            "version": "1.1.0",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "result": "published Decky discovery and logging RPC passed; Steam queue behavior is covered by isolated CEF/frontend fixtures, not this backend"
+      }
+    },
+    {
+      "architecture": "aarch64",
+      "runId": 41112855329,
+      "jobId": 124259416371,
+      "artifactZipSha256": "99994cc79b8de10d731ba8e9afa43329c141b504ee9a02d5a13dfaa260fb1ce2",
+      "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+      "checkoutCommit": "cfbefcc8aa8ef5ec921632113045f9f4ff9d1b29",
+      "checkoutTreeMatchesExactHead": true,
+      "desktopApps": {
+        "id": 143,
+        "name": "Desktop Apps",
+        "version": "0.1.0",
+        "sha256": "33fb674993c9b2bd119f0c6118c465e379f166ec1539c8183fcf7580f1d89577",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_apps",
+            "result": {
+              "framey-private": {
+                "id": "framey-private",
+                "name": "Private Desktop App",
+                "bin": "/home/tester/fixture-desktop-app",
+                "cmd": "--name 'Private Desktop App' --file /home/tester/desktop-primary/applications/framey-private.desktop",
+                "workdir": "/home/tester",
+                "flatpak": false
+              },
+              "nested-framey-flatpak": {
+                "id": "nested-framey-flatpak",
+                "name": "Private Flatpak",
+                "bin": "/usr/bin/flatpak",
+                "cmd": "run org.framey.Private",
+                "workdir": "/home/tester/private-workdir",
+                "flatpak": true
+              }
+            }
+          },
+          {
+            "method": "set_app_setting",
+            "result": null
+          },
+          {
+            "method": "set_app_setting",
+            "result": null
+          },
+          {
+            "method": "set_app_setting",
+            "result": null
+          },
+          {
+            "method": "get_temporary_shortcuts",
+            "result": []
+          },
+          {
+            "method": "save_temporary_shortcut",
+            "result": null
+          },
+          {
+            "method": "save_temporary_shortcut",
+            "result": null
+          },
+          {
+            "method": "get_temporary_shortcuts",
+            "result": [
+              424242
+            ]
+          },
+          {
+            "method": "get_apps",
+            "result": {
+              "framey-private": {
+                "favorite": true,
+                "hidden": true,
+                "lastOpened": 424242,
+                "id": "framey-private",
+                "name": "Private Desktop App",
+                "bin": "/home/tester/fixture-desktop-app",
+                "cmd": "--name 'Private Desktop App' --file /home/tester/desktop-primary/applications/framey-private.desktop",
+                "workdir": "/home/tester",
+                "flatpak": false
+              },
+              "nested-framey-flatpak": {
+                "id": "nested-framey-flatpak",
+                "name": "Private Flatpak",
+                "bin": "/usr/bin/flatpak",
+                "cmd": "run org.framey.Private",
+                "workdir": "/home/tester/private-workdir",
+                "flatpak": true
+              }
+            }
+          },
+          {
+            "method": "get_temporary_shortcuts",
+            "result": [
+              424242
+            ]
+          },
+          {
+            "method": "forget_temporary_shortcut",
+            "result": null
+          },
+          {
+            "method": "forget_temporary_shortcut",
+            "result": null
+          },
+          {
+            "method": "get_temporary_shortcuts",
+            "result": []
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Desktop Apps",
+            "version": "0.1.0",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "desktopEntries": {
+          "discovery": true,
+          "xdgPrecedence": true,
+          "filteredEntries": 7,
+          "fieldCodes": true,
+          "flatpakMetadata": true,
+          "privateSettingsPersisted": true,
+          "temporaryShortcutBookkeeping": true,
+          "loaderRestart": true,
+          "noApplicationLaunched": true,
+          "actualFlatpakDiscovery": false,
+          "actualSteamShortcutChanges": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky discovery, private desktop-entry parsing/filtering, settings and temporary-shortcut bookkeeping across restart passed; actual Flatpak installation, Steam shortcut changes, app launch, real Frame and VR unverified"
+      },
+      "downloadAll": {
+        "id": 131,
+        "name": "Download All",
+        "version": "1.1.0",
+        "sha256": "0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da",
+        "shim": "download-all-local-queue",
+        "calls": [
+          {
+            "method": "log_from_ui",
+            "result": {
+              "success": true
+            }
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Download All",
+            "version": "1.1.0",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "result": "published Decky discovery and logging RPC passed; Steam queue behavior is covered by isolated CEF/frontend fixtures, not this backend"
+      }
+    }
+  ],
+  "statusesRemainPartial": true,
+  "realFrameContacted": false,
+  "realSteamQueueVerified": false,
+  "actualFlatpakDiscoveryVerified": false,
+  "browserBackendIntegrationVerified": false,
+  "physicalControllerVerified": false
+}

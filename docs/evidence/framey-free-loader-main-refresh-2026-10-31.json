@@ -1,0 +1,2416 @@
+{
+  "at": "2026-10-31T12:06:55.227086+00:00",
+  "sourceRevision": "7bf8d070e90bcbdc15bdfaa25ed8bf75da63a4ca",
+  "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+  "priorHead": "f0d2b7541973edd52ad299aadf090a8326d42fb8",
+  "integration": {
+    "sourceRevision": "7bf8d070e90bcbdc15bdfaa25ed8bf75da63a4ca",
+    "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+    "priorHead": "f0d2b7541973edd52ad299aadf090a8326d42fb8",
+    "mainProbeBodiesPreserved": 36,
+    "freeLoaderProbeBodiesPreserved": 1,
+    "other115CatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "installerMainCodePreserved": true,
+    "sharedIpcAdapterUnchanged": true,
+    "historyRewritten": false
+  },
+  "focusedTests": 90,
+  "localNativeArchitecture": "x86_64",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "cef403572d39da67866423fd3f40e46ed146801f380cff498a6ac824eb7919b4",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "d4e66262285137b01bf011e9be44df9bdf160371a9e15691b0cd00cc5e7f53a0",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "9d99eff836c477bb7c51b68fc998ed1058810c61f334880614ec568e349d5a24",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "7e98fba19143cd4edbe0a2de54eef14986658c7660949b7944111e42953eb37e",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "installedSource": {
+    "archiveSha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+    "managedBackendSha256": "1be5c28420161c97207cc52e2f32cd5a1c9a47758f9cf3963aaa36aa7e706d45",
+    "originalBackendSha256": "2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364",
+    "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "preserved": {
+      "LICENSE": "a05d52a13f8992968968eaac00a518efbd872fd07352d87250b9b6e434e4a2c9",
+      "package.json": "56b3dd43b4660535b7cefa057fa184398a661920abf085411b7fe3619f5277c4",
+      "plugin.json": "16dbf146760c18feeae4cdd8e475b56ec26535109430a3019932c48f2f6647e7",
+      "README.md": "2bfa4f34143a12a7c40573b4b12f7438335ec869f74104b90d6e155a76cf6d78",
+      "dist/index.js.map": "8e2959fe8da92e0cf1de87f741f5e9e6c5dc49ce04edcdbf66708908c9df3506",
+      "dist/index.js": "508d23c9a6e26f51148e4e634b08c6c04009362ccca9787f0b714005f03cb48f",
+      "py_modules/amazon_feed.py": "c3868356681e55597402fd764093f69da5494ef872b88eb7753bb13b564e879b",
+      "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "py_modules/deal_db.py": "3dee809d91b7221befffe88bd3577340109b9a7506588a3201ad95702019c696",
+      "py_modules/request_lib.py": "c065cdd2d92b869b982f2f93bfc0a93e80db6e19797096f2b5ae84a5bd5548ae",
+      "py_modules/plugin_settings.py": "ff550c2641cf07b241e1d0aaf5be5c4bedaec2776896da8e8d78b07390f05742",
+      "py_modules/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "members": 19,
+    "receipt": {
+      "storeId": 63,
+      "sha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+      "version": "1.6.0",
+      "compatShims": [
+        "free-loader-ipc-eof"
+      ]
+    }
+  },
+  "freeLoaderCases": [
+    {
+      "caseIndex": 0,
+      "rpcs": 11,
+      "cleanShutdownVerified": true,
+      "expectedNegative": false,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "349904795"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "349904834"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "349904834"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "349904845"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.214,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793448298.5615137"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\nCalling Loader unload function for Free Loader (v1.6.0).\nAttempting to unload with plugin Free Loader (v1.6.0)'s \"_unload\" function.\n\nUnloading Free Loader\nUnloaded Free Loader (v1.6.0)\n\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a79c31079f11c0e2e5bac3ff79a807043e23e618752d085dbf02b11b17a03720",
+          "cleanShutdownVerified": true
+        },
+        {
+          "loaderPid": 23,
+          "descendantsBefore": {
+            "24": {
+              "state": "S",
+              "parent": 23,
+              "start": "349905119"
+            },
+            "33": {
+              "state": "S",
+              "parent": 24,
+              "start": "349905167"
+            },
+            "34": {
+              "state": "S",
+              "parent": 24,
+              "start": "349905167"
+            },
+            "35": {
+              "state": "S",
+              "parent": 34,
+              "start": "349905185"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 33,
+              "returncode": 0
+            },
+            {
+              "pid": 34,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.214,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\nCalling Loader unload function for Free Loader (v1.6.0).\nAttempting to unload with plugin Free Loader (v1.6.0)'s \"_unload\" function.\n\nUnloading Free Loader\nUnloaded Free Loader (v1.6.0)\n\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a79c31079f11c0e2e5bac3ff79a807043e23e618752d085dbf02b11b17a03720",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "diskReadbacks": [
+        {
+          "before": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          },
+          "after": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "before": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": false\n    }\n}",
+              "sha256": "135174cec8912531fb14c949ea91829394f6b5ed4104f02f0064e755d454a139",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": false
+                }
+              }
+            }
+          },
+          "after": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": false\n    }\n}",
+              "sha256": "135174cec8912531fb14c949ea91829394f6b5ed4104f02f0064e755d454a139",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": false
+                }
+              }
+            }
+          }
+        }
+      ],
+      "consoleSha256": "5f1991991e494c242267ec0fa855904faaff1764e16483a9bad2e26f1580f894",
+      "jsonDecodeDiagnosticCount": 0
+    },
+    {
+      "caseIndex": 1,
+      "rpcs": 7,
+      "cleanShutdownVerified": false,
+      "expectedNegative": true,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "349905669"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "349905704"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "349905704"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "349905716"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 5.224,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793448307.2697494"
+          ],
+          "forcedPluginKills": 1,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\n[plugin][WARNING]: Plugin Free Loader (v1.6.0) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "e828dbb632a87eb0b7b8133e31b4009667630a1409eb4d3204cca09d08d40fa9",
+          "cleanShutdownVerified": false
+        }
+      ],
+      "diskReadbacks": [
+        {
+          "before": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          },
+          "after": {
+            "settings.json": {
+              "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+              "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+              "parsed": {
+                "update_frequency_day": 0,
+                "update_frequency_hour": 12,
+                "update_frequency_min": 0,
+                "notify_on_free_games": true,
+                "last_update_timestamp": "1970-01-01T00:00:00Z",
+                "enable_steam_games": true,
+                "enable_egs_games": true,
+                "enable_gog_games": true,
+                "enable_itchio_games": true,
+                "enable_amazon_games": true,
+                "show_titles": true,
+                "show_hidden_games": false,
+                "disable_animations": false,
+                "larger_text": true
+              }
+            },
+            "deal_db.json": {
+              "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+              "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+              "parsed": {
+                "framey-private-63": {
+                  "id": "framey-private-63",
+                  "title": "Framey private cached game",
+                  "worth": "N/A",
+                  "image": "https://example.invalid/framey-owned.png",
+                  "open_giveaway_url": "https://example.invalid/framey-owned",
+                  "published_date": "2026-10-31",
+                  "end_date": "N/A",
+                  "status": "Active",
+                  "platforms": "Steam",
+                  "hidden": true
+                }
+              }
+            }
+          }
+        }
+      ],
+      "consoleSha256": "f947b3880c9940ff2498f4226c45adf4ade429eec454a3b3a004f1604d5dcd21",
+      "jsonDecodeDiagnosticCount": 0
+    }
+  ],
+  "tabmasterCases": [
+    {
+      "rpcs": 47,
+      "jsonDecodeDiagnostics": 1,
+      "stops": [
+        {
+          "returncode": 0,
+          "elapsedSeconds": 0.21382540790364146,
+          "signaledOnlyOwnedLoader": true,
+          "ownedProcessIdentitiesReaped": true,
+          "ownedProcessCount": 5
+        },
+        {
+          "returncode": 0,
+          "elapsedSeconds": 0.21381516009569168,
+          "signaledOnlyOwnedLoader": true,
+          "ownedProcessIdentitiesReaped": true,
+          "ownedProcessCount": 5
+        }
+      ],
+      "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab"
+    },
+    {
+      "rpcs": 48,
+      "jsonDecodeDiagnostics": 1,
+      "stops": [
+        {
+          "returncode": 0,
+          "elapsedSeconds": 0.21387720992788672,
+          "signaledOnlyOwnedLoader": true,
+          "ownedProcessIdentitiesReaped": true,
+          "ownedProcessCount": 5
+        },
+        {
+          "returncode": 0,
+          "elapsedSeconds": 0.21383906621485949,
+          "signaledOnlyOwnedLoader": true,
+          "ownedProcessIdentitiesReaped": true,
+          "ownedProcessCount": 5
+        }
+      ],
+      "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab"
+    }
+  ],
+  "currentNativeRuntimeConsoles": [
+    {
+      "id": 63,
+      "sha256": "5f1991991e494c242267ec0fa855904faaff1764e16483a9bad2e26f1580f894",
+      "stops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "id": 63,
+      "sha256": "f947b3880c9940ff2498f4226c45adf4ade429eec454a3b3a004f1604d5dcd21",
+      "stops": [
+        {
+          "pid": 22,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": false,
+          "parentOnlySignal": false,
+          "returncode": -15
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "id": 61,
+      "sha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+      "stops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "id": 61,
+      "sha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+      "stops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ]
+    }
+  ],
+  "installerFixtureCount": 37,
+  "installerTests": 1,
+  "installerSkips": 0,
+  "installerOwnedCleanupVerified": true,
+  "installerElapsedSeconds": 128.448,
+  "historicalArm64": {
+    "head": "f0d2b7541973edd52ad299aadf090a8326d42fb8",
+    "architecture": "aarch64",
+    "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+    "archiveSha256": "87040934c6c18dbd3b01d392f859f665a70910c5cc42e1f69e99fbc79e253c8f",
+    "nativeCasesCompleted": 42,
+    "officialArchiveDigestsVerified": 34,
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "beaec7b48d9df788347b99ba413918916d41aec15e2721a945357d02b215e64b",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "27d73b5dab9e0013b82e1f32b08fb9dd5752e81beab02c3a4e963b3d56bc39af",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "65faa44f97de37db05bfbe03dde2c91e3e061c49d59453289b1ea3c7b40c6303",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "83896532bcb93dd51bc9b7b1adc5d9069c8cf8cc022df92855d04bfc9c6898e5",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "allSixteenSourceFingerprintsVerified": true,
+    "caseInventoryAndDiscoveryVerified": true,
+    "expectedNegativeRegressionsVerified": true,
+    "deckProgressRpcsPerCase": 18,
+    "deckProgressSqliteSnapshotsIndependentlyDecoded": 4,
+    "deckProgressPositiveNoForcedKills": true,
+    "deckProgressOriginalTwoForcedKillsRetained": true,
+    "deckProgressRawConsoleAudited": true,
+    "deckProgressSourceBoundArchivePreservationVerified": true,
+    "ownedStops": [
+      [
+        {
+          "returncode": 0,
+          "elapsedSeconds": 0.21402603599995018,
+          "signaledOnlyOwnedLoader": true,
+          "ownedProcessIdentitiesReaped": true,
+          "ownedProcessCount": 5
+        },
+        {
+          "returncode": 0,
+          "elapsedSeconds": 0.21411799800000608,
+          "signaledOnlyOwnedLoader": true,
+          "ownedProcessIdentitiesReaped": true,
+          "ownedProcessCount": 5
+        }
+      ],
+      [
+        {
+          "returncode": 0,
+          "elapsedSeconds": 5.226418729999978,
+          "signaledOnlyOwnedLoader": true,
+          "ownedProcessIdentitiesReaped": true,
+          "ownedProcessCount": 5
+        },
+        {
+          "returncode": 0,
+          "elapsedSeconds": 5.2252680679998775,
+          "signaledOnlyOwnedLoader": true,
+          "ownedProcessIdentitiesReaped": true,
+          "ownedProcessCount": 5
+        }
+      ]
+    ],
+    "realFrameContacted": false,
+    "physicalControllerVerified": false,
+    "run": 41195794653,
+    "job": 124521567308,
+    "artifactId": 13042415195,
+    "githubArtifactDigestVerified": true,
+    "exactSuccessfulJobVerified": true,
+    "exactHeadCheckoutVerified": true,
+    "wholeWorkflowPassed": false,
+    "jobLogSha256": "a6d360ff04b6cb26558299753b37d4c40fcff25b3faaaae122496334e8c204db",
+    "installedSource": {
+      "archiveSha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+      "managedBackendSha256": "1be5c28420161c97207cc52e2f32cd5a1c9a47758f9cf3963aaa36aa7e706d45",
+      "originalBackendSha256": "2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364",
+      "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "preserved": {
+        "LICENSE": "a05d52a13f8992968968eaac00a518efbd872fd07352d87250b9b6e434e4a2c9",
+        "package.json": "56b3dd43b4660535b7cefa057fa184398a661920abf085411b7fe3619f5277c4",
+        "plugin.json": "16dbf146760c18feeae4cdd8e475b56ec26535109430a3019932c48f2f6647e7",
+        "README.md": "2bfa4f34143a12a7c40573b4b12f7438335ec869f74104b90d6e155a76cf6d78",
+        "dist/index.js.map": "8e2959fe8da92e0cf1de87f741f5e9e6c5dc49ce04edcdbf66708908c9df3506",
+        "dist/index.js": "508d23c9a6e26f51148e4e634b08c6c04009362ccca9787f0b714005f03cb48f",
+        "py_modules/amazon_feed.py": "c3868356681e55597402fd764093f69da5494ef872b88eb7753bb13b564e879b",
+        "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "py_modules/deal_db.py": "3dee809d91b7221befffe88bd3577340109b9a7506588a3201ad95702019c696",
+        "py_modules/request_lib.py": "c065cdd2d92b869b982f2f93bfc0a93e80db6e19797096f2b5ae84a5bd5548ae",
+        "py_modules/plugin_settings.py": "ff550c2641cf07b241e1d0aaf5be5c4bedaec2776896da8e8d78b07390f05742",
+        "py_modules/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "members": 19,
+      "receipt": {
+        "storeId": 63,
+        "sha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+        "version": "1.6.0",
+        "compatShims": [
+          "free-loader-ipc-eof"
+        ]
+      }
+    },
+    "freeLoaderCases": [
+      {
+        "caseIndex": 0,
+        "rpcs": 11,
+        "cleanShutdownVerified": true,
+        "expectedNegative": false,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "109913"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "109940"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "109940"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "109950"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.214,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793447947.0904765"
+            ],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\nCalling Loader unload function for Free Loader (v1.6.0).\nAttempting to unload with plugin Free Loader (v1.6.0)'s \"_unload\" function.\n\nUnloading Free Loader\nUnloaded Free Loader (v1.6.0)\n\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "a79c31079f11c0e2e5bac3ff79a807043e23e618752d085dbf02b11b17a03720",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 23,
+            "descendantsBefore": {
+              "24": {
+                "state": "S",
+                "parent": 23,
+                "start": "110208"
+              },
+              "33": {
+                "state": "S",
+                "parent": 24,
+                "start": "110236"
+              },
+              "34": {
+                "state": "S",
+                "parent": 24,
+                "start": "110236"
+              },
+              "35": {
+                "state": "S",
+                "parent": 34,
+                "start": "110246"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 33,
+                "returncode": 0
+              },
+              {
+                "pid": 34,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.216,
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\nCalling Loader unload function for Free Loader (v1.6.0).\nAttempting to unload with plugin Free Loader (v1.6.0)'s \"_unload\" function.\n\nUnloading Free Loader\nUnloaded Free Loader (v1.6.0)\n\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "a79c31079f11c0e2e5bac3ff79a807043e23e618752d085dbf02b11b17a03720",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "diskReadbacks": [
+          {
+            "before": {
+              "settings.json": {
+                "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+                "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+                "parsed": {
+                  "update_frequency_day": 0,
+                  "update_frequency_hour": 12,
+                  "update_frequency_min": 0,
+                  "notify_on_free_games": true,
+                  "last_update_timestamp": "1970-01-01T00:00:00Z",
+                  "enable_steam_games": true,
+                  "enable_egs_games": true,
+                  "enable_gog_games": true,
+                  "enable_itchio_games": true,
+                  "enable_amazon_games": true,
+                  "show_titles": true,
+                  "show_hidden_games": false,
+                  "disable_animations": false,
+                  "larger_text": true
+                }
+              },
+              "deal_db.json": {
+                "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+                "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+                "parsed": {
+                  "framey-private-63": {
+                    "id": "framey-private-63",
+                    "title": "Framey private cached game",
+                    "worth": "N/A",
+                    "image": "https://example.invalid/framey-owned.png",
+                    "open_giveaway_url": "https://example.invalid/framey-owned",
+                    "published_date": "2026-10-31",
+                    "end_date": "N/A",
+                    "status": "Active",
+                    "platforms": "Steam",
+                    "hidden": true
+                  }
+                }
+              }
+            },
+            "after": {
+              "settings.json": {
+                "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+                "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+                "parsed": {
+                  "update_frequency_day": 0,
+                  "update_frequency_hour": 12,
+                  "update_frequency_min": 0,
+                  "notify_on_free_games": true,
+                  "last_update_timestamp": "1970-01-01T00:00:00Z",
+                  "enable_steam_games": true,
+                  "enable_egs_games": true,
+                  "enable_gog_games": true,
+                  "enable_itchio_games": true,
+                  "enable_amazon_games": true,
+                  "show_titles": true,
+                  "show_hidden_games": false,
+                  "disable_animations": false,
+                  "larger_text": true
+                }
+              },
+              "deal_db.json": {
+                "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+                "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+                "parsed": {
+                  "framey-private-63": {
+                    "id": "framey-private-63",
+                    "title": "Framey private cached game",
+                    "worth": "N/A",
+                    "image": "https://example.invalid/framey-owned.png",
+                    "open_giveaway_url": "https://example.invalid/framey-owned",
+                    "published_date": "2026-10-31",
+                    "end_date": "N/A",
+                    "status": "Active",
+                    "platforms": "Steam",
+                    "hidden": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "before": {
+              "settings.json": {
+                "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+                "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+                "parsed": {
+                  "update_frequency_day": 0,
+                  "update_frequency_hour": 12,
+                  "update_frequency_min": 0,
+                  "notify_on_free_games": true,
+                  "last_update_timestamp": "1970-01-01T00:00:00Z",
+                  "enable_steam_games": true,
+                  "enable_egs_games": true,
+                  "enable_gog_games": true,
+                  "enable_itchio_games": true,
+                  "enable_amazon_games": true,
+                  "show_titles": true,
+                  "show_hidden_games": false,
+                  "disable_animations": false,
+                  "larger_text": true
+                }
+              },
+              "deal_db.json": {
+                "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": false\n    }\n}",
+                "sha256": "135174cec8912531fb14c949ea91829394f6b5ed4104f02f0064e755d454a139",
+                "parsed": {
+                  "framey-private-63": {
+                    "id": "framey-private-63",
+                    "title": "Framey private cached game",
+                    "worth": "N/A",
+                    "image": "https://example.invalid/framey-owned.png",
+                    "open_giveaway_url": "https://example.invalid/framey-owned",
+                    "published_date": "2026-10-31",
+                    "end_date": "N/A",
+                    "status": "Active",
+                    "platforms": "Steam",
+                    "hidden": false
+                  }
+                }
+              }
+            },
+            "after": {
+              "settings.json": {
+                "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+                "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+                "parsed": {
+                  "update_frequency_day": 0,
+                  "update_frequency_hour": 12,
+                  "update_frequency_min": 0,
+                  "notify_on_free_games": true,
+                  "last_update_timestamp": "1970-01-01T00:00:00Z",
+                  "enable_steam_games": true,
+                  "enable_egs_games": true,
+                  "enable_gog_games": true,
+                  "enable_itchio_games": true,
+                  "enable_amazon_games": true,
+                  "show_titles": true,
+                  "show_hidden_games": false,
+                  "disable_animations": false,
+                  "larger_text": true
+                }
+              },
+              "deal_db.json": {
+                "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": false\n    }\n}",
+                "sha256": "135174cec8912531fb14c949ea91829394f6b5ed4104f02f0064e755d454a139",
+                "parsed": {
+                  "framey-private-63": {
+                    "id": "framey-private-63",
+                    "title": "Framey private cached game",
+                    "worth": "N/A",
+                    "image": "https://example.invalid/framey-owned.png",
+                    "open_giveaway_url": "https://example.invalid/framey-owned",
+                    "published_date": "2026-10-31",
+                    "end_date": "N/A",
+                    "status": "Active",
+                    "platforms": "Steam",
+                    "hidden": false
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "consoleSha256": "5f1991991e494c242267ec0fa855904faaff1764e16483a9bad2e26f1580f894",
+        "jsonDecodeDiagnosticCount": 0
+      },
+      {
+        "caseIndex": 1,
+        "rpcs": 7,
+        "cleanShutdownVerified": false,
+        "expectedNegative": true,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "118070"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "118098"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "118098"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "118108"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 5.205,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793448028.6662393"
+            ],
+            "forcedPluginKills": 1,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Free Loader (v1.6.0)\n[plugin][INFO]: Stopping response listener for Free Loader (v1.6.0)\n[plugin][WARNING]: Plugin Free Loader (v1.6.0) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Free Loader (v1.6.0) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "e828dbb632a87eb0b7b8133e31b4009667630a1409eb4d3204cca09d08d40fa9",
+            "cleanShutdownVerified": false
+          }
+        ],
+        "diskReadbacks": [
+          {
+            "before": {
+              "settings.json": {
+                "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+                "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+                "parsed": {
+                  "update_frequency_day": 0,
+                  "update_frequency_hour": 12,
+                  "update_frequency_min": 0,
+                  "notify_on_free_games": true,
+                  "last_update_timestamp": "1970-01-01T00:00:00Z",
+                  "enable_steam_games": true,
+                  "enable_egs_games": true,
+                  "enable_gog_games": true,
+                  "enable_itchio_games": true,
+                  "enable_amazon_games": true,
+                  "show_titles": true,
+                  "show_hidden_games": false,
+                  "disable_animations": false,
+                  "larger_text": true
+                }
+              },
+              "deal_db.json": {
+                "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+                "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+                "parsed": {
+                  "framey-private-63": {
+                    "id": "framey-private-63",
+                    "title": "Framey private cached game",
+                    "worth": "N/A",
+                    "image": "https://example.invalid/framey-owned.png",
+                    "open_giveaway_url": "https://example.invalid/framey-owned",
+                    "published_date": "2026-10-31",
+                    "end_date": "N/A",
+                    "status": "Active",
+                    "platforms": "Steam",
+                    "hidden": true
+                  }
+                }
+              }
+            },
+            "after": {
+              "settings.json": {
+                "text": "{\n    \"update_frequency_day\": 0,\n    \"update_frequency_hour\": 12,\n    \"update_frequency_min\": 0,\n    \"notify_on_free_games\": true,\n    \"last_update_timestamp\": \"1970-01-01T00:00:00Z\",\n    \"enable_steam_games\": true,\n    \"enable_egs_games\": true,\n    \"enable_gog_games\": true,\n    \"enable_itchio_games\": true,\n    \"enable_amazon_games\": true,\n    \"show_titles\": true,\n    \"show_hidden_games\": false,\n    \"disable_animations\": false,\n    \"larger_text\": true\n}",
+                "sha256": "911b1133887aab6612192d7c19d56bc305836f35fa99155467568d90f8af4169",
+                "parsed": {
+                  "update_frequency_day": 0,
+                  "update_frequency_hour": 12,
+                  "update_frequency_min": 0,
+                  "notify_on_free_games": true,
+                  "last_update_timestamp": "1970-01-01T00:00:00Z",
+                  "enable_steam_games": true,
+                  "enable_egs_games": true,
+                  "enable_gog_games": true,
+                  "enable_itchio_games": true,
+                  "enable_amazon_games": true,
+                  "show_titles": true,
+                  "show_hidden_games": false,
+                  "disable_animations": false,
+                  "larger_text": true
+                }
+              },
+              "deal_db.json": {
+                "text": "{\n    \"framey-private-63\": {\n        \"id\": \"framey-private-63\",\n        \"title\": \"Framey private cached game\",\n        \"worth\": \"N/A\",\n        \"image\": \"https://example.invalid/framey-owned.png\",\n        \"open_giveaway_url\": \"https://example.invalid/framey-owned\",\n        \"published_date\": \"2026-10-31\",\n        \"end_date\": \"N/A\",\n        \"status\": \"Active\",\n        \"platforms\": \"Steam\",\n        \"hidden\": true\n    }\n}",
+                "sha256": "79c8ace3b157e10025ac437ee0e61fccf88b7ec51500541a26209a76c4fa984e",
+                "parsed": {
+                  "framey-private-63": {
+                    "id": "framey-private-63",
+                    "title": "Framey private cached game",
+                    "worth": "N/A",
+                    "image": "https://example.invalid/framey-owned.png",
+                    "open_giveaway_url": "https://example.invalid/framey-owned",
+                    "published_date": "2026-10-31",
+                    "end_date": "N/A",
+                    "status": "Active",
+                    "platforms": "Steam",
+                    "hidden": true
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "consoleSha256": "f947b3880c9940ff2498f4226c45adf4ade429eec454a3b3a004f1604d5dcd21",
+        "jsonDecodeDiagnosticCount": 0
+      }
+    ],
+    "freeLoaderLiteralRpcsVerified": true,
+    "freeLoaderSettingsCacheHashesAndReadbacksVerified": true,
+    "freeLoaderPositiveTwoCleanParentOnlyStops": true,
+    "freeLoaderOriginalForcedKillVerified": true,
+    "generalConsoleCasesAudited": 42,
+    "generalConsoleHashesVerified": true,
+    "generalConsoleObservations": [
+      {
+        "id": 61,
+        "version": "2.15.1",
+        "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 1
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 103,
+        "version": "1.2.2",
+        "consoleSha256": "cc5f5ec06bbc8f9085a8196412ed4f7cf17ea107944c14b3f3d20a239d717093",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 3
+        },
+        "cleanupStops": [
+          {
+            "pid": 62,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 44,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 27,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 134,
+        "version": "1.3.6",
+        "consoleSha256": "ecae41a023ae0ca08b083ef6d2dfec24248fa035d585167b59011a92dc966dc8",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 36,
+        "version": "1.8.1",
+        "consoleSha256": "98bb71372bc053b892f1e10f6e2f6a5e15a5ea6e98edf564597450ca3d03cd6d",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 27,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "version": "3.1.1",
+        "consoleSha256": "8a802a530b1f488c46b63bcdc7b909f5b24cda6f965d7db1b14471879b7cecc0",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 11,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 10,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": -15
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "version": "1.3.4",
+        "consoleSha256": "2285bb2a3ea0f108fc073ebc061863f776653ef96c50806ccfefd7aea737d634",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 143,
+        "version": "0.1.0",
+        "consoleSha256": "3ef082a698a3b9a149581e5a63ad23f6eee86e72d345978b6e27410419437893",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 117,
+        "version": "1.0.0",
+        "consoleSha256": "fabc9fa2f6863e9a93bba818bc217c6eb35e0bb46e7f9b8eb917eed3b9dde3ab",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 84,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": -15
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 131,
+        "version": "1.1.0",
+        "consoleSha256": "a8fc1c361a3fc5ff0c9b534b24e45b962eb3fc896c50b5cfa523fe5b1c6c6478",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 130,
+        "version": "1.0.1",
+        "consoleSha256": "d4e1addd9b735015af42d3c65f1214003a169dbe42e275a29e1db9085d4b08e7",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 10,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 130,
+        "version": "1.0.2",
+        "consoleSha256": "f2de8d13aa2cd740d284d65ac86becd270ff79af6f4f75c728f6bff2badb3b3d",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 68,
+        "version": "0.2.1",
+        "consoleSha256": "37e54283acd50063c79cda7c7ea4769b0976bd1e9c1643cbc5735abee9d7cd51",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 3
+        },
+        "cleanupStops": [
+          {
+            "pid": 29,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 52,
+        "version": "1.7.1-1",
+        "consoleSha256": "494daaca9d27ab6d1e8ce9a0381579646b9fba329c7b698761886112861e1a3c",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 93,
+        "version": "1.2.6",
+        "consoleSha256": "266eefe6ac7485fde01e4ff869828f40d5a30f4adf873fefeee92393060583ba",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 1,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 123,
+        "version": "1.2.3",
+        "consoleSha256": "285ed8d5d01bea849c7c19d25a8dedfff1a56931c2ac8e1fc109ac657f7f14a7",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 22,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 28,
+        "version": "2.0.5",
+        "consoleSha256": "f8bfa749ad6eb213eca30a1e5fcdfa00eeb653918c131258eaf6c3e60791db04",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 67,
+        "version": "0.2.0",
+        "consoleSha256": "3a3394fe3275bb52594ad7658c2af009a9017e61c58e4c1b09f5ec34c399b47f",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 1,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 114,
+        "version": "1.0.4",
+        "consoleSha256": "504ca9264b49206fe4abd15659906ac4ce182291b58c9b1c9ade6bdc8d29264c",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "version": "1.0.3",
+        "consoleSha256": "068540840d0b8d3dadfc3be23ba0e06b9cacf44dad5a8ace86d8a069674200b5",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 1
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 24,
+        "version": "1.3",
+        "consoleSha256": "467550ec01c68f0dc920484b69ab6a861f8636d9782068587d50e87171158749",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 132,
+        "version": "1.5.3",
+        "consoleSha256": "cf7ddc01f7c6026401762d583145f8e5afe878891d342ff9c783874c8d8d5c60",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 22,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 79,
+        "version": "1.0.1",
+        "consoleSha256": "1db90ef72c0eb7dd7136e126b77ef70c9ac85d4fa658ffad8b1974d8d172501b",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 26,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 135,
+        "version": "2.0.0",
+        "consoleSha256": "23cc369fc5d581f95de410601df1b7454ecadd7362d942453e626c7fd52f10c8",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 22,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 50,
+        "version": "1.4.0",
+        "consoleSha256": "761fb3f0e6020b4cf072ab692195a669aa012024d42a28f0f6b1ba9bd45a3aee",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 46,
+        "version": "1.0.0-1",
+        "consoleSha256": "73a616d22bbdf8fcd07c5f01a07bf07b9d2f148946be7bdeba953e8cb83709e2",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 104,
+        "version": "1.0.4",
+        "consoleSha256": "79ce57dc430ff9b4fc046326cf075a9738ace760f70198d3a94f49d1f260f21c",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 63,
+        "version": "1.6.0",
+        "consoleSha256": "5f1991991e494c242267ec0fa855904faaff1764e16483a9bad2e26f1580f894",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 22,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": -15
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "version": "1.1.6",
+        "consoleSha256": "9082d7cf7aebd39470d42212857a897aa6af8a093e196b1311cb8dbf843e1ec9",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 11,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 10,
+            "signaledProcessGroup": true,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": -15
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": true,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 111,
+        "version": "1.1.7",
+        "consoleSha256": "7d6d592b41d981c938e5b08aaae06f740da4933fdea01ed5046075460cbe44bc",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 11,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 10,
+            "signaledProcessGroup": true,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": -15
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": true,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 53,
+        "version": "0.1.0",
+        "consoleSha256": "9f11b46557fe03f31061fd2ab8494a0b608e70fb6ec85493318f392deede371e",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 22,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": -15
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 89,
+        "version": "0.6.7",
+        "consoleSha256": "772a3de62a058a985a96b15631f252ab2972b7a9b05d9a83ca1c67d65f2b79d3",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 1
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 96,
+        "version": "1.0.0",
+        "consoleSha256": "3092aacd1eec50520a717bd97216db42dda370392d4a908ee97500d005a6bef3",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 2
+        },
+        "cleanupStops": [
+          {
+            "pid": 51,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 37,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 60,
+        "version": "1.2.0",
+        "consoleSha256": "22836f103d4e66d9e98eb7a1195d4905e585244171897a966cae5b33eb1f5882",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 1
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 125,
+        "version": "0.4.5",
+        "consoleSha256": "b5ab744d717402fdc57ba8925c4f5f9386043608961aabca20334658ef5b45ae",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 111,
+        "version": "1.1.7",
+        "consoleSha256": "7d6d592b41d981c938e5b08aaae06f740da4933fdea01ed5046075460cbe44bc",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 11,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 10,
+            "signaledProcessGroup": true,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": -15
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": true,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 96,
+        "version": "1.0.0",
+        "consoleSha256": "62c2af18ea1fa097aab431abe9155719960493d76692511e2a8e838983e06018",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 1,
+          "Expecting value: line 1 column 1 (char 0)": 2
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 63,
+        "version": "1.6.0",
+        "consoleSha256": "f947b3880c9940ff2498f4226c45adf4ade429eec454a3b3a004f1604d5dcd21",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 1,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 22,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": -15
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 60,
+        "version": "1.2.0",
+        "consoleSha256": "22836f103d4e66d9e98eb7a1195d4905e585244171897a966cae5b33eb1f5882",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 1
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 65,
+        "version": "0.5.3",
+        "consoleSha256": "e9dc5045410adc73df12d29804b9adf5ae4c79f649af14e1c6a1f4bdafb7dcaa",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 0,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": true,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 134,
+        "version": "1.3.6",
+        "consoleSha256": "fda19ac60a50a7597b4e1e0bf770e2cf4ffea05ad87a1be6e6fd1b1fd0ae8fb9",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 2,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 23,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 68,
+        "version": "0.2.1",
+        "consoleSha256": "a24964260217be368701776255273e6b3caf25b242ea47bd1a40a9f54d406eab",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 1,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      },
+      {
+        "id": 53,
+        "version": "0.1.0",
+        "consoleSha256": "6ce40ac89c21463cb1a131a3d0689592c9c3271744ba9bb3338195097b780de4",
+        "markers": {
+          "Error during shutdown:": 0,
+          "asyncio.exceptions.CancelledError": 0,
+          "Task was destroyed but it is pending": 0,
+          "Bad file descriptor": 0,
+          "Sending SIGKILL!": 1,
+          "Expecting value: line 1 column 1 (char 0)": 0
+        },
+        "cleanupStops": [
+          {
+            "pid": 22,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": false,
+            "parentOnlySignal": false,
+            "returncode": -15
+          },
+          {
+            "pid": 9,
+            "signaledProcessGroup": false,
+            "forcedKill": false,
+            "loader": true,
+            "parentOnlySignal": false,
+            "returncode": 0
+          }
+        ]
+      }
+    ],
+    "generalCleanShutdownUnverified": true
+  },
+  "historicalArmWorkflowComplete": false,
+  "rawConsoleErrorFreeClaimed": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "New source requires fresh exact-head hosted checks/e2e/native AMD64/ARM64/PC and all package gates.",
+    "Historical ARM64 result applies to f0d2b75, before current-main integration; it does not qualify a new SHA.",
+    "Local native replay covers Free Loader and TabMaster only; full matrix was not run locally.",
+    "Installer test covers 37 pinned fixtures over HTTP/SSH without executing official backends; it is not full e2e or the 116-plugin audit.",
+    "Native Docker cleanup is runner/source-bound; owned parent/child process cleanup is checked by PID/start-time assertions.",
+    "Retained console diagnostics and forced stops in other plugins do not establish global clean shutdown.",
+    "No live feed, notifications, Steam store, browser, managed Frame, wearer/controller or release proof."
+  ],
+  "rawJsonSha256": "b3ded074f066f77da535e8251ba9605c5da0b86f27659a5485f598ab1f2c8be3",
+  "rawGzipSha256": "b1f54672c68d3792b437c2b4c55252d496e2f1040cbf912b428cc92b6c3a2cba"
+}

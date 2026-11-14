@@ -1,0 +1,188 @@
+{
+  "at": "2026-10-31T19:19:52.668351+00:00",
+  "head": "21a1535cdad19b4ba8410ed6e4b644d34db62e12",
+  "mainAtReview": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+  "checks": 24,
+  "successfulChecks": 24,
+  "artifactCount": 6,
+  "zipDigestsAndExactHeadMetadataVerified": true,
+  "sourceBindings": 1344,
+  "uniqueSources": 181,
+  "browser": {
+    "x86_64": {
+      "head": "21a1535cdad19b4ba8410ed6e4b644d34db62e12",
+      "artifact": 13052604101,
+      "architecture": "x86_64",
+      "sourceCount": 168,
+      "sourceArchiveReconstructed": true,
+      "panelBootstrapAndPacketVerified": true,
+      "testedC5SourceHashesUnchanged": true,
+      "httpRequests": 20,
+      "methodRequests": 14,
+      "eventPolls": 6,
+      "maxHttpSeconds": 1.621,
+      "cefCalls": 17,
+      "deliveredEvents": 3,
+      "lifecycleRpcs": 15,
+      "lifecycleEvents": 2,
+      "requestDrain": {
+        "drained": true,
+        "pendingHandlers": 0,
+        "timeoutSeconds": 35,
+        "productionDeadlineChanged": false
+      },
+      "ownedDeckyStop": {
+        "mainPidBefore": 336,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 1.528
+      },
+      "captures": {
+        "terminal": {
+          "sha256": "bec067eb1f12880b86c98daf97d750b5c578d31fbedaa81e34536e9873510242",
+          "visuallyInspected": true
+        },
+        "output": {
+          "sha256": "ee0eeed13c20d5b788f0ec62a7dac8b9eaf0411d8730596781abe555712d3ee1",
+          "visuallyInspected": true
+        },
+        "removed": {
+          "sha256": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3",
+          "visuallyInspected": true
+        }
+      },
+      "hostedOwnedQemuReaped": true,
+      "guestOwnedUserManagerStopped": true,
+      "scopedCleanupVerified": true,
+      "hostBootFileAbsenceIndependentlyVerified": false,
+      "priorArmFailureReclassified": false,
+      "soleCauseProved": false,
+      "realSteamCef": false,
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "managedInstallVerified": false,
+      "releaseQualified": false,
+      "limits": [
+        "Synthetic CEF/receipt/input in sandboxed QEMU fixture.",
+        "Horizontal overflow/clipped toolbar remains in inspected captures.",
+        "Earlier ARM64 timeout remains a failed run; sole cause and intermittent behavior are not established.",
+        "No real Steam/Frame/wearer/controller or managed Terminal proof."
+      ]
+    },
+    "aarch64": {
+      "head": "21a1535cdad19b4ba8410ed6e4b644d34db62e12",
+      "artifact": 13053775160,
+      "architecture": "aarch64",
+      "sourceCount": 168,
+      "sourceArchiveReconstructed": true,
+      "panelBootstrapAndPacketVerified": true,
+      "testedC5SourceHashesUnchanged": true,
+      "httpRequests": 20,
+      "methodRequests": 14,
+      "eventPolls": 6,
+      "maxHttpSeconds": 16.845,
+      "cefCalls": 17,
+      "deliveredEvents": 4,
+      "lifecycleRpcs": 15,
+      "lifecycleEvents": 4,
+      "requestDrain": {
+        "drained": true,
+        "pendingHandlers": 0,
+        "timeoutSeconds": 35,
+        "productionDeadlineChanged": false
+      },
+      "ownedDeckyStop": {
+        "mainPidBefore": 331,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 8.828
+      },
+      "captures": {
+        "terminal": {
+          "sha256": "ad5a8c1e93c2ac39df1bf273f6318eac7c1cbc13b49b107bdd14f7134b2c03ed",
+          "visuallyInspected": true
+        },
+        "output": {
+          "sha256": "d8ceff7fd3e0e769b9c31fe4cef25e5b146feb7e49235da5285fd7d122df62b0",
+          "visuallyInspected": true
+        },
+        "removed": {
+          "sha256": "3f14e90489b9344a9647a54ea95e4721a983ed9d6a59603400c181d019332994",
+          "visuallyInspected": true
+        }
+      },
+      "hostedOwnedQemuReaped": true,
+      "guestOwnedUserManagerStopped": true,
+      "scopedCleanupVerified": true,
+      "hostBootFileAbsenceIndependentlyVerified": false,
+      "priorArmFailureReclassified": false,
+      "soleCauseProved": false,
+      "realSteamCef": false,
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "managedInstallVerified": false,
+      "releaseQualified": false,
+      "limits": [
+        "Synthetic CEF/receipt/input in sandboxed QEMU fixture.",
+        "Horizontal overflow/clipped toolbar remains in inspected captures.",
+        "Earlier ARM64 timeout remains a failed run; sole cause and intermittent behavior are not established.",
+        "No real Steam/Frame/wearer/controller or managed Terminal proof."
+      ]
+    }
+  },
+  "nativeCandidate": [
+    {
+      "artifact": 13053831032,
+      "architecture": "x86_64",
+      "cases": 1,
+      "sourceHashes": 31,
+      "discoveryVerified": true,
+      "privateCandidate": true,
+      "allRuntimeBodiesIndependentlyAudited": false,
+      "lifecycleRpcCount": 15,
+      "lifecycleEvents": 2,
+      "privatePtyOutputResizeRemoveReloadPersistenceAndSiblingPreservation": true,
+      "cleanShutdownVerified": false,
+      "consoleWarningsRetained": true
+    },
+    {
+      "artifact": 13053930359,
+      "architecture": "aarch64",
+      "cases": 1,
+      "sourceHashes": 31,
+      "discoveryVerified": true,
+      "privateCandidate": true,
+      "allRuntimeBodiesIndependentlyAudited": false,
+      "lifecycleRpcCount": 15,
+      "lifecycleEvents": 2,
+      "privatePtyOutputResizeRemoveReloadPersistenceAndSiblingPreservation": true,
+      "cleanShutdownVerified": false,
+      "consoleWarningsRetained": true
+    }
+  ],
+  "normalNativeCasesPerArchitecture": 45,
+  "all24ChecksArtifactsIndependentlyQualified": false,
+  "mainCi": "14 success; ARM64 signed package still in progress at review",
+  "compatibility": "partial",
+  "priorArmFailureRetained": true,
+  "soleCauseProved": false,
+  "horizontalOverflowRemains": true,
+  "realFrameContacted": false,
+  "realSteamCef": false,
+  "physicalControllerVerified": false,
+  "managedInstallVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "09b3eb7a7cfd54608606198ce748fb541ec5853e6a603e0bfaf433cef4d5e72b",
+  "rawBytes": 5645674
+}

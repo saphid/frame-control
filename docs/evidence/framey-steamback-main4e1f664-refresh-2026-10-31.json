@@ -1,0 +1,517 @@
+{
+  "at": "2026-10-31T17:27:16.340926+00:00",
+  "sourceRevision": "9fbb0890a9e44bf60ce8281971f7727e9c8b2976",
+  "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+  "nativeAudit": {
+    "sourceRevision": "9fbb0890a9e44bf60ce8281971f7727e9c8b2976",
+    "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+    "sourceAudit": {
+      "at": "2026-10-31T17:22:53.943772+00:00",
+      "sourceRevision": "9fbb0890a9e44bf60ce8281971f7727e9c8b2976",
+      "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+      "priorHead": "b0b798c4189a471f1b98b09946120770ad68d47c",
+      "normalMerge": true,
+      "integrationSource": "5e26b5d14a9c7cbbcef0869f5e4f455b4b520df1",
+      "helperOnlyRemovesOneTrailingNewline": true,
+      "wholeMainCheckerAstPreserved": true,
+      "priorSteambackTopLevelNegativePreserved": true,
+      "mainTimerHelpersByteIdentical": true,
+      "mainOther33NativeCasesPreserved": true,
+      "wholeOtherInstallerAstPreserved": true,
+      "mainOtherE2eAssertionsPreserved": true,
+      "mainRunnerPreservedWithOneNewControl": true,
+      "mainOther36RuntimeBodiesPreserved": true,
+      "priorSteambackBodyPreserved": true,
+      "all37RuntimeDispatchOccurrencesVerified": true,
+      "mainOtherInstallerBranchesPreserved": true,
+      "onlyPriorSteambackInstallerBranchAdded": true,
+      "allMainApplyScriptDispatchesPreserved": true,
+      "freeLoaderRuntimeAndFixtureMatchMain": true,
+      "other115CompleteCatalogRowsPreserved": true,
+      "all116StatusInstallPoliciesPreserved": true,
+      "sharedIpcConsoleInventoryUnchanged": true,
+      "nativeSourceFingerprints": {
+        "scripts/framey-test-decky-runtime.py": "678c4405824fb13c098051253d2d4fd98085c267ab5cdf5c087def87c5bfd41d",
+        "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        "tests/decky-runtime/check.py": "f18bc26ce06159af62c81fb963f98ca682306012defa8ad6a8c16c8b02e88282",
+        "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+        "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+        "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+        "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+        "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+        "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/decky-runtime/cases.json": "3f093ff4d3fd7b7f7279096aaecc3cf365c46e8ac0006ea89392778d5065474a",
+        "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+        "ui/frame_decky_store.py": "4fdda4eb7a3c082f1c7db4416c6e1ca5bd4bb81245a13c15fc0b605ff7254caa",
+        "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+        "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+        "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+        "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+        "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+        "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+        ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+      },
+      "nativeInputCount": 20
+    },
+    "nativeSourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "678c4405824fb13c098051253d2d4fd98085c267ab5cdf5c087def87c5bfd41d",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "f18bc26ce06159af62c81fb963f98ca682306012defa8ad6a8c16c8b02e88282",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "3f093ff4d3fd7b7f7279096aaecc3cf365c46e8ac0006ea89392778d5065474a",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "4fdda4eb7a3c082f1c7db4416c6e1ca5bd4bb81245a13c15fc0b605ff7254caa",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeCases": [
+      {
+        "negative": false,
+        "rpcs": 11,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351813763"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351813792"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351813792"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351813803"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.214,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793467388.152172"
+            ],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steamback (v1.0.0-1)\n[plugin][INFO]: Stopping response listener for Steamback (v1.0.0-1)\nCalling Loader unload function for Steamback (v1.0.0-1).\nAttempting to unload with plugin Steamback (v1.0.0-1)'s \"_unload\" function.\n\nSteamback exiting!\nUnloaded Steamback (v1.0.0-1)\n\nStopping event loop\n[plugin][INFO]: Plugin Steamback (v1.0.0-1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "ef9529bea31f266bd7ed355a0e00cc97c744002fad8f4bb3b30abe97fb249100",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 23,
+            "descendantsBefore": {
+              "24": {
+                "state": "S",
+                "parent": 23,
+                "start": "351814076"
+              },
+              "33": {
+                "state": "S",
+                "parent": 24,
+                "start": "351814104"
+              },
+              "34": {
+                "state": "S",
+                "parent": 24,
+                "start": "351814104"
+              },
+              "35": {
+                "state": "S",
+                "parent": 34,
+                "start": "351814114"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 33,
+                "returncode": 0
+              },
+              {
+                "pid": 34,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.185,
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steamback (v1.0.0-1)\n[plugin][INFO]: Stopping response listener for Steamback (v1.0.0-1)\nCalling Loader unload function for Steamback (v1.0.0-1).\nAttempting to unload with plugin Steamback (v1.0.0-1)'s \"_unload\" function.\n\nSteamback exiting!\nUnloaded Steamback (v1.0.0-1)\n\nStopping event loop\n[plugin][INFO]: Plugin Steamback (v1.0.0-1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "ef9529bea31f266bd7ed355a0e00cc97c744002fad8f4bb3b30abe97fb249100",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "saveSnapshots": [
+          {
+            "before": {
+              "runtime": {
+                "saves2/save_777_1793467390311/save.dat": {
+                  "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                  "base64": "b2xk"
+                },
+                "saves2/save_777_1793467390311.json": {
+                  "sha256": "a0625614ba55cba6c9de3ab2e44842446523dcdaf9690b81564093544bbe7a94",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzExLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTAzMTEiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                },
+                "saves2/undo_777_1793467390325/save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                },
+                "saves2/undo_777_1793467390325.json": {
+                  "sha256": "492b794f04b396f59b6faaddfaa539de30015aa82624136a28eb15b021bb6eb7",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTAzMjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                }
+              },
+              "remote": {
+                "save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                }
+              }
+            },
+            "after": {
+              "runtime": {
+                "saves2/save_777_1793467390311/save.dat": {
+                  "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                  "base64": "b2xk"
+                },
+                "saves2/save_777_1793467390311.json": {
+                  "sha256": "a0625614ba55cba6c9de3ab2e44842446523dcdaf9690b81564093544bbe7a94",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzExLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTAzMTEiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                },
+                "saves2/undo_777_1793467390325/save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                },
+                "saves2/undo_777_1793467390325.json": {
+                  "sha256": "492b794f04b396f59b6faaddfaa539de30015aa82624136a28eb15b021bb6eb7",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTAzMjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                }
+              },
+              "remote": {
+                "save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                }
+              }
+            }
+          },
+          {
+            "before": {
+              "runtime": {
+                "saves2/save_777_1793467390311/save.dat": {
+                  "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                  "base64": "b2xk"
+                },
+                "saves2/save_777_1793467390311.json": {
+                  "sha256": "a0625614ba55cba6c9de3ab2e44842446523dcdaf9690b81564093544bbe7a94",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzExLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTAzMTEiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                },
+                "saves2/undo_777_1793467390325/save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                },
+                "saves2/undo_777_1793467390325.json": {
+                  "sha256": "492b794f04b396f59b6faaddfaa539de30015aa82624136a28eb15b021bb6eb7",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTAzMjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                }
+              },
+              "remote": {
+                "save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                }
+              }
+            },
+            "after": {
+              "runtime": {
+                "saves2/save_777_1793467390311/save.dat": {
+                  "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                  "base64": "b2xk"
+                },
+                "saves2/save_777_1793467390311.json": {
+                  "sha256": "a0625614ba55cba6c9de3ab2e44842446523dcdaf9690b81564093544bbe7a94",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzExLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTAzMTEiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                },
+                "saves2/undo_777_1793467390325/save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                },
+                "saves2/undo_777_1793467390325.json": {
+                  "sha256": "492b794f04b396f59b6faaddfaa539de30015aa82624136a28eb15b021bb6eb7",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTAzMjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                }
+              },
+              "remote": {
+                "save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                }
+              }
+            }
+          }
+        ],
+        "consoleSha256": "653d9888c8159579e64f18a685fc2b1fdc241dad7fbac9464a8a892a82af2918"
+      },
+      {
+        "negative": true,
+        "rpcs": 9,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351814424"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351814454"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351814454"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351814467"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 5.224,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793467394.7724223"
+            ],
+            "forcedPluginKills": 1,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Steamback (v1.0.0-1)\n[plugin][INFO]: Stopping response listener for Steamback (v1.0.0-1)\n[plugin][WARNING]: Plugin Steamback (v1.0.0-1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Steamback (v1.0.0-1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "33cc133e2af63910dccf2e0a26fffdd3fdc7d619d144b1708d8a0c2daee66e69",
+            "cleanShutdownVerified": false
+          }
+        ],
+        "saveSnapshots": [
+          {
+            "before": {
+              "runtime": {
+                "saves2/save_777_1793467396924/save.dat": {
+                  "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                  "base64": "b2xk"
+                },
+                "saves2/save_777_1793467396924.json": {
+                  "sha256": "f8bdca76021e958221b6cb0d5f9f8b874a5b73279b8f835507916f2df5dcee58",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3Mzk2OTI0LAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTY5MjQiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                },
+                "saves2/undo_777_1793467396927/save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                },
+                "saves2/undo_777_1793467396927.json": {
+                  "sha256": "cba77c7721f692bf4dad5aa3413c842dd4363283e6c06cc7e66141d5418b8263",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3Mzk2OTI3LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTY5MjciLAogImlzX3VuZG8iOiB0cnVlCn0="
+                }
+              },
+              "remote": {
+                "save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                }
+              }
+            },
+            "after": {
+              "runtime": {
+                "saves2/save_777_1793467396924/save.dat": {
+                  "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+                  "base64": "b2xk"
+                },
+                "saves2/save_777_1793467396924.json": {
+                  "sha256": "f8bdca76021e958221b6cb0d5f9f8b874a5b73279b8f835507916f2df5dcee58",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3Mzk2OTI0LAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTY5MjQiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                },
+                "saves2/undo_777_1793467396927/save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                },
+                "saves2/undo_777_1793467396927.json": {
+                  "sha256": "cba77c7721f692bf4dad5aa3413c842dd4363283e6c06cc7e66141d5418b8263",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3Mzk2OTI3LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTY5MjciLAogImlzX3VuZG8iOiB0cnVlCn0="
+                }
+              },
+              "remote": {
+                "save.dat": {
+                  "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+                  "base64": "bmV3"
+                }
+              }
+            }
+          }
+        ],
+        "consoleSha256": "6fd20b5211b2215499347589cb8c21736f807e8830cfba33823be42a4dda9425"
+      }
+    ],
+    "installedSource": {
+      "archiveSha256": "ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3",
+      "backendSha256": "4aab5d758aceca5889427a74f4ac0edd535e018ce9a403a9abd23c2e3b8882a0",
+      "originalBackendSha256": "3a61cae9e9fdfae1cf69eb73fdd8a15d47c10858f6d78fec4c0e10e5bb52abfb",
+      "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "preservedArchiveMembers": {
+        "LICENSE": "b9937ea3457e02c2389c348077c47c90bbebdb56b78b7d51dbf7e393499135a4",
+        "main.py": "3a61cae9e9fdfae1cf69eb73fdd8a15d47c10858f6d78fec4c0e10e5bb52abfb",
+        "package.json": "77c058dcab5f24e41b72ec3f05c0362f702b49e37a36d837ea5a844f7c2356a5",
+        "plugin.json": "90b6b04ce5fad80a87bec9ba52ef100055f98467984dadf216396cad70b5c054",
+        "README.md": "20a2622c602d39010869cb555b48ce595c2b43810f39890d7411422c43c01d33",
+        "dist/index.js": "2430a24b42557db25dd55eaebfc9e4ec3daf3040f7def8c8429495075edf0f28",
+        "bin/upload-release.sh": "105912528709fb6ab22e062c57b67138bd1e469c80a4b0742d4253e3f9f733a5",
+        "bin/run.sh": "c964a819723c5ec7ecaf5a5fdc3d74f0009e8c13da6b791d3b1c122e46fbfa47",
+        "bin/test-release.sh": "ae7ffeb7615160857f530bb8c146315a252dd127617c25cd0cd0ff367a7e99db",
+        "bin/regen-docs.sh": "cef6c7fa4e78838d6084d5a4c4f97ce36b26e82e2c36d228b914090c57bc7fde",
+        "py_modules/steamback/test.py": "bb31645415ac9f63d9981bc3b4ceae954faa328985c37ee467f82e9f1725429a",
+        "py_modules/steamback/__init__.py": "b8aee91a976acc24e41a786e2c8819ac51ab1ce9a798c43bdd0e97070c710317",
+        "py_modules/steamback/util.py": "f6b265b6e106e5721b67759dea47fa6c579d0a7aaa67a7498306d7b5d1f0aa44",
+        "py_modules/steamback/gui.py": "03d44ad0e7139a81fe135ca4d8e22f71a6010a0fdbba31aa66c4c39565dc82f1",
+        "py_modules/steamback/data/icons8-refresh-96.png": "a614f2531d9deb28f59c44cc84b41c12cade252c3822ff1c22c2639a953cd76c",
+        "py_modules/steamback/__main__.py": "b4489218f621d5bc5f05148ca10e4c252ff1bb046fb7256e443ebaac794f95bb",
+        "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "py_modules/.gitignore": "0acaff1a38c1f04a077aa9dbfbe5e1750c863993c101532ba75270bfe90632ef"
+      },
+      "archiveMemberCountIncludingDuplicates": 26,
+      "receipt": {
+        "storeId": 46,
+        "sha256": "ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3",
+        "version": "1.0.0-1",
+        "compatShims": [
+          "steamback-ipc-eof"
+        ]
+      },
+      "ownedRemovalVerified": true
+    },
+    "independentSaveSnapshotContentsVerified": true,
+    "steambackStatus": "partial",
+    "realFrameContacted": false
+  },
+  "timerControl": {
+    "sourceRevision": "9fbb0890a9e44bf60ce8281971f7727e9c8b2976",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "678c4405824fb13c098051253d2d4fd98085c267ab5cdf5c087def87c5bfd41d",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "f18bc26ce06159af62c81fb963f98ca682306012defa8ad6a8c16c8b02e88282",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "3f093ff4d3fd7b7f7279096aaecc3cf365c46e8ac0006ea89392778d5065474a",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "4fdda4eb7a3c082f1c7db4416c6e1ca5bd4bb81245a13c15fc0b605ff7254caa",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "native": [
+      {
+        "caseIndex": 0,
+        "rpcs": 31,
+        "events": 30,
+        "consoleSha256": "1dfd1e5815c0883b4e37034be4940c9ab5773d10c9043de1f85cb2b2ccb4afca",
+        "positiveScopedCleanShutdownVerified": true,
+        "expectedNegative": false
+      },
+      {
+        "caseIndex": 1,
+        "rpcs": 10,
+        "events": 14,
+        "consoleSha256": "99a450aa06b6246692af82cdd94005452f4353c14d6ca88ed825350505fb8846",
+        "positiveScopedCleanShutdownVerified": false,
+        "expectedNegative": true
+      },
+      {
+        "caseIndex": 2,
+        "rpcs": 18,
+        "events": 24,
+        "consoleSha256": "1ba776a57206b6dc31e610cc4d94797d98b1f9ba00768a92d04a1ff5d7c86130",
+        "positiveScopedCleanShutdownVerified": false,
+        "expectedNegative": true
+      }
+    ],
+    "repairedStopSeconds": [
+      0.185,
+      0.214,
+      0.225,
+      0.185
+    ],
+    "negativeStopSeconds": 5.256,
+    "settingsSnapshotsDecodedAndHashed": true,
+    "runtimeOwnedContainersAndImagesAbsent": true,
+    "realFrameContacted": false
+  },
+  "fullUnitTests": 1952,
+  "fullUnitSeconds": 254.261,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "installerFixtures": 37,
+  "installerMethods": 1,
+  "installerSkips": 0,
+  "installerOwnedCleanupIndependentlyVerified": true,
+  "steambackStatus": "partial",
+  "historicalStrictRedNotRerun": true,
+  "historicalArmFailureCauseEstablished": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawJsonSha256": "e4503aa41a4774724069cedcdbceb9ba24b6ffe0f6fc1ccf5ff8e5acb79e9b80",
+  "rawGzipSha256": "94bda91b2a1c3ed418122e3ea5f0199c1daccc19f260d05e3bffb47132de46c8"
+}

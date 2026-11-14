@@ -79,13 +79,13 @@ class AutoSyncTest(unittest.TestCase):
         self.free = [100 * GB]
         self.sync = self.make()
 
-    def make(self):
+    def make(self, path=None):
         f = self.frame
         return fa.AutoSync(f.list_shots, f.save_shots, f.list_clips, f.export_clip,
                            lambda: f.device, lambda: f.busy,
                            offline=lambda e: "The Frame isn't answering." if "timed out" in str(e) else None,
                            shots_folder=self.dir / "Pictures", clips_folder=self.dir / "Videos",
-                           path=self.dir / "auto-sync.json", clock=lambda: self.now[0],
+                           path=path or self.dir / "auto-sync.json", clock=lambda: self.now[0],
                            space=lambda folder: self.free[0])
 
     def test_off_by_default_and_does_nothing(self):
@@ -137,6 +137,38 @@ class AutoSyncTest(unittest.TestCase):
         self.frame.calls.clear()
         self.sync.tick()
         self.assertEqual(self.frame.calls, [])  # off again afterwards
+
+    def test_copy_everything_waits_for_clips_to_finish_with_auto_switches_off(self):
+        for idle in (None, fa.SETTLE - 1):
+            with self.subTest(idle=idle):
+                self.frame = FakeFrame()
+                (self.dir / "auto-sync.json").unlink(missing_ok=True)
+                self.sync = self.make()
+                first = clip(1, NOW - 3600)
+                pending = clip(2, NOW - 60, idle=idle)
+                self.frame.shots = [shot(1, NOW - 3600)]
+                self.frame.clips = [first, pending]
+                self.sync.copy_all()
+
+                for _ in range(2):
+                    self.assertEqual(self.sync.tick(), fa.INTERVAL)
+                    state = self.sync.state()
+                    self.assertFalse(state["screenshots"] or state["clips"])
+                    self.assertTrue(state["pending"])
+                    self.assertEqual(state["waiting"], 1)
+                    self.assertEqual(self.frame.saved,
+                                     [("frame-a", [self.frame.shots[0]["id"]])])
+                    self.assertEqual(self.frame.exported, [("frame-a", first["id"])])
+
+                pending["idle"] = fa.SETTLE
+                self.assertEqual(self.sync.tick(), fa.INTERVAL)
+                self.assertEqual(self.frame.exported,
+                                 [("frame-a", first["id"]), ("frame-a", pending["id"])])
+                self.assertFalse(self.sync.state()["pending"])
+                self.assertEqual(self.sync.state()["waiting"], 0)
+                self.frame.calls.clear()
+                self.sync.tick()
+                self.assertEqual(self.frame.calls, [])
 
     def test_not_copied_again_after_deleting_it_here(self):
         self.sync.update({"screenshots": True, "clips": True})
@@ -206,6 +238,102 @@ class AutoSyncTest(unittest.TestCase):
         sync = self.make()
         self.assertEqual(sync.tick(), fa.BUSY_WAIT)
         self.assertEqual(len(self.frame.exported), 1)
+
+    def test_disabling_during_listing_stops_the_old_pass_even_if_reenabled(self):
+        for kind, setting, item in (("shots", "screenshots", shot(1, NOW + 5)),
+                                    ("clips", "clips", clip(1, NOW + 5))):
+            for reenable, other_enabled in ((False, False), (True, False), (True, True)):
+                with self.subTest(kind=kind, reenable=reenable, other_enabled=other_enabled):
+                    self.frame = FakeFrame()
+                    self.now[0] = NOW
+                    sync = self.make(self.dir / f"listing-{kind}-{reenable}-{other_enabled}.json")
+                    other = "clips" if setting == "screenshots" else "screenshots"
+                    sync.update({"screenshots": False, "clips": False, other: other_enabled})
+                    sync.update({setting: True})
+                    setattr(self.frame, kind, [dict(item)])
+                    entered, release = threading.Event(), threading.Event()
+                    original = getattr(self.frame, "list_" + kind)
+
+                    def listing(device):
+                        result = original(device)
+                        entered.set()
+                        if not release.wait(5):
+                            raise RuntimeError("Listing was not released")
+                        return result
+
+                    setattr(sync, "list_" + kind, listing)
+                    worker = threading.Thread(target=sync.tick)
+                    worker.start()
+                    try:
+                        self.assertTrue(entered.wait(5))
+                        sync.update({setting: False})
+                        if reenable:
+                            self.now[0] += 1000
+                            sync.update({setting: True})
+                    finally:
+                        release.set()
+                        worker.join(5)
+                    self.assertFalse(worker.is_alive())
+                    self.assertEqual((self.frame.saved, self.frame.exported), ([], []))
+                    self.assertFalse(sync.state()["running"])
+                    if reenable:
+                        setattr(self.frame, kind, [dict(item, time=self.now[0] + 5)])
+                        sync.tick()
+                        copied = self.frame.saved if kind == "shots" else self.frame.exported
+                        self.assertEqual(len(copied), 1)
+
+    def test_disabling_allows_current_transfer_but_stops_the_next_one(self):
+        for kind, setting, items in (("shots", "screenshots", [shot(1, NOW + 5), shot(2, NOW + 6)]),
+                                     ("clips", "clips", [clip(1, NOW + 5), clip(2, NOW + 6)])):
+            with self.subTest(kind=kind):
+                self.frame = FakeFrame()
+                self.now[0] = NOW
+                sync = self.make(self.dir / f"transfer-{kind}.json")
+                sync.update({"screenshots": False, "clips": False})
+                sync.update({setting: True})
+                setattr(self.frame, kind, [dict(item) for item in items])
+                name = "save_shots" if kind == "shots" else "export_clip"
+                original = getattr(self.frame, name)
+                entered, release = threading.Event(), threading.Event()
+
+                def transfer(device, ids):
+                    original(device, ids)
+                    entered.set()
+                    if not release.wait(5):
+                        raise RuntimeError("Transfer was not released")
+
+                setattr(sync, name, transfer)
+                with mock.patch.object(fa, "BATCH", 1):
+                    worker = threading.Thread(target=sync.tick)
+                    worker.start()
+                    try:
+                        self.assertTrue(entered.wait(5))
+                        sync.update({setting: False})
+                    finally:
+                        release.set()
+                        worker.join(5)
+                self.assertFalse(worker.is_alive())
+                copied = self.frame.saved if kind == "shots" else self.frame.exported
+                self.assertEqual(len(copied), 1)
+                self.assertEqual(sync._synced("frame-a", kind), {items[0]["id"]})
+
+    def test_copy_everything_now_keeps_its_explicit_request_when_toggles_change(self):
+        self.sync.update({"screenshots": True, "clips": True})
+        self.frame.shots = [shot(1, NOW - 10), shot(2, NOW - 5)]
+        self.frame.clips = [clip(1, NOW - 10)]
+        save = self.sync.save_shots
+
+        def disable_after_copy(device, ids):
+            save(device, ids)
+            self.sync.update({"screenshots": False, "clips": False})
+
+        self.sync.save_shots = disable_after_copy
+        self.sync.copy_all()
+        with mock.patch.object(fa, "BATCH", 1):
+            self.assertEqual(self.sync.tick(), fa.INTERVAL)
+        self.assertEqual(len(self.frame.saved), 2)
+        self.assertEqual(len(self.frame.exported), 1)
+        self.assertFalse(self.sync.state()["pending"])
 
     def test_backs_off_while_unreachable(self):
         self.sync.update({"screenshots": True})
@@ -315,6 +443,60 @@ class AutoSyncTest(unittest.TestCase):
                 self.sync.tick()
             self.assertEqual(self.frame.calls.count("export_clip") - before, fa.TRIES)
             self.assertIn("bad source", self.sync.state()["error"] or "")
+
+    def test_manual_copy_retries_with_automatic_switches_off(self):
+        for kind in ("shots", "clips"):
+            with self.subTest(kind=kind):
+                self.frame = FakeFrame()
+                f = self.frame
+                sync = self.make(self.dir / f"manual-transient-{kind}.json")
+                f.shots, f.clips = [shot(1, NOW - 10)], [clip(1, NOW - 10)]
+                error_attr = "save_error" if kind == "shots" else "export_error"
+                copy_call = "save_shots" if kind == "shots" else "export_clip"
+                setattr(f, error_attr, RuntimeError("source not ready"))
+                sync.copy_all()
+                sync.tick()
+                self.assertTrue(sync.state()["pending"])
+                setattr(f, error_attr, None)
+                sync.tick()
+                self.assertEqual(f.calls.count(copy_call), 2)
+                self.assertEqual((len(f.saved), len(f.exported)), (1, 1))
+                self.assertIsNone(sync.state()["error"])
+                self.assertFalse(sync.state()["pending"])
+                self.assertFalse(sync.enabled())
+                f.calls.clear()
+                sync.tick()
+                self.assertEqual(f.calls, [])
+
+    def test_manual_copy_resume_retries_after_the_attempt_limit(self):
+        for kind in ("shots", "clips"):
+            with self.subTest(kind=kind):
+                self.frame = FakeFrame()
+                f = self.frame
+                sync = self.make(self.dir / f"manual-resume-{kind}.json")
+                f.shots, f.clips = [shot(1, NOW - 10)], [clip(1, NOW - 10)]
+                error_attr = "save_error" if kind == "shots" else "export_error"
+                copy_call = "save_shots" if kind == "shots" else "export_clip"
+                setattr(f, error_attr, RuntimeError("source not ready"))
+                sync.copy_all()
+                for _ in range(fa.TRIES + 2):
+                    sync.tick()
+                self.assertEqual(f.calls.count(copy_call), fa.TRIES)
+                self.assertTrue(sync.state()["pending"])
+                self.assertIn("Resume", sync.state()["error"])
+                setattr(f, error_attr, None)
+                sync.tick()  # Source recovery alone does not reset the retry limit.
+                self.assertEqual(f.calls.count(copy_call), fa.TRIES)
+                sync.resume()
+                sync.tick()
+                self.assertEqual(f.calls.count(copy_call), fa.TRIES + 1)
+                self.assertEqual((len(f.saved), len(f.exported)), (1, 1))
+                self.assertIsNone(sync.state()["error"])
+                self.assertFalse(sync.state()["pending"])
+                self.assertFalse(sync.enabled())
+                f.calls.clear()
+                sync.tick()
+                self.assertEqual(f.calls, [])
 
     def test_failed_item_saved_by_hand_clears_error(self):
         self.sync.update({"clips": True})

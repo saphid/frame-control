@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-31T08:38:46.406230+00:00",
+  "baseMain": "012f874906bd122c29e75a0c9d572980b41a1085",
+  "sourceRevision": "b141914f880536dcf917ab2755d8fb08f9cd4c66",
+  "preservedEvidenceCommit": "ef1f16f213bdd8f397e7e13e060300662628328b",
+  "mainProbeBodiesPreserved": 31,
+  "tabmasterProbeUnchanged": true,
+  "otherCompleteCatalogRecordsPreserved": 115,
+  "allCatalogPoliciesPreserved": true,
+  "mainProductionSourceSha256": {
+    "ui/frame_decky_store.py": "b105a6a9d8b84055a298ce904f9c21fc44416adb84f00f4112c156635be5c4d9",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "ui/frame_decky.py": "48a6e70d88d104e097e3267caf379107c1b9774c85f85a0c7c86443fb9e5389f",
+    "ui/index.html": "ae864f88cd32e246788f71d71e8bbe96282e950ad3d0e0721a7562a456d28e07",
+    "ui/frame_touch.py": "85bd7630e00cd7cfa24798e9601997d96ff1dd9639e3662bcb87940e335b5930",
+    "ui/server.py": "ccdf981376a8f910e6fb423f3fed3bd3b314bbb8cb02ed427365031286989f10",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581"
+  },
+  "focusedTests": 92,
+  "unitLogSha256": "bc1bb0b4bbb273da2f91b5f9d8014a7d5080856b16aad033920f6aeaa4fb1e8a",
+  "nativeArchitecture": "x86_64",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "020736aed67c530976744546e9708a4a9e1ee3a6d7320949ba53a5ba99bfa45d",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "140453b6b0ad933097cddac3186124c1d07df33e13b0c6f184172c8bd84672c6",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "f4d394c6734a5a5a0f214c0fe9ac62b66dd6c16bbc812008d33a936a2500629f",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "b105a6a9d8b84055a298ce904f9c21fc44416adb84f00f4112c156635be5c4d9",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "literalRpcsVerified": 40,
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "archiveSha256": "e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5",
+  "backendSha256": "cd34adcd3ea0cef90ca96d8ceff15cbd86a5f3b6116da35eeb892e2fc4870347",
+  "publishedBackendUnmodified": true,
+  "completeAvailableConsoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+  "jsonDecodeDiagnosticCount": 1,
+  "diagnosticPhaseLocalizedInThisRun": false,
+  "ownedLoaderStops": [
+    {
+      "returncode": 0,
+      "elapsedSeconds": 0.21403126185759902,
+      "signaledOnlyOwnedLoader": true,
+      "ownedProcessIdentitiesReaped": true,
+      "ownedProcessCount": 5
+    },
+    {
+      "returncode": 0,
+      "elapsedSeconds": 0.21402060519903898,
+      "signaledOnlyOwnedLoader": true,
+      "ownedProcessIdentitiesReaped": true,
+      "ownedProcessCount": 5
+    }
+  ],
+  "processReapingEvidence": "Source-bound PID/start-time checks; no retained complete process snapshot",
+  "all14SourceFingerprintsVerified": true,
+  "rawJsonSha256": "b30ad6b84e1e4da5037f29a13ddf8a21f01b86e5a7096b373e4d83d60fc9f3ab",
+  "rawGzipSha256": "fe419c274069d4c4d2c3df36985fd543d675a4e679b0caffd49bca8f6798cdbc",
+  "newOwnedContainers": 0,
+  "newOwnedImageTags": 0,
+  "realFrameContacted": false,
+  "compatibility": "partial",
+  "fullNativeMatrixExpected": {
+    "probes": 41,
+    "archivePins": 34,
+    "sourceFingerprints": 14
+  },
+  "limits": [
+    "Local AMD64 single-case replay only; full exact-head hosted checks/e2e/native/package gates remain required.",
+    "One JSON diagnostic retained; separate instrumented startup observation does not establish every occurrence or ARM64 cause.",
+    "No Steam editing, browser/backend integration, backup/restore, managed Frame, wearer/controller or release proof."
+  ]
+}

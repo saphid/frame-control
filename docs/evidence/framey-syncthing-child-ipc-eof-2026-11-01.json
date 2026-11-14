@@ -1,0 +1,77 @@
+{
+  "at": "2026-11-01T08:32:07.313603+00:00",
+  "testedSourceCommit": "98af6e28147eac7b473f311697cd29b3f283a9b0",
+  "baseCommit": "ad070b731386dfbc2c8ed24b901b0b5edaeacbf2",
+  "redReproducedForcedKillAndSocketDirectoryLeak": true,
+  "sameRegressionOtherThanAdapterDelivery": true,
+  "sameBackendOtherThanAdapterInstallation": true,
+  "sharedAdapterUnchanged": true,
+  "normalReloads": [
+    {
+      "disconnectedChildPeer": true,
+      "childPid": 27,
+      "helperPid": 48,
+      "replacementHelperPid": 68,
+      "childExited": true,
+      "helperExited": true,
+      "privateSocketDirectoryRemoved": true,
+      "seconds": 0.332,
+      "console": "[plugin][INFO]: Shutting down Syncthing (v0.2.7)\n[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)\nCalling Loader unload function for Syncthing (v0.2.7).\nAttempting to unload with plugin Syncthing (v0.2.7)'s \"_unload\" function.\n\nUnloaded Syncthing (v0.2.7)\n\n[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in 0.1s\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('Syncthing', '0.2.7', 0, True, 15000)}\nLoaded.\n"
+    },
+    {
+      "disconnectedChildPeer": true,
+      "childPid": 67,
+      "helperPid": 68,
+      "replacementHelperPid": 88,
+      "childExited": true,
+      "helperExited": true,
+      "privateSocketDirectoryRemoved": true,
+      "seconds": 0.311,
+      "console": "[plugin][INFO]: Shutting down Syncthing (v0.2.7)\n[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)\nCalling Loader unload function for Syncthing (v0.2.7).\nAttempting to unload with plugin Syncthing (v0.2.7)'s \"_unload\" function.\n\nUnloaded Syncthing (v0.2.7)\n\n[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in 0.1s\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('Syncthing', '0.2.7', 0, True, 15000)}\nLoaded.\n"
+    },
+    {
+      "disconnectedChildPeer": true,
+      "childPid": 87,
+      "helperPid": 88,
+      "replacementHelperPid": 108,
+      "childExited": true,
+      "helperExited": true,
+      "privateSocketDirectoryRemoved": true,
+      "seconds": 0.311,
+      "console": "[plugin][INFO]: Shutting down Syncthing (v0.2.7)\n[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)\nCalling Loader unload function for Syncthing (v0.2.7).\nAttempting to unload with plugin Syncthing (v0.2.7)'s \"_unload\" function.\n\nUnloaded Syncthing (v0.2.7)\n\n[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in 0.1s\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('Syncthing', '0.2.7', 0, True, 15000)}\nLoaded.\n"
+    }
+  ],
+  "forcedControlPreserved": true,
+  "focusedTests": 112,
+  "focusedSkips": 0,
+  "architecture": "x86_64",
+  "realPeerTwoWaySyncAndRestart": true,
+  "originalArmArtifactDigestVerified": true,
+  "sourceSha256": {
+    "scripts/framey-test-syncthing-candidate.py": "0bfe42f990ea4837a26bc545f8acde6934a7eaec0d51472d6df1a144cfc9cf01",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/syncthing_candidate.py": "b08243097773be9122d08b8c63e38dc3ed10f7a052626a96416ec52feccd66ee",
+    "ui/vendor/syncthing-0.2.7/main.py": "ea1c15f587b3dbece3fee67918e1187a71750aa74637a054a34be643265fb645",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "ui/vendor/syncthing-0.2.7/watchdog.patch": "b3ca4663f13d77d87e45d4eaeb92758944cd4165180d578d2cd685f061482b1f",
+    "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+    "scripts/framey-test-syncthing-runtime.py": "e4292645b4cadbb4ef0e7b088693d5a8ca34a4ac99b0dd0814ee4a253b6c86b0",
+    "tests/decky-runtime/syncthing_runtime.py": "ee72c88f2103d610fceada3484c14e2979f82d386f3e48840e7ac5d30ce76630"
+  },
+  "rawEvidence": {
+    "path": "docs/evidence/framey-syncthing-child-ipc-eof-2026-11-01-raw.json.gz",
+    "sha256": "9744febf8a83321fd6dc791fb04d8eec5b16f1dcc88eaf2db7529ea23ec79025",
+    "uncompressedSha256": "59238f4b790aa1607e9cc80b7ffa97085433fc40276a98f602578adcca7aa4ed"
+  },
+  "independentlyAuditedScope": "source/digest bindings and explicit probe readbacks; cleanup assertions source-bound, no full process or filesystem snapshots",
+  "unverified": [
+    "current-head ARM64",
+    "systemd and signed Flatpak package modes",
+    "browser and real Steam CEF",
+    "Frame and worn/controller behavior",
+    "release qualification"
+  ],
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "releaseQualified": false
+}

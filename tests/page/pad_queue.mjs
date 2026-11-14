@@ -46,6 +46,24 @@ for (const [label, api] of [["request failed", async () => { throw new Error("of
     fail(label + ": " + JSON.stringify(q));
   if (!shown.length || shown.at(-1).state === "ready") fail(label + ": state not shown");
 }
+// Physical key releases survive focus loss during a failed/reconnecting request,
+// including a full queue. A lost keyup must not strand Ctrl/Alt/Super on the Frame.
+{
+  const {pad,padSend}=page(()=>new Promise(()=>{}));
+  padSend({keyCode:29,down:true});
+  pad.state='pairing';
+  for(let i=0;i<250;i++) padSend({key:'x'});
+  pad.state='error';
+  for(const code of [20,56,29,125]) padSend({keyCode:code,down:false});
+  if(pad.queue.filter(e=>e.keyCode&&e.down===false).length!==4) fail('physical releases lost at queue cap');
+}
+for(const api of [async()=>{throw Error('offline');},async()=>({state:'starting',sent:false})]) {
+  const {pad,padSend}=page(api);
+  padSend({keyCode:29,down:false});
+  await new Promise(r=>setTimeout(r,0));
+  if(!pad.queue.some(e=>e.keyCode===29&&e.down===false)) fail('unacknowledged physical release was lost');
+}
+
 // Acknowledged text is removed locally, but its pending status must reach padShow
 // so failures reported after acceptance are polled without another keypress.
 {

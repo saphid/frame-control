@@ -32,10 +32,11 @@ EXPECTED = {
 }[ARCH]
 
 
-def command(args, timeout=180):
+def run_captured(args, timeout):
+    """Keep bounded diagnostics when a captured command never returns."""
     began = time.monotonic()
     try:
-        p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+        return subprocess.run(args, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired as error:
         def tail(value):
             return (value.decode(errors='replace') if isinstance(value, bytes) else value or '')[-10000:]
@@ -45,6 +46,10 @@ def command(args, timeout=180):
             'stdout': tail(error.stdout), 'stderr': tail(error.stderr),
         }
         raise
+
+
+def command(args, timeout=180):
+    p = run_captured(args, timeout)
     if p.returncode:
         raise RuntimeError(
             str(args)
@@ -273,6 +278,16 @@ def main():
                     files=files,
                 )
             )
+        def api(index, path, method="GET", authenticated=True):
+            request = urllib.request.Request(
+                "http://127.0.0.1:" + str(8384 + index) + path,
+                headers={"X-API-Key": cases[index]["key"]} if authenticated else {},
+                method=method,
+            )
+            with urllib.request.urlopen(request, timeout=5) as response:
+                data = response.read()
+            return json.loads(data) if data.strip() else None
+
         for index, case in enumerate(cases):
             other = cases[1 - index]
             device = ET.SubElement(
@@ -331,6 +346,8 @@ def main():
                 unit.write_text(
                     "[Unit]\nDescription=Private signed Flatpak package fixture\n[Service]\nExecStart="
                     + " ".join(argv)
+                    + "\nStandardOutput=append:" + str(home / "peer-0.log")
+                    + "\nStandardError=append:" + str(home / "peer-0.log")
                     + "\nTimeoutStopSec=25\n"
                 )
                 ctl("daemon-reload")
@@ -345,18 +362,36 @@ def main():
                 )
                 processes.append(process)
 
-        def api(index, path, method="GET", authenticated=True):
-            request = urllib.request.Request(
-                "http://127.0.0.1:" + str(8384 + index) + path,
-                headers={"X-API-Key": cases[index]["key"]} if authenticated else {},
-                method=method,
-            )
-            with urllib.request.urlopen(request, timeout=5) as response:
-                data = response.read()
-            return json.loads(data) if data.strip() else None
-
-        for index in range(2):
-            wait(lambda: api(index, "/rest/system/status"), "packaged peer readiness")
+            # Concurrent startup hit a missing shared Flatpak runtime tmp path.
+            # Keep each peer ready before starting another sandbox for this app.
+            began = time.monotonic()
+            try:
+                wait(lambda: api(index, "/rest/system/status"), "packaged peer readiness")
+            except Exception as error:
+                # Retain the original failure before owned cleanup removes
+                # the unit/processes. Never retry or relax the readiness gate.
+                failure = dict(index=index, port=8384+index,
+                    elapsedSeconds=round(time.monotonic()-began, 3),
+                    error=str(error)[:1500], processStatuses=[
+                        dict(pid=p.pid, returnCode=p.poll()) for p in processes],
+                    logTails={})
+                report["peerReadinessFailure"] = failure
+                try:
+                    failure["serviceState"] = command([
+                        "systemctl", "--user", "show", service,
+                        "--property=ActiveState,SubState,MainPID,Result,ExecMainCode,ExecMainStatus"
+                    ], timeout=10)[:2048]
+                except Exception as diagnostic_error:
+                    failure["serviceStateError"] = str(diagnostic_error)[:1000]
+                for peer_index in range(2):
+                    try:
+                        with (home / ("peer-"+str(peer_index)+".log")).open("rb") as stream:
+                            stream.seek(0, 2)
+                            stream.seek(max(0, stream.tell()-4096))
+                            failure["logTails"][str(peer_index)] = stream.read(4096).decode(errors="replace")
+                    except OSError as diagnostic_error:
+                        failure["logTails"][str(peer_index)] = str(diagnostic_error)[:1000]
+                raise
         try:
             api(0, "/rest/system/status", authenticated=False)
         except urllib.error.HTTPError as error:
@@ -444,9 +479,9 @@ def main():
     wait_for_instances()
     report["noOwnedFlatpakInstancesRemain"] = True
     if Path('/input/candidate-inputs.json').exists():
-        migration = subprocess.run(
+        migration = run_captured(
             ['python3', '/input/syncthing_migration.py'],
-            capture_output=True, text=True, timeout=360,
+            timeout=360,
         )
         print(migration.stdout, flush=True)
         print(migration.stderr[-12000:], flush=True)
@@ -454,9 +489,9 @@ def main():
                  for line in migration.stdout.splitlines() if 'FRAMEY_MIGRATION_JSON=' in line]
         assert migration.returncode == 0 and len(lines) == 1
         report['candidateMigration'] = json.loads(lines[0])
-        candidate = subprocess.run(
+        candidate = run_captured(
             ['python3', '/input/syncthing_service.py', '--signed-flatpak'],
-            capture_output=True, text=True, timeout=720 if inputs.get('browserSetupRequested') else 360,
+            timeout=720 if inputs.get('browserSetupRequested') else 360,
         )
         print(candidate.stdout, flush=True)
         print(candidate.stderr[-12000:], flush=True)

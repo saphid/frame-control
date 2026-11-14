@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-13T03:37:29.201491+00:00",
+  "base": "b7fa4e0e3f8df904de9fdd5e3ba365f5d069f370",
+  "feature": "c7f7619351b5282228f8434854d1a2dc3829f0c2",
+  "integration": "277ac608509b1da620b4b89d0767e198e7cdd033",
+  "integrationTree": "40b3d441e39500b16d80eb01dac74f8c0dad1e2a",
+  "tests": 43,
+  "skips": 0,
+  "browser": "installed Playwright Chromium headless shell 1223",
+  "testLogSha256": "09988b7c99544606506a891bad4eb47e729cc18feee4b73917d6e8c895c8e490",
+  "sourceSha256": {
+    "ui/framey-host.js": "0c4266f0ba8ca73a116611bf7ca4a0c4b5b1ef17fd32744565cbae8e38bf99ca",
+    "tests/page/framey_field_refs.html": "d3c5ce6974f83389cfcd1c49c2f400414b7fba84829440ecb0524fa85e8a9c00",
+    "tests/test_framey_field_refs_browser.py": "34678df9d5d453eb6979e0e0cb2cc81ceec3a43791b76c206417417914a1e69c",
+    "tests/test_framey_view_recovery_browser.py": "d3e5bdb2ca4c15472348bb9719a0e2f0fb8f5dee47c00be18b074189bac27ec4",
+    "tests/test_framey_panel.py": "73f111ca7246bee2649167a17385a161a668c127c6abceaa39f288ec7c7fbe3a"
+  },
+  "realFrameContacted": false,
+  "wornVisibilityVerified": false,
+  "controllerInputVerified": false,
+  "releaseQualified": false
+}

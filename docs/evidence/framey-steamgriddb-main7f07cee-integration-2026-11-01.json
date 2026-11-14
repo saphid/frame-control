@@ -1,0 +1,60 @@
+{
+  "at": "2026-11-01T00:04:00.599251+00:00",
+  "pr": 523,
+  "testedSource": "b644e6c9b22f5a449e7cb41a1dda2aeefd01d121",
+  "integratedMain": "7f07cee953f0be340f98239ddcaeb02117b87fc4",
+  "normalMergeParents": [
+    "845c874dafac55fbaf755863e3387a2b63388672",
+    "7f07cee953f0be340f98239ddcaeb02117b87fc4"
+  ],
+  "sourceInputs": 24,
+  "serverTests": 1964,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 15,
+  "localNativePluginIds": [
+    36,
+    24,
+    130,
+    61,
+    96,
+    117
+  ],
+  "steamGridDbRpcs": [
+    14,
+    12
+  ],
+  "radiYoRpcs": [
+    9,
+    7
+  ],
+  "radiYoTlsRejectionPreserved": true,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "store130Pin": "1.0.1",
+  "github102CandidateStatus": "unverified",
+  "prefixBothExactArchiveInstallOutputsUnchangedFromMain": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 400.592,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "broken",
+  "officialUiAndWearerControllerUnverified": true,
+  "priorHeadWindowsFailureRetained": true,
+  "priorWindowsFailureAnnotation": "The hosted runner lost communication with the server. Anything in your workflow that terminates the runner process, starves it for CPU/Memory, or blocks its network access can cause this error.",
+  "priorWindowsFailureCauseProven": false,
+  "priorOther17ChecksPassed": true,
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "eb33b8eee838fa6be10f0f255a6ca5d47026735b0bd9311c4f8824709d37b2a0",
+  "rawBytes": 104796
+}
