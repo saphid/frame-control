@@ -49,6 +49,11 @@ neither frontend can load, even if one copy is missing its frontend or both
 receipts have the same digest. Admission does not repair or delete either copy.
 This check is covered with disposable local plugin folders, not a live headset
 installation.
+Installed inventory reads store ownership receipts only up to 16 KiB, matching
+panel admission. An oversized receipt leaves its plugin visible without store
+ownership or receipt metadata; valid neighbors still appear. Scanning does not
+rewrite the receipt. After the receipt is repaired, a fresh scan can recognize
+its ownership again. This limit is tested with disposable local plugin folders.
 For persistent backend settings, use Decky's `decky.DECKY_PLUGIN_SETTINGS_DIR` rather
 than assuming an environment variable or Steam Deck home path. Validate stored
 types when reading, write through a temporary file before replacing the old

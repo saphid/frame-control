@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'ui'))
 import frame_decky
@@ -84,6 +85,46 @@ class PluginInventory(unittest.TestCase):
         self.assertEqual(found[1]['sha256'],'d'*64)
         self.assertEqual(found[1]['version'],'2.0')
         self.assertEqual(found[1]['author'],'Repaired author')
+
+    def test_oversized_receipt_cannot_claim_ownership_or_hide_valid_neighbors(self):
+        receipt = self.middle/'.frame-control-store.json'
+        record = json.dumps({'storeId':43,'sha256':'b'*64,'version':'1.0',
+                             'compatShims':['known-shim']}).encode()
+        for size in (16_385, 200_000):
+            with self.subTest(size=size):
+                original = record + b' '*(size-len(record))
+                receipt.write_bytes(original)
+                found = self.scan()
+                self.assertEqual([p['name'] for p in found], ['First','Middle','Last'])
+                self.assertEqual([p['storeId'] for p in found], [42,None,44])
+                self.assertEqual(found[1]['sha256'], '')
+                self.assertEqual(found[1]['version'], '')
+                self.assertEqual(found[1]['compatShims'], [])
+                self.assertEqual(receipt.read_bytes(), original)
+        # The limit includes its boundary; fresh scans recover after repair.
+        original = record + b' '*(16_384-len(record))
+        receipt.write_bytes(original)
+        found = self.scan()
+        self.assertEqual([p['storeId'] for p in found], [42,43,44])
+        self.assertEqual(found[1]['sha256'], 'b'*64)
+        self.assertEqual(found[1]['compatShims'], ['known-shim'])
+        self.assertEqual(receipt.read_bytes(), original)
+
+    def test_oversized_receipt_is_rejected_before_reading_its_contents(self):
+        receipt = self.middle/'.frame-control-store.json'
+        receipt.write_bytes(b' '*16_385)
+        namespace = {'json':json}
+        exec(frame_decky.PLUGIN_SCAN, namespace)
+        original_read = Path.read_text
+
+        def read_text(path, *args, **kwargs):
+            if path == receipt:
+                self.fail('Oversized receipt contents were read')
+            return original_read(path, *args, **kwargs)
+
+        with patch.object(Path, 'read_text', read_text):
+            found = namespace['plugins'](self.plugins)
+        self.assertEqual([p['storeId'] for p in found], [42,None,44])
 
     def test_only_positive_integer_store_ids_claim_inventory_ownership(self):
         receipt = self.middle/'.frame-control-store.json'
