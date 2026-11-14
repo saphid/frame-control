@@ -280,6 +280,12 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 18 and digest == 'f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_BLUETOOTH_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 133 and digest == '9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_NONSTEAM_BADGES_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 50 and digest == STORAGE_CLEANER_DIGEST:
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_STORAGE_CLEANER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -358,6 +364,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 24 and digest == RADIYO_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_RADIYO_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 124 and digest == '17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_ALARME_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 96 and digest == '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_SIMPLE_TIMER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -873,6 +882,31 @@ try:
                 frontend.write_bytes(managed)
                 compat_shims.append('download-all-local-queue')
                 compat_shims.append('download-all-ipc-eof')
+            # Repair the exact backend's three Deck-user paths and child-only
+            # IPC EOF handling. Keep its API, frontend, search and parser intact.
+            if int(plugin_id)==133 and digest=='9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131' and folder=='decky-nonsteam-badges':
+                main=unpacked/'main.py'
+                source=main.read_bytes()
+                if hashlib.sha256(source).hexdigest()!='af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704':
+                    raise RuntimeError('Non-Steam Badges Python source mismatch')
+                if source.count(b'Path("/home/deck/.steam/steam/userdata/")')!=2 or source.count(b'base_path = "/home/deck/.steam/steam/userdata/"')!=1:
+                    raise RuntimeError('Non-Steam Badges userdata paths differ from pinned archive')
+                source=source.replace(b'Path("/home/deck/.steam/steam/userdata/")',
+                    b'(Path.home()/".steam/steam/userdata")')
+                source=source.replace(b'base_path = "/home/deck/.steam/steam/userdata/"',
+                    b'base_path = str(Path.home()/".steam/steam/userdata")')
+                ipc=globals().get('FRAMEY_NONSTEAM_BADGES_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Non-Steam Badges child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Non-Steam Badges child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('nonsteam-badges-user-paths')
+                compat_shims.append('nonsteam-badges-ipc-eof')
             if prefix_manager:
                 main=unpacked/'main.py'
                 data=main.read_bytes()
@@ -1397,6 +1431,31 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 main.write_bytes(prefix+source.replace(old,new))
                 compat_shims.append('tabmaster-json-file-restore')
                 compat_shims.append('tabmaster-ipc-eof')
+            # AlarMe 1.6.3 restarts tasks (or deletes elapsed deadlines) even
+            # for paused timers. Keep frozen timers untouched at startup.
+            if int(plugin_id)==124 and digest=='17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe' and folder=='alarme-decky-plugin':
+                main=unpacked/'main.py'
+                source=main.read_bytes()
+                if hashlib.sha256(source).hexdigest()!='ff456c2620b5b85473b4ca642551df49b490a2770e0af5c2706c6069c9f73d27':
+                    raise RuntimeError('AlarMe backend differs from pinned archive')
+                old=b'        for timer_id, timer in timers.items():\r\n            remaining = timer["end_time"] - current_time\r\n'
+                if source.count(old)!=1: raise RuntimeError('AlarMe paused timer startup changed')
+                new=old.replace(b'            remaining =', b'            if timer.get("paused", False):\r\n                continue\r\n            remaining =')
+                ipc=globals().get('FRAMEY_ALARME_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing AlarMe child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('AlarMe child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                source=prefix+source.replace(old,new)
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('alarme-paused-restart')
+                compat_shims.append('alarme-ipc-eof')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.
@@ -2165,6 +2224,24 @@ def split_by_app(data):
                 crypto.write_bytes(crypto_data.replace(env_dump,b''))
                 compat_shims.append('notifications-private-logs')
                 compat_shims.append('notifications-ipc-eof')
+            if (int(plugin_id)==18 and digest=='f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5'
+                    and folder=='Bluetooth'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='7a24a0fb9e52eb7c0c57abc83b49ff52cb7095a780757628a4ad567eb2f13806':
+                    raise RuntimeError('Bluetooth backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_BLUETOOTH_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing Bluetooth child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Bluetooth child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+original
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('bluetooth-ipc-eof')
             # The exact published backend awaits synchronous shutil.rmtree:
             # it deletes the cache then reports TypeError. Restrict deletion
             # to the two directories selected by its UI and their numeric app IDs.
