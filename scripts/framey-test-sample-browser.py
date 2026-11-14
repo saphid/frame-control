@@ -41,6 +41,7 @@ SOURCES = (
     'ui/framey-host.js', 'ui/frame_steam.py',
     'ui/vendor/react-18.3.1.min.js', 'ui/vendor/react-dom-18.3.1.min.js',
     'examples/framey-settings/plugin.json', 'examples/framey-settings/main.py',
+    'examples/framey-settings/py_modules/framey_decky_ipc.py', 'ui/framey_decky_ipc.py',
     'examples/framey-settings/dist/index.js',
     '.github/workflows/framey-sample-browser.yml', 'tests/test_framey_sample_browser_bridge.py',
 )
