@@ -280,6 +280,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 19 and digest == 'c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_NOTEBOOK_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 56 and digest == '71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1':
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_MANGOPEEL_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -2330,6 +2333,24 @@ def split_by_app(data):
                 crypto.write_bytes(crypto_data.replace(env_dump,b''))
                 compat_shims.append('notifications-private-logs')
                 compat_shims.append('notifications-ipc-eof')
+            if (int(plugin_id)==19 and digest=='c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c'
+                    and folder=='SDH-Notebook'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='d7c403c28f0d848bea3d1a927bf6ef32ceddfb486a97edad4e9ed147aba4dc67':
+                    raise RuntimeError('Notebook backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_NOTEBOOK_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing Notebook child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Notebook child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+original
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('notebook-ipc-eof')
             if (int(plugin_id)==18 and digest=='f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5'
                     and folder=='Bluetooth'):
                 main=unpacked/'main.py'

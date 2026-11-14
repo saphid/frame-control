@@ -60,3 +60,71 @@ def probe(call, restart, settings):
                 publishedBackendUnmodified=True, syntheticAppIds=[0, app_a, app_b],
                 browserVerified=False, realSteamGameSelectionVerified=False,
                 realFrameContacted=False, physicalControllerVerified=False)
+
+
+def stop(backend, log, call, *, regression):
+    """Close an owned IPC peer; then stop only the loader and audit its children."""
+    import os
+    from pathlib import Path
+    import signal
+    import socket
+    import time
+    from deck_shelves_private import descendants, identity
+
+    children = descendants(backend.pid)
+    assert children, 'the private loader must own its Notebook child'
+    log.flush()
+    before = Path(log.name).read_text()
+    closed = []
+    for path in Path('/tmp').glob('plugin_socket_*'):
+        assert path.is_socket() and path.stat().st_uid == os.getuid()
+        with socket.socket(socket.AF_UNIX) as peer:
+            peer.settimeout(.2)
+            try:
+                peer.connect(str(path))
+            except ConnectionRefusedError:
+                continue
+            peer.shutdown(socket.SHUT_WR)
+            closed.append(str(path))
+    assert len(closed) == 1, closed
+    time.sleep(.05)
+    # A completed RPC after EOF proves the original event-loop spin is gone.
+    readback = None if regression else call('loadLastSelectedPage', appid=0)
+    if not regression:
+        assert readback == 0
+    started = time.monotonic()
+    backend.send_signal(signal.SIGTERM)
+    backend.wait(timeout=8)
+    elapsed = time.monotonic()-started
+    log.flush()
+    console = Path(log.name).read_text()[len(before):]
+    adopted = []
+    deadline = time.monotonic()+2
+    while True:
+        for pid, old in children.items():
+            state = identity(pid)
+            if state and state['start'] == old['start']:
+                try:
+                    child, status = os.waitpid(pid, os.WNOHANG)
+                    if child:
+                        adopted.append(dict(pid=child, returncode=os.waitstatus_to_exitcode(status)))
+                except ChildProcessError:
+                    pass
+        remaining = {pid: state for pid, old in children.items()
+                     if (state := identity(pid)) and state['start'] == old['start']}
+        if not remaining or time.monotonic() >= deadline:
+            break
+        time.sleep(.01)
+    forced = console.count('Sending SIGKILL!')
+    errors = [m for m in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
+                         'Task was destroyed but it is pending', 'Bad file descriptor') if m in console]
+    clean = (backend.returncode == 0 and elapsed < 5 and not remaining and not forced and not errors
+             and all(c['returncode'] == 0 for c in adopted)
+             and console.count('[main][INFO]: Shutdown finished.') == 1
+             and console.count('Unloaded Notebook (v0.1.5)') == 1)
+    return dict(parentOnlySignal=True, returncode=backend.returncode, elapsedSeconds=round(elapsed, 3),
+                fixtureClosedUnixPeers=closed, postEofRpcReadback=readback,
+                descendantsBefore=children, exactDescendantsRemaining=remaining,
+                adoptedChildExits=adopted, forcedPluginKills=forced, errors=errors,
+                console=console, consoleSha256=hashlib.sha256(console.encode()).hexdigest(),
+                cleanShutdownVerified=clean)
