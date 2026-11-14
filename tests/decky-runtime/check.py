@@ -91,6 +91,7 @@ def main():
     parser.add_argument('--reproduce-nonsteam-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-bluetooth-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-mangopeel-unload-regression', action='store_true')
     parser.add_argument('--terminal-candidate', action='store_true')
     parser.add_argument('--terminal-browser-candidate', action='store_true')
     parser.add_argument('--terminal-http-candidate', action='store_true')
@@ -431,6 +432,15 @@ def main():
             source = source.replace(old, new)
         (plugin/'main.py').write_text(source)
 
+    if args.reproduce_mangopeel_unload_regression:
+        assert record['id'] == 56
+        source = (plugin/'main.py').read_bytes()
+        prefix = (b'# Frame Control: repair child IPC EOF for the exact MangoPeel 0.0.7 archive.\n'
+                  b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        assert source.startswith(prefix)
+        (plugin/'main.py').write_bytes(source[len(prefix):])
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_bluetooth_unload_regression:
         assert record['id'] == 18
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -550,6 +560,9 @@ def main():
         report['candidate'] = candidate
     with (home/'runtime.log').open('w+') as log:
         with ExitStack() as fixtures, capture_runtime(log, report, processes, loader=loader):
+            if case['probe'] == 'mangopeel-private-watch':
+                import mangopeel
+                private_mango = mangopeel.start(env, log, processes)
             if case['probe'] == 'discord-private-activity':
                 import discord_private
                 discord_peer = fixtures.enter_context(
@@ -601,7 +614,22 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'terminal-private-pty':
+            if case['probe'] == 'mangopeel-private-watch':
+                report['privateMangoPeel'] = mangopeel.exercise(
+                    current, rpc, backend, log, private_mango, until_ready,
+                    regression=args.reproduce_mangopeel_unload_regression)
+                report['managedBackendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['childIpcRepairSha256'] = (None if args.reproduce_mangopeel_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_mangopeel_unload_regression:
+                    report['expectedRegression'] = dict(priorManagedWatchRepairRestored=True,
+                        forcedPluginKills=1, qualifiedCompatibilityPass=False)
+                report['result'] = ('prior watch-only MangoPeel child EOF forced kill reproduced; negative control only'
+                    if args.reproduce_mangopeel_unload_regression else
+                    'published Decky discovery, private MangoHud profile writes, actual '
+                    'inotify callbacks and clean reload/shutdown passed; gamescope/MangoHud overlay, '
+                    'browser, actual Frame and worn/controller behavior unverified')
+            elif case['probe'] == 'terminal-private-pty':
                 from terminal_lifecycle import probe
                 report['terminalLifecycle'] = probe(record['name'], home, backend, processes)
                 if args.terminal_browser_candidate:

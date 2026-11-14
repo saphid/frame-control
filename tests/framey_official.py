@@ -12,6 +12,8 @@ MANAGED_FRONTENDS = {
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
+    {'id': 56, 'name': 'MangoPeel', 'version': '0.0.7', 'api_version': 1,
+     'folder': 'MangoPeel', 'sha256': '71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1'},
     {'id': 124, 'name': 'AlarMe', 'version': '1.6.3', 'api_version': 1,
      'folder': 'alarme-decky-plugin', 'sha256': '17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe'},
     {'id': 19, 'name': 'Notebook', 'version': '0.1.5', 'api_version': 'legacy',
