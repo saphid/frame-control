@@ -245,7 +245,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `localStorage.name`, `localStorage['name']`, `delete localStorage.name` | Direct string-property writes, reads and deletion use the same bounded snapshot as `setItem`, `getItem` and `removeItem`. Values become strings, including empty strings and zero; a missing property is `undefined`. `Object.keys`, `Object.entries`, object spread, `for...in` and JSON serialization expose saved non-reserved names and values; API methods and `length` are not enumerable. API/prototype members remain available; use `getItem` and `length`/`key(index)` for saved keys with those reserved names, which are omitted from named enumeration. | Real parent/iframe scripts with synthetic storage: export and reopen, own descriptors, empty/numeric names, method/property interoperability, deletion/clear, plugin isolation, quota rejection and denied-write fallback/recovery. No live-headset persistence proof. |
 | `SteamClient.Storage.GetJSON` / `SetObject` | Uses the same bounded per-plugin cache; a missing key rejects with `Not found`. It cannot read Steam account or global storage. | Host contract tests and local Chromium settings views; headset persistence after reopen remains unverified. |
 | IndexedDB / localForage | IndexedDB is deliberately absent inside the opaque iframe so feature detection chooses the bounded localStorage driver. Plugins requiring IndexedDB directly remain unsupported. | HLTB official frontend in local Chromium: its previous `IDBFactory.open` SecurityError disappeared. No live HLTB data request was run. |
-| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values. Back walks up to 32 local page transitions and skips routes removed since navigation. | Host unit test; VR navigation unverified |
+| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values. Replacing a registration refreshes the active view. Each returned disposer removes only its own registration. Back walks up to 32 local page transitions and skips routes removed since navigation. | Host contract tests and real React/DOM with synthetic registrations: replacement, stale cleanup, same-component re-registration, exact/pattern fallback, parameter refresh, state retention, history and render-error recovery. No backend, physical controller or worn VR proof. |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
 | `findModule`, `findModuleChild`, `findModuleExport`, class lookup and module mapping | Searches a finite registry of Framey controls and CSS maps. Unknown Steam modules return `undefined` or an empty mapping. The optional UI-audio export cannot play sound. | Host contract tests; pinned TabMaster 2.15.1 QAM and documentation render in local Chromium. Steam library editing and worn VR remain unverified. |
 | `findInTree`, `findInReactTree` | Searches objects and arrays supplied by the plugin, returning the first matching object. `walkable` restricts object keys and `ignore` skips them; React search follows only `props`, `children`, `child` and `sibling`. Cycles terminate. `getReactRoot()` still returns `null`. | Exact published Emuchievements 2.0.5 settings migration and reopen with synthetic legacy RPC replies; nested values, including empty strings, survive. No real account, backend, Steam-tree access or worn VR proof. |
@@ -374,7 +374,15 @@ plugin that calls `Navigation.Navigate('/decky/store')` will not open the
 Frame Control store; only paths registered by that same plugin can navigate.
 Optional route segments must be at the end. Framey accepts local path segments
 only; query strings, external URLs, Steam library routes and duplicate parameter
-names are rejected. Removing an active route returns to the plugin panel.
+names are rejected. `addRoute` replaces an existing registration at the same
+path and returns a disposer for that registration alone. Keep and call it during
+cleanup; an older disposer cannot remove a later registration, even if both use
+the same component. `removeRoute(path)` explicitly removes the current registration.
+Changing the active registration remounts its view and clears its render error;
+unrelated route changes preserve the current view's state. Registration changes
+refresh `useParams()` without adding history entries. Removing the active match
+uses another registered match for the same URL if one exists, or returns to the
+plugin panel otherwise.
 `Navigation.NavigateBack()` returns to the preceding local page, then the
 plugin root. `Navigation.CloseSideMenus()` returns directly to the root and
 clears that panel's history. Neither operation navigates Steam's own UI.
