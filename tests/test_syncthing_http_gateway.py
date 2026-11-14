@@ -104,7 +104,10 @@ class BrowserReadyCandidate(unittest.TestCase):
 
     def test_unready_or_failed_candidate_is_closed_and_never_accepted(self):
         browser = self.browser()
-        for replies, outcome, phase in [([False, []], 'not-ready', 'panel-errors'),
+        snapshot = dict(errors=[], state=dict(parentInstalled=True, iframeLoads=1,
+                        cacheRequests=0, seedReplies=0, readyMessages=0),
+                        documentState='complete', iframeAssigned=True)
+        for replies, outcome, phase in [([False, snapshot], 'not-ready', 'panel-errors'),
                 ([OSError('owned CDP timeout')], 'failure', 'panel-ready'),
                 ([False, OSError('owned errors timeout')], 'failure', 'panel-errors')]:
             with self.subTest(outcome=outcome, phase=phase):
@@ -114,6 +117,9 @@ class BrowserReadyCandidate(unittest.TestCase):
                 page.sock.close.assert_called_once_with()
                 self.assertEqual(report['readinessAttempts'][0]['phase'], phase)
                 self.assertEqual(report['readinessAttempts'][0]['outcome'], outcome)
+                if outcome == 'not-ready':
+                    self.assertEqual(report['startupState']['state']['cacheRequests'], 0)
+                    self.assertTrue(report['startupState']['iframeAssigned'])
 
     def test_ready_page_remains_owned_by_caller_and_trace_is_bounded(self):
         browser = self.browser(); page = Mock(); page.eval.return_value = True
@@ -142,7 +148,7 @@ class BrowserParentErrors(unittest.TestCase):
             self.skipTest('Node is required for fixture JavaScript behavior')
         harness = r"""
 const assert=require('node:assert/strict'),vm=require('node:vm');
-const owned={},handlers=[];
+const replies=[],owned={postMessage:message=>replies.push(message)},handlers=[];
 const context={document:{getElementById:()=>({contentWindow:owned})},
  addEventListener:(type,handler)=>handlers.push({type,handler})};
 context.window=context;vm.createContext(context);vm.runInContext(SOURCE,context);
@@ -150,12 +156,23 @@ const message=handlers.find(v=>v.type==='message').handler;
 (async()=>{
  await message({source:{},data:{type:'framey:error',message:'foreign'}});
  assert.equal(context.startupErrors.length,0);
+ await message({source:{},data:{type:'framey:cache:init',session:'foreign'}});
+ assert.equal(context.startupState.cacheRequests,0);
+ await message({source:owned,data:{type:'framey:cache:init',session:'owned'}});
+ assert.equal(context.startupState.cacheRequests,1);
+ assert.equal(context.startupState.seedReplies,1);
+ assert.equal(replies[0].type,'framey:cache:seed');
+ assert.equal(replies[0].session,'owned');
  await message({source:owned,data:{type:'framey:error',message:'module startup failed'}});
  assert.deepEqual(Array.from(context.startupErrors),['module startup failed']);
  for(let i=0;i<25;i++)await message({source:owned,data:{type:'framey:error',message:'x'.repeat(2000)}});
  assert.equal(context.startupErrors.length,16);
  assert.equal(context.startupErrors.at(-1).length,1000);
  assert.equal(vm.runInContext('ready',context),false);
+ assert.equal(context.startupState.readyMessages,0);
+ await message({source:owned,data:{type:'framey:ready'}});
+ assert.equal(context.startupState.readyMessages,1);
+ assert.equal(vm.runInContext('ready',context),true);
 })().catch(error=>{console.error(error);process.exitCode=1;});
 """
         result = subprocess.run([node, '-e', harness.replace('SOURCE', json.dumps(browser.PARENT))],

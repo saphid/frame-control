@@ -66,14 +66,19 @@ addEventListener('message',async event=>{
 '''
 PARENT = r'''
 let ready=false;window.stage=null;window.startupErrors=[];
+window.startupState={parentInstalled:true,iframeLoads:0,cacheRequests:0,seedReplies:0,readyMessages:0};
 addEventListener('error',event=>startupErrors.push(event.message));
 addEventListener('unhandledrejection',event=>startupErrors.push(String(event.reason)));
 const panel=()=>document.getElementById('panel').contentWindow;
 addEventListener('message',async event=>{
  if(event.source!==panel())return;
  const req=event.data||{};
- if(req.type==='framey:cache:init'){panel().postMessage({type:'framey:cache:seed',session:req.session,entries:{}},'*');return;}
- if(req.type==='framey:ready'){ready=true;return;}
+ if(req.type==='framey:cache:init'){
+  startupState.cacheRequests++;
+  panel().postMessage({type:'framey:cache:seed',session:req.session,entries:{}},'*');
+  startupState.seedReplies++;return;
+ }
+ if(req.type==='framey:ready'){startupState.readyMessages++;ready=true;return;}
  if(req.type==='framey:error'){
   if(startupErrors.length<16)startupErrors.push(String(req.message||'Panel startup failed').slice(0,1000));
   return;
@@ -116,7 +121,12 @@ def ready_page(report):
             outcome = 'ready'
             return candidate
         phase = 'panel-errors'
-        report['startupErrors'] = candidate.eval('window.startupErrors')
+        snapshot = candidate.eval("""({errors:window.startupErrors||[],
+            state:window.startupState||null,documentState:document.readyState,
+            iframeAssigned:!!document.getElementById('panel')?.getAttribute('src')})""")
+        report['startupErrors'] = snapshot['errors']
+        report['startupState'] = {key: snapshot[key] for key in
+                                  ('state', 'documentState', 'iframeAssigned')}
     except (OSError, frame_steam.Fail) as error:
         outcome = 'failure'
         report['lastReadinessError'] = str(error)[:1500]
@@ -184,6 +194,7 @@ script-src 'unsafe-inline' data: blob:; connect-src 'none'; style-src 'unsafe-in
 content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src data:; connect-src 'self'; style-src 'unsafe-inline'; img-src data:">
 <title>Owned Syncthing actual backend</title><style>body{margin:0;background:#0d1925;color:white}iframe{width:1200px;height:1050px;border:0}</style>
 <iframe id="panel" sandbox="allow-scripts"></iframe><script>''' + PARENT + '''
+document.getElementById('panel').addEventListener('load',()=>startupState.iframeLoads++);
 document.getElementById('panel').src = ''' + json.dumps(child) + ''';
 </script>'''
 

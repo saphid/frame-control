@@ -80,13 +80,16 @@ class BrowserReadiness(unittest.TestCase):
     def test_incomplete_page_is_closed_before_ready_page_is_accepted(self):
         self.port.write_text('12345\nfixture')
         pending, ready = Mock(), Mock()
-        pending.eval.side_effect = [False, ['loading']]
+        pending.eval.side_effect = [False, dict(errors=['loading'], state=None,
+                                               documentState='loading', iframeAssigned=False)]
         ready.eval.return_value = True
         self.backend.Page.side_effect = [pending, ready]
         self.assertIs(self.wait(self.browser, self.profile, self.report), ready)
         pending.sock.close.assert_called_once()
         ready.sock.close.assert_not_called()
         self.assertEqual(self.report['startupErrors'], ['loading'])
+        self.assertEqual(self.report['startupState'], dict(state=None,
+                         documentState='loading', iframeAssigned=False))
 
 
 if __name__ == '__main__':

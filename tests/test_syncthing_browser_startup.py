@@ -105,6 +105,11 @@ class BrowserStartup(unittest.TestCase):
                         time.sleep(.1)
                     self.assertTrue(ready, 'child seed request was lost during parent delivery')
                     self.assertEqual(page.eval('window.startupErrors'), [])
+                    state = page.eval('window.startupState')
+                    self.assertTrue(state['parentInstalled'])
+                    self.assertGreaterEqual(state['cacheRequests'], 1)
+                    self.assertEqual(state['seedReplies'], state['cacheRequests'])
+                    self.assertGreaterEqual(state['readyMessages'], 1)
             finally:
                 if page is not None:
                     page.sock.close()
