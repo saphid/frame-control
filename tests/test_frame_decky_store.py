@@ -2486,6 +2486,91 @@ pathlib.Path.rename = fail_staged_move
             'applySha256':hashlib.sha256(frame_decky_store.APPLY.encode()).hexdigest(),
             'syntheticHome':True, 'realFrameContacted':False}, sort_keys=True))
 
+    def test_oversized_receipt_refuses_changes_before_service_and_recovers_after_repair(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        newer, _ = archive(extra=('Example/new.txt', 'new version'))
+        for action, data in [('update', newer), ('remove', None)]:
+            for unicode_padding in (False, True):
+                with self.subTest(action=action, unicode_padding=unicode_padding):
+                    if self.folder.exists():
+                        shutil.rmtree(self.folder)
+                    self.assertEqual(self.apply('install', original).returncode, 0)
+                    marker = self.folder/'.frame-control-store.json'
+                    valid = marker.read_bytes()
+                    if unicode_padding:
+                        record = json.loads(valid)
+                        record['note'] = '\u00e9' * 8200
+                        oversized = json.dumps(record, ensure_ascii=False).encode('utf-8')
+                        self.assertLess(len(oversized.decode('utf-8')), 16384)
+                    else:
+                        oversized = valid + b' ' * (16385-len(valid))
+                    self.assertGreater(len(oversized), 16384)
+                    marker.write_bytes(oversized)
+                    before = self.plugin_snapshot()
+                    calls = self.record_service_calls()
+                    result = self.apply(action, data, expected=digest)
+                    self.assertNotEqual(result.returncode, 0, result.stdout)
+                    self.assertIn('Only a Frame Control store plugin can be changed', result.stderr)
+                    self.assertEqual(self.plugin_snapshot(), before)
+                    self.assertEqual(calls.read_text(), '')
+                    self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+                    marker.write_bytes(valid)
+                    retry = self.apply(action, data, expected=digest)
+                    self.assertEqual(retry.returncode, 0, retry.stderr)
+                    if action == 'update':
+                        self.assertEqual((self.folder/'new.txt').read_text(), 'new version')
+                    else:
+                        self.assertFalse(self.folder.exists())
+
+    def test_receipt_at_byte_limit_can_authorize_update_and_remove(self):
+        original, digest = archive()
+        for action in ('update', 'remove'):
+            with self.subTest(action=action):
+                if self.folder.exists():
+                    shutil.rmtree(self.folder)
+                self.assertEqual(self.apply('install', original).returncode, 0)
+                marker = self.folder/'.frame-control-store.json'
+                valid = marker.read_bytes()
+                marker.write_bytes(valid + b' ' * (16384-len(valid)))
+                self.assertEqual(marker.stat().st_size, 16384)
+                result = self.apply(action, original if action == 'update' else None, expected=digest)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(self.folder.exists(), action == 'update')
+
+    def test_peer_receipt_scan_uses_bounded_reads_and_preserves_oversized_neighbor(self):
+        data, _ = archive()
+        peer = self.folder.parent/'Other'
+        peer.mkdir()
+        receipt = peer/'.frame-control-store.json'
+        payload = json.dumps({'storeId': 43, 'sha256': 'b'*64}).encode() + b' '*20000
+        receipt.write_bytes(payload)
+        # A receipt reader must request a finite byte budget, even when its
+        # size changes between admission and read. This guards I/O rather
+        # than relying on a particular parser or helper implementation.
+        guard = '''
+import pathlib
+receipt_open = pathlib.Path.open
+class ReceiptReadBudget:
+    def __init__(self, stream): self.stream = stream
+    def __enter__(self): return self
+    def __exit__(self, *args): self.stream.close()
+    def read(self, size=-1):
+        assert 0 <= size <= 16385, 'unbounded ownership receipt read'
+        return self.stream.read(size)
+def guarded_open(path, *args, **kwargs):
+    stream = receipt_open(path, *args, **kwargs)
+    mode = args[0] if args else kwargs.get('mode', 'r')
+    if path.name == '.frame-control-store.json' and 'r' in mode:
+        return ReceiptReadBudget(stream)
+    return stream
+pathlib.Path.open = guarded_open
+'''
+        with patch.object(frame_decky_store, 'APPLY', guard+frame_decky_store.APPLY):
+            result = self.apply('install', data)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(receipt.read_bytes(), payload)
+        self.assertTrue((self.folder/'dist/index.js').is_file())
+
     def test_malformed_receipt_refuses_changes_before_touching_service(self):
         original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
         self.assertEqual(self.apply('install', original).returncode, 0)

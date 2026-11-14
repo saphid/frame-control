@@ -479,12 +479,18 @@ backup=base/('.frame-control-old-'+token)
 marker='.frame-control-store.json'
 STORAGE_CLEANER_FRONTEND='8252cfcd2182546f715cc0e4116a887fcf40af1b8b9d132bd1761c8b9ff46fdb'
 transaction_lock=None
+def read_receipt(receipt):
+    if receipt.is_symlink() or not receipt.is_file(): return None
+    try:
+        # Keep the transaction's ownership reads within the same byte limit
+        # as inventory/panel admission, even if a file grows before reading.
+        with receipt.open('rb') as source: data=source.read(16385)
+        if len(data)>16384: return None
+        return json.loads(data.decode('utf-8'))
+    except (OSError,ValueError): return None
 def owned_receipt():
     if target.is_symlink() or not target.is_dir(): return None
-    receipt=target/marker
-    if receipt.is_symlink() or not receipt.is_file(): return None
-    try: record=json.loads(receipt.read_text())
-    except (OSError,ValueError): return None
+    record=read_receipt(target/marker)
     if (isinstance(record,dict) and type(record.get('storeId')) is int
             and record['storeId']==int(plugin_id)):
         return record
@@ -508,10 +514,7 @@ try:
         # Names and folders may change between store versions; identity cannot.
         for peer in base.iterdir():
             if peer.is_symlink() or not peer.is_dir(): continue
-            receipt=peer/marker
-            if receipt.is_symlink() or not receipt.is_file(): continue
-            try: record=json.loads(receipt.read_text())
-            except (OSError,ValueError,UnicodeError): continue
+            record=read_receipt(peer/marker)
             if isinstance(record,dict) and type(record.get('storeId')) is int and record['storeId']==int(plugin_id):
                 raise RuntimeError('This store plugin is already installed; refresh installed plugins and use Update or Remove')
     # Match inventory's refusal to follow receipt symlinks. Read the receipt
