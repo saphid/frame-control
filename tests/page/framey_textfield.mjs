@@ -51,7 +51,7 @@ Object.assign(context,{DFL:window.DFL,SP_JSX:window.SP_JSX});
 vm.runInContext(popup,context);
 context.commits=[];
 vm.runInContext('textInputPopup("Private label", "Original", value=>commits.push(value))',context);
-const modal=()=>roots.get(elements.get('framey-modal')).value[0].children[1];
+const modal=()=>roots.get(elements.get('framey-modal')).value[0].children[1].children[0];
 let rendered=modal().type(modal().props);
 const inputElement=nodes(rendered,window.DFL.TextField)[0];
 const input=nodes(inputElement.type(inputElement.props),'input')[0];

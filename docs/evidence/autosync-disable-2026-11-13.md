@@ -1,0 +1,5 @@
+Turning off automatic screenshot or clip copying previously left the current pass using stale settings. With fake listing and transfer callbacks held by thread events, the unchanged base starts copies after disabling or re-enabling a switch and starts a second transfer after the first completes. All eight negative subcases fail against the base; the explicit Copy everything now control passes.
+
+Automatic passes now retire when their settings revision changes. A transfer already in flight may finish and is recorded before the worker stops; the next pass uses current settings. Manual Copy everything now requests remain independent of the automatic switches.
+
+All 36 autosync tests passed without skips, including both media kinds, rapid off/on while the other kind stays enabled, resumption, completed-copy history and the existing headset-switch, retry and disk-full checks. The adjacent JSON binds the tested source and log hashes. These are local synthetic callbacks: no real Frame, file transfer, mobile background sync or release qualification is claimed.

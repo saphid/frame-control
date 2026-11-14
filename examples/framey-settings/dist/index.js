@@ -29,22 +29,33 @@ const setSetting = callable('set_setting');
 // A backend write outlives the view that sent it. Keep its ordering guard at
 // module scope so reopening cannot read and edit a pre-save snapshot.
 let pendingSave = null;
+let saveSequence = 0;
 async function readEnabled(isCurrent = () => true) {
-    while (pendingSave) {
-        // A rejected reply can still follow a committed save. Read afterward in
-        // either case, unless the view waiting for that read has already retired.
-        await pendingSave.catch(() => { });
+    while (true) {
+        while (pendingSave) {
+            // A rejected reply can still follow a committed save. Read afterward in
+            // either case, unless the view waiting for that read has already retired.
+            await pendingSave.catch(() => { });
+            if (!isCurrent())
+                throw new Error('The settings view is closed.');
+        }
+        const sequence = saveSequence;
+        const value = await getSetting('enabled', false);
         if (!isCurrent())
             throw new Error('The settings view is closed.');
+        // A peer view can start and finish a save while this read is in flight.
+        // Its old reply cannot authorize editing or describe the saved value.
+        if (sequence !== saveSequence)
+            continue;
+        if (typeof value !== 'boolean')
+            throw new Error('Backend returned an invalid setting value.');
+        return value;
     }
-    const value = await getSetting('enabled', false);
-    if (typeof value !== 'boolean')
-        throw new Error('Backend returned an invalid setting value.');
-    return value;
 }
 function writeEnabled(value) {
     if (pendingSave)
         throw new Error('A setting save is still pending. Reload saved setting before changing it.');
+    saveSequence++;
     const request = setSetting('enabled', value);
     pendingSave = request;
     const settled = () => { if (pendingSave === request)

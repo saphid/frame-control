@@ -1,0 +1,36 @@
+{
+  "at": "2026-11-13T21:15:57.225600+00:00",
+  "base": "3c1e1f8f069f6f2886d407bcea0baf932a73f1d8",
+  "change": "Retain failed manual copy requests for capped retries and Resume with automatic switches off.",
+  "sourceSha256": {
+    "ui/frame_autosync.py": "4ef0b6235f44e28a83dadcc5b50d31d0959e1ce106e60771af4c2152ea698f05",
+    "tests/test_autosync.py": "d296163c46a05fd7442ffcd50e09b45ed6babdc36340d1a027e918005f7306bb",
+    "docs/recording.md": "8acf47562f08730b8a1d69211721f4259bd28478499a1a44b3457850688ceca2"
+  },
+  "logs": {
+    "before": {
+      "path": "docs/evidence/autosync-manual-retry-2026-11-13.before.log",
+      "sha256": "ac1340adcf81a8ed88a7596600c5271ba0050859bf17348d2a65c5ffa405ec65"
+    },
+    "tests": {
+      "path": "docs/evidence/autosync-manual-retry-2026-11-13.tests.log",
+      "sha256": "9b5e3bafe92481b679be68fa92a5129d2f62bbfbaa2c65fdd573ab0d38c0d3ab"
+    }
+  },
+  "baseControlFailedSubcases": 4,
+  "focusedTests": 70,
+  "focusedSkips": 0,
+  "coverage": [
+    "Screenshot and clip transient failures retry automatically",
+    "Three-attempt limit still applies with switches off",
+    "Source recovery alone does not reset exhausted attempts",
+    "Resume retries failed older captures with switches off",
+    "Healthy copies remain saved once",
+    "Completed request stops listing",
+    "Automatic switches remain off"
+  ],
+  "syntheticSources": true,
+  "realFrameContacted": false,
+  "exactReleaseSmokePerformed": false,
+  "hostedQualificationPending": true
+}
