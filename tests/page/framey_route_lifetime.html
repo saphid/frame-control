@@ -1,0 +1,76 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const router=window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit.connect(2,'fixture').routerHook;
+  const container=document.getElementById('framey-root'),root=ReactDOM.createRoot(container);
+  const plugin={content:React.createElement('p',null,'Plugin home')};
+  const change=fn=>ReactDOM.flushSync(fn);
+  const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
+  let mounts=0,unmounts=0,disposeOriginal=()=>{};
+  function Original(){
+    const [value,setValue]=React.useState(0);
+    React.useEffect(()=>{mounts++;return()=>{unmounts++;disposeOriginal();};},[]);
+    return React.createElement('button',{onClick:()=>setValue(value+1)},'Original '+value);
+  }
+  function Replacement(){return React.createElement('p',null,'Replacement '+DFL.useParams().id);}
+  try {
+    change(()=>root.render(React.createElement(window.__FixtureSurface,{plugin})));await tick();
+    const old=router.addRoute('/fixture/:id',Original);
+    disposeOriginal=old;
+    change(()=>DFL.Navigation.Navigate('/fixture/123'));
+    change(()=>container.querySelector('button:last-child').click());
+    assert(container.textContent.includes('Original 1'),'route state did not change');
+    const unrelated=()=>React.createElement('p',null,'Unrelated');
+    change(()=>router.addRoute('/fixture/unrelated',unrelated));
+    assert(container.textContent.includes('Original 1')&&mounts===1&&unmounts===0,'unrelated registration remounted active route');
+    let replacement;
+    change(()=>{replacement=router.addRoute('/fixture/:id',Replacement);});await tick();
+    assert(container.textContent.includes('Replacement 123')&&unmounts===1,'active route replacement did not redraw and retire old view');
+    change(old);
+    assert(container.textContent.includes('Replacement 123'),'old disposer removed replacement');
+    assert(DFL.Navigation.Navigate('/fixture/456'),'replacement no longer registered');await tick();
+    assert(container.textContent.includes('Replacement 456'),'replacement params did not update');
+    change(()=>DFL.Navigation.NavigateBack());
+    assert(container.textContent.includes('Replacement 123'),'registry change added a history entry');
+    let same;
+    change(()=>{same=router.addRoute('/fixture/:id',Replacement);});
+    change(replacement);
+    assert(container.textContent.includes('Replacement 123'),'same-component registration lost ownership');
+    const exact=()=>React.createElement('p',null,'Exact page');
+    let removeExact;
+    change(()=>{removeExact=router.addRoute('/fixture/123',exact);});
+    assert(container.textContent.includes('Exact page')&&Object.keys(DFL.useParams()).length===0,'exact registration did not replace pattern params');
+    change(removeExact);
+    assert(container.textContent.includes('Replacement 123')&&DFL.useParams().id==='123','exact removal did not restore matching pattern and params');
+    change(same);change(same);
+    assert(container.textContent==='Plugin home','last matching route removal did not return home');
+    // A retired disposer stays retired after an explicit remove and re-add.
+    const retired=router.addRoute('/fixture/retired',Original);
+    router.removeRoute('/fixture/retired');
+    const fresh=router.addRoute('/fixture/retired',Replacement);
+    change(()=>DFL.Navigation.Navigate('/fixture/retired'));change(retired);
+    assert(container.textContent.includes('Replacement'),'removed registration deleted re-added route');
+    change(fresh);
+    // Replacing a failed route must clear only that registration's boundary.
+    const broken=()=>{throw Error('Synthetic route failure');};
+    const brokenDisposer=router.addRoute('/fixture/broken',broken);
+    change(()=>DFL.Navigation.Navigate('/fixture/broken'));
+    assert(container.textContent.includes('Synthetic route failure'),'failed route diagnostic absent');
+    let repaired;
+    change(()=>{repaired=router.addRoute('/fixture/broken',Replacement);});
+    assert(container.textContent.includes('Replacement')&&!container.textContent.includes('Synthetic route failure'),'replacement inherited retired render failure');
+    change(brokenDisposer);change(repaired);router.removeRoute('/fixture/unrelated');
+    change(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      staleDisposerSafe:true,sameComponentOwnership:true,removeReaddSafe:true,
+      activeReplacementRedrawn:true,oldViewUnmounted:true,unrelatedStatePreserved:true,
+      exactPatternFallback:true,paramsRefreshed:true,historyPreserved:true,failedReplacementRecovered:true,
+      syntheticRoutes:true,realFrameContacted:false,wornVisibilityVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
