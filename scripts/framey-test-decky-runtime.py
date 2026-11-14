@@ -165,6 +165,7 @@ def main():
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
             probes = [(case['id'], case.get('version'), None) for case in cases] + [
                 (plugin_id, None, negative) for plugin_id, negative in [
+                    (19, '--reproduce-notebook-unload-regression'),
                     (23, '--reproduce-animation-unload-regression'),
                     (143, '--reproduce-desktop-apps-unload-regression'),
                     (38, '--reproduce-volume-mixer-user-regression'),
@@ -217,7 +218,7 @@ def main():
                     '--mount', f'type=bind,source={ROOT},target=/repo,readonly',
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
                     ]
-                if plugin_id in (50, 79, 143) and negative:
+                if plugin_id in (19, 50, 79, 143) and negative:
                     # The original EOF spin allocates tasks without yielding.
                     # Keep this negative below OOM pressure until Decky's own
                     # five-second forced-stop deadline proves the regression.

@@ -108,6 +108,7 @@ def main():
     parser.add_argument('--reproduce-radiyo-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
     parser.add_argument('--reproduce-storage-cleaner-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-notebook-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.terminal_candidate:
         assert args.id == 65 and args.version == '-' and not args.reproduce_terminal_import_regression
@@ -142,6 +143,11 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_notebook_unload_regression:
+        assert record['id'] == 19
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_storage_cleaner_unload_regression:
         assert record['id'] == 50
         prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
@@ -661,19 +667,27 @@ def main():
                     legacy, rpc, until_ready, screensaver_oracle, plugin, discovered)
                 report['result'] = 'private user D-Bus names, busy-service refusal without queueing, three inhibit APIs, disconnect release, settings restart and two clean stops; Frame suspend/UI/VR unverified'
             elif case['probe'] == 'notebook-private-pages':
-                from notebook_pages import probe
+                from notebook_pages import probe, stop
 
+                prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                          b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
                 with zipfile.ZipFile(io.BytesIO(data)) as original:
                     for name in ('main.py', 'plugin.json', 'dist/index.js', 'LICENSE'):
-                        assert (plugin/name).read_bytes() == original.read(record['folder']+'/'+name)
+                        expected = original.read(record['folder']+'/'+name)
+                        if name == 'main.py' and not args.reproduce_notebook_unload_regression:
+                            expected = prefix+expected
+                        assert (plugin/name).read_bytes() == expected
                 stops = []
 
                 def stop_notebook():
-                    started = time.monotonic()
-                    backend.terminate()  # Let the loader own its child-plugin shutdown.
-                    code = backend.wait(timeout=8)
-                    assert code == 0, code
-                    stops.append(dict(returncode=code, elapsedSeconds=round(time.monotonic()-started, 3)))
+                    observation = stop(backend, log, legacy,
+                                       regression=args.reproduce_notebook_unload_regression)
+                    stops.append(observation)
+                    if args.reproduce_notebook_unload_regression:
+                        assert observation['forcedPluginKills'] == 1
+                        assert not observation['cleanShutdownVerified']
+                    else:
+                        assert observation['cleanShutdownVerified'], observation
 
                 def restart_notebook():
                     nonlocal backend
@@ -687,15 +701,15 @@ def main():
 
                 report['privatePages'] = probe(legacy, restart_notebook, base/'settings'/record['folder'])
                 stop_notebook()
-                log.flush()
-                console = (home/'runtime.log').read_text()
-                assert console.count('Shutdown finished.') == 2
-                assert not any(marker in console for marker in ('Error during shutdown:',
-                    'asyncio.exceptions.CancelledError', 'Task was destroyed but it is pending'))
-                report['privatePages'].update(ownedLoaderStops=stops, completeLoaderShutdownLogged=True,
-                    unchangedPublishedFiles=['main.py', 'plugin.json', 'dist/index.js', 'LICENSE'])
-                report['result'] = ('published legacy Decky discovery and private per-app page, selection, '
-                    'restart and selected-delete isolation passed; browser/game selection/Frame/VR unverified')
+                report['privatePages'].update(ownedLoaderStops=stops,
+                    publishedBackendUnmodified=args.reproduce_notebook_unload_regression,
+                    unchangedPublishedFiles=['plugin.json', 'dist/index.js', 'LICENSE'],
+                    originalBackendBodyPreserved=True,
+                    controlledPeerEof=True,
+                    cleanShutdownVerified=not args.reproduce_notebook_unload_regression)
+                report['result'] = ('expected original child IPC forced-kill shutdown; negative only'
+                    if args.reproduce_notebook_unload_regression else
+                    'private per-app page persistence, RPC after peer EOF and two clean parent-only stops; Frame/VR unverified')
             elif case['probe'] == 'animation-private-overrides':
                 report['privateAnimationOverrides'] = animation_private.exercise(
                     animation_fixture, legacy, rpc, record['name'], until_ready)
