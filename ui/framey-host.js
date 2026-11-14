@@ -465,16 +465,36 @@
   const dropdownOptionRows = (options, path=[]) => (Array.isArray(options) ? options : [])
     .flatMap(entry=>Array.isArray(entry.options)
       ? dropdownOptionRows(entry.options,[...path,entry]) : [{entry,path}]);
-  const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
-    const rows=dropdownOptionRows(rgOptions), choices=rows.map(row=>row.entry), sections=[];
+  // Native optgroup labels are strings. Render rich labels through React in
+  // hidden spans, then mirror their text into the native group heading.
+  const dropdownPlainLabel = label => typeof label==='string' || typeof label==='number'
+    ? String(label) : label==null || typeof label==='boolean' ? '' : null;
+  const DropdownGroupText = ({label, onText}) => {
+    const node=R.useRef(null);
+    R.useLayoutEffect(()=>{
+      let active=true;
+      const read=()=>{if(active && node.current)onText(node.current.textContent);};
+      read();
+      const observer=new MutationObserver(read);
+      observer.observe(node.current,{childList:true,characterData:true,subtree:true});
+      return ()=>{active=false;observer.disconnect();};
+    },[label]);
+    return R.createElement('span',{ref:node,hidden:true,'aria-hidden':true,style:{display:'none'}},label);
+  };
+  const DropdownNativeInput = ({rows, label, menuLabel, selectedOption, disabled, strDefaultLabel, onChange, groupText}) => {
+    const choices=rows.map(row=>row.entry), sections=[];
     rows.forEach(({entry,path},index)=>{
       if (sections.at(-1)?.path!==path) sections.push({path,options:[]});
       sections.at(-1).options.push(R.createElement('option', {key:index, value:String(index)}, entry.label));
     });
+    const groupLabel=group=>{
+      const plain=dropdownPlainLabel(group.label), cached=groupText?.get(group);
+      return plain!==null ? plain : cached && Object.is(cached.label,group.label) ? cached.text : '';
+    };
     // Native selects cannot nest optgroups. Keep each contiguous run of
     // leaves in source order, with its full group path as a visible label.
     const entries=sections.map(({path,options},index)=>path.length
-      ? R.createElement('optgroup', {key:index, label:path.map(group=>group.label).join(' › ')}, options)
+      ? R.createElement('optgroup', {key:index, label:path.map(groupLabel).join(' › ')}, options)
       : options);
     const selected=choices.findIndex(entry=>Object.is(entry.data, selectedOption));
     return R.createElement('select', {
@@ -483,6 +503,33 @@
       onChange:e=>{const entry=choices[Number(e.target.value)];if(!disabled && entry)onChange?.(entry);}},
       selected < 0 && R.createElement('option', {value:'', disabled:true}, strDefaultLabel || 'Choose an option'),
       entries);
+  };
+  const DropdownRichInput = props => {
+    const {richGroups}=props;
+    const [groupText,setGroupText]=R.useState(new Map());
+    const groupKeys=R.useRef(new WeakMap()), nextGroupKey=R.useRef(0);
+    R.useEffect(()=>{
+      setGroupText(previous=>[...previous.keys()].every(group=>richGroups.has(group))
+        ? previous : new Map([...previous].filter(([group])=>richGroups.has(group))));
+    });
+    const hiddenLabels=[...richGroups].map(group=>{
+      if(!groupKeys.current.has(group))groupKeys.current.set(group,++nextGroupKey.current);
+      const label=group.label;
+      return R.createElement(DropdownGroupText,{key:groupKeys.current.get(group),label,onText:text=>{
+        setGroupText(previous=>{
+          const old=previous.get(group);
+          if(old && Object.is(old.label,label) && old.text===text)return previous;
+          const next=new Map(previous);next.set(group,{label,text});return next;
+        });
+      }});
+    });
+    return R.createElement(R.Fragment,null,hiddenLabels,DropdownNativeInput({...props,groupText}));
+  };
+  const DropdownInput = props => {
+    const rows=dropdownOptionRows(props.rgOptions);
+    const richGroups=new Set(rows.flatMap(row=>row.path).filter(group=>dropdownPlainLabel(group.label)===null));
+    return richGroups.size ? R.createElement(DropdownRichInput,{...props,rows,richGroups})
+      : DropdownNativeInput({...props,rows});
   };
   // Some plugins populate rgOptions only after their onMenuWillOpen read.
   // A native select cannot wait for that async gate, so prepare choices first.
