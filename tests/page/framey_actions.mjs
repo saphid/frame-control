@@ -187,9 +187,9 @@ const icon=React.createElement('svg',null);
 const rich=api.toaster.toast({title:heading,body:[detail,' again'],icon,
   subtext:'Open settings',showToast:true});
 const richNode=elements.get('framey-toasts').children[1];
-assert.equal(roots.get(richNode.children[0]).value,icon);
-assert.equal(roots.get(richNode.children[1]).value,heading);
-assert.deepEqual(Array.from(roots.get(richNode.children[2]).value),[detail,' again']);
+assert.equal(roots.get(richNode.children[0]).value.children[0],icon);
+assert.equal(roots.get(richNode.children[1]).value.children[0],heading);
+assert.deepEqual(Array.from(roots.get(richNode.children[2]).value.children[0]),[detail,' again']);
 assert.equal(richNode.children[3].textContent,'Open settings');
 rich.dismiss();rich.dismiss();
 assert.equal(richNode.removed,true);
