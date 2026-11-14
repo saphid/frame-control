@@ -11,6 +11,7 @@ import http.server
 import importlib.util
 import json
 import os
+import platform
 from pathlib import Path
 import selectors
 import signal
@@ -243,7 +244,7 @@ def replay(args, report):
                     capture=screenshot(page);(args.output/(label+'.png')).write_bytes(capture)
                     report['captureSha256'][label]=hashlib.sha256(capture).hexdigest()
                 def reopen():
-                    page.eval('(()=>{window.ready=false;window.stage=null;window.failure=null;const panel=document.getElementById("panel");panel.src=panel.src;})()')
+                    page.eval('(()=>{window.ready=false;window.stage=null;window.failure=null;const panel=document.getElementById("panel");panel.replaceWith(panel.cloneNode(false));})()')
                 stage('initial','read',False)
                 stage('saved-on','save-on',True)
                 report['snapshots'].append(bridge.call(dict(op='snapshot')))
@@ -264,6 +265,14 @@ def replay(args, report):
                     assert saved['sha256']==hashlib.sha256((json.dumps(saved['value'])+'\n').encode()).hexdigest()
                 assert [c['args'] for c in report['browserCalls'] if c['method']=='set_setting']==[['enabled',True],['enabled',False]]
                 report.update(success=True,realLoaderRestarts=2,syntheticInput=True,syntheticReceipt=True,syntheticParentBridge=True,productionFrameHttpParent=False,realFrameContacted=False,physicalControllerVerified=False,wornVisibilityVerified=False,browserSandboxDisabled=False)
+        except Exception:
+            if page:
+                try:
+                    capture=screenshot(page);(args.output/'failure.png').write_bytes(capture)
+                    report['failureCaptureSha256']=hashlib.sha256(capture).hexdigest()
+                except (OSError,KeyError,frame_steam.Fail):
+                    pass
+            raise
         finally:
             if page:page.sock.close()
             if browser:stop_browser(browser);report['ownedBrowserGroupStopped']=True
@@ -283,7 +292,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--loader',type=Path);parser.add_argument('--browser',type=Path,required=True);parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
     args.output.mkdir(parents=True,exist_ok=False)
     source={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in SOURCES}
-    report=dict(success=False,sourceRevision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),sourceDirty=bool(subprocess.check_output(['git','status','--porcelain','--untracked-files=normal'],cwd=ROOT,text=True)),sourceSha256=source,browserCalls=[],stages=[],snapshots=[],captureSha256={})
+    report=dict(success=False,architecture=platform.machine(),browserVersion=subprocess.check_output([str(args.browser.resolve()),'--version'],text=True,timeout=10).strip(),sourceRevision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),sourceDirty=bool(subprocess.check_output(['git','status','--porcelain','--untracked-files=normal'],cwd=ROOT,text=True)),sourceSha256=source,browserCalls=[],stages=[],snapshots=[],captureSha256={})
     try:
         replay(args,report)
         assert source=={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in SOURCES}
