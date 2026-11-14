@@ -151,6 +151,17 @@ Controlled tabs move focus when `activeTab` changes, rather than when a header
 merely calls `onShowTab`. Omitting the option or setting it false leaves focus
 under your control. This does not establish Steam controller navigation.
 
+For `SidebarNavigation`, give pages a stable `identifier` when the parent controls
+selection. Set `page` to that identifier and update it from `onPageRequested`;
+clicking a page reports the request and waits for the parent's new value.
+Without `page`, navigation keeps its own selected page. Framey accepts a page's
+route or original index string as local selection aliases and prefers an
+explicit identifier when aliases overlap. Separators and hidden pages cannot
+be selected; an unavailable selection falls back to the first visible page.
+Set `showTitle={false}` to omit the sidebar heading. These checks use local
+React DOM and synthetic child views; Steam route reporting and physical
+controller navigation remain unverified.
+
 To test safely, use a separate Frame Control managed Decky install, verify the
 ZIP digest from the official store, install one plugin at a time, and inspect
 `journalctl --user -u frame-control-decky.service`. Remove only your own

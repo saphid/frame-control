@@ -707,14 +707,19 @@
         tab.title, tab.renderTabAddon?.()))),
       R.createElement('div', {role:'tabpanel',ref:panel,tabIndex:autoFocusContents ? -1 : undefined}, current?.content));
   };
-  const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
-    title && R.createElement('h2', null, title), R.createElement(Tabs, {
-      // Decky separators are layout markers, never selectable pages. Keep the
-      // original index so hiding an earlier page does not retarget selection.
-      tabs:pages.flatMap((page,index)=>page==='separator' || page.visible===false ? [] : [{
-        id:page.route || String(index),
-        title:page.icon == null ? page.title : R.createElement(R.Fragment, null, page.icon, ' ', page.title),
-        content:page.content}])}));
+  const SidebarNavigation = ({pages=[], title, showTitle=true, page, onPageRequested}) => {
+    // Prefer explicit page identifiers. Route and original index remain local
+    // aliases so changing visibility does not change an existing selection.
+    const tabs=pages.flatMap((entry,index)=>entry==='separator' || entry.visible===false ? [] : [{
+      id:entry.identifier ?? entry.route ?? String(index),
+      aliases:[entry.identifier,entry.route,String(index)],
+      title:entry.icon == null ? entry.title : R.createElement(R.Fragment, null, entry.icon, ' ', entry.title),
+      content:entry.content}]);
+    const activeTab=page == null ? undefined : tabs.find(tab=>tab.id===page)?.id ?? tabs.find(tab=>tab.aliases.includes(page))?.id ?? page;
+    return R.createElement('section', null,
+      showTitle && title && R.createElement('h2', null, title),
+      R.createElement(Tabs, {tabs, activeTab, onShowTab:onPageRequested}));
+  };
   const emptyReorderEntries = Object.freeze([]);
   const ReorderableList = ({entries=emptyReorderEntries, onSave, interactables:Interactables,
     fieldProps, disableReordering=false}) => {

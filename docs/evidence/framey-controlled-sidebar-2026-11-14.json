@@ -1,0 +1,53 @@
+{
+  "baseCommit": "eb6a022d485c1062cc9d315ac12f9ab3f3f1a6f1",
+  "sourceRunWasDirty": true,
+  "sourceBindings": {
+    "tests/test_framey_sidebar_browser.py": "35cc9ac6e1533c6bfb726e88a00c3b378aba3dc78311283257ba275d526e216f",
+    "tests/page/framey_sidebar_icons.html": "b36d869e922d82ae63a89b690daad4b0bb138edde04bcb2e10585d3ff867a71d",
+    "docs/frame-plugin-author.md": "6388cc52e659a042b9cb36d106074a702c949b0be8f7f06624ca10ae1e2a3ef2",
+    "tests/test_framey_dropdown_rich_groups_browser.py": "87b262a2eadb2f67dd3011b548ff52789a9cc084fbce1e854b1489007a4cf834",
+    "tests/page/framey_dropdown_rich_groups.html": "c89ea34dcd571875d31a0042d5df0a812a2753abbe4468f0e82a625d23529b8a",
+    "tests/test_framey_dropdown_browser.py": "bec0faf64d1bf8bfeb8597504a71d0566f00b314d6c3b44bc5d5e5d437c99c6e",
+    "tests/page/framey_dropdown_value.html": "eb8af37f313a6a094cfd7c2f16c64015a9266de37fc87373e6e1b659b87c43f1",
+    "tests/test_framey_panel_loading_browser.py": "3e31eb3c5d45b3b2165452a50bd93993fc9e66ee64ef807f20edae821f1d31f6",
+    "tests/page/framey_panel_loading.html": "8e03eed4d0765cb623a4917bc587b9972ca41100272210b7b443651dc645ee62",
+    "ui/vendor/react-18.3.1.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+    "ui/vendor/react-dom-18.3.1.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+    "ui/frame_steam.py": "dcd8508b3e9ed814bc35b44c1f1923da110b876bb6b12a1b77666e90a1ab9b33",
+    "ui/framey-host.js": "59dde85f3bab982c28036f0e9b1f3324d1ba40c75d50f734d93ec6f2cc807bc7"
+  },
+  "publishedTypes": {
+    "package": "@decky/ui",
+    "version": "4.16.0",
+    "tarSha256": "d4e901a35fbd52c6bb9fa63f4fefd8d821ecaee2b4e101cefa56a95d3824cf11",
+    "definitionPath": "package/dist/components/SidebarNavigation.d.ts",
+    "supportedProps": [
+      "page",
+      "onPageRequested",
+      "showTitle",
+      "identifier"
+    ]
+  },
+  "redExpectedFailure": "controlled initial identifier ignored",
+  "redPreviousHostSha256": "c804854546d35b19004baba33a02f563dad195ed6c494adb7bab1b5505cef16e",
+  "greenBrowserTests": 4,
+  "focusedHostApiTests": 43,
+  "skips": 0,
+  "controlledRequestsWaitForParent": true,
+  "identifierRouteAndOriginalIndexSelection": true,
+  "canonicalIdentifierPrecedesAliases": true,
+  "emptyIdentifierPreserved": true,
+  "showTitleHonoured": true,
+  "publishedSuggestMeIconsAndChildActions": 7,
+  "dropdownAndSectionFixturesPreserved": true,
+  "browserTransport": "bounded loopback CDP adapter; committed tests use standard headless helper",
+  "rawEvidence": "framey-controlled-sidebar-2026-11-14.json.gz",
+  "rawEvidenceSha256": "94d1817a2baa9d6e0175d86320b4f2d81a9f9e7793e19f379966fbf3ff5e3cf3",
+  "compressedEvidenceSha256": "c146344f4fae457a41cc396cfc7661aee0d0db1564cd151570a6553528b2b0b9",
+  "freshHostedQualificationRequired": true,
+  "syntheticChildViews": true,
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "physicalControllerVerified": false,
+  "steamRouteReportingVerified": false
+}
