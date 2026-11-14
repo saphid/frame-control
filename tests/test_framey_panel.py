@@ -332,6 +332,12 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_actions.mjs')],
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
+        marker = 'Framey toast action lifetime proof: '
+        line = next(line for line in result.stdout.splitlines() if line.startswith(marker))
+        report = json.loads(line[len(marker):])
+        self.assertIs(report['passed'], True, report)
+        report['hostSha256'] = hashlib.sha256((Path(__file__).resolve().parents[1]/'ui/framey-host.js').read_bytes()).hexdigest()
+        print(marker+json.dumps(report, sort_keys=True))
 
     def test_published_battery_lookback_slider_reset(self):
         from framey_official import PLUGINS, archive
