@@ -87,6 +87,7 @@ def main():
     parser.add_argument('--reproduce-deck-shelves-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
+    parser.add_argument('--terminal-candidate', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-unload-regression', action='store_true')
     parser.add_argument('--reproduce-prefix-manager-102-unload-regression', action='store_true')
@@ -103,12 +104,15 @@ def main():
     parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
     parser.add_argument('--reproduce-storage-cleaner-unload-regression', action='store_true')
     args = parser.parse_args()
+    if args.terminal_candidate:
+        assert args.id == 65 and args.version == '-' and not args.reproduce_terminal_import_regression
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
     assert os.getuid() == 1100 and ROOT.is_dir(), 'Run through framey-test-decky-runtime.py'
     record = (PREFIX_MANAGER_102 if args.id == 130 and args.version == '1.0.2'
               else next(p for p in PLUGINS if p['id'] == args.id))
-    case = (dict(id=65, shim=None, probe='terminal-import-regression')
+    case = (dict(id=65, shim=None, probe='terminal-private-pty') if args.terminal_candidate else
+            dict(id=65, shim=None, probe='terminal-import-regression')
             if args.reproduce_terminal_import_regression else
             next(p for p in json.loads((ROOT/'tests/decky-runtime/cases.json').read_text())
                  if p['id'] == args.id and p.get('version', '-') == args.version))
@@ -400,6 +404,10 @@ def main():
             source = source.replace(old, new)
         (plugin/'main.py').write_text(source)
 
+    candidate = None
+    if args.terminal_candidate:
+        from terminal_candidate import apply
+        candidate = apply(plugin, record)
     if args.reproduce_suggestme_unload_regression:
         assert record['id'] == 132
         main = plugin/'main.py'
@@ -498,6 +506,8 @@ def main():
     processes = []
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
+    if candidate is not None:
+        report['candidate'] = candidate
     with (home/'runtime.log').open('w+') as log:
         with ExitStack() as fixtures, capture_runtime(log, report, processes, loader=loader):
             if case['probe'] == 'discord-private-activity':
@@ -550,7 +560,18 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'playtime-private-sessions':
+            if case['probe'] == 'terminal-private-pty':
+                from terminal_lifecycle import probe
+                report['terminalLifecycle'] = probe(record['name'], home, backend, processes)
+                abi = json.loads((home/'terminal-candidate-abi.json').read_text())
+                assert abi['versionInfo'][:2] == [3, 14] and abi['cacheTag'] == 'cpython-314', abi
+                assert abi['architecture'] == os.uname().machine, abi
+                assert abi['termiosPath'] == str(plugin/'py_modules/framey_terminal_stdlib'/
+                    f"termios.cpython-314-{os.uname().machine}-linux-gnu.so"), abi
+                report['candidate']['loaderPythonAbi'] = abi
+                report['result'] = ('test-only adapted Terminal: private PTY input/output, resize, '
+                    'remove/reload cleanup and config persistence passed; production/browser/Frame unverified')
+            elif case['probe'] == 'playtime-private-sessions':
                 import playtime_private
                 report['privateSessions'] = playtime_private.exercise(
                     current, plugin, data, record, base, backend, loader, env, log,
@@ -581,6 +602,42 @@ def main():
                 report['screensaverRuntime'] = screensaver_private.probe(backend, loader, env, log, processes,
                     legacy, rpc, until_ready, screensaver_oracle, plugin, discovered)
                 report['result'] = 'private user D-Bus names, busy-service refusal without queueing, three inhibit APIs, disconnect release, settings restart and two clean stops; Frame suspend/UI/VR unverified'
+            elif case['probe'] == 'notebook-private-pages':
+                from notebook_pages import probe
+
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for name in ('main.py', 'plugin.json', 'dist/index.js', 'LICENSE'):
+                        assert (plugin/name).read_bytes() == original.read(record['folder']+'/'+name)
+                stops = []
+
+                def stop_notebook():
+                    started = time.monotonic()
+                    backend.terminate()  # Let the loader own its child-plugin shutdown.
+                    code = backend.wait(timeout=8)
+                    assert code == 0, code
+                    stops.append(dict(returncode=code, elapsedSeconds=round(time.monotonic()-started, 3)))
+
+                def restart_notebook():
+                    nonlocal backend
+                    stop_notebook()
+                    backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                               start_new_session=True)
+                    processes.append(backend)
+                    plugins = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Notebook discovery')
+                    assert len(plugins) == 1 and plugins[0]['name'] == record['name']
+                    assert plugins[0]['version'] == record['version'] and not plugins[0]['disabled']
+
+                report['privatePages'] = probe(legacy, restart_notebook, base/'settings'/record['folder'])
+                stop_notebook()
+                log.flush()
+                console = (home/'runtime.log').read_text()
+                assert console.count('Shutdown finished.') == 2
+                assert not any(marker in console for marker in ('Error during shutdown:',
+                    'asyncio.exceptions.CancelledError', 'Task was destroyed but it is pending'))
+                report['privatePages'].update(ownedLoaderStops=stops, completeLoaderShutdownLogged=True,
+                    unchangedPublishedFiles=['main.py', 'plugin.json', 'dist/index.js', 'LICENSE'])
+                report['result'] = ('published legacy Decky discovery and private per-app page, selection, '
+                    'restart and selected-delete isolation passed; browser/game selection/Frame/VR unverified')
             elif case['probe'] == 'animation-private-overrides':
                 report['privateAnimationOverrides'] = animation_private.exercise(
                     animation_fixture, legacy, rpc, record['name'], until_ready)
