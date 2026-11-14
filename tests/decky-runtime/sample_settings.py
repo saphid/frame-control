@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shutil
 import signal
+import socket
 import subprocess
 import time
 import traceback
@@ -28,6 +29,27 @@ def stop(backend, log):
     owned = descendants(backend.pid)
     assert owned, 'published loader must own its plugin child'
     offset = len(Path(log.name).read_text())
+    closed = []
+    for path in Path('/tmp').glob('plugin_socket_*'):
+        assert path.is_socket() and path.stat().st_uid == os.getuid()
+        with socket.socket(socket.AF_UNIX) as peer:
+            peer.settimeout(.2)
+            try:
+                peer.connect(str(path))
+            except ConnectionRefusedError:
+                continue
+            peer.shutdown(socket.SHUT_WR)
+            closed.append(str(path))
+    assert len(closed) == 1, closed
+    time.sleep(.05)
+
+    async def after_eof():
+        async with Client(NAME, REPORT['transcript']) as client:
+            expected = json.loads(SETTINGS.read_bytes())['enabled']
+            assert await client.call('get_setting', 'enabled', not expected) is expected
+
+    asyncio.run(after_eof())
+    began = time.monotonic()
     backend.send_signal(signal.SIGTERM)
     backend.wait(timeout=8)
     adopted = []
@@ -54,7 +76,9 @@ def stop(backend, log):
              and console.count(f'[plugin][INFO]: Plugin {NAME} has been stopped in ') == 1
              and not any(s in console for s in ('Sending SIGKILL!', 'Error during shutdown:',
                          'Task was destroyed but it is pending', 'asyncio.exceptions.CancelledError')))
-    result = dict(parentOnlySignal=True, descendantsBefore=owned, exactDescendantsRemaining=remaining,
+    result = dict(parentOnlySignal=True, closedUnixPeers=closed, postEofRpcVerified=True,
+                  elapsedSeconds=round(time.monotonic()-began, 3),
+                  descendantsBefore=owned, exactDescendantsRemaining=remaining,
                   adoptedChildExits=adopted, loaderReturncode=backend.returncode, console=console,
                   consoleSha256=hashlib.sha256(console.encode()).hexdigest(), cleanShutdownVerified=clean)
     REPORT['stops'].append(result)
@@ -101,7 +125,7 @@ def main():
     plugin = BASE/'plugins/framey-settings'
     plugin.mkdir(parents=True)
     with zipfile.ZipFile('/input/sample.zip') as archive:
-        assert set(archive.namelist()) == {'framey-settings/'+p for p in ('plugin.json', 'main.py', 'dist/index.js')}
+        assert set(archive.namelist()) == {'framey-settings/'+p for p in ('plugin.json', 'main.py', 'py_modules/framey_decky_ipc.py', 'dist/index.js')}
         for name in archive.namelist():
             path = BASE/'plugins'/name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -109,6 +133,7 @@ def main():
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest['name'] == NAME and manifest['api_version'] == 2 and not manifest['flags']
     assert (plugin/'main.py').read_bytes() == Path('/repo/examples/framey-settings/main.py').read_bytes()
+    assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == Path('/repo/ui/framey_decky_ipc.py').read_bytes()
     loader = BASE/'PluginLoader'
     shutil.copyfile('/input/PluginLoader', loader)
     loader.chmod(0o700)
