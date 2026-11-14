@@ -43,6 +43,8 @@ if __name__ == '__main__':
     sample.exercise = browser_cycle
     try:
         sample.main()
+        # The browser cycle replaces the native-only malformed-schema cases.
+        sample.REPORT.pop('malformedAndFutureSchemaPreserved', None)
         sample.REPORT.update(browserVerified=True, syntheticParentBridge=True)
     except Exception:
         sample.REPORT.update(success=False, error=traceback.format_exc())
