@@ -1,0 +1,69 @@
+{
+  "pr": 704,
+  "head": "4a43958c8459abda0847a2fc6e9043878c50ec87",
+  "mainBefore": "7777eedf4e54796430b94d25e3745ee8e5a8acce",
+  "merge": "c764040d4e35910bd89e19e7b5f36970e70b2148",
+  "testedTree": "09523ca4df7d09d6db09b122f28eaadc828f9175",
+  "actualTreeAndParentsVerified": true,
+  "hostedChecksPassed": 23,
+  "nativeArtifactAudit": {
+    "terminal-candidate-ubuntu-24.04-arm": {
+      "head": "4a43958c8459abda0847a2fc6e9043878c50ec87",
+      "artifactId": 14109420437,
+      "zipSha256": "d53a9cf6ec7db40074d7bff645215aefb880c27082c490fef2023e1a5be691c7",
+      "sourceHashesVerified": 68,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-704-exact4a43-native-terminal-candidate-ubuntu-24.04-arm.json"
+    },
+    "terminal-candidate-ubuntu-latest": {
+      "head": "4a43958c8459abda0847a2fc6e9043878c50ec87",
+      "artifactId": 14109355617,
+      "zipSha256": "5b75911a798a3c79dae62502e3951919af5a34f12264b1b08635c003f8b57b4d",
+      "sourceHashesVerified": 68,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-704-exact4a43-native-terminal-candidate-ubuntu-latest.json"
+    },
+    "decky-runtime-ubuntu-24.04-arm": {
+      "head": "4a43958c8459abda0847a2fc6e9043878c50ec87",
+      "artifactId": 14109277446,
+      "zipSha256": "5e4683f7f17cbaef8d3ac4390bdfe1151d7ac00c928747c7ff6ec051433347af",
+      "sourceHashesVerified": 56,
+      "primaryCases": 42,
+      "controls": 36,
+      "consoleDigestsVerified": 78,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-704-exact4a43-native-decky-runtime-ubuntu-24.04-arm.json"
+    },
+    "decky-runtime-ubuntu-latest": {
+      "head": "4a43958c8459abda0847a2fc6e9043878c50ec87",
+      "artifactId": 14108674100,
+      "zipSha256": "71f7a33b4e5d0b59f8bc331f7b5f845e1ac1aba5f99aa23c0f0013aedc2f6546",
+      "sourceHashesVerified": 56,
+      "primaryCases": 42,
+      "controls": 36,
+      "consoleDigestsVerified": 78,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-704-exact4a43-native-decky-runtime-ubuntu-latest.json"
+    }
+  },
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "physicalInputVerified": false,
+  "actualMainPanelTestsPassed": 38,
+  "actualMainCdpFixturesPassed": 5,
+  "originalHostedBrowserRanAndPassed": true,
+  "localStandardCliTimeoutsRetained": 2,
+  "oldMainWrapperRegressionReproduced": true,
+  "rawReport": "framey-wrapped-route-merge-c764040d-2026-11-14.json.gz",
+  "rawReportSha256": "45c44647671a1b688fba37dc2f5d8bc1e93714752c5f8d5d62944cedec4a1e9f"
+}
