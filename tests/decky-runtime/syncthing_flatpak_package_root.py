@@ -48,8 +48,8 @@ try:
     limits = inputs['timeouts']
     browser = inputs.get('browserSetupRequested', False)
     stack_inputs = inputs.get('migrationStacks')
-    assert not browser or os.uname().machine == 'x86_64'
-    expected_user_limit = 1440 if browser else (2400 if os.uname().machine == 'aarch64' else 840)
+    assert os.uname().machine in ('x86_64', 'aarch64')
+    expected_user_limit = 2400 if os.uname().machine == 'aarch64' else (1440 if browser else 840)
     assert limits['userSeconds'] == expected_user_limit
     observer = contextlib.nullcontext()
     if stack_inputs:
