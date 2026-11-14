@@ -557,6 +557,8 @@
     // The getter also retires retained handles when the native input unmounts.
     R.useImperativeHandle(ref, () => ({
       get element() {return input.current;},
+      // Published Terminal initializes its hidden input through this alias.
+      get m_elInput() {return input.current;},
       Focus:() => input.current?.focus(),
     }), []);
     const [draft, setDraft] = R.useState(defaultValue ?? '');
