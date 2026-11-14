@@ -62,27 +62,36 @@ def apply(plugin, record):
     terminal = plugin/'py_modules/decky_terminal/terminal.py'
     original = '    async def shutdown(self):\n        self._kill_process()'
     assert terminal.read_text().count(original) == 1
-    # Decky 3.3.0's EOF listener can starve the event loop after the
-    # parent closes the plugin socket. Keep owned cleanup synchronous
-    # inside this private candidate; never signal or reap another PID.
+    # Let asyncio reap its own child; waitpid races the subprocess watcher.
+    # The existing child-only IPC repair lets unload await without EOF starvation.
     replacement = """    async def shutdown(self):
-        import time
-        decky.logger.info("FRAMEY_SHUTDOWN_BEGIN")
+        self._framey_closing = True
         self._kill_process()
         if self.process is not None:
-            deadline = time.monotonic()+3
-            while True:
-                try:
-                    waited, _status = os.waitpid(self.process.pid, os.WNOHANG)
-                except ChildProcessError:
-                    waited = self.process.pid
-                if waited == self.process.pid:
-                    break
-                if time.monotonic() >= deadline:
-                    raise RuntimeError("Owned child not reaped before unload deadline")
-                time.sleep(0.01)
-        decky.logger.info("FRAMEY_SHUTDOWN_REAPED")"""
-    terminal.write_text(terminal.read_text().replace(original, replacement))
+            await asyncio.wait_for(self.process.wait(), timeout=3)
+        tasks = getattr(self, "_framey_tasks", ())
+        if tasks:
+            await asyncio.wait_for(asyncio.gather(*tasks), timeout=3)"""
+    text = terminal.read_text().replace(original, replacement)
+    original = ('        asyncio.ensure_future(self._read_output_loop())\n'
+                '        asyncio.ensure_future(self._process_subscriber())')
+    assert text.count(original) == 1
+    text = text.replace(original,
+        '        self._framey_tasks = (asyncio.create_task(self._read_output_loop()),\n'
+        '                              asyncio.create_task(self._process_subscriber()))')
+    original = ('            except Exception as e:\n'
+                '                decky.logger.exception("[terminal][EXCEPTION][%s] Exception during output read: %s", self.id, e)')
+    assert text.count(original) == 1
+    text = text.replace(original,
+        '            except OSError as e:\n'
+        '                if getattr(self, "_framey_closing", False) and e.errno in (5, 9):\n'
+        '                    break\n'
+        '                raise\n' + original)
+    terminal.write_text(text)
+    shutil.copyfile(ROOT/'ui/framey_decky_ipc.py', plugin/'py_modules/framey_decky_ipc.py')
+    source = plugin/'main.py'
+    source.write_text('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                      '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n' + source.read_text())
 
     with (plugin/'main.py').open('a') as main:
         main.write('''

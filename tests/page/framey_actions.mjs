@@ -6,10 +6,10 @@ const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'ut
 const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface; window.__legacy=legacyServerAPI; window.__library=setLibrarySnapshot; window.__running=setRunningSnapshot; window.__refreshRunning=refreshRunning;\n})();');
 assert.notEqual(testSource,source);
 const states=[];
-const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,next=>states.push(next)], useRef:value=>({current:value}),
-  useEffect(){},isValidElement:value=>!!value?.type};
+  useEffect(){},useLayoutEffect(){},useImperativeHandle(){},isValidElement:value=>!!value?.type};
 class Element {constructor(){this.children=[];this.textContent='';this.attributes={};}
   append(...children){this.children.push(...children);}setAttribute(key,value){this.attributes[key]=value;}
   remove(){this.removed=true;}}
@@ -19,12 +19,12 @@ const window={React,ReactDOM:{createRoot:node=>{
   const root={render(value){this.value=value;},unmount(){this.unmounted=true;}};
   roots.set(node,root);return root;
 }},addEventListener(){}};
-const listeners=[];const messages=[];const parent={postMessage:message=>messages.push(message)};
+const listeners=[];const messages=[];const toastTimers=[];const parent={postMessage:message=>messages.push(message)};
 const context=vm.createContext({window,document:{getElementById:id=>{
   if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:()=>new Element()},
   navigator:{language:'en'}, parent,DOMException,getComputedStyle:node=>({overflowY:node.overflowY||'visible'}),
   addEventListener:(type,handler)=>listeners.push({type,handler}),
-  setTimeout:()=>1,clearTimeout(){}});
+  setTimeout:callback=>{toastTimers.push(callback);return toastTimers.length;},clearTimeout(){}});
 vm.runInContext(testSource,context);
 // No Steam React tree exists inside the isolated Framey iframe.
 assert.equal(window.DFL.getReactRoot({}),null);
@@ -187,9 +187,9 @@ const icon=React.createElement('svg',null);
 const rich=api.toaster.toast({title:heading,body:[detail,' again'],icon,
   subtext:'Open settings',showToast:true});
 const richNode=elements.get('framey-toasts').children[1];
-assert.equal(roots.get(richNode.children[0]).value,icon);
-assert.equal(roots.get(richNode.children[1]).value,heading);
-assert.deepEqual(Array.from(roots.get(richNode.children[2]).value),[detail,' again']);
+assert.equal(roots.get(richNode.children[0]).value.children[0],icon);
+assert.equal(roots.get(richNode.children[1]).value.children[0],heading);
+assert.deepEqual(Array.from(roots.get(richNode.children[2]).value.children[0]),[detail,' again']);
 assert.equal(richNode.children[3].textContent,'Open settings');
 rich.dismiss();rich.dismiss();
 assert.equal(richNode.removed,true);
@@ -204,6 +204,42 @@ actionable.dismiss();
 const hidden=api.toaster.toast({title:heading,showToast:false});
 assert.equal(elements.get('framey-toasts').children.length,3);
 hidden.dismiss();
+
+// Dismissed notifications must retire retained actions. This covers API
+// dismissal, the native button, expiration and an already-completed Open.
+for(const dismissal of ['api','button','expiration','open']) {
+  let calls=0;
+  const notice=api.toaster.toast({title:'Lifetime',onClick:()=>calls++});
+  const node=elements.get('framey-toasts').children.at(-1);
+  const open=node.children.at(-1).onclick;
+  if(dismissal==='api')notice.dismiss();
+  else if(dismissal==='button')node.children.at(-2).onclick();
+  else if(dismissal==='expiration')toastTimers.at(-1)();
+  else open();
+  const expected=dismissal==='open'?1:0;
+  assert.equal(calls,expected);
+  open();open();
+  assert.equal(calls,expected,'retained Open ran after '+dismissal+' dismissal');
+  assert.equal(node.removed,true);
+}
+let reentries=0,reenter;
+const reentrant=api.toaster.toast({title:'Reentrant',onClick:()=>{
+  reentries++;if(reentries===1)reenter();
+}});
+const reentrantNode=elements.get('framey-toasts').children.at(-1);
+reenter=reentrantNode.children.at(-1).onclick;reenter();
+assert.equal(reentries,1,'Open must lock before invoking plugin callback');
+assert.equal(reentrantNode.removed,true);reentrant.dismiss();
+let failures=0;
+const failed=api.toaster.toast({title:'Throwing action',onClick:()=>{failures++;throw Error('Synthetic toast action failure');}});
+const failedNode=elements.get('framey-toasts').children.at(-1),failedOpen=failedNode.children.at(-1).onclick;
+assert.throws(failedOpen,/Synthetic toast action failure/);
+assert.equal(failedNode.removed,true,'throwing action must still retire and dismiss');
+failedOpen();assert.equal(failures,1);failed.dismiss();
+console.log('Framey toast action lifetime proof: '+JSON.stringify({passed:true,
+  apiDismissalRetires:true,buttonDismissalRetires:true,expirationRetires:true,
+  successfulOpenRetires:true,synchronousReentryBlocked:true,throwingActionRetires:true,
+  syntheticCallbacks:true,realFrameContacted:false}));
 
 function LocalRoute(){return React.createElement('p',null,'Route content');}
 const undo=api.routerHook.addRoute('/plugin/details',LocalRoute);
@@ -268,10 +304,30 @@ nodes(tabs,'button')[0].props.onClick();
 nodes(tabs,'button')[2].props.onClick();
 assert.deepEqual(tabChanges,['one']);
 assert.equal(window.DFL.Spinner({}).props.role,'status');
+// Decky's custom validValues predicate applies to every way of changing a
+// slider setting, including editable values and reset defaults.
+const allowed=[],validValues=value=>[1,2,4,8].includes(value);
+const constrained=window.DFL.SliderField({label:'Workers',value:2,min:1,max:8,step:1,
+  editableValue:true,resetValue:4,validValues,onChange:value=>allowed.push(value)});
+const constrainedInputs=nodes(constrained,'input');
+constrainedInputs[0].props.onChange({target:{value:'3'}});
+constrainedInputs[1].props.onChange({target:{value:'3',validity:{valid:true}}});
+assert.deepEqual(allowed,[],'range and typed input cannot save a value rejected by the plugin');
+constrainedInputs[0].props.onChange({target:{value:'4'}});
+constrainedInputs[1].props.onChange({target:{value:'8',validity:{valid:true}}});
+nodes(constrained,'button')[0].props.onClick();
+assert.deepEqual(allowed,[4,8,4]);
+const rejectedReset=window.DFL.SliderField({value:2,min:1,max:8,resetValue:3,validValues});
+assert.equal(nodes(rejectedReset,'button').length,0,'invalid reset values must not be offered');
+const disabledSlider=window.DFL.SliderField({value:2,min:1,max:8,disabled:true,
+  editableValue:true,resetValue:4,validValues,onChange:value=>allowed.push(value)});
+for(const input of nodes(disabledSlider,'input'))input.props.onChange({target:{value:'4'}});
+nodes(disabledSlider,'button')[0].props.onClick();
+assert.deepEqual(allowed,[4,8,4],'disabled handlers stay inert');
 assert.equal(window.DFL.ProgressBar({nProgress:120}).props.value,100);
 assert.equal(window.DFL.ProgressBar({nProgress:40,indeterminate:true}).props.value,undefined,
   'an indeterminate progress element must omit its value');
-assert.equal(window.DFL.ProgressBarItem({nProgress:35}).props.value,35);
+assert.equal(nodes(window.DFL.ProgressBarItem({nProgress:35}),'progress')[0].props.value,35);
 const progressInfo=window.DFL.ProgressBarWithInfo({indeterminate:true,
   sOperationText:'Downloading plugin'});
 assert.equal(nodes(progressInfo,'progress')[0].props.value,undefined);
@@ -410,7 +466,7 @@ const modalHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmMod
   strTitle:'Remove preset?',strDescription:'Only this private preset will be removed.',
   strOKButtonText:'Remove',strCancelButtonText:'Keep',
   onOK:()=>confirmed++,onCancel:()=>cancelled++,closeModal:()=>dismissed++}));
-let modal=modalRoot.value.at(-1).children.at(-1);
+let modal=modalRoot.value.at(-1).children.at(-1).children[0];
 let confirm=modal.type(modal.props);
 assert.equal(nodes(confirm,'div')[0].children[0],'Only this private preset will be removed.');
 assert.deepEqual(nodes(confirm,'button').map(button=>button.children[0]),['Remove','Keep']);
@@ -426,7 +482,7 @@ const childModal=window.DFL.showModal(React.createElement(window.DFL.ConfirmModa
   strTitle:'Confirm',bOKDisabled:true,bCancelDisabled:true,bMiddleDisabled:true,
   onOK:()=>confirmed++,onCancel:()=>cancelled++,onMiddleButton:()=>confirmed++}));
 assert.equal(modalRoot.value.length,2);assert.equal(modalRoot.value[0].props.hidden,true);
-modal=modalRoot.value.at(-1).children.at(-1);confirm=modal.type(modal.props);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];confirm=modal.type(modal.props);
 for(const button of nodes(confirm,'button')){assert.equal(button.props.disabled,true);button.props.onClick();}
 assert.equal(confirmed,0);assert.equal(cancelled,1);
 let prevented=0;
@@ -438,11 +494,11 @@ childModal.Close();await childModal.ClosedPromise;assert.equal(modalRoot.value,n
 let replacement;
 const first=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
   onOK:()=>{replacement=window.DFL.showModal(React.createElement('p',null,'Next dialog'));}}));
-modal=modalRoot.value.at(-1).children.at(-1);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];
 nodes(modal.type(modal.props),'button')[0].props.onClick();
 await first.ClosedPromise;assert.equal(modalRoot.value.length,1);
 replacement.Update(React.createElement('p',null,'Updated'));
-assert.equal(modalRoot.value[0].children.at(-1).children[0],'Updated');
+assert.equal(modalRoot.value[0].children.at(-1).children[0].children[0],'Updated');
 replacement.Close();await replacement.ClosedPromise;
 const alert=window.DFL.ConfirmModal({bAlertDialog:true,onCancel:()=>cancelled++});
 assert.equal(nodes(alert,'button').length,1);
@@ -456,7 +512,7 @@ for (const actionIndex of [0,1]) for (const withCallback of [false,true]) {
   updated.Update(React.createElement(window.DFL.ConfirmModal,{
     strTitle:'Updated confirmation',onOK:()=>updatedActions++,onCancel:()=>updatedActions++,
     ...(withCallback ? {closeModal:()=>updatedCloses++} : {})}));
-  const updatedElement=modalRoot.value.at(-1).children.at(-1);
+  const updatedElement=modalRoot.value.at(-1).children.at(-1).children[0];
   nodes(updatedElement.type(updatedElement.props),'button')[actionIndex].props.onClick();
   assert.equal(modalRoot.value,null,'Updated OK/Cancel must close its own dialog');
   await updated.ClosedPromise;
@@ -471,7 +527,7 @@ for (const actionIndex of [0,1]) for (const withCallback of [false,true]) {
 let completeAction, asyncCalls=0;
 const asyncHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
   strTitle:'Private action',onOK:()=>{asyncCalls++;return new Promise(resolve=>{completeAction=resolve;});}}));
-modal=modalRoot.value.at(-1).children.at(-1);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];
 confirm=modal.type(modal.props);
 const asyncButton=nodes(confirm,'button')[0];
 const firstAction=asyncButton.props.onClick();
@@ -487,7 +543,7 @@ assert.equal(modalRoot.value,null);
 let rejectAction, failedCalls=0;
 const failedHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
   strTitle:'Private failure',onOK:()=>{failedCalls++;return new Promise((resolve,reject)=>{rejectAction=reject;});}}));
-modal=modalRoot.value.at(-1).children.at(-1);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];
 confirm=modal.type(modal.props);
 const failureButton=nodes(confirm,'button')[0];
 const failedAction=failureButton.props.onClick();
@@ -618,10 +674,40 @@ assert.equal(unsubscribeRequest.args[0].length,0);
 onMessage({source:parent,data:{type:'framey:reply',id:unsubscribeRequest.id,
   result:{events:[{event:'timer:tick',args:[99]}],cursor:2}}});
 for(let i=0;i<12;i++)await Promise.resolve();assert.equal(eventValues.length,1);
+// A cleanup callback can dispose another listener while a received batch is
+// queued. That retired listener must not overwrite a newer view's state.
+const deliveries=[];
+const retired=value=>deliveries.push(`retired:${value}`);
+const live=value=>deliveries.push(`live:${value}`);
+const cleanup=()=>{
+  deliveries.push('cleanup');
+  api.removeEventListener('simple_timer_seconds_updated',retired);
+};
+api.addEventListener('timer:cleanup',cleanup);
+const firstRegistration=messages.at(-1);
+api.addEventListener('simple_timer_seconds_updated',retired);
+api.addEventListener('simple_timer_seconds_updated',live);
+onMessage({source:parent,data:{type:'framey:reply',id:firstRegistration.id,
+  result:{events:[],cursor:2}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+const batchRequest=messages.at(-1);
+assert.equal(batchRequest.type,'framey:events');
+assert.deepEqual(Array.from(batchRequest.args[0]),['timer:cleanup','simple_timer_seconds_updated']);
+onMessage({source:parent,data:{type:'framey:reply',id:batchRequest.id,
+  result:{events:[{event:'timer:cleanup',args:[]},
+    {event:'simple_timer_seconds_updated',args:[7]}],cursor:4}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+assert.deepEqual(deliveries,['cleanup','live:7'],'removed listeners cannot receive queued events');
 assert.throws(()=>api.addEventListener('bad event',callback),/Invalid Decky event/);
 assert.throws(()=>api.addEventListener('tick',null),/Invalid Decky event/);
+const lateEvents=messages.at(-1);
+assert.equal(lateEvents.type,'framey:events');
 listeners.find(x=>x.type==='unload').handler();
 assert.equal(messages.at(-1).type,'framey:events:close');
+onMessage({source:parent,data:{type:'framey:reply',id:lateEvents.id,
+  result:{events:[{event:'simple_timer_seconds_updated',args:[99]}],cursor:5}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+assert.deepEqual(deliveries,['cleanup','live:7'],'closed panels ignore late event replies');
 const finalRefresh=window.__refreshRunning();
 assert.equal(window.__refreshRunning(),finalRefresh,'Running reads must not overlap');
 const finalRequest=messages.at(-1);

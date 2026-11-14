@@ -10,6 +10,8 @@ import socket
 import subprocess
 import sys
 import threading
+import tempfile
+import time
 import zipfile
 
 from check import rpc, until_ready
@@ -27,12 +29,92 @@ def alive(pid):
         return False
 
 
+def disconnect_child_peer(helper_pid):
+    """Close a real extra Decky child IPC peer before normal reload.
+
+    Decky's parent closes its peer immediately after SIGTERM. A ready EOF
+    must not starve the signal handler that runs the plugin's _unload.
+    Select only the socket retained by this candidate's owning child.
+    """
+    parent = int(next(line.split(':', 1)[1] for line in
+                      Path(f'/proc/{helper_pid}/status').read_text().splitlines()
+                      if line.startswith('PPid:')))
+    assert b'Syncthing' in Path(f'/proc/{parent}/cmdline').read_bytes()
+    inodes = {os.readlink(fd) for fd in Path(f'/proc/{parent}/fd').iterdir()}
+    paths = {row[7] for line in Path('/proc/net/unix').read_text().splitlines()[1:]
+             if len(row := line.split()) == 8 and f'socket:[{row[6]}]' in inodes
+             and row[7].startswith('/tmp/plugin_socket_')}
+    assert len(paths) == 1, paths
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as peer:
+        peer.connect(next(iter(paths)))
+        peer.shutdown(socket.SHUT_WR)
+    return parent
+
+
+def time_wait_recovery(helper, home):
+    """Use a real closed TCP client, not a mocked bind error or timer."""
+    with tempfile.TemporaryDirectory(prefix='time-wait-', dir=home) as temporary:
+        root = Path(temporary)
+        settings = root/'invalid-settings.json'
+        settings.write_text('not JSON')
+        pid = root/'watchdog.pid'
+        pid.write_text('private PID marker')
+        logs = root/'logs'
+        logs.mkdir()
+        env = dict(os.environ, FRAMEY_SYNCTHING_OWNER_PID=str(os.getpid()),
+                   FRAMEY_SYNCTHING_SOCKET=str(root/'private.sock'))
+        with socket.socket() as server, socket.socket() as client:
+            client.bind(('127.0.0.1', 58384))
+            server.bind(('127.0.0.1', 0))
+            server.listen(1)
+            client.connect(server.getsockname())
+            accepted, _ = server.accept()
+            with accepted:
+                client.shutdown(socket.SHUT_WR)
+                assert accepted.recv(1) == b''
+            assert client.recv(1) == b''
+        rows = [row.split() for row in Path('/proc/net/tcp').read_text().splitlines()[1:]
+                if row.split()[1] == '0100007F:E410']
+        assert rows and all(row[3] == '06' for row in rows), rows
+        began = time.monotonic()
+        child = subprocess.Popen([str(helper), str(settings), str(pid), str(logs)],
+                                 env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            time.sleep(.25)
+            assert child.poll() is None, 'TIME_WAIT must not cause immediate startup failure'
+            assert pid.read_text() == 'private PID marker'
+            assert settings.read_text() == 'not JSON' and not list(logs.iterdir())
+            assert not (root/'private.sock').exists()
+            stdout, stderr = child.communicate(timeout=80)
+            assert child.returncode != 0, 'invalid settings remain a deliberate negative control'
+            assert 'Watchdog waiting for loopback TCP TIME_WAIT' in stderr, stderr
+            assert 'Watchdog listener unavailable' not in stderr, stderr
+            # Upstream's registered panic hook writes to this owned file,
+            # rather than stderr. Retain the deliberate settings failure.
+            panic = (logs/'last_panic.txt').read_text()
+            assert 'SerdeJson' in panic, panic
+            assert pid.read_text() == str(child.pid)
+            assert settings.read_text() == 'not JSON'
+            elapsed = round(time.monotonic()-began, 3)
+            assert 1 < elapsed < 80, elapsed
+            return dict(initialTcpRows=rows, seconds=elapsed, helperExit=child.returncode,
+                        stdout=stdout, stderr=stderr, panicLog=panic,
+                        heldStateUntouchedWhileWaiting=True,
+                        actualTcpTimeWaitExpired=True, listenerReservedBeforeSettings=True,
+                        settingsStillInvalid=True, realFrameContacted=False)
+        finally:
+            if child.poll() is None:
+                child.terminate()
+                child.wait(timeout=3)
+
+
 def main():
     assert os.getuid() == 1100 and ROOT.is_dir(), 'Use the isolated candidate runner'
     home = Path.home()
     helper = home/'candidate-watchdog'
     shutil.copy('/input/watchdog', helper)
     helper.chmod(0o700)
+    recovery = time_wait_recovery(helper, home)
     # Invalid settings and an absent log directory make ordering observable:
     # a listener conflict must be refused before either can be opened.
     settings = home/'invalid-settings.json'
@@ -73,6 +155,8 @@ def main():
                 destination.write_bytes(original.read(entry))
     plugin = plugins/'decky-syncthing'
     shutil.copy(ASSETS/'main.py', plugin/'main.py')
+    (plugin/'py_modules').mkdir(exist_ok=True)
+    shutil.copy('/repo/ui/framey_decky_ipc.py', plugin/'py_modules/framey_decky_ipc.py')
     binary = plugin/'bin/decky-syncthing-watchdog'
     shutil.copy(helper, binary)
     binary.chmod(0o700)
@@ -111,6 +195,7 @@ def main():
     worker.start()
     report = {'archiveSha256':DIGEST, 'pythonSha256':hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest(),
               'helperSha256':hashlib.sha256(binary.read_bytes()).hexdigest(), 'installerEnabled':False,
+              'timeWaitRecovery':recovery,
               'independentState':{'listenerConflictBeforeSettingsOrService':True,
                                   'invalidOrMismatchedParentBeforeOwnershipOrSettings':True}}
     with (home/'candidate-runtime.log').open('w+') as log:
@@ -138,7 +223,7 @@ def main():
                 command = Path(f'/proc/{pid}/cmdline').read_bytes().split(b'\0')
                 return pid if os.fsencode(binary) in command else None
 
-            first = until_ready(current_pid, 'owned native watchdog')
+            first = until_ready(current_pid, 'owned native watchdog', timeout=80)
             def owned_socket(pid):
                 key = b'FRAMEY_SYNCTHING_SOCKET='
                 entries = Path(f'/proc/{pid}/environ').read_bytes().split(b'\0')
@@ -197,16 +282,27 @@ def main():
             # A stale/foreign PID value must not make reset signal that process.
             actual_pid_path.write_text(str(unrelated.pid))
             assert legacy('restart_watchdog') is None
-            restarted = until_ready(current_pid, 'owned restart')
+            restarted = until_ready(current_pid, 'owned restart', timeout=80)
             assert restarted != first and not alive(first) and unrelated.poll() is None
             assert not first_socket.parent.exists()
             old = restarted
             old_socket = owned_socket(old)
+            report['normalReloads'] = []
             for _ in range(3):
+                parent = disconnect_child_peer(old)
+                normal_start = Path(log.name).stat().st_size
+                began = time.monotonic()
                 rpc('loader/reload_plugin', 'Syncthing')
-                new = until_ready(lambda: (pid if (pid := current_pid()) != old else None), 'candidate reload')
+                new = until_ready(lambda: (pid if (pid := current_pid()) != old else None), 'candidate reload', timeout=80)
                 assert not alive(old) and unrelated.poll() is None
                 assert not old_socket.parent.exists()
+                assert not alive(parent)
+                console = Path(log.name).read_bytes()[normal_start:].decode('utf-8')
+                assert 'Sending SIGKILL!' not in console, console
+                report['normalReloads'].append(dict(disconnectedChildPeer=True,
+                    childPid=parent, helperPid=old, replacementHelperPid=new,
+                    childExited=True, helperExited=True, privateSocketDirectoryRemoved=True,
+                    seconds=round(time.monotonic()-began, 3), console=console))
                 old = new
                 old_socket = owned_socket(old)
             report['independentState'].update(ownedRestartReaped=True, foreignPidIgnored=True,
@@ -227,7 +323,7 @@ def main():
             os.kill(parent, signal.SIGSTOP)
             rpc('loader/reload_plugin', 'Syncthing')
             new = until_ready(lambda: (pid if (pid := current_pid()) != old else None),
-                              'reload after forced plugin termination')
+                              'reload after forced plugin termination', timeout=80)
             assert until_ready(lambda: not alive(old), 'helper stopped with killed plugin')
             assert not alive(parent) and unrelated.poll() is None
             forced_console = Path(log.name).read_bytes()[forced_log_start:].decode('utf-8')
@@ -242,7 +338,7 @@ def main():
                 forcedReloadPreservesUnrelatedProcess=True, forcedOwnerTempCleanedByFixture=True,
                 publishedDeckyForcedTerminationLogVerified=True)
             report['result'] = ('published Decky discovery, disabled defaults, native listener/ownership conflicts, '
-                'owned restart, three normal reloads, forced plugin termination/reload and private-socket HTTP transport passed; '
+                'owned restart, three normal reloads after real child IPC peer EOF, forced plugin termination/reload and private-socket HTTP transport passed; '
                 'the upstream HTTP fixture is synthetic; service control, actual Syncthing, sync, Frame and VR unverified')
         except BaseException:
             log.flush()

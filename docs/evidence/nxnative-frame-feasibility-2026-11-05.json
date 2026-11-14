@@ -1,0 +1,43 @@
+{
+  "checked_at_utc": "2026-11-05T06:50:15.038133+00:00",
+  "scope": "Read-only Linux host inspection. No Lepton instance started; no game built, installed or launched.",
+  "upstream_commit": "56bafa974a18382fc53dac20080d7fce3d815a1b",
+  "android_fork_commit": "32b0ef2c5408e1e32cb5c0bc49f84d1e63653dc3",
+  "checks": [
+    {
+      "name": "system",
+      "command": "uname -m; cat /etc/os-release; getconf PAGE_SIZE; free -m | head -3",
+      "exit_status": 0,
+      "stdout": "aarch64\nNAME=\"SteamOS\"\nPRETTY_NAME=\"SteamOS\"\nVERSION_CODENAME=holo\nID=steamos\nID_LIKE=arch\nANSI_COLOR=\"1;35\"\nHOME_URL=\"https://www.steampowered.com/\"\nDOCUMENTATION_URL=\"https://support.steampowered.com/\"\nSUPPORT_URL=\"https://support.steampowered.com/\"\nBUG_REPORT_URL=\"https://support.steampowered.com/\"\nLOGO=steamos\nBUILD_ID=20261022.6153909\nVARIANT_ID=\"vr\"\nVERSION_ID=0.5.6\n4096\n               total        used        free      shared  buff/cache   available\nMem:           15662        6569        1279        1596        9658        9092\nSwap:           7830           0        7830\n",
+      "stderr": ""
+    },
+    {
+      "name": "vulkan",
+      "command": "vulkaninfo --summary 2>/dev/null; vulkaninfo 2>/dev/null | rg \"textureCompressionBC|geometryShader|tessellationShader|shaderInt64|shaderFloat64|subgroupSize |minSubgroupSize|maxSubgroupSize|timelineSemaphore |descriptorIndexing |scalarBlockLayout |bufferDeviceAddress |VK_EXT_transform_feedback|VK_EXT_custom_border_color|VK_EXT_index_type_uint8|VK_EXT_depth_clip_control|shaderStorageImageMultisample|VK_EXT_external_memory_host\" | head -45",
+      "exit_status": 0,
+      "stdout": "==========\nVULKANINFO\n==========\n\nVulkan Instance Version: 1.4.309\n\n\nInstance Extensions: count = 24\n-------------------------------\nVK_EXT_acquire_drm_display             : extension revision 1\nVK_EXT_acquire_xlib_display            : extension revision 1\nVK_EXT_debug_report                    : extension revision 10\nVK_EXT_debug_utils                     : extension revision 2\nVK_EXT_direct_mode_display             : extension revision 1\nVK_EXT_display_surface_counter         : extension revision 1\nVK_EXT_headless_surface                : extension revision 1\nVK_EXT_surface_maintenance1            : extension revision 1\nVK_EXT_swapchain_colorspace            : extension revision 5\nVK_KHR_device_group_creation           : extension revision 1\nVK_KHR_display                         : extension revision 23\nVK_KHR_external_fence_capabilities     : extension revision 1\nVK_KHR_external_memory_capabilities    : extension revision 1\nVK_KHR_external_semaphore_capabilities : extension revision 1\nVK_KHR_get_display_properties2         : extension revision 1\nVK_KHR_get_physical_device_properties2 : extension revision 2\nVK_KHR_get_surface_capabilities2       : extension revision 1\nVK_KHR_portability_enumeration         : extension revision 1\nVK_KHR_surface                         : extension revision 25\nVK_KHR_surface_protected_capabilities  : extension revision 1\nVK_KHR_wayland_surface                 : extension revision 6\nVK_KHR_xcb_surface                     : extension revision 6\nVK_KHR_xlib_surface                    : extension revision 6\nVK_LUNARG_direct_driver_loading        : extension revision 1\n\nInstance Layers: count = 16\n---------------------------\nVK_LAYER_FROG_gamescope_wsi_aarch64  Gamescope WSI (XWayland Bypass) Layer (aarch64) 1.3.221  version 1\nVK_LAYER_LUNARG_api_dump             LunarG API dump layer                           1.4.309  version 2\nVK_LAYER_LUNARG_gfxreconstruct       GFXReconstruct Capture Layer Version 1.0.5-dev  1.4.350  version 4194309\nVK_LAYER_LUNARG_monitor              Execution Monitoring Layer                      1.4.309  version 1\nVK_LAYER_LUNARG_screenshot           LunarG image capture layer                      1.4.309  version 1\nVK_LAYER_MANGOHUD_overlay_aarch64    Vulkan Hud Overlay                              1.3.0    version 1\nVK_LAYER_MESA_vram_report_limit      Limit reported VRAM                             1.4.303  version 1\nVK_LAYER_RENDERDOC_Capture           Debugging capture layer for RenderDoc           1.4.324  version 46\nVK_LAYER_VALVE_fdm_injection         FDM injection                                   1.4.303  version 1\nVK_LAYER_VALVE_rpo                   Renderpass Optimizer                            1.4.303  version 1\nVK_LAYER_VALVE_steam_fossilize_32    Steam Pipeline Caching Layer                    1.3.207  version 1\nVK_LAYER_VALVE_steam_fossilize_64    Steam Pipeline Caching Layer                    1.3.207  version 1\nVK_LAYER_VALVE_steam_fossilize_arm64 Steam Pipeline Caching Layer                    1.3.207  version 1\nVK_LAYER_VALVE_steam_overlay_32      Steam Overlay Layer                             1.3.207  version 1\nVK_LAYER_VALVE_steam_overlay_64      Steam Overlay Layer                             1.3.207  version 1\nVK_LAYER_fossilize                   Fossilize capture layer                         1.4.303  version 1\n\nDevices:\n========\nGPU0:\n\tapiVersion         = 1.4.362\n\tdriverVersion      = 26.2.99\n\tvendorID           = 0x5143\n\tdeviceID           = 0x43051401\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n\tdeviceName         = Turnip Adreno (TM) 750\n\tdriverID           = DRIVER_ID_MESA_TURNIP\n\tdriverName         = turnip Mesa driver\n\tdriverInfo         = Mesa 26.3.0-devel (git-e07916b45f)\n\tconformanceVersion = 1.4.0.0\n\tdeviceUUID         = 72935926-0b51-4406-15cd-57aae941a569\n\tdriverUUID         = fc7ef8ca-dbfb-4749-76cc-20fe04cbbe44\n\tsubgroupSize                      = 128\n\tminSubgroupSize                                                               = 64\n\tmaxSubgroupSize                                                               = 128\n\tVK_EXT_custom_border_color                          : extension revision 12\n\tVK_EXT_depth_clip_control                           : extension revision 1\n\tVK_EXT_index_type_uint8                             : extension revision 1\n\tVK_EXT_transform_feedback                           : extension revision 1\n\tgeometryShader                          = true\n\ttessellationShader                      = true\n\ttextureCompressionBC                    = true\n\tshaderStorageImageMultisample           = false\n\tshaderFloat64                           = false\n\tshaderInt64                             = true\n\tdescriptorIndexing                                 = true\n\tscalarBlockLayout                                  = true\n\ttimelineSemaphore                                  = true\n\tbufferDeviceAddress                                = true\n",
+      "stderr": ""
+    },
+    {
+      "name": "installed_tools_and_runtime",
+      "command": "command -v clang; ls /usr/include/vulkan/vulkan.h /usr/include/SDL2/SDL.h; pkg-config --modversion vulkan sdl2; test -x \"$HOME/.local/share/Steam/steamapps/common/Lepton/lepton\" && echo lepton_installed; podman ps --format \"{{.Names}}\"",
+      "exit_status": 0,
+      "stdout": "/usr/bin/clang\n/usr/include/SDL2/SDL.h\n/usr/include/vulkan/vulkan.h\n1.4.309\n2.30.2\nlepton_installed\n",
+      "stderr": ""
+    }
+  ],
+  "pa_agent_sources": [
+    {
+      "path": "/Users/saphid/projects/PA/artifacts/nxnative-iphone-duo-2026-11-03/device-verification.json",
+      "finding": "Wonder 1.2.1 title screen and about 25 seconds logging recorded on iPhone; gameplay explicitly unverified."
+    },
+    {
+      "path": "/Users/saphid/projects/PA/artifacts/nxnative-more-games-2026-11-03/game-build-id-verification.json",
+      "finding": "Dread 2.1.0 main/subsdk0/sdk match the inspected Android profile; Celeste and Balatro profile build IDs also match."
+    },
+    {
+      "path": "/Users/saphid/projects/PA/artifacts/nxnative-more-games-2026-11-03/runtime-batch-v3-result.json",
+      "finding": "No requested gameplay input visually verified. Foreground interruptions and an existing launcher process limited the batch."
+    }
+  ]
+}

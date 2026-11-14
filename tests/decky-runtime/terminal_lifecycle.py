@@ -100,7 +100,7 @@ def probe(name, home, backend, processes):
     assert rpc('loader/call_plugin_method',name,'get_config') == report['config']
     assert unrelated.poll() is None
     unrelated.terminate(); unrelated.wait(timeout=3)
-    report.update(calls=observed, privateInputOutput=True, resizeVerified=True,
+    report.update(calls=observed, transcript=transcript, privateInputOutput=True, resizeVerified=True,
                   explicitRemoveReaped=True, reloadReaped=True, unrelatedProcessPreserved=True,
                   configPersistedAcrossPluginReload=True, realFrameContacted=False,
                   browserVerified=False, physicalControllerVerified=False)

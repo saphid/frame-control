@@ -63,12 +63,13 @@ computer, exactly as they were sent.
 error becomes one category from this fixed list, plus Android's own
 `INSTALL_FAILED_…` code (`installer_code`) when there is one:
 `android_installer`, `apk_needs_newer_android`, `apk_wrong_abi`,
-`layer_missing`, `apk_repack_failed`, `tool_missing`, `apk_unreadable`,
+`layer_missing`, `apk_repack_failed`, `rdp_client_missing`, `tool_missing`, `apk_unreadable`,
 `cant_run_on_frame`, `steam_shortcut`, `steam_not_running`,
 `steam_not_responding`, `steam_js_error`, `artwork_failed`, `copy_timeout`,
 `frame_not_set_up`, `frame_auth`, `frame_unreachable`, `frame_disk_full`,
-`copy_failed`, `download_failed`, `flatpak`, `cancelled`, `lepton`,
-`internal_error` (a mistake in Frame Control's own code) or `other`. A VR
+`copy_failed`, `download_failed`, `flatpak`, `cancelled`, `desktop_closed`,
+`ssh_crashed`, `lepton`, `internal_error` (a mistake in Frame Control's own code)
+or `other`. A VR
 APK that installed without Frame Control's OpenXR compatibility layer,
 because this copy of the app is missing it, carries `xr_layer_missing: true`;
 otherwise that field is left out. It names what was installed only when
@@ -124,11 +125,14 @@ scrubbed:
   names, passwords, ports, paths and queries are dropped
 - `token=`, `key=`, `password=` and similar values are replaced
 
-The same error is sent at most once every 10 minutes. When ssh reports that
-it couldn't reach the Frame (asleep, away, or not set up yet), or that ssh and
-the Frame refused each other's keys (a changed host key, or this computer's
-key not accepted), that is sent at most once per kind each time Frame Control
-runs.
+Expected outcomes that already have a fixed usage category aren't sent as
+`$exception`: an APK needing newer Android, a missing ssh, scp, rsync or adb, no
+RDP client installed, the headset desktop being closed, or a cancelled action.
+The same other error is sent at
+most once every 10 minutes. When ssh reports that it couldn't reach the Frame
+(asleep, away, or not set up yet), or that ssh and the Frame refused each
+other's keys (a changed host key, or this computer's key not accepted), that is
+sent at most once per kind each time Frame Control runs.
 
 ## Report a problem
 

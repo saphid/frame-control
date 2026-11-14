@@ -15,6 +15,13 @@ checks, but a worn-headset click has not been verified.
 
 The confidence labels are the same as in [ssh.md](ssh.md).
 
+Small fractional wheel movements accumulate until they make a whole pixel,
+so smooth thumbstick events do not disappear when the Mac converts them to
+integer scroll values. Each axis accumulates independently; losing viewer
+focus or reconnecting discards the leftover fraction. Automated checks cover
+the viewer's wheel messages and native-agent receipt on macOS. Real
+thumbstick scrolling speed and feel still need a worn-headset check.
+
 ## Why this design
 
 First-party options come first, as the repo's rule asks, with the reason

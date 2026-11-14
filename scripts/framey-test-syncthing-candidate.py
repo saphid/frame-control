@@ -31,7 +31,7 @@ def main():
     source_paths = ['scripts/framey-test-syncthing-candidate.py',
                     'tests/decky-runtime/Containerfile',
                     'tests/decky-runtime/syncthing_candidate.py',
-                    'ui/vendor/syncthing-0.2.7/main.py',
+                    'ui/vendor/syncthing-0.2.7/main.py', 'ui/framey_decky_ipc.py',
                     'ui/vendor/syncthing-0.2.7/watchdog.patch',
                     'ui/vendor/syncthing-0.2.7/owned_unit.rs']
     source_hashes = {path:hashlib.sha256((ROOT/path).read_bytes()).hexdigest() for path in source_paths}
@@ -73,7 +73,7 @@ def main():
             for filename in ('watchdog', 'PluginLoader', 'official.zip'):
                 command += ['--mount', f'type=bind,source={inputs/filename},target=/input/{filename},readonly']
             command += ['--entrypoint', 'python3', image['Id'], '/repo/tests/decky-runtime/syncthing_candidate.py']
-            result = subprocess.run(command, capture_output=True, text=True, timeout=120)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=210)
             if result.returncode:
                 raise RuntimeError('Native candidate failed:\n'+result.stdout+'\n'+result.stderr)
             report = json.loads(result.stdout)

@@ -1,0 +1,565 @@
+{
+  "at": "2026-10-31T13:50:12.533223+00:00",
+  "head": "a05881e798c4c63e4d60d719768a371afccddb90",
+  "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+  "sourceFrozenAt": "713e1692c48e6f89663c44786439e54141861af5",
+  "ownedEvidenceUncommitted": true,
+  "other36RuntimeBranchesPreserved": true,
+  "other115CatalogRowsPreserved": true,
+  "all116StatusInstallPoliciesPreserved": true,
+  "sharedIpcAdapterUnchanged": true,
+  "native": {
+    "x86_64": {
+      "job": 124537858546,
+      "run": 41201435838,
+      "artifactId": 13044333929,
+      "zipSha256": "a70a149fe5e03d290af21a7fdececa40d0c0cd1f89a6315dc8cdd6da8cad14e7",
+      "sources": {
+        "scripts/framey-test-decky-runtime.py": "2e3e6e27fed8441c82438bfae737904a60f3276f648157146d9ef91435b90f42",
+        "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        "tests/decky-runtime/check.py": "c90891af2c1d3f80e6009b9905e6212e3367b843e7f304928ab0b750f684d18d",
+        "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+        "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/decky-runtime/cases.json": "da2f2fe9dd5b704f30a53c14db91cf1a022ae7e12a9460549165bb820a2cc737",
+        "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+        "ui/frame_decky_store.py": "145adc5d412479c706f17330a178bddbfaedfb081c23a2c645195247f26b1a00",
+        "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+        "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+        "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+        "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+        "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+        "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+        ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+      },
+      "probes": 43,
+      "archivePins": 34,
+      "sourceFingerprints": 16,
+      "consoleHashes": 43,
+      "deckypartyRpcs": [
+        15,
+        8
+      ],
+      "repairedReloadSeconds": [
+        0.368,
+        0.368,
+        0.367
+      ],
+      "priorManagedForcedReloadSeconds": 5.284,
+      "finalParentOnlyStopSeconds": [
+        0.215,
+        0.215
+      ],
+      "cleanRepairedReloadsVerified": true,
+      "priorManagedForcedReloadAndSurvivingServerVerified": true,
+      "tabmasterRestoreControlsVerified": true,
+      "tabmasterRpcCounts": [
+        47,
+        48
+      ],
+      "positiveOtherForcedKills": []
+    },
+    "aarch64": {
+      "job": 124537858393,
+      "run": 41201435838,
+      "artifactId": 13043027541,
+      "zipSha256": "634a6cbc610a713298d36e244961e494663a881618f64a9fa75a475698b94508",
+      "sources": {
+        "scripts/framey-test-decky-runtime.py": "2e3e6e27fed8441c82438bfae737904a60f3276f648157146d9ef91435b90f42",
+        "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        "tests/decky-runtime/check.py": "c90891af2c1d3f80e6009b9905e6212e3367b843e7f304928ab0b750f684d18d",
+        "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+        "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/decky-runtime/cases.json": "da2f2fe9dd5b704f30a53c14db91cf1a022ae7e12a9460549165bb820a2cc737",
+        "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+        "ui/frame_decky_store.py": "145adc5d412479c706f17330a178bddbfaedfb081c23a2c645195247f26b1a00",
+        "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+        "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+        "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+        "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+        "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+        "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+        ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+      },
+      "probes": 43,
+      "archivePins": 34,
+      "sourceFingerprints": 16,
+      "consoleHashes": 43,
+      "deckypartyRpcs": [
+        15,
+        8
+      ],
+      "repairedReloadSeconds": [
+        0.363,
+        0.363,
+        0.363
+      ],
+      "priorManagedForcedReloadSeconds": 5.28,
+      "finalParentOnlyStopSeconds": [
+        0.164,
+        0.214
+      ],
+      "cleanRepairedReloadsVerified": true,
+      "priorManagedForcedReloadAndSurvivingServerVerified": true,
+      "tabmasterRestoreControlsVerified": true,
+      "tabmasterRpcCounts": [
+        47,
+        48
+      ],
+      "positiveOtherForcedKills": [
+        {
+          "id": 36,
+          "version": "1.8.1",
+          "consoleSha256": "e107f685ebea1e820a5d0003f0184117b367731caab1669cd548e8b090d35a45",
+          "forcedKills": 1
+        },
+        {
+          "id": 14,
+          "version": "1.3.4",
+          "consoleSha256": "b2e21a2b438c17623a7335bba75d317a9661a630e6e9b111bdb533e07701578a",
+          "forcedKills": 1
+        },
+        {
+          "id": 67,
+          "version": "0.2.0",
+          "consoleSha256": "3a3394fe3275bb52594ad7658c2af009a9017e61c58e4c1b09f5ec34c399b47f",
+          "forcedKills": 1
+        },
+        {
+          "id": 96,
+          "version": "1.0.0",
+          "consoleSha256": "a2a25a455bb6791b7853d6743c4b25c5f33a941ff05464cd6b0dc917ad5401a6",
+          "forcedKills": 1
+        }
+      ]
+    }
+  },
+  "installed": {
+    "head": "a05881e798c4c63e4d60d719768a371afccddb90",
+    "archiveSha256": "193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf",
+    "managedBackendSha256": "ace5c277fc010ebc102ba731c479a478e11aa004f763755c8e5b298a4a2c0734",
+    "priorManagedBackendSha256": "2d2ad3bedf43cddc8ad992ca79268593b7d181144c820322e72d1b16e9c0405f",
+    "adapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "receipt": {
+      "storeId": 117,
+      "sha256": "193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf",
+      "version": "1.0.0",
+      "compatShims": [
+        "deckyparty-user-lifecycle",
+        "deckyparty-ipc-eof"
+      ]
+    },
+    "unchangedPublishedFiles": {
+      "LICENSE": "d9bbb2eef9907fb42eac3cc7ad90d33608dac47e1cf618ac0088c8123be5fbf1",
+      "package.json": "a06f1f1fe71cd7d088a26b038dc1e79541177d37fdb62c037dc85e8c8c6fd656",
+      "plugin.json": "2d52baaf95ecc0828f97809278b56296d2e5174f2bbfc205bade21c47632164f",
+      "README.md": "d2122fcdd8dc3c6ba169f3c81623e47a0ef73a99b8a7d39aa374c5f826943756",
+      "dist/index.js": "72295c05f3ce33c5b544d12b653dfe2c8aa833b95a79c8ca152b35b202059a62",
+      "bin/copyparty-sfx.py": "e88f0327739c85dcd382048244942c668669cc2dd92db64e1aebf425981f7310"
+    },
+    "archiveMembers": 7
+  },
+  "ownership": {
+    "at": "2026-10-31T13:47:58.970250+00:00",
+    "head": "a05881e798c4c63e4d60d719768a371afccddb90",
+    "ownership": {
+      "x86_64": {
+        "success": true,
+        "head": "a05881e798c4c63e4d60d719768a371afccddb90",
+        "architecture": "x86_64",
+        "archiveSha256": "8237ae55e1a17dce1b5f01faca84594ad8c8621f07ee9c5741d8f7ea7535c0f0",
+        "exactSourceFingerprintsVerified": 14,
+        "sourceSha256": {
+          "scripts/framey-test-syncthing-candidate.py": "cebe1625a15b58c6797790d5c207c4496dfb42fb3ea2aa3ce908e1477122bd1e",
+          "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+          "tests/decky-runtime/syncthing_candidate.py": "a2048cc5ce16bca5a4d1b8efe833a9d6ba62c2ef88d6d70df88c8616fa1f4d63",
+          "ui/vendor/syncthing-0.2.7/main.py": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+          "ui/vendor/syncthing-0.2.7/watchdog.patch": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+          "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+          "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+          "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+          "scripts/framey-test-syncthing-service.py": "32831e46d805bc6e1f6bd1ae21a9325b56a5c85d6596ec874f4f6b9a0db6678b",
+          "tests/decky-runtime/Containerfile.systemd": "b2d4bfd834c50baa25d97a746ea956ad05802fc63ee5eb7645c6dd980986b5b2",
+          "tests/decky-runtime/syncthing_service.py": "dfd92d0d2b66a675b952e0611369943e34d186a9a91ba7af92371e37cf1f5309",
+          "tests/decky-runtime/syncthing_service_root.py": "7860ab6124766191e0bc644ee70c798ce25af3781d690adade1722d1366b76d1",
+          "scripts/framey-test-decky-runtime.py": "2e3e6e27fed8441c82438bfae737904a60f3276f648157146d9ef91435b90f42",
+          "ui/frame_decky.py": "48a6e70d88d104e097e3267caf379107c1b9774c85f85a0c7c86443fb9e5389f"
+        },
+        "nativeOwnershipChecksVerified": true,
+        "actualRuntimeTwoWaySyncVerified": true,
+        "serviceLifecycleAssertions": 17,
+        "ownershipRefusals": 18,
+        "ownedDeckyStop": {
+          "mainPidBefore": 326,
+          "timeoutStopUSec": "1min 30s",
+          "killMode": "mixed",
+          "activeState": "inactive",
+          "result": "success",
+          "mainPidAfter": 0,
+          "execMainCode": "0",
+          "execMainStatus": "0",
+          "elapsedSeconds": 1.159
+        },
+        "flatpakPackageVerified": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false,
+        "rawPeerLoaderConsoleSeparatelyRetained": false,
+        "rawPeerLoaderExitCodeSeparatelyRetained": false,
+        "rawPeerCleanShutdownUnverified": true,
+        "artifactId": 13044323150,
+        "run": 41201435825,
+        "job": 124537858505,
+        "githubArtifactDigestVerified": true,
+        "exactJobAndCheckoutVerified": true,
+        "strictDeckyShutdownVerified": true,
+        "jobLogSha256": "bcc070b7330ed83c1da65c1e49c6c6f1ef80f33cfebe40f446dd36a532cbb4dc",
+        "rawDeckyConsoleIndependentlyAudited": false,
+        "wholeWorkflowPassed": true
+      },
+      "aarch64": {
+        "success": true,
+        "head": "a05881e798c4c63e4d60d719768a371afccddb90",
+        "architecture": "aarch64",
+        "archiveSha256": "35a35f2162004c39fe64184383c8c747531c5a3415824c3abbf52035ee24619e",
+        "exactSourceFingerprintsVerified": 14,
+        "sourceSha256": {
+          "scripts/framey-test-syncthing-candidate.py": "cebe1625a15b58c6797790d5c207c4496dfb42fb3ea2aa3ce908e1477122bd1e",
+          "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+          "tests/decky-runtime/syncthing_candidate.py": "a2048cc5ce16bca5a4d1b8efe833a9d6ba62c2ef88d6d70df88c8616fa1f4d63",
+          "ui/vendor/syncthing-0.2.7/main.py": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+          "ui/vendor/syncthing-0.2.7/watchdog.patch": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+          "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+          "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+          "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+          "scripts/framey-test-syncthing-service.py": "32831e46d805bc6e1f6bd1ae21a9325b56a5c85d6596ec874f4f6b9a0db6678b",
+          "tests/decky-runtime/Containerfile.systemd": "b2d4bfd834c50baa25d97a746ea956ad05802fc63ee5eb7645c6dd980986b5b2",
+          "tests/decky-runtime/syncthing_service.py": "dfd92d0d2b66a675b952e0611369943e34d186a9a91ba7af92371e37cf1f5309",
+          "tests/decky-runtime/syncthing_service_root.py": "7860ab6124766191e0bc644ee70c798ce25af3781d690adade1722d1366b76d1",
+          "scripts/framey-test-decky-runtime.py": "2e3e6e27fed8441c82438bfae737904a60f3276f648157146d9ef91435b90f42",
+          "ui/frame_decky.py": "48a6e70d88d104e097e3267caf379107c1b9774c85f85a0c7c86443fb9e5389f"
+        },
+        "nativeOwnershipChecksVerified": true,
+        "actualRuntimeTwoWaySyncVerified": true,
+        "serviceLifecycleAssertions": 17,
+        "ownershipRefusals": 18,
+        "ownedDeckyStop": {
+          "mainPidBefore": 325,
+          "timeoutStopUSec": "1min 30s",
+          "killMode": "mixed",
+          "activeState": "inactive",
+          "result": "success",
+          "mainPidAfter": 0,
+          "execMainCode": "0",
+          "execMainStatus": "0",
+          "elapsedSeconds": 9.025
+        },
+        "flatpakPackageVerified": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false,
+        "rawPeerLoaderConsoleSeparatelyRetained": false,
+        "rawPeerLoaderExitCodeSeparatelyRetained": false,
+        "rawPeerCleanShutdownUnverified": true,
+        "artifactId": 13043582891,
+        "run": 41201435825,
+        "job": 124537858271,
+        "githubArtifactDigestVerified": true,
+        "exactJobAndCheckoutVerified": true,
+        "strictDeckyShutdownVerified": true,
+        "jobLogSha256": "87e1fdbe931fe9014984cc705a56b601205f3878749a550528654496abd8762b",
+        "rawDeckyConsoleIndependentlyAudited": false,
+        "wholeWorkflowPassed": true
+      }
+    },
+    "pending": [],
+    "realFrameContacted": false
+  },
+  "packages": {
+    "at": "2026-10-31T13:49:44.062406+00:00",
+    "head": "a05881e798c4c63e4d60d719768a371afccddb90",
+    "run": 41201435952,
+    "packages": {
+      "amd": {
+        "head": "a05881e798c4c63e4d60d719768a371afccddb90",
+        "architecture": "x86_64",
+        "artifactSha256": "15a926b9a693b7d4a598d7ff150b35db4ab2c71ac59cfb0d9838a37b9492a918",
+        "allSourceFingerprintsVerified": true,
+        "signedContentAndActualPackageVerified": true,
+        "requiredResults": {
+          "signedBundlesInstalled": true,
+          "packageLaunched": true,
+          "actualTwoWaySync": true,
+          "runtimeOriginGpgVerificationEnabled": true,
+          "appOriginGpgVerificationEnabled": true,
+          "actualUserServiceLifecycle": true,
+          "certificateRetained": true,
+          "syncRetainedAfterRestart": true,
+          "ownedServiceRemoved": true,
+          "ownedProcessesReaped": true,
+          "noOwnedFlatpakInstancesRemain": true,
+          "uninstallPreservedOwnedData": true
+        },
+        "commits": {
+          "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+          "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+        },
+        "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+        "stopElapsedSeconds": 0.167,
+        "installerEnabled": false,
+        "realFrameContacted": false,
+        "setupPortScans": [
+          8384
+        ],
+        "setupPortScanElapsedSeconds": 0.34,
+        "combinedDeckyVerified": true,
+        "requiredLifecycleResults": 17,
+        "wizardResults": {
+          "defaultPackageConfig": true,
+          "remainedUnconfiguredDuringScan": true,
+          "discoveredDefaultPort": true,
+          "discoveredDefaultApiKey": true,
+          "scannedBasicAuth": true,
+          "persistedThroughDeckyRpc": true,
+          "setupCommittedAndReloaded": true,
+          "authenticatedRestWithDiscoveredKey": true,
+          "ownedSetupServiceStopped": true
+        },
+        "ownershipRefusals": 18,
+        "processIdentityChecks": 10,
+        "uninstallPreservedCandidateData": true,
+        "migrationMountNamespaceAssertionSourceBound": true,
+        "migrationResults": 12,
+        "legacyPidBefore": 638,
+        "legacyPidAfter": 707,
+        "migrationDataPreservedAfterUninstall": true,
+        "artifactDigestMatchesGitHub": true,
+        "artifactId": 13043532473,
+        "sourceCount": 13,
+        "exactSourceCount": 26,
+        "ownedDeckyStop": {
+          "mainPidBefore": 880,
+          "timeoutStopUSec": "1min 30s",
+          "killMode": "mixed",
+          "activeState": "inactive",
+          "result": "success",
+          "mainPidAfter": 0,
+          "execMainCode": "0",
+          "execMainStatus": "0",
+          "elapsedSeconds": 7.188
+        },
+        "migrationDeckyStop": {
+          "mainPidBefore": 672,
+          "timeoutStopUSec": "1min 30s",
+          "killMode": "mixed",
+          "activeState": "inactive",
+          "result": "success",
+          "mainPidAfter": 0,
+          "execMainCode": "0",
+          "execMainStatus": "0",
+          "elapsedSeconds": 2.803
+        },
+        "sourceBoundGuestShutdownLogCheckPassed": true,
+        "rawDeckyConsoleRetainedInArtifact": false,
+        "rawDeckyConsoleIndependentlyAudited": false,
+        "job": 124537859054,
+        "run": 41201435952,
+        "exactCompletedJobVerified": true,
+        "exactHeadCheckoutVerified": true,
+        "jobLogSha256": "7f92f265e000785dd5db255aca86bcfe366baf41a3f07d23113d8e4794b71a99",
+        "fullGuestResultVerified": true
+      }
+    },
+    "pending": [
+      {
+        "mode": "arm",
+        "job": 124537859166,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "mode": "http",
+        "job": 124537859235,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "mode": "parent",
+        "job": 124537859312,
+        "status": "queued",
+        "conclusion": null
+      }
+    ],
+    "wholeWorkflowPassed": false,
+    "allFourModesAudited": false,
+    "realFrameContacted": false
+  },
+  "ci": {
+    "at": "2026-10-31T13:48:29.836021+00:00",
+    "head": "a05881e798c4c63e4d60d719768a371afccddb90",
+    "tree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+    "jobs": [
+      {
+        "run": 41201435747,
+        "job": 124537857935,
+        "name": "e2e",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435747/job/124537857935",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "58df444ae56e257874dc0325859cd5059a7d343acb6d764880aa2c5f4e477e7e",
+        "testSummaries": [
+          "Ran 53 tests in 239.570s",
+          "OK (skipped=1)"
+        ]
+      },
+      {
+        "run": 41201435747,
+        "job": 124537858002,
+        "name": "server-tests (windows-latest, 3.12)",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435747/job/124537858002",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "92149bd4d36e7344df155209b0ee98d54502031511051889e80c5f00cfb9ded5",
+        "testSummaries": [
+          "==> 6 passed, 1 skipped, 0 failed on build fake; results in C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmp6ivqzn_r\\results\\2026-10-31T125155Z-fake.json",
+          "Ran 1934 tests in 300.977s",
+          "OK (skipped=300)"
+        ]
+      },
+      {
+        "run": 41201435747,
+        "job": 124537858079,
+        "name": "ios",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435747/job/124537858079",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "a9ad9fd115496084d1e25a5056925bb1cf52354e3c06ce6dac93583a0221b628",
+        "testSummaries": []
+      },
+      {
+        "run": 41201435747,
+        "job": 124537858081,
+        "name": "checks",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435747/job/124537858081",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "e91da3b06fc46be76ba37edfe9c86287f25bcb69ef76a344a48a34356c892ce3",
+        "testSummaries": [
+          "==> 6 passed, 1 skipped, 0 failed on build fake; results in /tmp/tmpldwjie1g/results/2026-10-31T124845Z-fake.json",
+          "Ran 1943 tests in 201.111s",
+          "OK (skipped=27)"
+        ]
+      },
+      {
+        "run": 41201435747,
+        "job": 124537858117,
+        "name": "server-tests (ubuntu-latest, 3.13)",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435747/job/124537858117",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "de8d53cdfa65cf01e704c8bf419fdddcb69bdab82d4229d93d10184486eb3cf4",
+        "testSummaries": [
+          "==> 6 passed, 1 skipped, 0 failed on build fake; results in /tmp/tmp2lgu6dzp/results/2026-10-31T132228Z-fake.json",
+          "Ran 1943 tests in 213.966s",
+          "OK (skipped=28)"
+        ]
+      },
+      {
+        "run": 41201435747,
+        "job": 124537858145,
+        "name": "server-tests (macos-latest, 3.12)",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435747/job/124537858145",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "feb47a8fa59aa3d2323a870c6900efb1011e388197de52212e100415c88457dd",
+        "testSummaries": [
+          "==> 6 passed, 1 skipped, 0 failed on build fake; results in /var/folders/n6/hn37q6pj7sj_9dmqqc2113800000gn/T/tmp89u1zj45/results/2026-10-31T131229Z-fake.json",
+          "Ran 1934 tests in 400.155s",
+          "OK (skipped=69)"
+        ]
+      },
+      {
+        "run": 41201435747,
+        "job": 124537858183,
+        "name": "wireless-windows",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435747/job/124537858183",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "63b3ea3597d2e0d476de7d0835da04a8e77b118f4d259e6e61bf071ae8222fd4",
+        "testSummaries": [
+          "Ran 15 tests in 8.070s",
+          "OK"
+        ]
+      },
+      {
+        "run": 41201435813,
+        "job": 124537858269,
+        "name": "linux (ubuntu-latest)",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435813/job/124537858269",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "35aaf38435977499757661938d6e5a6bb382f16c945e81d4fed811ed4399d638",
+        "testSummaries": [
+          "Ran 33 tests in 1.407s",
+          "OK (skipped=1)"
+        ]
+      },
+      {
+        "run": 41201435813,
+        "job": 124537858382,
+        "name": "linux (ubuntu-24.04-arm)",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435813/job/124537858382",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "4a0d2ae2510e3216be948954baf82fe3dbfa761d0eec13354e0a3920321f4536",
+        "testSummaries": [
+          "Ran 33 tests in 1.578s",
+          "OK (skipped=1)"
+        ]
+      },
+      {
+        "run": 41201435813,
+        "job": 124537858545,
+        "name": "windows",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41201435813/job/124537858545",
+        "allStepsPassed": true,
+        "checkout": "322c62619c295454bdd5db8f98dc7d1112c7b71a",
+        "checkoutTree": "f23e62a8f2d4ef083b6a1feee77510367b284cbe",
+        "checkoutTreeEqualsExactHead": true,
+        "logSha256": "f1496f6eace48a59a2ba411326c44bd470f71e6740cd8c5c2c2d025a84f1e8e1",
+        "testSummaries": [
+          "Ran 33 tests in 3.047s",
+          "OK (skipped=2)"
+        ]
+      }
+    ],
+    "allHostedCheckAndPcJobsSourceMatched": true,
+    "manualUserGatesStillRequired": true,
+    "realFrameContacted": false
+  },
+  "releaseQualified": false,
+  "mergeQualified": false,
+  "mainGatesStillRequired": true,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "completePeerConsoleIndependentAudit": false,
+  "rawJsonSha256": "15cc6c708d018f7677a19cfddc8eabb1ce6b04bd1e4193297ff49eba64bd3e64",
+  "rawGzipSha256": "a3fd70430e32643154cfed30feb48002b13a3394d7d2fef45079b2111e255dc9"
+}

@@ -18,6 +18,10 @@ decky.DECKY_PLUGIN_DIR = str(folder)
 decky.DECKY_PLUGIN_LOG_DIR = str(folder)
 decky.DECKY_PLUGIN_RUNTIME_DIR = str(folder/'private-runtime')
 sys.modules['decky_plugin'] = decky
+# Filesystem/process contracts run without a loader. Native CI exercises IPC.
+ipc = types.ModuleType('framey_decky_ipc')
+ipc.install = lambda: None
+sys.modules['framey_decky_ipc'] = ipc
 spec = importlib.util.spec_from_file_location('deckyparty', folder/'main.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)

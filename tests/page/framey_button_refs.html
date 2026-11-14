@@ -1,0 +1,75 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div><div id="framey-modal"></div>
+<div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container),SP_REACT=React;
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  const trans_string=(_key,fallback)=>fallback;
+  // Verbatim toolbar ref, exposed focus method and Filter button; surrounding
+  // artwork, settings provider and Steam navigation are deliberately absent.
+  const Published=React.forwardRef(function Published({onFilterClick,assetSizeStyleAttr},ref){
+    __OFFICIAL_REF__
+    __OFFICIAL_FOCUS__
+    return __OFFICIAL_BUTTON__;
+  });
+  try {
+    const toolbar=React.createRef();let filters=0;
+    const size={'--asset-size':'120px'};
+    const published=()=>React.createElement(Published,{ref:toolbar,assetSizeStyleAttr:size,onFilterClick:()=>filters++});
+    render(published());const filter=container.querySelector('button');
+    assert(filter?.textContent==='Filter','published Filter button missing');
+    toolbar.current.focus();
+    assert(document.activeElement===filter,'published toolbar focus lost its DialogButton ref');
+    assert(toolbar.current.assetSizeStyleAttr===size,'published toolbar handle changed');
+    ReactDOM.flushSync(()=>filter.click());assert(filters===1,'published Filter callback changed');
+    render(published());assert(container.querySelector('button')===filter,'redraw replaced published button');
+    render(null);assert(toolbar.current===null,'published toolbar handle did not detach');
+    // ProtonDB Badges inspects the render result's type before mounting it.
+    __OFFICIAL_LEGACY_BUTTON__
+    let legacyClicks=0;
+    render(React.createElement(Button,{onClick:()=>legacyClicks++},'Legacy action'));
+    ReactDOM.flushSync(()=>container.querySelector('button').click());
+    assert(legacyClicks===1,'published legacy button type could not render/activate');
+    render(null);
+
+    for(const name of ['DialogButton','DialogButtonPrimary','DialogButtonSecondary','Button']){
+      const first=React.createRef(),second=React.createRef();let clicks=0;
+      const local=(ref,extra={})=>React.createElement(DFL[name],{ref,className:'ref-button',
+        style:{marginTop:7},onClick:()=>clicks++,...extra},name);
+      render(local(first));const node=container.querySelector('button');
+      assert(first.current===node&&node instanceof HTMLButtonElement,name+' ref is not the native button');
+      first.current.focus();assert(document.activeElement===node,name+' native focus failed');
+      ReactDOM.flushSync(()=>first.current.click());assert(clicks===1,name+' ref click failed');
+      render(local(second));assert(first.current===null&&second.current===node,name+' object ref replacement failed');
+      const seen=[],callback=value=>seen.push(value);
+      render(local(callback));assert(second.current===null&&seen.length===1&&seen[0]===node,name+' callback ref attach failed');
+      render(local(callback,{className:'updated-button',style:{marginTop:9},disabled:true}));
+      assert(seen.length===1&&seen[0]===node&&node.className==='updated-button'&&node.style.marginTop==='9px',
+        name+' redraw changed ref or lost native props');
+      const outside=document.createElement('button');document.body.append(outside);outside.focus();
+      node.focus();assert(document.activeElement===outside,name+' disabled button received focus');
+      ReactDOM.flushSync(()=>node.click());assert(clicks===1,name+' disabled ref click ran');outside.remove();
+      assert(DFL.findModuleByExport(value=>value===DFL[name])?.[name]===DFL[name],name+' missing from local module lookup');
+      render(null);assert(seen.length===2&&seen[1]===null&&!node.isConnected,name+' unmount did not clear ref');
+    }
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedSteamGridDBToolbarFocus:true,publishedFilterCallback:true,allButtonAliases:true,
+      nativeFocusAndClick:true,objectAndCallbackRefReplacement:true,stableNativeNode:true,
+      publishedProtonDBButtonType:true,
+      unmountClearsRefs:true,disabledFocusAndClickSuppressed:true,propsPreserved:true,localModuleLookup:true,
+      syntheticArtworkSize:true,realArtworkChanged:false,realFrameContacted:false,
+      wornVisibilityVerified:false,controllerInputVerified:false,vrKeyboardVerified:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

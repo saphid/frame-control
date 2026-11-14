@@ -1,13 +1,57 @@
 [
   {
+    "id": 75,
+    "shim": "reshadeck-owned-shaders",
+    "additionalShims": [
+      "reshadeck-ipc-eof"
+    ],
+    "probe": "reshadeck-private-x11"
+  },
+  {
+    "id": 37,
+    "shim": "discord-status-pipe-lifecycle",
+    "additionalShims": [
+      "discord-status-ipc-eof"
+    ],
+    "probe": "discord-private-activity"
+  },
+  {
+    "id": 38,
+    "shim": "volume-mixer-user-audio",
+    "probe": "volume-mixer-private-audio",
+    "additionalShims": [
+      "volume-mixer-ipc-eof"
+    ]
+  },
+  {
+    "id": 87,
+    "shim": "screensaver-user-bus",
+    "additionalShims": [
+      "screensaver-ipc-eof"
+    ],
+    "probe": "screensaver-private-bus"
+  },
+  {
+    "id": 23,
+    "shim": "animation-preserve-overrides",
+    "additionalShims": ["animation-ipc-eof"],
+    "probe": "animation-private-overrides"
+  },
+  {
     "id": 61,
     "shim": "tabmaster-json-file-restore",
-    "probe": "tabmaster-private-settings"
+    "probe": "tabmaster-private-settings",
+    "additionalShims": [
+      "tabmaster-ipc-eof"
+    ]
   },
   {
     "id": 103,
     "shim": "ludusavi-dependency-discovery",
-    "probe": "ludusavi-dependency-discovery"
+    "probe": "ludusavi-dependency-discovery",
+    "additionalShims": [
+      "ludusavi-ipc-eof"
+    ]
   },
   {
     "id": 134,
@@ -16,7 +60,7 @@
   },
   {
     "id": 36,
-    "shim": null,
+    "shim": "steamgriddb-ipc-eof",
     "probe": "steamgriddb-private-artwork"
   },
   {
@@ -26,22 +70,26 @@
   },
   {
     "id": 14,
-    "shim": null,
+    "shim": "protondb-ipc-eof",
     "probe": "protondb-private-settings"
   },
   {
     "id": 143,
-    "shim": null,
+    "shim": "desktop-apps-ipc-eof",
     "probe": "desktop-apps-private-entries"
   },
   {
     "id": 117,
     "shim": "deckyparty-user-lifecycle",
+    "additionalShims": [
+      "deckyparty-ipc-eof"
+    ],
     "probe": "deckyparty-private-files"
   },
   {
     "id": 131,
     "shim": "download-all-local-queue",
+    "additionalShims": ["download-all-ipc-eof"],
     "probe": "download-all-logging"
   },
   {
@@ -53,7 +101,10 @@
     "id": 130,
     "version": "1.0.2",
     "shim": "prefix-manager-user-paths",
-    "probe": "prefix-manager"
+    "probe": "prefix-manager",
+    "additionalShims": [
+      "prefix-manager-102-ipc-eof"
+    ]
   },
   {
     "id": 68,
@@ -65,33 +116,41 @@
   },
   {
     "id": 52,
-    "shim": null,
+    "shim": "game-theme-music-ipc-eof",
     "probe": "theme-music-settings"
   },
   {
     "id": 93,
     "shim": "deck-settings-verified-tls",
-    "additionalShims": ["deck-settings-ipc-eof"],
+    "additionalShims": [
+      "deck-settings-ipc-eof"
+    ],
     "probe": "deck-settings-readonly"
   },
   {
     "id": 123,
     "shim": "steam-status-verified-tls",
+    "additionalShims": ["steam-status-ipc-eof"],
     "probe": "steam-status-private-settings"
   },
   {
     "id": 28,
     "shim": "emuchievements-safe-arm64",
+    "additionalShims": ["emuchievements-ipc-eof"],
     "probe": "emuchievements-private-hash"
   },
   {
     "id": 67,
     "shim": "battery-tracker-user-supply",
-    "probe": "battery-tracker"
+    "probe": "battery-tracker",
+    "additionalShims": [
+      "battery-tracker-ipc-eof"
+    ]
   },
   {
     "id": 114,
     "shim": "network-sentinel-user-psutil",
+    "additionalShims": ["network-sentinel-ipc-eof"],
     "probe": "network-sentinel"
   },
   {
@@ -102,37 +161,46 @@
   {
     "id": 24,
     "shim": "radiyo-verified-tls",
-    "probe": "radio-local"
+    "probe": "radio-local",
+    "additionalShims": [
+      "radiyo-ipc-eof"
+    ]
   },
   {
     "id": 132,
     "shim": "suggestme-verified-tls",
+    "additionalShims": ["suggestme-ipc-eof"],
     "probe": "suggestme-private"
   },
   {
     "id": 79,
     "shim": "notifications-private-logs",
+    "additionalShims": ["notifications-ipc-eof"],
     "probe": "notifications-private"
   },
   {
     "id": 135,
-    "shim": null,
+    "shim": "deck-shelves-ipc-eof",
     "probe": "shelves-settings"
   },
   {
     "id": 50,
     "shim": "storage-cleaner-bounded-delete",
+    "additionalShims": ["storage-cleaner-ipc-eof"],
     "probe": "storage-cleaner"
   },
   {
     "id": 46,
-    "shim": null,
+    "shim": "steamback-ipc-eof",
     "probe": "steamback-private-save"
   },
   {
     "id": 104,
     "shim": "game-sync-bounded-selection",
-    "probe": "game-sync-config"
+    "probe": "game-sync-config",
+    "additionalShims": [
+      "game-sync-ipc-eof"
+    ]
   },
   {
     "id": 63,
@@ -142,11 +210,13 @@
   {
     "id": 12,
     "shim": "music-control-system-dbus-env",
+    "additionalShims": ["music-control-ipc-eof"],
     "probe": "mpris"
   },
   {
     "id": 111,
     "shim": "music-control-system-dbus-env",
+    "additionalShims": ["music-control-ipc-eof"],
     "probe": "mpris"
   },
   {
@@ -161,6 +231,7 @@
   {
     "id": 89,
     "shim": "deckyspy-psutil-and-battery",
+    "additionalShims": ["deckyspy-ipc-eof"],
     "probe": "system-monitor"
   },
   {
@@ -177,12 +248,20 @@
     "probe": "fileserver",
     "additionalShims": [
       "deckyfileserver-https-address",
-      "deckyfileserver-directory-entry"
+      "deckyfileserver-directory-entry",
+      "deckyfileserver-ipc-eof"
     ]
   },
   {
     "id": 125,
     "shim": "localsend-digest-native",
+    "additionalShims": ["localsend-ipc-eof"],
     "probe": "localsend"
+  },
+  {
+    "id": 100,
+    "shim": "surround-owned-runtime",
+    "additionalShims": ["surround-ipc-eof"],
+    "probe": "surround-private-audio"
   }
 ]

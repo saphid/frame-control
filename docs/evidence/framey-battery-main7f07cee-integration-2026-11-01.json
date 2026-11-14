@@ -1,0 +1,56 @@
+{
+  "at": "2026-11-01T00:24:08.331826+00:00",
+  "pr": 519,
+  "testedSource": "d52d2fc9e2e1652c7d7dfed14688edfdecf689b9",
+  "integratedMain": "7f07cee953f0be340f98239ddcaeb02117b87fc4",
+  "normalMergeParents": [
+    "d63d4853e1e63add37e7a8eeffb58a0544b939b1",
+    "7f07cee953f0be340f98239ddcaeb02117b87fc4"
+  ],
+  "sourceInputs": 24,
+  "serverTests": 1962,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 7,
+  "localNativePluginIds": [
+    67,
+    24,
+    130
+  ],
+  "batteryRpcs": [
+    38,
+    36
+  ],
+  "radiYoRpcs": [
+    9,
+    7
+  ],
+  "radiYoTlsBothRejectionPathsPreserved": true,
+  "twoPrivateSqliteSnapshotsIndependentlyIntegrityChecked": true,
+  "pendingFlushAndRestartPersistenceVerified": true,
+  "priorForcedKillAndLostSamplesVerified": true,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "store130Pin": "1.0.1",
+  "github102CandidateStatus": "unverified",
+  "prefixBothExactArchiveInstallOutputsUnchangedFromMain": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 403.359,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "partial",
+  "realFrameRecordingAccuracyLongTermHistoryOfficialUiWearerControllerUnverified": true,
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "5a6fa56a9acada472ca06a751f52862b144196be82f441183028b43a59528850",
+  "rawBytes": 68005
+}
