@@ -19,12 +19,12 @@ const window={React,ReactDOM:{createRoot:node=>{
   const root={render(value){this.value=value;},unmount(){this.unmounted=true;}};
   roots.set(node,root);return root;
 }},addEventListener(){}};
-const listeners=[];const messages=[];const parent={postMessage:message=>messages.push(message)};
+const listeners=[];const messages=[];const toastTimers=[];const parent={postMessage:message=>messages.push(message)};
 const context=vm.createContext({window,document:{getElementById:id=>{
   if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:()=>new Element()},
   navigator:{language:'en'}, parent,DOMException,getComputedStyle:node=>({overflowY:node.overflowY||'visible'}),
   addEventListener:(type,handler)=>listeners.push({type,handler}),
-  setTimeout:()=>1,clearTimeout(){}});
+  setTimeout:callback=>{toastTimers.push(callback);return toastTimers.length;},clearTimeout(){}});
 vm.runInContext(testSource,context);
 // No Steam React tree exists inside the isolated Framey iframe.
 assert.equal(window.DFL.getReactRoot({}),null);
@@ -204,6 +204,42 @@ actionable.dismiss();
 const hidden=api.toaster.toast({title:heading,showToast:false});
 assert.equal(elements.get('framey-toasts').children.length,3);
 hidden.dismiss();
+
+// Dismissed notifications must retire retained actions. This covers API
+// dismissal, the native button, expiration and an already-completed Open.
+for(const dismissal of ['api','button','expiration','open']) {
+  let calls=0;
+  const notice=api.toaster.toast({title:'Lifetime',onClick:()=>calls++});
+  const node=elements.get('framey-toasts').children.at(-1);
+  const open=node.children.at(-1).onclick;
+  if(dismissal==='api')notice.dismiss();
+  else if(dismissal==='button')node.children.at(-2).onclick();
+  else if(dismissal==='expiration')toastTimers.at(-1)();
+  else open();
+  const expected=dismissal==='open'?1:0;
+  assert.equal(calls,expected);
+  open();open();
+  assert.equal(calls,expected,'retained Open ran after '+dismissal+' dismissal');
+  assert.equal(node.removed,true);
+}
+let reentries=0,reenter;
+const reentrant=api.toaster.toast({title:'Reentrant',onClick:()=>{
+  reentries++;if(reentries===1)reenter();
+}});
+const reentrantNode=elements.get('framey-toasts').children.at(-1);
+reenter=reentrantNode.children.at(-1).onclick;reenter();
+assert.equal(reentries,1,'Open must lock before invoking plugin callback');
+assert.equal(reentrantNode.removed,true);reentrant.dismiss();
+let failures=0;
+const failed=api.toaster.toast({title:'Throwing action',onClick:()=>{failures++;throw Error('Synthetic toast action failure');}});
+const failedNode=elements.get('framey-toasts').children.at(-1),failedOpen=failedNode.children.at(-1).onclick;
+assert.throws(failedOpen,/Synthetic toast action failure/);
+assert.equal(failedNode.removed,true,'throwing action must still retire and dismiss');
+failedOpen();assert.equal(failures,1);failed.dismiss();
+console.log('Framey toast action lifetime proof: '+JSON.stringify({passed:true,
+  apiDismissalRetires:true,buttonDismissalRetires:true,expirationRetires:true,
+  successfulOpenRetires:true,synchronousReentryBlocked:true,throwingActionRetires:true,
+  syntheticCallbacks:true,realFrameContacted:false}));
 
 function LocalRoute(){return React.createElement('p',null,'Route content');}
 const undo=api.routerHook.addRoute('/plugin/details',LocalRoute);
