@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-11-14T12:30:10.207041+00:00",
+  "sourceKind": "native run from fingerprinted working tree snapshot; all61sourcebytes now independently matched to PR708commit",
+  "sourceBindingsVerified": 61,
+  "rawSha256": "1372de9c20cc3f274337b8c2e45b6888ede31fd9896cce34997cbac4977aa696",
+  "positiveStops": [
+    0.214,
+    0.265
+  ],
+  "positivePostEofRpcReads": 2,
+  "negativeForcedKillSeconds": [
+    5.415,
+    5.449
+  ],
+  "allRecordedDescendantsGone": true,
+  "pageFileDigestsMatchPositiveNegative": true,
+  "compressedProofMatchesRaw": true,
+  "realFrameContacted": false,
+  "sourceCommit": "d4d0c3d46e2aa4b7c9df45297f26ec1aefd80518",
+  "sourceMatchesPr708": true
+}
