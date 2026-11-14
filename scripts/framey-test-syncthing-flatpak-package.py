@@ -213,6 +213,68 @@ def candidate_payloads(helper_path, report_path, archive_path, loader_path, arch
     }, evidence
 
 
+def migration_stack_payloads(wheel, arch, loader_sha):
+    probe = module('migration_sampler', ROOT / 'scripts/framey-probe-decky-parent-stacks.py')
+    data, provenance = probe.sampler_bytes(wheel, arch)
+    observer = ROOT / 'tests/decky-runtime/syncthing_migration_stacks.py'
+    metadata = dict(provenance, architecture=arch, version='0.4.3',
+                    loaderSha256=loader_sha, observerSha256=sha(observer))
+    return {'migration-py-spy': data, 'syncthing_migration_stacks.py': observer.read_bytes()}, metadata
+
+
+def verify_migration_stacks(report, metadata):
+    observer = module('migration_observer', ROOT / 'tests/decky-runtime/syncthing_migration_stacks.py')
+    if (report.get('sampler') != metadata or report.get('unit') != observer.UNIT
+            or report.get('observerJoined') is not True
+            or report.get('queryHelperJoined') is not True
+            or report.get('deactivationTimeBasis') != 'first observed deactivating state'
+            or report.get('changesStopBudget') is not False
+            or report.get('historicalCauseEstablished') is not False):
+        raise ValueError('Missing guest migration observer provenance/cleanup')
+    if report.get('errors') != []:
+        raise ValueError('Migration unit observation failed')
+    snapshots = report.get('snapshots', [])
+    if not 1 <= len(snapshots) <= 4 or snapshots[0].get('window') != 'baseline':
+        raise ValueError('Missing running migration stack baseline')
+    windows = [snapshot.get('window') for snapshot in snapshots]
+    if len(set(windows)) != len(windows) or any(value not in ('baseline', 10, 30, 60) for value in windows):
+        raise ValueError('Unexpected migration capture windows')
+    python_baseline = False
+    for snapshot in snapshots:
+        if snapshot['window'] == 'baseline':
+            if snapshot.get('activeState') != 'active' or snapshot.get('pythonServerReady') is not True:
+                raise ValueError('Stop-time sample cannot replace an active baseline')
+        elif (snapshot.get('activeState') != 'deactivating'
+              or snapshot.get('observedDeactivationSeconds', -1) < snapshot['window']):
+            raise ValueError('Premature migration stop sample')
+        # A clean stop can remove the cgroup between the state query and dump.
+        # Retain that diagnostic gap, never treat it as a captured stack.
+        if (snapshot['window'] != 'baseline' and snapshot.get('error')
+                and not any(name in snapshot for name in ('processes', 'stdout', 'stderr'))):
+            continue
+        if snapshot.get('controlGroup') != observer.GROUP or len(snapshot.get('processes', [])) > observer.MAX_PIDS:
+            raise ValueError('Unbound migration snapshot')
+        for process in snapshot.get('processes', []):
+            if process.get('identityUnchanged') is not True:
+                if 'stdout' in process or 'stderr' in process:
+                    raise ValueError('Unbound stack output retained')
+                continue
+            identity = process.get('identity', {})
+            if (identity.get('uid') != 1100 or identity.get('controlGroup') != observer.GROUP
+                    or identity.get('pid') != process.get('pid') or identity.get('startTicks', 0) <= 0):
+                raise ValueError('Unbound migration process identity')
+            for name, limit in zip(('stdout', 'stderr'), observer.OUTPUT_LIMITS):
+                text = process.get(name, '')
+                if len(text) > limit or hashlib.sha256(text.encode()).hexdigest() != process.get(name+'Sha256'):
+                    raise ValueError('Migration stack output digest/bound mismatch')
+            if (snapshot['window'] == 'baseline' and process.get('returncode') == 0
+                    and process.get('timedOut') is False and process.get('outputTruncated') is False
+                    and any(frame in process['stdout'] for frame in ('_run_once', 'run_forever', 'run_until_complete'))):
+                python_baseline = True
+    if not python_baseline:
+        raise ValueError('No identity-bound guest Python baseline was captured')
+
+
 def verify_migration(report, arch, bundles):
     if (report.get('architecture') != arch
         or report.get('installerEnabled') is not False
@@ -485,6 +547,10 @@ def main():
     parser.add_argument('--candidate-build-report', type=Path)
     parser.add_argument('--archive', type=Path, help='Optional pinned official Syncthing plugin ZIP')
     parser.add_argument('--loader', type=Path, help='Optional pinned native Decky 3.3.0 loader')
+    parser.add_argument('--migration-stacks', action='store_true',
+                        help='Opt-in guest-root Python stacks for the actual native migration')
+    parser.add_argument('--migration-sampler-wheel', type=Path,
+                        help='Optional locally cached pinned py-spy wheel; requires --migration-stacks')
     parser.add_argument('--browser-setup', action='store_true',
                         help='AMD64 only: actual browser controls with Decky and the signed package')
     parser.add_argument('--http-gateway', action='store_true',
@@ -494,6 +560,10 @@ def main():
     parser.add_argument('--keep-boot-artifacts', action='store_true',
                         help='Debugging only: keep the regenerated vmlinuz/initrd.gz in --output')
     args = parser.parse_args()
+    if args.migration_stacks and (not args.candidate_helper or args.browser_setup):
+        parser.error('Migration stacks require a native candidate probe without browser setup')
+    if args.migration_sampler_wheel and not args.migration_stacks:
+        parser.error('Migration sampler wheel requires --migration-stacks')
     if args.http_gateway and not args.browser_setup:
         parser.error('HTTP gateway probe requires --browser-setup')
     if args.http_browser_parent and not args.http_gateway:
@@ -535,10 +605,17 @@ def main():
         payloads.update(extra)
     elif args.archive or args.loader:
         parser.error('Candidate archive/loader require --candidate-helper')
+    migration_stacks = None
+    if args.migration_stacks:
+        stack_extra, migration_stacks = migration_stack_payloads(
+            args.migration_sampler_wheel, arch, candidate['loaderSha256'])
+        payloads.update(stack_extra)
     browser_inputs = None
     if args.browser_setup:
         browser_extra, browser_inputs = browser_payloads(payloads['official.zip'])
         payloads.update(browser_extra)
+    dedicated_result = args.browser_setup or args.migration_stacks
+    if dedicated_result:
         result_codec = module('guest_result', ROOT/'tests/decky-runtime/guest_result.py')
         payloads['guest_result.py'] = (ROOT/'tests/decky-runtime/guest_result.py').read_bytes()
     http_gateway = None
@@ -548,7 +625,7 @@ def main():
     budgets = ({'installSeconds': 300, 'userSeconds': 1440, 'unitSeconds': 1500, 'hostSeconds': 1560}
                if args.browser_setup else BUDGETS[arch])
     manifest = {"bundles": bundles, "bundleChunks": {}, "timeouts": budgets,
-                "browserSetupRequested": args.browser_setup}
+                "browserSetupRequested": args.browser_setup, "migrationStacks": migration_stacks}
     for kind, expected in bundles.items():
         path = args.bundles / (kind + ".flatpak")
         if path.stat().st_size != expected["bytes"] or sha(path) != expected["sha256"]:
@@ -569,6 +646,10 @@ def main():
     root_probe = ROOT / "tests/decky-runtime/syncthing_flatpak_package_root.py"
     user_probe = ROOT / "tests/decky-runtime/syncthing_flatpak_package.py"
     source_paths = [Path(__file__).resolve(), packer_path, root_probe, user_probe]
+    if args.migration_stacks:
+        source_paths.extend(ROOT / name for name in [
+            'tests/decky-runtime/syncthing_migration_stacks.py',
+            'scripts/framey-probe-decky-parent-stacks.py', 'tests/decky-runtime/guest_result.py'])
     if candidate:
         source_paths.extend(ROOT / path for path in [
             'tests/decky-runtime/syncthing_service.py', 'tests/decky-runtime/syncthing_migration.py',
@@ -639,12 +720,13 @@ def main():
                 "hostBusExposed": False,
                 "realFrameContacted": False,
                 "candidate": candidate,
+                "migrationStacks": migration_stacks,
                 "browserSetup": browser_inputs,
                 "httpGateway": http_gateway,
                 "httpBrowserParentRequested": args.http_browser_parent,
                 "resultTransport": ({"kind": "virtio-serial", "port": result_codec.PORT,
                                      "maximumPayloadBytes": result_codec.MAX_PAYLOAD}
-                                    if args.browser_setup else None),
+                                    if dedicated_result else None),
             }
             result["inputs"] = inputs
             (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
@@ -677,7 +759,7 @@ def main():
             ]
             console = args.output / "console.log"
             packet_path = args.output / 'guest-result.packet'
-            if args.browser_setup:
+            if dedicated_result:
                 command += ['-chardev', 'file,id=framey_result,path='+str(packet_path).replace(',', ',,'),
                             '-device', 'virtio-serial-pci,id=framey_result_bus',
                             '-device', 'virtserialport,bus=framey_result_bus.0,chardev=framey_result,name='+result_codec.PORT]
@@ -693,7 +775,7 @@ def main():
                 code = process.wait(timeout=budgets['hostSeconds'])
             if code != 0:
                 raise RuntimeError('Nonzero QEMU exit')
-            if args.browser_setup:
+            if dedicated_result:
                 if not packet_path.is_file() or not 0 < packet_path.stat().st_size <= result_codec.MAX_PAYLOAD+256:
                     raise RuntimeError('Missing/oversized dedicated guest result packet')
                 packet = packet_path.read_bytes()
@@ -726,6 +808,8 @@ def main():
                     raise RuntimeError('Candidate certificate/data preserving uninstall proof is missing')
                 if package.get('uninstallPreservedMigrationData') is not True:
                     raise RuntimeError('Legacy migration data preserving uninstall proof is missing')
+            if args.migration_stacks:
+                verify_migration_stacks(guest.get('migrationStacks', {}), migration_stacks)
             if args.browser_setup:
                 browser_result = package.get('candidateService', {}).get('browserSetup', {})
                 verify_browser(browser_result, browser_inputs['panelSha256'])

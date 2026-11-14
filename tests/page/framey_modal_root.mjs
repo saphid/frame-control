@@ -6,13 +6,13 @@ const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'ut
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 assert.notEqual(host,source);
 let hooks=[],cursor=0;
-const React={Fragment:'fragment',Component:class {},
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   isValidElement:element=>!!element?.type,
   useState:value=>{const index=cursor++;if(!(index in hooks))hooks[index]=value;
     const state=hooks;return [state[index],value=>{state[index]=value;}];},
-  useRef:value=>{const index=cursor++;return hooks[index]??=( {current:value} );},useEffect(){}};
+  useRef:value=>{const index=cursor++;return hooks[index]??=( {current:value} );},useEffect(){},useImperativeHandle(){}};
 const elements=new Map(),roots=new Map();
 const window={React,ReactDOM:{createRoot:node=>{
   const root={render:tree=>{root.tree=tree;}};roots.set(node,root);return root;
@@ -34,7 +34,7 @@ const submitted=[];
 const handle=window.DFL.showModal(React.createElement(window.publishedModal,{
   onClosed:text=>submitted.push(text),label:'Search',placeholder:'Station name'}));
 const modalRoot=roots.get(elements.get('framey-modal'));
-const published=()=>modalRoot.tree.at(-1).children.at(-1);
+const published=()=>modalRoot.tree.at(-1).children.at(-1).children[0];
 const state=[];
 let modal=render(published(),state);
 const text=nodes(modal,window.DFL.TextField)[0];
@@ -48,6 +48,8 @@ submit.props.onClick({});
 await handle.ClosedPromise;
 assert.deepEqual(submitted,['Synthetic station query']);
 assert.equal(modalRoot.tree,null,'published callback closes its own modal');
+submit.props.onClick({});
+assert.deepEqual(submitted,['Synthetic station query'],'a retained action cannot resubmit a closed published dialog');
 // Closing the same published dialog must not submit an empty search.
 const cancelled=window.DFL.showModal(React.createElement(window.publishedModal,{
   onClosed:text=>submitted.push(text),label:'Search'}));
@@ -103,3 +105,10 @@ const throwing=React.createElement(window.DFL.ModalRoot,{onOK:()=>{throw Error('
 const failedState=[];tree=render(throwing,failedState);
 nodes(tree,'button')[0].props.onClick({});tree=render(throwing,failedState);
 assert.equal(nodes(tree,'p').find(node=>node.props.role==='alert').children[0],'Synthetic validation error');
+// Synchronous plugin code can reenter before returning its result. Suppress
+// only that overlapping call: an open root may submit again after success.
+let repeats=0,repeat;
+tree=render(React.createElement(window.DFL.ModalRoot,{onOK:()=>{if(++repeats===1)repeat({});}}));
+repeat=nodes(tree,'button')[0].props.onClick;
+repeat({});assert.equal(repeats,1,'synchronous submission reentered');
+repeat({});assert.equal(repeats,2,'an open root must stay retryable after synchronous success');

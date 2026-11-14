@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {webcrypto} from 'node:crypto';
 
 const html=readFileSync(new URL('../../ui/index.html',import.meta.url),'utf8');
 const start=html.indexOf('function deckyCompatibilityText(');
@@ -17,7 +18,7 @@ class Element {
 const elements=new Map();
 const $=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);};
 const requests=[];let posts=0,confirms=0;
-const ctx=vm.createContext({$,document:{createElement:tag=>new Element(tag)},
+const ctx=vm.createContext({$,document:{createElement:tag=>new Element(tag)},crypto:webcrypto,
   api:path=>{assert.ok(['/api/decky','/api/decky/store'].includes(path));
     return new Promise((resolve,reject)=>requests.push({path,resolve,reject}));},
   confirm:()=>{confirms++;return true;},runJob:()=>{posts++;throw Error('No mutation expected');}});
@@ -94,10 +95,10 @@ assert.equal(posts,0);assert.equal(confirms,beforeBlocked);
 let mutation;
 const read=ctx.api;
 ctx.api=(path,body)=>{
-  if(path==='/api/decky/plugin'){mutation=body;return Promise.resolve({job:'synthetic-remove'});}
+  if(path==='/api/decky/plugin'){mutation=body;return Promise.resolve({job:body.requestId});}
   return read(path);
 };
-ctx.runJob=async(_title,_kind,send)=>{posts++;await send();};
+ctx.runJob=async(_title,_kind,send,progress)=>{posts++;await send();progress({done:true});};
 const removing=removeStopped.onclick();
 await new Promise(resolve=>setImmediate(resolve));
 requests.shift().resolve(stopped);await removing;
@@ -112,7 +113,9 @@ const buttons=()=>$('deckyStoreList').querySelectorAll('button');
 const retainedUpdate=buttons().find(node=>node.textContent==='Reinstall').onclick;
 const retainedRemove=$('deckyManagedList').querySelectorAll('button')[0].onclick;
 const jobs=[];
-ctx.runJob=(_title,_kind,send)=>{posts++;return new Promise((resolve,reject)=>jobs.push({resolve,reject,send}));};
+ctx.runJob=(_title,_kind,send,progress)=>{posts++;return new Promise((resolve,reject)=>jobs.push({
+  resolve:value=>{progress({done:true});resolve(value);},
+  reject:error=>{progress({done:true,error:error.message});reject(error);},send}));};
 const beforeJobPosts=posts,beforeJobConfirms=confirms;
 const firstChange=retainedUpdate();
 const duplicateUpdate=retainedUpdate(),duplicateRemove=retainedRemove();
@@ -139,8 +142,9 @@ assert.ok(buttons().every(node=>!node.disabled),'successful job and refresh rest
 assert.ok($('deckyManagedList').querySelectorAll('button').every(node=>!node.disabled));
 
 // Failures release the local busy guard so an explicit retry is possible.
-const failedChange=retainedUpdate();jobs.shift().reject(Error('job fixture failed'));await failedChange;
-assert.match($('deckyStoreState').textContent,/job fixture failed/);
+const failedChange=retainedUpdate();jobs.shift().reject(Error('job fixture failed'));
+await new Promise(resolve=>setImmediate(resolve));requests.shift().resolve(state('After terminal error'));await failedChange;
+assert.match($('deckyPluginJobState').textContent,/job fixture failed/);
 const afterFailure=retainedRemove();assert.equal(jobs.length,1,'failed job must release the guard');
 jobs.shift().resolve({});await new Promise(resolve=>setImmediate(resolve));
 requests.shift().reject(Error('status fixture failed'));await afterFailure;
@@ -209,12 +213,12 @@ class Element {
 }
 const elements=new Map(),bodies=[];
 const el=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);};
-const context=vm.createContext({$:el,document:{createElement:()=>new Element()},confirm:()=>true,
-  deckyButtons(){},runJob:async (_name,_kind,submit)=>submit(),
+const context=vm.createContext({$:el,document:{createElement:()=>new Element()},confirm:()=>true,crypto:webcrypto,
+  deckyButtons(){},runJob:async (_name,_kind,submit,_progress,onError)=>{try{await submit();}catch(error){onError(error);}},
   api:async (path,body)=>{
     if(path==='/api/decky')return {managed:true,running:true,plugins:[
       {storeId:2,name:'Plugin',version:'1',sha256:'a'.repeat(64)}],upstreamPlugins:[]};
-    if(path==='/api/decky/plugin'){bodies.push(body);throw Error('Installed plugin changed');}
+    if(path==='/api/decky/plugin'){bodies.push(body);throw Object.assign(Error('Installed plugin changed'),{status:409});}
     throw Error(`unexpected ${path}`);
   }});
 vm.runInContext(source,context);
@@ -231,7 +235,7 @@ for(const body of bodies)assert.equal(body.installedSha256,'a'.repeat(64));
 assert.equal(bodies[1].sha256,'d'.repeat(64),'reviewed store archive stays separate from installed receipt');
 assert.equal(bodies[0].sha256,undefined);
 assert.equal(bodies[2].sha256,undefined);
-assert.match(el('deckyStoreState').textContent,/Installed plugin changed/);
+assert.match(el('deckyPluginJobState').textContent,/Installed plugin changed/);
 
 vm.runInContext('deckyInfo.plugins=[];showDeckyStore()',context);
 await el('deckyStoreList').children[0].children.find(c=>c.textContent==='Install').onclick();

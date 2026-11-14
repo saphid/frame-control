@@ -150,6 +150,7 @@
   {
     "id": 114,
     "shim": "network-sentinel-user-psutil",
+    "additionalShims": ["network-sentinel-ipc-eof"],
     "probe": "network-sentinel"
   },
   {
@@ -174,6 +175,7 @@
   {
     "id": 79,
     "shim": "notifications-private-logs",
+    "additionalShims": ["notifications-ipc-eof"],
     "probe": "notifications-private"
   },
   {
@@ -246,7 +248,8 @@
     "probe": "fileserver",
     "additionalShims": [
       "deckyfileserver-https-address",
-      "deckyfileserver-directory-entry"
+      "deckyfileserver-directory-entry",
+      "deckyfileserver-ipc-eof"
     ]
   },
   {

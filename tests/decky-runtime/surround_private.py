@@ -83,13 +83,32 @@ def probe(backend, loader, env, log, processes, current, until_ready, fixture, p
     processes.append(player)
     def stream():
         return next((s for s in current('get_sink_inputs')if s['name']=='FrameyPrivate'),None)
+
+    def routed_stream(target, description):
+        last = None
+
+        def read():
+            nonlocal last
+            last = stream()
+            return last if last and last['sink'] == target['index'] else None
+
+        try:
+            return until_ready(read, description)
+        except RuntimeError:
+            # Keep the failed route in the hosted log, where the normal probe
+            # return value is unavailable. Do not change the original failure.
+            print('SURROUND_ROUTING_FAILURE ' + json.dumps(dict(
+                description=description, expectedSink=target, lastStream=last,
+                playerReturncode=player.poll(), privateAudioOnly=True)), flush=True)
+            raise
+
     active=until_ready(stream,'actual Pulse stream')
     assert current('enable_for_app','FrameyPrivate')is True
-    routed=until_ready(lambda:(v if(v:=stream())and v['sink']==surround['index']else None),'stream routed to surround')
+    routed=routed_stream(surround,'stream routed to surround')
     evidence['routingReadbacks'].append(routed)
     assert current('disable_for_app','FrameyPrivate')is True
     neutral=next(s for s in current('get_sinks')if s['name']=='input.virtual-sink')
-    routed=until_ready(lambda:(v if(v:=stream())and v['sink']==neutral['index']else None),'stream returned to private neutral sink')
+    routed=routed_stream(neutral,'stream returned to private neutral sink')
     evidence['routingReadbacks'].append(routed)
     for name in ['OpenAL Soft default HRTF.wav','Steam Audio.wav']:
         path=plugin/'hrir-audio'/name

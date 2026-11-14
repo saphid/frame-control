@@ -56,8 +56,19 @@ class Plugin:
                 temporary = Path(output.name)
                 json.dump({'schema': SETTINGS_SCHEMA, 'enabled': value}, output)
                 output.write('\n')
-            temporary.chmod(0o600)
+                temporary.chmod(0o600)
+                output.flush()
+                os.fsync(output.fileno())
             os.replace(temporary, target)
+            # On Decky's Linux backend, persist the replaced directory entry
+            # before acknowledging success. A failure here is uncertain: the
+            # new value may already be readable, so the panel must reload it.
+            if hasattr(os, 'O_DIRECTORY'):
+                directory = os.open(target.parent, os.O_RDONLY | os.O_DIRECTORY)
+                try:
+                    os.fsync(directory)
+                finally:
+                    os.close(directory)
         finally:
             if temporary is not None:
                 temporary.unlink(missing_ok=True)

@@ -7,7 +7,7 @@ const host=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8
 const bundle=readFileSync(new URL('../../examples/framey-settings/dist/index.js',import.meta.url),'utf8');
 assert.match(bundle,/SP_JSX\.jsx/);
 const states=[];
-const React={Fragment:Symbol('fragment'),Component:class {},
+const React={Fragment:Symbol('fragment'),Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,next=>states.push(next)],useRef:value=>({current:value}),
@@ -79,7 +79,7 @@ assert.deepEqual(Array.from(calls.find(call=>call.method==='set_setting').args),
 const toast=elements.get('framey-toasts').children[0];
 assert.equal(toast.attributes.role,'status');
 assert.equal(toast.children[0].textContent,'Framey sample');
-const toastBody=roots.get(toast.children[1]).value;
+const toastBody=roots.get(toast.children[1]).value.children[0];
 assert.equal(toastBody.type,'span');
 assert.match(JSON.stringify(toastBody),/Setting saved/);
 assert.match(JSON.stringify(toastBody),/on/);
@@ -93,7 +93,7 @@ assert.equal(calls.filter(call=>call.method==='set_setting').length,2,
 // sample setting only after explicit confirmation.
 const reset=content.children[0][2].children[0];
 const setCalls=()=>calls.filter(call=>call.method==='set_setting');
-const dialog=()=>roots.get(elements.get('framey-modal')).value[0].children[1];
+const dialog=()=>roots.get(elements.get('framey-modal')).value[0].children[1].children[0];
 reset.props.onClick();
 reset.props.onClick();
 assert.equal(roots.get(elements.get('framey-modal')).value.length,1,

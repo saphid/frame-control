@@ -5,9 +5,9 @@ import vm from 'node:vm';
 const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 assert.notEqual(host,source);
-const React={Fragment:'fragment',Component:class {},
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:props||{},children}),
-  useRef:value=>({current:value}),useState:value=>[value,()=>{}]};
+  useRef:value=>({current:value}),useState:value=>[value,()=>{}],useImperativeHandle(){}};
 const window={React,ReactDOM:{createRoot:()=>({render(){}})}};
 const context=vm.createContext({window,document:{getElementById:()=>({})},
   navigator:{language:'en'},parent:{postMessage:message=>assert.equal(message.type,'framey:cache:init')},

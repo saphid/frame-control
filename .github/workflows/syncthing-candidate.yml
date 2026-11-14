@@ -21,6 +21,7 @@ on:
       - 'ui/framey_panel.py'
       - 'ui/frame_decky_store.py'
       - 'ui/frame_decky.py'
+      - 'scripts/ci-ubuntu-packages.py'
       - '.github/workflows/syncthing-candidate.yml'
       - '.github/actions/framey-runtime-inputs/**'
       - 'scripts/framey-cache-runtime-inputs.py'
@@ -43,6 +44,7 @@ on:
       - 'ui/framey_panel.py'
       - 'ui/frame_decky_store.py'
       - 'ui/frame_decky.py'
+      - 'scripts/ci-ubuntu-packages.py'
       - '.github/workflows/syncthing-candidate.yml'
       - '.github/actions/framey-runtime-inputs/**'
       - 'scripts/framey-cache-runtime-inputs.py'
@@ -89,14 +91,14 @@ jobs:
             --helper "$RUNNER_TEMP/syncthing-build/$(uname -m).watchdog" \
             --output "$RUNNER_TEMP/syncthing-runtime.json"
       - name: Install matching QEMU system emulator
+        timeout-minutes: 12
         run: |
           case "$(uname -m)" in
             x86_64) emulator=qemu-system-x86 ;;
             aarch64) emulator=qemu-system-arm ;;
             *) exit 1 ;;
           esac
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends "$emulator"
+          sudo python3 scripts/ci-ubuntu-packages.py "$emulator"
       - name: Actual systemd user service lifecycle in an isolated networkless VM
         run: |
           python3 scripts/framey-test-syncthing-service.py \

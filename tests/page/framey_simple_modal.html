@@ -26,6 +26,10 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
   window.SP_REACT=React;
   const deckyFrontendLib=DFL;
   __OFFICIAL_COMPONENT__
+  // Replay the published QR wrapper, replacing only its QR renderer with inert
+  // local text. No QR library, URL navigation or plugin initializer runs.
+  const _default=()=>React.createElement('span',null,'Inert QR renderer');
+  __OFFICIAL_QR_COMPONENT__
   const warning=()=>React.createElement(UsageWarningModal,{
     onOk:()=>choices.push('accept'),onCancel:()=>choices.push('cancel')});
   try {
@@ -68,10 +72,68 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     ReactDOM.flushSync(()=>handle.Update(content(true)));await settle();
     assert(container.querySelector('input').value==='Fresh draft' && mounted===2,'inactive draft survived remount');
     close(handle);await settle();assert(unmounted===2,'closing did not clean up active child');
+
+    let cancelCalls=0, shellCalls=0, originalEvent;
+    const escape=node=>{
+      const event=new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true});
+      ReactDOM.flushSync(()=>node.dispatchEvent(event));return event;
+    };
+    const QRReplay=({closeModal})=>React.createElement(QRModal,{
+      url:'https://example.invalid/local-fixture',closeModal:event=>{
+        cancelCalls++;originalEvent=event.nativeEvent;closeModal();
+      }});
+    handle=show(React.createElement(QRReplay));await settle();
+    let focusable=container.querySelector('div[role=button]');
+    assert(focusable,'published QR Focusable missing');focusable.focus();
+    const qrEscape=escape(focusable);await settle();
+    assert(cancelCalls===1,'published Focusable cancel callback dropped');
+    assert(originalEvent===qrEscape && qrEscape.defaultPrevented,'original keyboard event lost');
+    assert(!container.children.length,'published cancel did not close shell');
+
+    // Descendant Escape reaches the nearest cancel handler exactly once. The
+    // handler owns dismissal; neither the parent handler nor shell also runs.
+    const cancelChild=props=>React.createElement(DFL.Focusable,props,React.createElement('input'));
+    handle=show(React.createElement(DFL.Focusable,{onCancel:()=>shellCalls++},
+      cancelChild({onCancel:()=>cancelCalls++})));
+    await settle();escape(container.querySelector('input'));await settle();
+    assert(cancelCalls===2 && shellCalls===0 && container.children.length,
+      'nested cancellation bubbled or implicitly dismissed shell');
+    close(handle);await settle();
+
+    // An explicit key handler can consume Escape before the compatibility
+    // callback. Keep the shell from reacting to the consumed event as well.
+    handle=show(cancelChild({onCancel:()=>cancelCalls++,onKeyDown:event=>{
+      event.preventDefault();
+    }}));await settle();escape(container.querySelector('input'));await settle();
+    assert(cancelCalls===2 && container.children.length,'consumed Escape cancelled');
+    close(handle);await settle();
+
+    handle=show(React.createElement(DFL.ConfirmModal,{bCancelDisabled:true,onCancel:()=>shellCalls++},
+      cancelChild({onCancel:()=>cancelCalls++})));
+    await settle();escape(container.querySelector('input'));await settle();
+    assert(cancelCalls===2 && shellCalls===0 && container.children.length,'cancel-disabled modal bypassed');
+    close(handle);await settle();
+
+    let finishSave;
+    handle=show(React.createElement(DFL.ConfirmModal,{onOK:()=>new Promise(resolve=>{finishSave=resolve;})},
+      cancelChild({onCancel:()=>cancelCalls++})));
+    await settle();click('OK');await settle();escape(container.querySelector('input'));await settle();
+    assert(cancelCalls===2 && container.children.length,'busy modal cancelled through Focusable');
+    finishSave();await handle.ClosedPromise;await settle();
+
+    // Disabled Focusable callbacks remain inert outside a modal, too.
+    const local=document.createElement('div');document.getElementById('framey-root').append(local);
+    const localRoot=ReactDOM.createRoot(local);
+    ReactDOM.flushSync(()=>localRoot.render(cancelChild({disabled:true,onCancel:()=>cancelCalls++})));
+    escape(local.querySelector('input'));assert(cancelCalls===2,'disabled Focusable cancelled');
+    ReactDOM.flushSync(()=>localRoot.unmount());local.remove();
     assert(fixtureFailures.length===0,fixtureFailures.join('; '));
     result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedWarning:true,
       acceptAndShellDismiss:true,programmaticCloseSilent:true,childStylesPreserved:true,
       inactiveChildrenUnmounted:true,activeRemountFresh:true,focusRestored:true,
+      publishedQRCancel:true,originalCancelKeyboardEvent:true,nestedCancelOnce:true,
+      cancelHandlerOwnsDismissal:true,consumedEscapeRespected:true,
+      busyCancelAndDisabledGuards:true,
       realFrameContacted:false,controllerInputVerified:false,vrKeyboardVerified:false});
   } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
 })();

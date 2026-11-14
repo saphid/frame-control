@@ -14,6 +14,27 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_fileserver_old_receipt_requires_child_ipc_repair(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 60)
+        shims = ['deckyfileserver-user-native', 'deckyfileserver-https-address',
+                 'deckyfileserver-directory-entry']
+        old = dict(storeId=60, version=record['version'], sha256=record['sha256'], compatShims=shims)
+        fixed = dict(old, compatShims=shims+['deckyfileserver-ipc-eof'])
+        results = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertIn('Update or reinstall', results[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', results[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in results], ['partial', 'partial'])
+
+    def test_network_sentinel_old_receipt_requires_child_ipc_repair(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 114)
+        old = dict(storeId=114, version=record['version'], sha256=record['sha256'],
+                   compatShims=['network-sentinel-user-psutil'])
+        fixed = dict(old, compatShims=['network-sentinel-user-psutil', 'network-sentinel-ipc-eof'])
+        results = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertIn('Update or reinstall', results[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', results[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in results], ['partial', 'partial'])
+
     def test_animation_old_receipt_requires_child_ipc_without_upgrading_partial_status(self):
         record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 23)
         old = dict(storeId=23, version=record['version'], sha256=record['sha256'],
@@ -214,7 +235,7 @@ class Compatibility(unittest.TestCase):
                    compatShims=['deckyfileserver-user-native'])
         previous = dict(old, compatShims=['deckyfileserver-user-native', 'deckyfileserver-https-address'])
         updated = dict(old, compatShims=['deckyfileserver-user-native', 'deckyfileserver-https-address',
-                                         'deckyfileserver-directory-entry'])
+                                         'deckyfileserver-directory-entry', 'deckyfileserver-ipc-eof'])
         result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, previous, updated]}))['plugins']
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
         self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])
@@ -266,15 +287,18 @@ class Compatibility(unittest.TestCase):
         self.assertNotIn('Update or reinstall this managed plugin', result[2]['compatibility']['reason'])
         self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 3)
 
-    def test_notifications_old_copy_exposes_logging_update_requirement(self):
+    def test_notifications_old_copy_requires_logging_and_eof_repairs(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 79)
         old = dict(storeId=79, version=plugin['version'], sha256=plugin['sha256'])
-        updated = dict(old, compatShims=['notifications-private-logs'])
-        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
-        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        logging_only = dict(old, compatShims=['notifications-private-logs'])
+        updated = dict(old, compatShims=['notifications-private-logs', 'notifications-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, logging_only, updated]}))['plugins']
+        for item in result[:2]:
+            self.assertIn('Update or reinstall', item['compatibility']['reason'])
+            self.assertIn('IPC', item['compatibility']['reason'])
         self.assertIn('environment dump', result[0]['compatibility']['reason'])
-        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
-        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[2]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 3)
 
     def test_game_sync_old_copy_requires_selection_fix(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 104)

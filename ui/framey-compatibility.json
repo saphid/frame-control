@@ -4436,7 +4436,7 @@
         "https://github.com/grimkor/DeckyFileServer"
       ],
       "status": "partial",
-      "reason": "Managed install supplies a native ARM64 helper, removes the exact archive's unnecessary root request, and displays the backend-returned IP with HTTPS. Isolated Decky 3.3.0 amd64 and ARM64 pass private HTTPS listing/download, thumbnail policy and stop. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. The exact managed panel offers a typed directory path alongside saved history; a local Node component test verifies its submit callback, while the Steam folder picker remains unavailable. Live directory entry, uploads, generated thumbnails and worn VR are unverified. Existing managed copies need update or reinstall for the panel changes.",
+      "reason": "Managed install supplies a native ARM64 helper, removes the exact archive's unnecessary root request, and displays the backend-returned IP with HTTPS. Isolated Decky 3.3.0 amd64 and ARM64 pass private HTTPS listing/download, thumbnail policy and stop. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. The exact managed panel offers a typed directory path alongside saved history; a local Node component test verifies its submit callback, while the Steam folder picker remains unavailable. Live directory entry, uploads, generated thumbnails and worn VR are unverified. Existing managed copies need update or reinstall for the panel changes. A later native AMD64 gate caught a forced plugin kill without its unload hook. The exact-archive child IPC EOF repair preserves the previous backend and helper; existing copies need Update/reinstall. Private native AMD64 verifies peer-EOF RPC, the original unload hook, two clean parent-only stops and restart; a previous-backend negative reproduces the forced kill. Fresh hosted and ARM64 shutdown qualification are pending; this adds no new real Frame or worn/controller proof.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -4474,7 +4474,8 @@
       "requiredShims": [
         "deckyfileserver-user-native",
         "deckyfileserver-https-address",
-        "deckyfileserver-directory-entry"
+        "deckyfileserver-directory-entry",
+        "deckyfileserver-ipc-eof"
       ],
       "managedNative": {
         "shim": "deckyfileserver-user-native",
@@ -6233,10 +6234,11 @@
         "https://github.com/Firemoon777/decky-notifications.git"
       ],
       "status": "partial",
-      "reason": "The exact managed install routes backend logs through Decky instead of shared /tmp and removes an environment dump on certificate failure. Isolated published Decky 3.3.0 amd64 and ARM64 discovered the plugin, generated a private certificate, returned an empty device list, and read/cleared a synthetic notification across a restart. Its exact frontend displays a synthetic trusted device and notification in opaque local Chromium. Existing managed copies need Update or reinstall for the logging fix. Actual phone pairing, LAN delivery, real Frame ARM64 backend, live panel delivery and worn VR remain unverified.",
+      "reason": "The exact managed install routes backend logs through Decky instead of shared /tmp and removes an environment dump on certificate failure. Isolated published Decky 3.3.0 amd64 and ARM64 discovered the plugin, generated a private certificate, returned an empty device list, and read/cleared a synthetic notification across a restart. Its exact frontend displays a synthetic trusted device and notification in opaque local Chromium. The exact archive also installs a child IPC EOF adapter to end a closed peer connection without starving unload. Local published Decky 3.3.0 AMD64 verified peer EOF readback, fingerprint persistence across restart and two clean parent-only stops; the prior managed source reproduced a forced kill. Existing managed copies need Update or reinstall for the logging and IPC fixes. Fresh hosted ARM64 lifecycle qualification remains pending. Actual phone pairing, LAN delivery, real Frame ARM64 backend, live panel delivery and worn VR remain unverified.",
       "blockInstall": false,
       "requiredShims": [
-        "notifications-private-logs"
+        "notifications-private-logs",
+        "notifications-ipc-eof"
       ],
       "verification": [
         "static archive",
@@ -10162,7 +10164,8 @@
       "reason": "Exact managed install removes the unnecessary root flag and adds pinned plugin-local psutil wheels. Actual Decky 3.3.0 in isolated amd64 and ARM64 containers loads the backend and records a private network sample; settings and read-only RPCs pass. External ping/DNS, real Frame ARM64 backend, Wi-Fi scan behavior, panel controls and worn VR remain unverified. Existing copies need update or reinstall.",
       "blockInstall": false,
       "requiredShims": [
-        "network-sentinel-user-psutil"
+        "network-sentinel-user-psutil",
+        "network-sentinel-ipc-eof"
       ],
       "verification": [
         "static archive",

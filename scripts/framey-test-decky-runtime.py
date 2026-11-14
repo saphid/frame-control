@@ -105,6 +105,7 @@ def main():
               'tests/decky-runtime/steam_status_private.py',
               'tests/decky-runtime/storage_cleaner_private.py',
               'tests/decky-runtime/suggestme_private.py',
+              'tests/decky-runtime/notifications_private.py',
               'tests/decky-runtime/localsend_private.py',
               'tests/decky-runtime/timer_private.py',
               'tests/decky-runtime/deck_settings_private.py',
@@ -114,6 +115,8 @@ def main():
               'tests/decky-runtime/battery_private.py',
               'tests/decky-runtime/deckyspy_private.py',
               'tests/decky-runtime/theme_music_private.py',
+              'tests/decky-runtime/network_sentinel_private.py',
+              'tests/decky-runtime/fileserver_private.py',
               'tests/decky-runtime/emuchievements_private.py',
               'tests/decky-runtime/steamback_private.py',
               'tests/decky-runtime/tabmaster_private.py',
@@ -155,6 +158,7 @@ def main():
                     (123, '--reproduce-steam-status-unload-regression'),
                     (50, '--reproduce-storage-cleaner-unload-regression'),
                     (132, '--reproduce-suggestme-unload-regression'),
+                    (79, '--reproduce-notifications-unload-regression'),
                     (12, '--reproduce-music-control-unload-regression'),
                     (111, '--reproduce-music-control-unload-regression'),
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
@@ -163,6 +167,7 @@ def main():
                     (135, '--reproduce-deck-shelves-unload-regression'),
                     (46, '--reproduce-steamback-unload-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression'),
+                    (60, '--reproduce-fileserver-unload-regression'),
                     (93, '--reproduce-deck-settings-unload-regression'),
                     (65, '--reproduce-terminal-import-regression'),
                     (61, '--reproduce-tabmaster-restore-regression'),
@@ -173,6 +178,7 @@ def main():
                     (67, '--reproduce-battery-tracker-unload-regression'),
                     (89, '--reproduce-deckyspy-unload-regression'),
                     (52, '--reproduce-theme-music-unload-regression'),
+                    (114, '--reproduce-network-sentinel-unload-regression'),
                     (28, '--reproduce-emuchievements-unload-regression'),
                     (36, '--reproduce-steamgriddb-unload-regression'),
                     (24, '--reproduce-radiyo-unload-regression'),
@@ -189,7 +195,7 @@ def main():
                     '--mount', f'type=bind,source={ROOT},target=/repo,readonly',
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
                     ]
-                if plugin_id in (50, 143) and negative:
+                if plugin_id in (50, 79, 143) and negative:
                     # The original EOF spin allocates tasks without yielding.
                     # Keep this negative below OOM pressure until Decky's own
                     # five-second forced-stop deadline proves the regression.

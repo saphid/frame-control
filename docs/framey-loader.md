@@ -16,6 +16,14 @@ plugins → Open official store**. Search the catalogue, confirm an install, and
 choose **Open panel** from the installed plugin list. The panel contains the
 plugin's own controls and settings. Update and Remove affect only plugin
 folders that Frame Control's store manager installed.
+
+Update and Remove recheck ownership under the transaction lock using a regular
+store receipt file with a matching positive integer store ID. A symlinked,
+unreadable or malformed receipt cannot authorize a change. Refused operations
+leave the plugin and its data in place and do not stop the loader. Inventory
+still lists readable plugin manifests without claiming store ownership when
+their receipt or store ID is invalid.
+
 Use **Scroll plugin up** and **Scroll plugin down** above an open panel when
 wheel scrolling is unavailable. Point at a scrollable part of the plugin first
 to move that section; otherwise the buttons move the panel document. Each
@@ -31,6 +39,15 @@ folder with rollback on failure. If moving the installed folder to a backup
 fails, the update or removal leaves the original folder in place. Rollback
 deletes only a replacement that the transaction successfully moved into place.
 It rejects non-ARM64 ELF and Windows binaries.
+Before transfer, it streams every file through its ZIP checksum within the
+existing archive size limits. Corruption after a file's header is rejected on
+the host and by the local author checker. Remote extraction also rejects
+checksum failures before changing the installed plugin or restarting Decky.
+File/directory collisions are rejected before transfer and checked again on the
+headset before extraction. For example, a file named `plugin/cache` cannot
+coexist with `plugin/cache/` or `plugin/cache/data.json`, in either ZIP order.
+Explicit directory entries remain optional; identical repeated file payloads
+with only execute-bit differences are still accepted for official archives.
 The Decky user service restarts after a file change. Framey's panel host accepts
 API v2 bundles and API v1 bundles using Decky's modern frontend initializer,
 with `dist/index.js`. Legacy `(function (...) {...})(DFL, SP_REACT)` bundles are
@@ -55,7 +72,11 @@ Framey gives each plugin a bounded `localStorage` substitute because browser
 storage is denied to an opaque-origin iframe. The parent panel keeps a separate
 cache for each plugin: up to 64 keys, 64 KiB per value and 128 KiB total. It
 restores the cache when a panel reopens if the parent's browser storage is
-available. If browser storage rejects a write, the parent keeps the latest
+available. Plugins can enumerate non-reserved cache keys with `Object.keys`,
+`Object.entries` or `for...in`, and export their string values with object spread
+or `JSON.stringify(localStorage)`. API members are not enumerable; stored keys
+that collide with API/prototype names still require `getItem` and `key(index)`.
+If browser storage rejects a write, the parent keeps the latest
 bounded snapshot in memory across plugin close/reopen and switches back to disk
 on the next successful write. The plugin panel shows a notice while its snapshot
 is only in memory. **Retry saving** attempts to save that latest snapshot without
@@ -149,7 +170,12 @@ work in VR. Storage Cleaner rendered an
 Its cleanup actions were not tested; they may remove local game saves.
 
 Framey also supplies local tabs/sidebar pages, spinners, dialog/menu wrappers
-and progress bars. Its explicit SteamClient subscription fallbacks return
+and progress bars. `SidebarNavigation` preserves each visible page's React
+`icon` beside its title in the local navigation button, including icon props
+and later updates. Separators and pages with `visible: false` do not become
+buttons. This is local page selection; it does not recreate Steam's sidebar
+layout or verify controller navigation.
+Its explicit SteamClient subscription fallbacks return
 disposable handles without emitting fabricated events. Running-game reads and
 lifetime notifications use the scoped bridge described below; power, app launch
 and hardware mutation methods are not supplied. Other live Steam stores require integration
@@ -239,11 +265,44 @@ from starting, Remove remains available for Frame Control-owned plugins while
 the managed service is stopped; it does not restart the service.
 
 Install, Update, and Remove show the current job stage in the headset panel.
+The desktop store also reserves a request ID before sending a plugin change.
+Its separate result message and **Check result** action recover that same job
+without submitting the change again. Install, Update, Remove and loader changes
+stay disabled through the job and final installed-status refresh, including
+after a lost POST reply or exhausted polling retries. The saved request is
+bound to the original headset; return to it to check the result. Session storage
+retains the request through a page reload. If storage is denied, recovery is
+limited to the current open page; a reload loses the memory fallback.
+If the server no longer has the job, the desktop keeps changes disabled until
+its **Refresh** button successfully reads a complete installed list. Automatic
+reads, failed reads and acknowledgement changes do not clear that uncertainty.
+An explicit HTTP rejection before the request was accepted releases the request;
+a terminal job error also releases it after status refresh. These desktop paths
+are tested with synthetic API replies and real DOM controls, not live installs.
+
+Network Sentinel 1.0.4 installs a child IPC EOF repair while preserving its
+original monitoring and unload code. Existing managed copies need Update or
+reinstall to receive it. The isolated runtime gate requires a settings RPC after
+peer disconnect, the original unload save, restart persistence and two clean
+parent-only stops; a negative control restores the previous managed backend.
+External network quality, the real headset and worn VR remain unverified.
+
+DeckyFileServer 1.2.0 also installs the child IPC EOF repair. Its managed
+backend, HTTPS helper and original unload hook are preserved; existing copies
+need Update or reinstall. The native runtime gate closes a private IPC peer,
+requires a subsequent settings RPC, checks two clean parent-only stops and
+restart persistence, and restores the previous backend as a negative control.
+This does not establish the historical ARM64 migration timeout's cause or add
+real Frame or worn/controller proof.
+
 The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the
 same job for a repeated, identical request while its result is retained;
-reusing the ID for a different change is rejected. **Check result** can resume
+reusing the ID for a different change is rejected. Invalid plugin IDs and
+malformed reviewed store hashes receive HTTP 400 before a job is reserved or
+a worker starts. A corrected request can use the ID from that rejected
+submission. **Check result** can resume
 polling even if the POST response is lost. A rejected polling request also keeps
 an accepted job's ID; it cannot establish that the install or update stopped.
 After a connection error, Install, Update, and Remove
@@ -296,6 +355,25 @@ chunks from two installed versions.
 The headset also includes the panel's store SHA-256 receipt with each backend
 call, Steam read, and event poll. It rejects a request if the installed receipt
 changed before the next status refresh; reopen the panel to use the new version.
+
+Catalog and installed plugin names stay complete when validating archives,
+checking name collisions, and routing backend calls or event subscriptions.
+Long names that share a prefix remain distinct; display-length truncation must
+not change a plugin's backend identity. The existing catalog-response and
+installed-manifest size limits still apply. These paths are tested locally
+with synthetic names and disposable manifests, without a live headset.
+
+An installed plugin with a non-object JSON manifest is skipped during inventory
+instead of hiding every plugin. A readable manifest with a non-object ownership
+receipt stays visible as unowned, without store actions or a managed Framey
+panel. The scan leaves those files untouched; after repair, a fresh inventory
+reads them again. These cases are tested with disposable local plugin folders.
+Panel and JavaScript module admission also require a positive integer `storeId`
+in the ownership receipt. JSON booleans and floating-point IDs cannot claim an
+integer plugin ID or mask a valid installed plugin during the panel scan.
+Malformed receipts are left untouched. Local fixtures cover rejection and
+recovery after repairing the ID; live-headset behavior remains unverified.
+
 Panel-ready, error, and trusted-pointer reports also carry the current panel
 session. A delayed report from a closed panel cannot change the new panel's
 status or count as input to that panel.

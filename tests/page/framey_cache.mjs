@@ -26,7 +26,7 @@ const onParent=parentListeners.find(x=>x.type==='message').fn;
 
 function iframe({delaySeed=false}={}){
   const listeners=[];const queued=[];const timers=[];let live=false,bundleReads=0;
-  const frameWindow={location:{hash:`#${session}`},React:{Fragment:'fragment',Component:class {},createElement:()=>({}),isValidElement:()=>true},
+  const frameWindow={location:{hash:`#${session}`},React:{Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:()=>({}),isValidElement:()=>true},
     ReactDOM:{createRoot:()=>({render(){}})}};
   const proxy={postMessage:message=>listeners.find(x=>x.type==='message')?.fn({source:hostParent,data:message})};
   el('frameyFrame').contentWindow=proxy;
@@ -101,6 +101,83 @@ reopenedSync.setInSync(appId,false);
 const otherPlugin=openPlugin(14);
 assert.equal(marker in otherPlugin.storage,false,'membership must stay inside this plugin cache');
 assert.equal(values.get('framey-plugin-cache-v1:104'),savedGameCache);
+
+// Native Storage accepts direct string properties as well as setItem/getItem.
+// Exercise the real parent snapshot and a fresh iframe, not only this wrapper.
+const checkEnumeration=(storage,expected)=>{
+  assert.deepEqual(Object.keys(storage).sort(),Object.keys(expected).sort(),
+    'enumeration must expose saved names, not the Storage API');
+  assert.deepEqual(Object.fromEntries(Object.entries(storage)),expected);
+  assert.deepEqual({...storage},expected);
+  assert.deepEqual(JSON.parse(JSON.stringify(storage)),expected,
+    'a settings export must contain saved values');
+  const names=[];
+  for(const name in storage)names.push(name);
+  assert.deepEqual(names.sort(),Object.keys(expected).sort());
+  for(const [name,value] of Object.entries(expected)) {
+    const descriptor=Object.getOwnPropertyDescriptor(storage,name);
+    assert.deepEqual(descriptor,{value,writable:true,enumerable:true,configurable:true});
+    assert.equal(Object.prototype.hasOwnProperty.call(storage,name),true);
+  }
+  assert.equal(Object.getOwnPropertyDescriptor(storage,'absent'),undefined);
+};
+checkEnumeration(otherPlugin.storage,{});
+otherPlugin.storage.preference='on';
+assert.equal(otherPlugin.storage.getItem('preference'),'on','property assignment must enter the persisted cache');
+otherPlugin.storage['empty-value']='';
+otherPlugin.storage.count=0;
+assert.equal(otherPlugin.storage.preference,'on');
+assert.equal(otherPlugin.storage['empty-value'],'');
+assert.equal(otherPlugin.storage.count,'0','property values use Storage string conversion');
+assert.equal(otherPlugin.storage.absent,undefined);
+assert.equal(otherPlugin.storage.getItem('absent'),null);
+assert.equal(otherPlugin.storage.length,3);
+checkEnumeration(otherPlugin.storage,{preference:'on','empty-value':'',count:'0'});
+let propertyReopen=openPlugin(14);
+checkEnumeration(propertyReopen.storage,{preference:'on','empty-value':'',count:'0'});
+assert.equal(propertyReopen.storage.preference,'on','property save must survive a new host document');
+assert.equal(propertyReopen.storage['empty-value'],'');
+assert.equal(propertyReopen.storage.count,'0');
+propertyReopen.storage.setItem('preference','off');
+assert.equal(propertyReopen.storage.preference,'off','method writes must update property reads');
+delete propertyReopen.storage.preference;
+assert.equal(propertyReopen.storage.getItem('preference'),null);
+assert.equal('preference' in propertyReopen.storage,false);
+propertyReopen=openPlugin(14);
+assert.equal(propertyReopen.storage.preference,undefined,'property deletion must survive reopen');
+assert.equal(propertyReopen.storage.length,2);
+checkEnumeration(propertyReopen.storage,{'empty-value':'',count:'0'});
+const propertySnapshot=values.get('framey-plugin-cache-v1:14');
+assert.throws(()=>{propertyReopen.storage.huge='x'.repeat(65537);},/Framey plugin cache is full/);
+assert.equal(propertyReopen.storage.huge,undefined);
+assert.equal(values.get('framey-plugin-cache-v1:14'),propertySnapshot,'rejected property write must preserve saved bytes');
+// Reserved API/prototype names never replace the methods or prototype. Their
+// stored strings remain reachable with getItem, just as for method writes.
+propertyReopen.storage.getItem='reserved';
+assert.equal(typeof propertyReopen.storage.getItem,'function');
+assert.equal(propertyReopen.storage.getItem('getItem'),'reserved');
+propertyReopen.storage.__proto__='saved prototype name';
+assert.equal(typeof propertyReopen.storage.__proto__,'object');
+assert.equal(propertyReopen.storage.getItem('__proto__'),'saved prototype name');
+checkEnumeration(propertyReopen.storage,{'empty-value':'',count:'0'});
+assert.equal(Object.getOwnPropertyDescriptor(propertyReopen.storage,'getItem').enumerable,false);
+delete propertyReopen.storage.getItem;
+assert.equal(typeof propertyReopen.storage.getItem,'function');
+assert.equal(propertyReopen.storage.getItem('getItem'),null);
+const isolatedProperties=openPlugin(104);
+assert.equal(isolatedProperties.storage.count,undefined,'property values remain plugin-scoped');
+assert.equal(values.get('framey-plugin-cache-v1:104'),savedGameCache);
+propertyReopen=openPlugin(14);
+propertyReopen.storage.clear();
+assert.equal(propertyReopen.storage.count,undefined,'clear must retire property values too');
+assert.equal(propertyReopen.storage.length,0);
+checkEnumeration(propertyReopen.storage,{});
+// Empty and integer-like names stay ordinary string keys. Enumeration reads
+// descriptors without sending writes or bypassing the normal quota checks.
+propertyReopen.storage.setItem('','empty key');
+propertyReopen.storage.setItem('0','numeric key');
+checkEnumeration(propertyReopen.storage,{'':'empty key','0':'numeric key'});
+propertyReopen.storage.clear();
 
 let first=iframe();
 assert.equal(first.storage.getItem('status-cache'),null);
@@ -198,7 +275,7 @@ assert.equal(readableAgain.storage.getItem('saved'),'true','reopen after recover
 const diskWrite=localStorage.setItem;
 localStorage.setItem=()=>{throw new DOMException('Full', 'QuotaExceededError');};
 const beforeDenial=iframe();
-beforeDenial.storage.setItem('saved','latest');
+beforeDenial.storage.saved='latest';
 assert.equal(values.get('framey-plugin-cache-v1:14'),'{"saved":"true"}');
 assert.equal(el('frameyCacheWarning').hidden,false,'failed storage writes must be visible');
 el('frameyCacheRetry').onclick();
@@ -208,6 +285,8 @@ vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
 session=vm.runInContext('frameySession',parent);
 const deniedReopen=iframe();
 assert.equal(deniedReopen.storage.getItem('saved'),'latest');
+assert.equal(deniedReopen.storage.saved,'latest','property reads must use the latest fallback snapshot');
+checkEnumeration(deniedReopen.storage,{saved:'latest'});
 assert.equal(el('frameyCacheWarning').hidden,false,'reopen must keep the unsaved-settings notice');
 deniedReopen.send({type:'framey:scroll:result',session,direction:'down',moved:true});
 deniedReopen.send({type:'framey:error',session,message:'Synthetic unrelated panel error'});
@@ -230,7 +309,7 @@ session=vm.runInContext('frameySession',parent);
 const stillDenied=iframe();
 assert.equal(stillDenied.storage.getItem('saved'),'latest');
 assert.equal(await stillDenied.steamStorage.GetJSON('settings'),'{"enabled":true}');
-stillDenied.storage.removeItem('saved');
+delete stillDenied.storage.saved;
 vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
 session=vm.runInContext('frameySession',parent);
 assert.equal(iframe().storage.getItem('saved'),null,'removal must also survive a denied write');
@@ -273,3 +352,8 @@ localStorage.setItem=diskWrite;
 assert.equal(el('frameyCacheWarning').hidden,false);
 iframe().storage.setItem('memory-only','now durable');
 assert.equal(el('frameyCacheWarning').hidden,true,'a normal successful write also resolves the notice');
+console.log('Framey cache enumeration proof: '+JSON.stringify({passed:true,
+  savedKeysOnly:true, entriesAndSpread:true, jsonExport:true, ownDescriptors:true,
+  reopenReadback:true, emptyAndNumericNames:true, deletionAndClear:true,
+  reservedAPIPreserved:true, deniedWriteFallback:true, pluginIsolation:true,
+  syntheticStorage:true, realFrameContacted:false}));

@@ -21,6 +21,18 @@ To recover, preserve a copy of the damaged file in the plugin's settings
 directory, then repair it or restore a known-good `settings.json` there.
 Choose **Reload saved setting** to read the repaired value before editing.
 The next successful save atomically replaces the sample's settings file.
+Before replacement, the backend flushes Python's output buffer and calls
+`fsync` on the temporary file. On platforms with directory descriptors,
+including Decky's Linux backend, it also calls `fsync` on the settings directory
+after replacement before returning a successful save acknowledgement. A file
+flush failure preserves the previous file (or leaves a first save absent).
+A directory flush failure happens after replacement: the new value can already
+be readable even though the save returns an error. Use **Reload saved setting**
+to reconcile it, just as for a lost reply; a rejected save does not mean a
+rollback. All temporary files and opened directory descriptors are cleaned up.
+Local tests inject both flush failures and read a successful save after its
+backend process exits. They do not establish live-headset persistence or
+survival of a physical power loss.
 The current file is `{"schema": 1, "enabled": true|false}`. An unversioned
 `{"enabled": true|false}` file from the first sample release still reads, and
 the next save writes schema 1. A file with another explicit schema returns a
@@ -62,6 +74,19 @@ The sample also handles React's development effect setup/cleanup replay: a
 late reply from the first setup cannot unlock or replace the newer read.
 Lifecycle tests use delayed synthetic replies through the real host and built
 bundle; they do not prove live-headset persistence.
+An unfinished save also keeps a guard at module scope, so a newly mounted view
+and the read-only quick action wait for its reply before reading the backend.
+They read again after either success or failure; the requested value is not a
+replacement for that read. A view closed while waiting sends no read, and two
+settings surfaces cannot send competing saves from this loaded frontend.
+The guard does not cancel a backend request or coordinate independent clients.
+If a read was already in flight when another sample view starts a save, its
+reply is discarded and a fresh read follows that save's settlement. This also
+applies when the save finishes before the old read replies, whether the save
+succeeds or rejects, and to the read-only quick action. Editing stays disabled
+until a read completes without an overlapping save. A retired view sends no
+replacement read. These cases use delayed synthetic replies through the built
+sample; live headset persistence remains unverified.
 
 **Reset example setting** opens a local `ConfirmModal`. **Keep setting** closes
 it without a backend call; **Reset** saves `false` through the same guarded
@@ -76,6 +101,10 @@ while pending, and stays open with an error if the save fails. Close it with
 opening a new Reset dialog. Retrying the failed dialog before reloading sends
 no write and cannot close it as a success. Only a successful save closes the
 dialog automatically and shows a success toast.
+Framey retires a confirmation's button handlers after it closes, unmounts
+or completes successfully, so a retained Reset handler cannot issue another
+save. A save already sent may still finish after programmatic dismissal;
+reopen the settings view or reload to read its result.
 The ordinary toggle catches the same rejected promise after `change` records
 the error in the panel's status, so it does not create an unhandled rejection.
 Do not discard an asynchronous confirmation with `void`: that makes the modal
@@ -110,16 +139,20 @@ From the repository root, pack and validate this sample without contacting a
 store or headset:
 
 ```sh
-python3 - <<'PY'
-from pathlib import Path
-from zipfile import ZipFile
-source = Path('examples/framey-settings')
-with ZipFile('/tmp/framey-settings-sample.zip', 'w') as archive:
-    for name in ('plugin.json', 'main.py', 'dist/index.js'):
-        archive.write(source / name, 'framey-settings/' + name)
-PY
-python3 scripts/framey-check-archive.py /tmp/framey-settings-sample.zip --name 'Framey Settings Sample'
+python3 scripts/framey-pack-sample.py /tmp/framey-settings-sample.zip
 ```
+
+The command packages the existing built frontend; run `pnpm build` first after
+editing its source. It includes only `plugin.json`, `main.py`, and `dist/index.js`
+under `framey-settings/`. Fixed file order, timestamps, permissions and uncompressed
+ZIP entries make unchanged input bytes produce the same ZIP and SHA-256,
+regardless of source modification times. The destination directory must exist.
+The command checks a temporary ZIP with the author archive checker before
+replacing the destination. A failed check leaves an existing ZIP untouched and
+removes the temporary file. Its JSON result includes the output path and SHA-256.
+For a renamed fork with this same three-file layout, use `--source path/to/sample
+--name 'Exact Decky store name'`. Plugins with extra assets or chunks need their
+own packaging step and `scripts/framey-check-archive.py`.
 
 Expect `installerAccepted` and `panelCandidate` to be `true`. This only checks
 local archive admission. Published store identity, Decky backend discovery,

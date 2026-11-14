@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 assert.notEqual(host,source);
-const React={Fragment:'fragment',Component:class {},
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   isValidElement:element=>!!element?.type};
@@ -24,7 +24,7 @@ vm.runInContext(readFileSync(0,'utf8'),context);
 const manager={privateFixture:true};
 context.getShowMenu('private-tab',manager)();
 assert.equal(modalRoot.value.length,1);
-const menu=modalRoot.value[0].children[1];
+const menu=modalRoot.value[0].children[1].children[0];
 assert.equal(menu.props.selectedTabId,'private-tab');
 assert.equal(menu.props.tabMasterManager,manager);
 // Replay the exact published closure. The actual library menu and manager
@@ -37,7 +37,7 @@ handle.Show();handle.Show();assert.equal(modalRoot.value.length,1);
 const nested=window.DFL.showModal(React.createElement('div',null,'Nested dialog'));
 assert.equal(modalRoot.value.length,2);
 handle.Hide();handle.Hide();assert.equal(modalRoot.value.length,1);
-assert.equal(modalRoot.value[0].children[1].children[0],'Nested dialog');
+assert.equal(modalRoot.value[0].children[1].children[0].children[0],'Nested dialog');
 nested.Close();assert.equal(modalRoot.value,null);
 handle.Show();assert.equal(modalRoot.value.length,1);
 // Shell dismissal and Show can occur in the same turn, before any promise

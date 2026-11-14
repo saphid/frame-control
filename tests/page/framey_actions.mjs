@@ -6,10 +6,10 @@ const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'ut
 const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface; window.__legacy=legacyServerAPI; window.__library=setLibrarySnapshot; window.__running=setRunningSnapshot; window.__refreshRunning=refreshRunning;\n})();');
 assert.notEqual(testSource,source);
 const states=[];
-const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,next=>states.push(next)], useRef:value=>({current:value}),
-  useEffect(){},isValidElement:value=>!!value?.type};
+  useEffect(){},useLayoutEffect(){},useImperativeHandle(){},isValidElement:value=>!!value?.type};
 class Element {constructor(){this.children=[];this.textContent='';this.attributes={};}
   append(...children){this.children.push(...children);}setAttribute(key,value){this.attributes[key]=value;}
   remove(){this.removed=true;}}
@@ -187,9 +187,9 @@ const icon=React.createElement('svg',null);
 const rich=api.toaster.toast({title:heading,body:[detail,' again'],icon,
   subtext:'Open settings',showToast:true});
 const richNode=elements.get('framey-toasts').children[1];
-assert.equal(roots.get(richNode.children[0]).value,icon);
-assert.equal(roots.get(richNode.children[1]).value,heading);
-assert.deepEqual(Array.from(roots.get(richNode.children[2]).value),[detail,' again']);
+assert.equal(roots.get(richNode.children[0]).value.children[0],icon);
+assert.equal(roots.get(richNode.children[1]).value.children[0],heading);
+assert.deepEqual(Array.from(roots.get(richNode.children[2]).value.children[0]),[detail,' again']);
 assert.equal(richNode.children[3].textContent,'Open settings');
 rich.dismiss();rich.dismiss();
 assert.equal(richNode.removed,true);
@@ -430,7 +430,7 @@ const modalHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmMod
   strTitle:'Remove preset?',strDescription:'Only this private preset will be removed.',
   strOKButtonText:'Remove',strCancelButtonText:'Keep',
   onOK:()=>confirmed++,onCancel:()=>cancelled++,closeModal:()=>dismissed++}));
-let modal=modalRoot.value.at(-1).children.at(-1);
+let modal=modalRoot.value.at(-1).children.at(-1).children[0];
 let confirm=modal.type(modal.props);
 assert.equal(nodes(confirm,'div')[0].children[0],'Only this private preset will be removed.');
 assert.deepEqual(nodes(confirm,'button').map(button=>button.children[0]),['Remove','Keep']);
@@ -446,7 +446,7 @@ const childModal=window.DFL.showModal(React.createElement(window.DFL.ConfirmModa
   strTitle:'Confirm',bOKDisabled:true,bCancelDisabled:true,bMiddleDisabled:true,
   onOK:()=>confirmed++,onCancel:()=>cancelled++,onMiddleButton:()=>confirmed++}));
 assert.equal(modalRoot.value.length,2);assert.equal(modalRoot.value[0].props.hidden,true);
-modal=modalRoot.value.at(-1).children.at(-1);confirm=modal.type(modal.props);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];confirm=modal.type(modal.props);
 for(const button of nodes(confirm,'button')){assert.equal(button.props.disabled,true);button.props.onClick();}
 assert.equal(confirmed,0);assert.equal(cancelled,1);
 let prevented=0;
@@ -458,11 +458,11 @@ childModal.Close();await childModal.ClosedPromise;assert.equal(modalRoot.value,n
 let replacement;
 const first=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
   onOK:()=>{replacement=window.DFL.showModal(React.createElement('p',null,'Next dialog'));}}));
-modal=modalRoot.value.at(-1).children.at(-1);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];
 nodes(modal.type(modal.props),'button')[0].props.onClick();
 await first.ClosedPromise;assert.equal(modalRoot.value.length,1);
 replacement.Update(React.createElement('p',null,'Updated'));
-assert.equal(modalRoot.value[0].children.at(-1).children[0],'Updated');
+assert.equal(modalRoot.value[0].children.at(-1).children[0].children[0],'Updated');
 replacement.Close();await replacement.ClosedPromise;
 const alert=window.DFL.ConfirmModal({bAlertDialog:true,onCancel:()=>cancelled++});
 assert.equal(nodes(alert,'button').length,1);
@@ -476,7 +476,7 @@ for (const actionIndex of [0,1]) for (const withCallback of [false,true]) {
   updated.Update(React.createElement(window.DFL.ConfirmModal,{
     strTitle:'Updated confirmation',onOK:()=>updatedActions++,onCancel:()=>updatedActions++,
     ...(withCallback ? {closeModal:()=>updatedCloses++} : {})}));
-  const updatedElement=modalRoot.value.at(-1).children.at(-1);
+  const updatedElement=modalRoot.value.at(-1).children.at(-1).children[0];
   nodes(updatedElement.type(updatedElement.props),'button')[actionIndex].props.onClick();
   assert.equal(modalRoot.value,null,'Updated OK/Cancel must close its own dialog');
   await updated.ClosedPromise;
@@ -491,7 +491,7 @@ for (const actionIndex of [0,1]) for (const withCallback of [false,true]) {
 let completeAction, asyncCalls=0;
 const asyncHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
   strTitle:'Private action',onOK:()=>{asyncCalls++;return new Promise(resolve=>{completeAction=resolve;});}}));
-modal=modalRoot.value.at(-1).children.at(-1);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];
 confirm=modal.type(modal.props);
 const asyncButton=nodes(confirm,'button')[0];
 const firstAction=asyncButton.props.onClick();
@@ -507,7 +507,7 @@ assert.equal(modalRoot.value,null);
 let rejectAction, failedCalls=0;
 const failedHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
   strTitle:'Private failure',onOK:()=>{failedCalls++;return new Promise((resolve,reject)=>{rejectAction=reject;});}}));
-modal=modalRoot.value.at(-1).children.at(-1);
+modal=modalRoot.value.at(-1).children.at(-1).children[0];
 confirm=modal.type(modal.props);
 const failureButton=nodes(confirm,'button')[0];
 const failedAction=failureButton.props.onClick();

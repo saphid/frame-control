@@ -4,12 +4,12 @@ import vm from 'node:vm';
 
 const host=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8')
   .replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
-const React={Fragment:'fragment',Component:class {},
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:{...props,
     ...(children.length?{children:children.length===1?children[0]:children}:{})},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,()=>{}],useRef:value=>({current:value}),
-  useEffect(){},isValidElement:value=>!!value?.type};
+  useEffect(){},useImperativeHandle(){},isValidElement:value=>!!value?.type};
 const elements=new Map(),roots=new Map();
 const window={React,ReactDOM:{createRoot:node=>{
   const root={render(value){this.value=value;}};roots.set(node,root);return root;
@@ -51,7 +51,7 @@ Object.assign(context,{DFL:window.DFL,SP_JSX:window.SP_JSX});
 vm.runInContext(popup,context);
 context.commits=[];
 vm.runInContext('textInputPopup("Private label", "Original", value=>commits.push(value))',context);
-const modal=()=>roots.get(elements.get('framey-modal')).value[0].children[1];
+const modal=()=>roots.get(elements.get('framey-modal')).value[0].children[1].children[0];
 let rendered=modal().type(modal().props);
 const inputElement=nodes(rendered,window.DFL.TextField)[0];
 const input=nodes(inputElement.type(inputElement.props),'input')[0];

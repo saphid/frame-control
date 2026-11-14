@@ -27,14 +27,37 @@ import frame_decky_store
 import frame_decky
 
 
-def archive(flags=(), extra=None):
+def archive(flags=(), extra=None, manifest=None, members=()):
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, 'w') as bundle:
-        bundle.writestr('Example/plugin.json', json.dumps({'name': 'Example', 'flags': list(flags)}))
+        bundle.writestr('Example/plugin.json', manifest if manifest is not None else
+                        json.dumps({'name': 'Example', 'flags': list(flags)}))
         bundle.writestr('Example/dist/index.js', 'export default {};' + ' ' * 1200)
         if extra:
             bundle.writestr(*extra)
+        for member in members:
+            bundle.writestr(*member)
     data = stream.getvalue()
+    return data, hashlib.sha256(data).hexdigest()
+
+
+def file_directory_collisions():
+    for child in ('Example/cache/', 'Example/cache/data.json', 'Example/cache/nested/data.json'):
+        for paths in (('Example/cache', child), (child, 'Example/cache')):
+            data, digest = archive(members=[(path, b'' if path.endswith('/') else b'{}') for path in paths])
+            yield paths, data, digest
+
+def damaged_asset_archive():
+    name = 'Example/assets/large.bin'
+    data, _ = archive(extra=(name, b'x' * 150_000))
+    with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+        entry = bundle.getinfo(name)
+        offset = entry.header_offset
+        start = (offset + 30 + int.from_bytes(data[offset+26:offset+28], 'little')
+                 + int.from_bytes(data[offset+28:offset+30], 'little'))
+        changed = bytearray(data)
+        changed[start + entry.file_size - 1] ^= 1
+    data = bytes(changed)
     return data, hashlib.sha256(data).hexdigest()
 
 
@@ -54,6 +77,45 @@ def duplicate_archive(second=b'#!/bin/sh\nexit 0\n', second_mode=0o100755):
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_rejects_file_directory_and_implicit_parent_collisions_in_either_order(self):
+        for paths, data, digest in file_directory_collisions():
+            with self.subTest(paths=paths), self.assertRaisesRegex(ValueError, 'file/directory collision'):
+                frame_decky_store.archive_info(data, digest, 'Example')
+
+    def test_explicit_and_implicit_directories_can_share_the_same_tree(self):
+        for paths in (('Example/cache/', 'Example/cache/data.json'),
+                      ('Example/cache/data.json', 'Example/cache/')):
+            data, digest = archive(members=[(path, b'' if path.endswith('/') else b'{}') for path in paths])
+            with self.subTest(paths=paths):
+                self.assertEqual(frame_decky_store.archive_info(data, digest, 'Example'), 'Example')
+
+    def test_manifest_requires_utf8_json_without_bom(self):
+        text = json.dumps({'name': 'Example', 'flags': []})
+        for encoding in ('utf-16', 'utf-16-le', 'utf-16-be', 'utf-32',
+                         'utf-32-le', 'utf-32-be', 'utf-8-sig'):
+            with self.subTest(encoding=encoding):
+                data, digest = archive(manifest=text.encode(encoding))
+                with self.assertRaisesRegex(ValueError, 'manifest.*UTF-8'):
+                    frame_decky_store.archive_info(data, digest, 'Example')
+        # Unicode content is allowed; only its byte encoding is constrained.
+        name = 'Exämple 日本語'
+        data, digest = archive(manifest=json.dumps({'name': name, 'flags': []},
+                                                  ensure_ascii=False).encode('utf-8'))
+        self.assertEqual(frame_decky_store.archive_info(data, digest, name), 'Example')
+
+    def test_large_asset_checksum_is_verified_beyond_its_header(self):
+        good, digest = archive(extra=('Example/assets/large.bin', b'x' * 150_000))
+        self.assertEqual(frame_decky_store.archive_info(good, digest, 'Example'), 'Example')
+        data, digest = damaged_asset_archive()
+        # The first read still succeeds; only reading through EOF detects it.
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            with bundle.open('Example/assets/large.bin') as source:
+                self.assertEqual(source.read(20), b'x' * 20)
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'CRC'):
+                bundle.read('Example/assets/large.bin')
+        with self.assertRaisesRegex(zipfile.BadZipFile, 'CRC'):
+            frame_decky_store.archive_info(data, digest, 'Example')
+
     def test_catalog_selects_valid_visible_latest_versions(self):
         records = [{'id': 42, 'name': 'Example', 'author': 'Panel Author', 'visible': True, 'versions':
                     [{'name': '1.0', 'hash': 'a' * 64}], 'tags': []},
@@ -176,6 +238,33 @@ class ArchiveTests(unittest.TestCase):
 
 @unittest.skipIf(os.name == 'nt', 'remote plugin transaction runs on Linux')
 class StoreTransaction(unittest.TestCase):
+    def test_type_collisions_are_rejected_before_extraction_or_service_changes(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        self.assertEqual(self.apply('install', original).returncode, 0)
+        before = self.plugin_snapshot()
+        calls = self.record_service_calls()
+        no_extract = '''
+import zipfile
+def forbidden_extract(*args, **kwargs):
+    raise AssertionError('Archive validation must finish before extraction')
+zipfile.ZipFile.extractall = forbidden_extract
+'''
+        for paths, data, _ in file_directory_collisions():
+            with self.subTest(paths=paths), patch.object(frame_decky_store, 'APPLY', no_extract+frame_decky_store.APPLY):
+                result = self.apply('update', data, expected=digest)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('file/directory collision', result.stderr)
+                self.assertNotIn('must finish before extraction', result.stderr)
+                self.assertEqual(self.plugin_snapshot(), before)
+                self.assertEqual(calls.read_text(), '')
+                self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+        # Rejection must release the lock; a normal update still installs.
+        valid, _ = archive(members=[('Example/cache/data.json', '{}'), ('Example/cache/', '')])
+        result = self.apply('update', valid, expected=digest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.folder/'cache/data.json').read_text(), '{}')
+        self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'])
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -191,18 +280,65 @@ class StoreTransaction(unittest.TestCase):
         self.folder = home / '.local/share/frame-control/decky/plugins/Example'
         self.folder.parent.mkdir(parents=True)
 
-    def apply(self, action, data=None, expected='-', plugin_id=42, folder='Example', version='1.0'):
+    def apply(self, action, data=None, expected='-', plugin_id=42, folder='Example', version='1.0',
+              target_arch=None):
         token = secrets.token_hex(12)
         source = Path('/tmp/frame-control-decky-plugin-' + token)
         if data is not None:
             source.write_bytes(data)
         digest = hashlib.sha256(data or b'').hexdigest()
         try:
+            script = frame_decky_store.apply_script(plugin_id, digest)
+            if target_arch is not None:
+                # Install fixtures inspect Linux ELF metadata without executing helpers.
+                script = 'import platform\nplatform.machine=lambda:'+repr(target_arch)+'\n'+script
             return subprocess.run([sys.executable, '-', action, token, str(plugin_id), digest, folder, version, expected],
-                                  input=frame_decky_store.apply_script(plugin_id, digest), text=True, capture_output=True,
+                                  input=script, text=True, capture_output=True,
                                   env=self.env, timeout=15)
         finally:
             source.unlink(missing_ok=True)
+
+    def test_non_utf8_manifest_cannot_install_or_replace_saved_plugin(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        text = json.dumps({'name': 'Example', 'flags': []})
+        for action in ('install', 'update'):
+            if action == 'update':
+                self.assertEqual(self.apply('install', original).returncode, 0)
+            before = self.plugin_snapshot()
+            calls = self.record_service_calls()
+            for encoding in ('utf-16', 'utf-8-sig'):
+                with self.subTest(action=action, encoding=encoding):
+                    data, _ = archive(manifest=text.encode(encoding))
+                    result = self.apply(action, data, expected=digest)
+                    self.assertNotEqual(result.returncode, 0, result.stdout)
+                    self.assertIn('manifest must be UTF-8', result.stderr)
+                    self.assertEqual(self.plugin_snapshot(), before)
+                    self.assertEqual(calls.read_text(), '', 'invalid manifest must not stop the loader')
+                    self.assertEqual(list(self.folder.parent.iterdir()), [self.folder] if before else [])
+            # Rejection must release the transaction lock and leave recovery usable.
+            retry = self.apply(action, original, expected=digest)
+            self.assertEqual(retry.returncode, 0, retry.stderr)
+            self.assertEqual((self.folder/'saved-data.json').read_text(), '{"keep":true}')
+            self.assertEqual(self.apply('remove').returncode, 0)
+
+    def test_damaged_asset_cannot_replace_installed_plugin_or_restart_service(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        self.assertEqual(self.apply('install', original).returncode, 0)
+        before = self.plugin_snapshot()
+        calls = self.record_service_calls()
+        damaged, _ = damaged_asset_archive()
+        result = self.apply('update', damaged, expected=digest)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('CRC', result.stderr)
+        self.assertEqual(self.plugin_snapshot(), before)
+        self.assertEqual(calls.read_text(), '')
+        self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+        # Failed extraction must release the transaction lock for recovery.
+        good, _ = archive(extra=('Example/assets/large.bin', b'x' * 150_000))
+        result = self.apply('update', good, expected=digest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.folder/'assets/large.bin').read_bytes(), b'x' * 150_000)
+        self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'])
 
     def test_ludusavi_dependency_discovery_is_exact_archive_scoped(self):
         from framey_official import PLUGINS, archive as official_archive
@@ -867,15 +1003,47 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/plugin['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['notifications-private-logs'])
+        self.assertEqual(receipt['compatShims'], ['notifications-private-logs', 'notifications-ipc-eof'])
         main = (folder/'main.py').read_text()
         crypto = (folder/'py_modules/connector/crypto.py').read_text()
         self.assertNotIn('filename="/tmp/notifications.log"', main)
         self.assertNotIn('=== ENVIRON ===', crypto)
         self.assertNotIn('clear_env.items()', crypto)
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue((folder/'main.py').read_bytes().startswith(prefix))
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py')).read_bytes())
         result = self.apply('remove', plugin_id=79, folder=plugin['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
+
+    def test_notifications_missing_ipc_payload_refuses_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 79)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=79,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Decky Notifications child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
+
+    def test_notifications_other_archive_keeps_original_backend(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 79)
+        stream = io.BytesIO(official_archive(plugin))
+        with zipfile.ZipFile(stream, 'a') as bundle:
+            original = bundle.read(plugin['folder']+'/main.py')
+            bundle.writestr(plugin['folder']+'/new-version.txt', b'Different archive; no adaptation')
+        changed = stream.getvalue()
+        self.assertEqual(frame_decky_store.apply_script(79, hashlib.sha256(changed).hexdigest()), frame_decky_store.APPLY)
+        result = self.apply('install', changed, plugin_id=79,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        self.assertEqual((folder/'main.py').read_bytes(), original)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
 
     def test_exact_storage_cleaner_deletes_only_private_cache_fixture(self):
         from framey_official import PLUGINS, archive as official_archive
@@ -975,6 +1143,44 @@ class StoreTransaction(unittest.TestCase):
                 frame_decky_store.apply_script(68, frame_decky_store.WINE_CELLAR_DIGEST)
         self.assertEqual(frame_decky_store.apply_script(68, '0'*64), frame_decky_store.APPLY)
 
+    def test_fileserver_child_ipc_repair_preserves_managed_backend(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 60)
+        for arch in ('x86_64', 'aarch64'):
+            with self.subTest(target_arch=arch):
+                result = self.apply('install', official_archive(record), plugin_id=60,
+                                    folder=record['folder'], version=record['version'], target_arch=arch)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                plugin = self.folder.parent/record['folder']
+                source = (plugin/'main.py').read_bytes()
+                prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                          b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                self.assertTrue(source.startswith(prefix))
+                self.assertEqual(hashlib.sha256(source[len(prefix):]).hexdigest(),
+                                 '78a972424cc20ce8c25fc00450bed47e00ff067b3c158c8c4dc066f13f5f22bf')
+                self.assertEqual((plugin/'py_modules/framey_decky_ipc.py').read_bytes(),
+                                 Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+                self.assertIn('deckyfileserver-ipc-eof',
+                              json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'])
+                self.assertEqual(hashlib.sha256((plugin/'bin/backend').read_bytes()).hexdigest(),
+                                 frame_decky_store.FILESERVER_BINARIES[arch])
+                shutil.rmtree(plugin)
+
+    def test_fileserver_missing_ipc_payload_rolls_back_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 60)
+        source = frame_decky_store.apply_script(60, record['sha256'])
+        # Delete only the embedded adapter assignment, preserving native assets.
+        source = '\n'.join(line for line in source.split('\n')
+                           if not line.startswith('FRAMEY_FILESERVER_IPC_SOURCE ='))
+        for arch in ('x86_64', 'aarch64'):
+            with self.subTest(target_arch=arch), patch.object(frame_decky_store, 'apply_script', return_value=source):
+                result = self.apply('install', official_archive(record), plugin_id=60,
+                                    folder=record['folder'], version=record['version'], target_arch=arch)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('Missing DeckyFileServer child IPC EOF repair', result.stderr)
+                self.assertFalse((self.folder.parent/record['folder']).exists())
+
     def test_exact_fileserver_gets_native_user_helper(self):
         from framey_official import PLUGINS, archive as official_archive
         import platform
@@ -989,7 +1195,7 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(json.loads((plugin/'plugin.json').read_text())['flags'], [])
         self.assertEqual(json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'],
                          ['deckyfileserver-user-native', 'deckyfileserver-https-address',
-                          'deckyfileserver-directory-entry'])
+                          'deckyfileserver-directory-entry', 'deckyfileserver-ipc-eof'])
         helper = plugin/'bin/backend'
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(), frame_decky_store.FILESERVER_BINARIES[platform.machine()])
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
@@ -1213,9 +1419,16 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent / record['folder']
         receipt = json.loads((folder / '.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['network-sentinel-user-psutil'])
+        self.assertEqual(receipt['compatShims'], ['network-sentinel-user-psutil', 'network-sentinel-ipc-eof'])
         self.assertEqual(json.loads((folder / 'plugin.json').read_text())['flags'], ['debug'])
         source = (folder / 'main.py').read_text()
+        prefix = ('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue(source.startswith(prefix))
+        self.assertEqual(hashlib.sha256(source[len(prefix):].encode()).hexdigest(),
+                         'd9a7e7d476ce6ab9554eb5e7035f7e07ddddf47de3a8964daa7b6f89089e38c5')
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
         self.assertNotIn('decky.DECKY_SETTINGS_DIR', source)
         self.assertIn('decky.DECKY_PLUGIN_SETTINGS_DIR', source)
         self.assertIn("            jitter = 0\n            cmd = ['ping'", source)
@@ -1224,6 +1437,32 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(int.from_bytes(native[18:20], 'little'),
                          {'x86_64': 62, 'aarch64': 183}[platform.machine()])
         self.assertIn('BSD 3-Clause', (folder / 'py_modules/psutil-7.2.2.dist-info/LICENSE').read_text())
+        # The published setting update is memory-only. Exercise the unchanged
+        # lifecycle body locally without monitoring, network or Decky services.
+        with tempfile.TemporaryDirectory(prefix='framey-network-settings-') as private:
+            settings = Path(private)/'network-sentinel.json'
+            decky = types.SimpleNamespace(DECKY_PLUGIN_SETTINGS_DIR=private,
+                                          logger=logging.getLogger('framey-network-settings'))
+            module = types.ModuleType('framey_network_settings_fixture')
+            with patch.dict(sys.modules, {'decky': decky, 'psutil': types.SimpleNamespace()}):
+                exec(compile(source[len(prefix):], str(folder/'main.py'), 'exec'), module.__dict__)
+
+                async def exercise():
+                    first = module.Plugin()
+                    await first._main()
+                    self.assertTrue(await first.update_settings({'show_bandwidth': False}))
+                    self.assertFalse(settings.exists())
+                    await first._unload()
+                    self.assertIs(json.loads(settings.read_text())['show_bandwidth'], False)
+                    second = module.Plugin()
+                    await second._main()
+                    self.assertIs((await second.get_settings())['show_bandwidth'], False)
+                    self.assertTrue(await second.update_settings({'show_bandwidth': True}))
+                    self.assertIs(json.loads(settings.read_text())['show_bandwidth'], False)
+                    await second._unload()
+                    self.assertIs(json.loads(settings.read_text())['show_bandwidth'], True)
+
+                asyncio.run(exercise())
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             self.assertEqual((folder / 'LICENSE').read_bytes(), original.read(record['folder']+'/LICENSE'))
         self.assertEqual(self.apply('remove', plugin_id=114, folder=record['folder']).returncode, 0)
@@ -1238,6 +1477,19 @@ class StoreTransaction(unittest.TestCase):
                             folder=record['folder'], version=record['version'])
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(folder.exists())
+
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
+    def test_network_sentinel_missing_ipc_payload_rolls_back_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 114)
+        source = frame_decky_store.apply_script(record['id'], record['sha256'])
+        missing = source[:source.index('FRAMEY_NETWORK_SENTINEL_IPC_SOURCE =')]+frame_decky_store.APPLY
+        with patch.object(frame_decky_store, 'apply_script', return_value=missing):
+            result = self.apply('install', official_archive(record), plugin_id=114,
+                                folder=record['folder'], version=record['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Network Sentinel child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/record['folder']).exists())
 
     @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
     def test_exact_deckyspy_gets_native_dependency_and_license_only_in_its_folder(self):
@@ -1936,6 +2188,86 @@ pathlib.Path.rename = fail_staged_move
         self.assertEqual(self.apply('remove', expected='b' * 64).returncode, 0)
         self.assertFalse(self.folder.exists())
 
+    def test_symlinked_receipt_cannot_authorize_update_or_remove(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        newer, _ = archive(extra=('Example/new.txt', 'new version'))
+        for action, data in [('update', newer), ('remove', None)]:
+            with self.subTest(action=action):
+                if self.folder.exists():
+                    shutil.rmtree(self.folder)
+                self.assertEqual(self.apply('install', original).returncode, 0)
+                marker = self.folder/'.frame-control-store.json'
+                valid = marker.read_bytes()
+                external = Path(self.tmp.name)/'external-receipt.json'
+                external.write_bytes(valid)
+                marker.unlink()
+                marker.symlink_to(external)
+                before = self.plugin_snapshot()
+                calls = self.record_service_calls()
+                result = self.apply(action, data, expected=digest)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertIn('Only a Frame Control store plugin can be changed', result.stderr)
+                self.assertEqual(self.plugin_snapshot(), before)
+                self.assertTrue(marker.is_symlink())
+                self.assertEqual(external.read_bytes(), valid)
+                self.assertEqual(calls.read_text(), '')
+                self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+                # Restoring a regular receipt permits a new transaction. The
+                # rejected attempt must release the lock and preserve data.
+                marker.unlink()
+                marker.write_bytes(valid)
+                retry = self.apply(action, data, expected=digest)
+                self.assertEqual(retry.returncode, 0, retry.stderr)
+                if action == 'update':
+                    self.assertEqual((self.folder/'new.txt').read_text(), 'new version')
+                else:
+                    self.assertFalse(self.folder.exists())
+        print('Framey store receipt transaction proof: '+json.dumps({
+            'passed':True, 'symlinkUpdateRefused':True, 'symlinkRemoveRefused':True,
+            'installedFilesPreserved':True, 'externalReceiptPreserved':True,
+            'rejectedChangeDidNotStopService':True, 'regularReceiptRetrySucceeded':True,
+            'applySha256':hashlib.sha256(frame_decky_store.APPLY.encode()).hexdigest(),
+            'syntheticHome':True, 'realFrameContacted':False}, sort_keys=True))
+
+    def test_malformed_receipt_refuses_changes_before_touching_service(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        self.assertEqual(self.apply('install', original).returncode, 0)
+        marker = self.folder/'.frame-control-store.json'
+        valid = marker.read_bytes()
+        calls = self.record_service_calls()
+        invalid = [b'[]', b'null', b'true', b'42', b'"text"', b'{}', b'{', b'\xff',
+                   json.dumps({'storeId':42.0,'sha256':digest}).encode(),
+                   json.dumps({'storeId':'42','sha256':digest}).encode(),
+                   json.dumps({'storeId':43,'sha256':digest}).encode()]
+        for payload in invalid:
+            for action, data in [('update', original), ('remove', None)]:
+                with self.subTest(payload=payload, action=action):
+                    marker.write_bytes(payload)
+                    before = self.plugin_snapshot()
+                    result = self.apply(action, data, expected=digest)
+                    self.assertNotEqual(result.returncode, 0, result.stdout)
+                    self.assertIn('Only a Frame Control store plugin can be changed', result.stderr)
+                    self.assertEqual(self.plugin_snapshot(), before)
+                    self.assertEqual(calls.read_text(), '')
+                    self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+        marker.write_bytes(valid)
+        self.assertEqual(self.apply('remove', expected=digest).returncode, 0)
+
+    def test_noninteger_peer_id_does_not_block_an_unrelated_install(self):
+        data, _ = archive()
+        other = self.folder.parent/'Other'
+        other.mkdir()
+        (other/'plugin.json').write_text('{"name":"Other"}')
+        marker = other/'.frame-control-store.json'
+        for value in (True, 1.0, '1'):
+            with self.subTest(value=value):
+                original = json.dumps({'storeId':value})
+                marker.write_text(original)
+                result = self.apply('install', data, plugin_id=1)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(marker.read_text(), original)
+                self.assertEqual(self.apply('remove', plugin_id=1).returncode, 0)
+
 
     def test_exact_deck_shelves_keeps_published_files_with_child_ipc_repair(self):
         from framey_official import PLUGINS, archive as official_archive
@@ -1990,6 +2322,42 @@ pathlib.Path.rename = fail_staged_move
 
 
 class StoreHost(unittest.TestCase):
+    def test_archive_type_collision_is_rejected_before_headset_transfer(self):
+        _, data, digest = next(file_directory_collisions())
+        state = {'managed': True, 'running': True, 'plugins': []}
+        catalog = [{'id':42, 'name':'Example', 'root':False, 'sha256':digest, 'version':'1.0'}]
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog', return_value=catalog), \
+             patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
+            with self.assertRaisesRegex(ValueError, 'file/directory collision'):
+                frame_decky_store.change(lambda *args, **kwargs:self.fail('No headset transfer expected'),
+                                         'install', 42, reviewed_hash=digest)
+
+    def test_non_utf8_manifest_is_rejected_before_headset_transfer(self):
+        text = json.dumps({'name': 'Example', 'flags': []})
+        for encoding in ('utf-16', 'utf-8-sig'):
+            with self.subTest(encoding=encoding):
+                data, digest = archive(manifest=text.encode(encoding))
+                state = {'managed': True, 'running': True, 'plugins': []}
+                catalog = [{'id':42, 'name':'Example', 'root':False, 'sha256':digest, 'version':'1.0'}]
+                with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+                     patch.object(frame_decky_store, 'catalog', return_value=catalog), \
+                     patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
+                    with self.assertRaisesRegex(ValueError, 'manifest.*UTF-8'):
+                        frame_decky_store.change(lambda *a, **kw:self.fail('No headset transfer expected'),
+                                                 'install', 42, reviewed_hash=digest)
+
+    def test_damaged_asset_is_rejected_before_headset_transfer(self):
+        data, digest = damaged_asset_archive()
+        state = {'managed': True, 'running': True, 'plugins': []}
+        catalog = [{'id':42, 'name':'Example', 'root':False, 'sha256':digest, 'version':'1.0'}]
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog', return_value=catalog), \
+             patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'CRC'):
+                frame_decky_store.change(lambda *args, **kwargs:self.fail('No headset transfer expected'),
+                                         'install', 42, reviewed_hash=digest)
+
     def test_reviewed_installed_copy_changed_before_submission_is_preserved(self):
         state = {'managed': True, 'running': True, 'plugins': [
             {'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '2.0',

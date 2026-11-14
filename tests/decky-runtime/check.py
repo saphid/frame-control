@@ -70,6 +70,7 @@ def main():
     parser.add_argument('version', nargs='?', default='-')
     parser.add_argument('--reproduce-desktop-apps-unload-regression', action='store_true')
     parser.add_argument('--reproduce-suggestme-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-notifications-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steam-status-unload-regression', action='store_true')
     parser.add_argument('--reproduce-localsend-unload-regression', action='store_true')
     parser.add_argument('--reproduce-download-all-unload-regression', action='store_true')
@@ -78,6 +79,7 @@ def main():
     parser.add_argument('--reproduce-music-control-unload-regression', action='store_true')
     parser.add_argument('--reproduce-animation-unload-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
+    parser.add_argument('--reproduce-fileserver-unload-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-settings-unload-regression', action='store_true')
@@ -94,6 +96,7 @@ def main():
     parser.add_argument('--reproduce-battery-tracker-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deckyspy-unload-regression', action='store_true')
     parser.add_argument('--reproduce-theme-music-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-network-sentinel-unload-regression', action='store_true')
     parser.add_argument('--reproduce-emuchievements-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamgriddb-unload-regression', action='store_true')
     parser.add_argument('--reproduce-radiyo-unload-regression', action='store_true')
@@ -188,6 +191,16 @@ def main():
         assert hashlib.sha256(previous).hexdigest() == '0c40ea57255833829d84d84dd1fa0fc0bd4d529761950dd407347b0c61c7529a'
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_network_sentinel_unload_regression:
+        assert record['id'] == 114
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == 'd9a7e7d476ce6ab9554eb5e7035f7e07ddddf47de3a8964daa7b6f89089e38c5'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_theme_music_unload_regression:
         assert record['id'] == 52
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -203,6 +216,16 @@ def main():
         assert managed.startswith(prefix)
         previous = managed[len(prefix):]
         assert hashlib.sha256(previous).hexdigest() == frame_decky_store.EMU_MANAGED_MAIN
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_notifications_unload_regression:
+        assert record['id'] == 79
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == 'a5d082d2521a0a52a0f1077f0c2ba773b7b22d139896c82da351772c36ede398'
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_battery_tracker_unload_regression:
@@ -354,6 +377,16 @@ def main():
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
     assert '_root' not in manifest.get('flags', []), manifest
+    if args.reproduce_fileserver_unload_regression:
+        assert record['id'] == 60
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        source = (plugin/'main.py').read_bytes()
+        assert source.startswith(prefix)
+        previous = source[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '78a972424cc20ce8c25fc00450bed47e00ff067b3c158c8c4dc066f13f5f22bf'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_fileserver_empty_flag_regression:
         assert record['id'] == 60
         source = plugin/'main.py'
@@ -1612,7 +1645,20 @@ def main():
                 history = until_ready(lambda: current('get_network_history'), 'isolated network sample')
                 assert 'bandwidth' in history[0] and 'quality' in history[0], history
                 assert current('stop_monitoring') is True
-                report['result'] = 'discovery, native psutil, private settings and isolated monitoring loop passed; external latency/DNS and live Frame unverified'
+                import network_sentinel_private
+                network_sentinel_private.probe(backend, loader, env, log, processes, current,
+                    rpc, until_ready, report, base/'settings'/record['folder'],
+                    regression=args.reproduce_network_sentinel_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_network_sentinel_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_network_sentinel_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        pendingSettingsLost=True, qualifiedCompatibilityPass=False)
+                report['result'] = ('previous managed child IPC forced-kill and skipped unload reproduced'
+                    if args.reproduce_network_sentinel_unload_regression else
+                    'discovery, native psutil, private monitoring/settings, RPC after peer EOF, two clean parent-only stops and restart persistence passed; external latency/DNS, Frame and VR unverified')
             elif case['probe'] == 'localsend':
                 helper = plugin/'bin/localsend-core'
                 expected = ('e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'
@@ -1680,12 +1726,28 @@ def main():
                     raise AssertionError('uploads must be disabled')
                 except urllib.error.HTTPError as error:
                     assert error.code == 401, error.code
+                # Identify only this fixture's native helper before the API's
+                # requested SIGTERM; it can remain an adopted zombie at unload.
+                from theme_music_private import descendants
+                owned_helpers = {pid: state for pid, state in descendants(backend.pid).items()
+                    if Path('/proc') .joinpath(str(pid), 'exe').resolve() == plugin/'bin/backend'}
+                assert len(owned_helpers) == 1, owned_helpers
+                report['ownedFileserverHelpers'] = owned_helpers
                 assert current('set_server_running', False) is False
                 assert current('get_server_running') is False
                 assert current('get_history') == [str(fixture)]
+                import fileserver_private
+                fileserver_private.probe(backend, loader, env, log, processes, current, rpc,
+                    until_ready, report, base/'settings'/record['folder'],
+                    regression=args.reproduce_fileserver_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_fileserver_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
                 report['result'] = ('original empty argument bug reproduced: thumbnail policy ignored'
                     if args.reproduce_fileserver_empty_flag_regression else
-                    'discovery, API1 settings, native HTTPS listing/download, thumbnail policy and stop passed; uploads disabled')
+                    'prior fileserver forced child kill after peer EOF reproduced; negative only'
+                    if args.reproduce_fileserver_unload_regression else
+                    'discovery, API1 settings, native HTTPS listing/download, thumbnail policy, peer EOF RPC, two clean parent-only stops and restart passed; uploads disabled')
             elif case['probe'] == 'free-loader':
                 settings = current('settings_read')
                 assert settings['notify_on_free_games'] is True, settings
@@ -1871,17 +1933,31 @@ def main():
                 assert len(notifications) == 1 and notifications[0]['title'] == 'Private title', notifications
                 assert legacy('notifications_clear') is None
                 assert legacy('notification_list') == []
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                assert until_ready(fingerprint_when_ready, 'persisted fingerprint') == fingerprint
-                assert legacy('notification_list') == []
-                assert not Path('/tmp/notifications.log').exists()
-                report['result'] = ('discovery, private certificate, empty device list and synthetic notification '
-                    'read/clear/restart passed; pairing, live notifications, Frame and VR unverified')
+                installed = (plugin/'main.py').read_bytes()
+                prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                          b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                previous = installed if args.reproduce_notifications_unload_regression else installed[len(prefix):]
+                assert hashlib.sha256(previous).hexdigest() == 'a5d082d2521a0a52a0f1077f0c2ba773b7b22d139896c82da351772c36ede398'
+                if not args.reproduce_notifications_unload_regression:
+                    assert installed.startswith(prefix)
+                    assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for entry in original.infolist():
+                        relative = entry.filename.removeprefix(record['folder']+'/')
+                        if not entry.is_dir() and relative not in ('main.py', 'py_modules/connector/crypto.py'):
+                            assert (plugin/relative).read_bytes() == original.read(entry), relative
+                report['backendSha256'] = hashlib.sha256(installed).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_notifications_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                import notifications_private
+                notifications_private.probe(backend, loader, env, log, processes, legacy, rpc,
+                    until_ready, fingerprint_when_ready, fingerprint, report,
+                    regression=args.reproduce_notifications_unload_regression)
+                report['result'] = ('prior managed Notifications peer EOF and forced kill reproduced; negative control only'
+                    if args.reproduce_notifications_unload_regression else
+                    'discovery, private certificate, empty device list and synthetic notification read/clear, '
+                    'peer EOF readback, restart and two clean parent-only unloads passed; '
+                    'pairing, live notifications, Frame and VR unverified')
             elif case['probe'] == 'radio-local':
                 # Exercise HTTP behavior and prove managed RadiYo rejects a
                 # self-signed HTTPS endpoint. No station or audio opens.
