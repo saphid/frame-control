@@ -101,6 +101,12 @@ or failure. A retired waiting view sends no read. This prevents a pre-save
 snapshot from enabling a second edit; it does not cancel backend work or
 coordinate independent clients.
 
+The optional `framey-test-sample-browser.py` replay connects the built sample and
+real Framey host to published Decky in a networkless Linux container. It verifies
+rendered toggle/Reset saves, iframe reopen and two loader restarts against saved
+file hashes. Its parent bridge, receipt and DOM input are synthetic; it does not
+prove Frame HTTP/SSH, ARM64 browser or live-headset behavior.
+
 Give text fields a visible `label` or an explicit `aria-label`; Framey preserves
 the latter on the native input. This includes Wine Cellar 0.2.1's published
 installed-game search, tested with synthetic search text in the local host.
