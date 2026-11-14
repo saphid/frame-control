@@ -1,0 +1,51 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>(async()=>{
+  const assert=(ok,message)=>{if(!ok)throw Error(message);};
+  const nativeObserver=window.MutationObserver,active=new Set();
+  window.MutationObserver=class extends nativeObserver{
+    constructor(callback){super(callback);active.add(this);}
+    disconnect(){active.delete(this);return super.disconnect();}
+  };
+  const tick=()=>new Promise(resolve=>setTimeout(resolve,20));
+  let mounts=0,unmounts=0,setTitle,selected,changes=0;
+  const StatefulLabel=()=>{
+    const [title,set]=React.useState('Proton tools');setTitle=set;
+    React.useEffect(()=>{mounts++;return()=>unmounts++;},[]);
+    return React.createElement('strong',null,title);
+  };
+  const leaf={data:0,label:'Synthetic tool'},empty={data:'',label:'Steam default'};
+  const inner={label:React.createElement(React.Fragment,null,'Local ',React.createElement('em',null,'tools')),options:[leaf]};
+  const group={label:React.createElement(StatefulLabel),options:[inner]};
+  const root=ReactDOM.createRoot(document.getElementById('fixture'));
+  const render=(options,disabled=false)=>ReactDOM.flushSync(()=>root.render(React.createElement(DFL.Dropdown,{
+    label:'Tool',rgOptions:options,selectedOption:0,disabled,onChange:value=>{selected=value;changes++;}})));
+  const groups=()=>[...document.querySelectorAll('optgroup')].map(node=>node.label);
+  const choose=text=>ReactDOM.flushSync(()=>{
+    const select=document.querySelector('select');select.value=[...select.options].find(option=>option.textContent===text).value;
+    select.dispatchEvent(new Event('change',{bubbles:true}));
+  });
+  try{
+    render([group,empty]);await tick();
+    assert(groups().join('|')==='Proton tools › Local tools','rich React group path lost text');
+    assert(mounts===1 && active.size===2,'labels must render once per rich group');
+    choose('Synthetic tool');assert(selected===leaf,'zero-valued callback identity changed');
+    ReactDOM.flushSync(()=>setTitle('Updated Proton'));await tick();
+    assert(groups()[0]==='Updated Proton › Local tools','component state changes did not update native heading');
+    render([empty,group]);await tick();
+    assert(groups()[0]==='Updated Proton › Local tools' && mounts===1,'reordering reset the label component');
+    render([empty,group],true);await tick();const before=changes;choose('Steam default');
+    assert(changes===before && document.querySelector('select').disabled,'disabled control submitted a value');
+    render([{label:'Plain group',options:[leaf]}]);await tick();
+    assert(groups()[0]==='Plain group' && active.size===0 && unmounts===1,'removed rich group observers or label survived');
+    render([group,empty]);await tick();
+    assert(groups()[0]==='Proton tools › Local tools' && mounts===2 && active.size===2,'reloaded labels were stale');
+    ReactDOM.flushSync(()=>root.unmount());await tick();
+    assert(active.size===0 && unmounts===2,'unmount leaked an observer or label component');
+    document.getElementById('result').textContent=JSON.stringify({passed:true,richGroupLabels:true,fragmentAndComponentLabels:true,componentStateUpdates:true,reorderingPreservesLabelState:true,zeroValueCallbackIdentity:true,disabledSuppression:true,reloadDropsOldObservers:true,unmountStopsObservers:true,labelMounts:mounts,labelUnmounts:unmounts,remainingObservers:active.size,syntheticOptions:true,realFrameContacted:false});
+  }catch(error){root.unmount();document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
