@@ -283,6 +283,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 18 and digest == 'f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_BLUETOOTH_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 133 and digest == '9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_NONSTEAM_BADGES_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 50 and digest == STORAGE_CLEANER_DIGEST:
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_STORAGE_CLEANER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -879,6 +882,31 @@ try:
                 frontend.write_bytes(managed)
                 compat_shims.append('download-all-local-queue')
                 compat_shims.append('download-all-ipc-eof')
+            # Repair the exact backend's three Deck-user paths and child-only
+            # IPC EOF handling. Keep its API, frontend, search and parser intact.
+            if int(plugin_id)==133 and digest=='9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131' and folder=='decky-nonsteam-badges':
+                main=unpacked/'main.py'
+                source=main.read_bytes()
+                if hashlib.sha256(source).hexdigest()!='af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704':
+                    raise RuntimeError('Non-Steam Badges Python source mismatch')
+                if source.count(b'Path("/home/deck/.steam/steam/userdata/")')!=2 or source.count(b'base_path = "/home/deck/.steam/steam/userdata/"')!=1:
+                    raise RuntimeError('Non-Steam Badges userdata paths differ from pinned archive')
+                source=source.replace(b'Path("/home/deck/.steam/steam/userdata/")',
+                    b'(Path.home()/".steam/steam/userdata")')
+                source=source.replace(b'base_path = "/home/deck/.steam/steam/userdata/"',
+                    b'base_path = str(Path.home()/".steam/steam/userdata")')
+                ipc=globals().get('FRAMEY_NONSTEAM_BADGES_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Non-Steam Badges child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Non-Steam Badges child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('nonsteam-badges-user-paths')
+                compat_shims.append('nonsteam-badges-ipc-eof')
             if prefix_manager:
                 main=unpacked/'main.py'
                 data=main.read_bytes()

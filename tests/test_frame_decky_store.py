@@ -470,6 +470,59 @@ zipfile.ZipFile.extractall = forbidden_extract
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
 
+    def test_nonsteam_badges_repairs_only_pinned_paths_and_ipc_and_preserves_archive(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 133)
+        data = official_archive(record)
+        folder = self.folder.parent/record['folder']
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            backend = original.read(record['folder']+'/main.py')
+            for plugin_id in (42, 133):
+                with self.subTest(plugin_id=plugin_id):
+                    result = self.apply('install', data, plugin_id=plugin_id,
+                                        folder=record['folder'], version=record['version'])
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    expected = backend
+                    if plugin_id == 133:
+                        expected = expected.replace(b'Path("/home/deck/.steam/steam/userdata/")',
+                                                    b'(Path.home()/".steam/steam/userdata")')
+                        expected = expected.replace(b'base_path = "/home/deck/.steam/steam/userdata/"',
+                                                    b'base_path = str(Path.home()/".steam/steam/userdata")')
+                        expected = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                                    b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n') + expected
+                        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+                    self.assertEqual((folder/'main.py').read_bytes(), expected)
+                    for item in original.infolist():
+                        if not item.is_dir() and item.filename != record['folder']+'/main.py':
+                            self.assertEqual((folder/item.filename.split('/', 1)[1]).read_bytes(), original.read(item))
+                    receipt = json.loads((folder/'.frame-control-store.json').read_text())
+                    self.assertEqual(receipt.get('compatShims', []),
+                                     ['nonsteam-badges-user-paths', 'nonsteam-badges-ipc-eof'] if plugin_id == 133 else [])
+                    self.assertEqual(self.apply('remove', plugin_id=plugin_id,
+                                                folder=record['folder']).returncode, 0)
+                    self.assertFalse(folder.exists())
+
+    def test_nonsteam_badges_missing_ipc_payload_preserves_installed_copy(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 133)
+        data = official_archive(record)
+        folder = self.folder.parent/record['folder']
+        self.assertEqual(self.apply('install', data, plugin_id=133, folder=record['folder']).returncode, 0)
+        (folder/'private-saved.txt').write_bytes(b'keep private data')
+        before = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+        original = frame_decky_store.apply_script
+        def without_payload(plugin_id, digest):
+            return original(plugin_id, digest).replace('FRAMEY_NONSTEAM_BADGES_IPC_SOURCE =',
+                                                       'FRAMEY_UNUSED_IPC_SOURCE =', 1)
+        with patch.object(frame_decky_store, 'apply_script', side_effect=without_payload):
+            result = self.apply('update', data, expected=record['sha256'], plugin_id=133,
+                                folder=record['folder'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Non-Steam Badges child IPC EOF repair', result.stderr)
+        self.assertEqual({str(p.relative_to(folder)): p.read_bytes()
+                          for p in folder.rglob('*') if p.is_file()}, before)
+
     def test_prefix_manager_is_user_scoped_with_legacy_api_and_original_license(self):
         from framey_official import PLUGINS, archive as official_archive
         record = next(p for p in PLUGINS if p['id'] == 130)

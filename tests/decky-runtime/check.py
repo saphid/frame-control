@@ -87,6 +87,8 @@ def main():
     parser.add_argument('--reproduce-deck-shelves-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
     parser.add_argument('--reproduce-alarme-pause-regression', action='store_true')
+    parser.add_argument('--reproduce-nonsteam-path-regression', action='store_true')
+    parser.add_argument('--reproduce-nonsteam-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-bluetooth-unload-regression', action='store_true')
     parser.add_argument('--terminal-candidate', action='store_true')
@@ -312,6 +314,19 @@ def main():
         assert hashlib.sha256(previous).hexdigest() == '96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478'
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_nonsteam_path_regression:
+        assert record['id'] == 133
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+    if args.reproduce_nonsteam_unload_regression:
+        assert record['id'] == 133
+        source = (plugin/'main.py').read_bytes()
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        assert source.startswith(prefix)
+        previous = source[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '17c2880823cc0683f887fe95c419b64ba39fe18671eab4257ffecb7422ea1970'
+        (plugin/'main.py').write_bytes(previous)
     if args.reproduce_deck_progress_unload_regression:
         assert record['id'] == 134
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -520,7 +535,7 @@ def main():
     processes = []
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
               'sha256': record['sha256'],
-              'shim': None if args.reproduce_alarme_pause_regression else case['shim'], 'calls': []}
+              'shim': None if (args.reproduce_alarme_pause_regression or args.reproduce_nonsteam_path_regression) else case['shim'], 'calls': []}
     if candidate is not None:
         report['candidate'] = candidate
     with (home/'runtime.log').open('w+') as log:
@@ -1310,6 +1325,124 @@ def main():
                         report['expectedRegression'] = dict(success=False, phase='plugin unload',
                             previousManagedSourceRestored=True, forcedPluginKills=1,
                             qualifiedCompatibilityPass=False)
+            elif case['probe'] == 'nonsteam-private-shortcuts':
+                # Only this container user's synthetic Steam files are read.
+                assert str(home) == '/home/tester' and not Path('/home/deck').exists()
+                config = home/'.steam/steam/userdata/424242/config'
+                config.mkdir(parents=True)
+                shortcuts = config/'shortcuts.vdf'
+                assert current('get_all_store_mappings') == {}
+                # Independent binary VDF writer: object, string and signed int.
+                import struct
+                def field(kind, key, value):
+                    return bytes([kind])+key.encode()+b'\0'+value
+                def entry(index, appid, name, options):
+                    body = field(1, 'AppName', name.encode()+b'\0')
+                    body += field(1, 'LaunchOptions', options.encode()+b'\0')
+                    if appid is not None:
+                        body += field(2, 'appid', struct.pack('<i', appid))
+                    return field(0, str(index), body+b'\x08')
+                payload = field(0, 'shortcuts', b''.join([
+                    entry(0, -123, 'Private GOG', 'gog launch'),
+                    entry(1, 4242, 'Private Epic', 'epic launch'),
+                    entry(2, 4343, 'Private Amazon', 'amazon launch'),
+                    entry(3, 4444, 'Private Luna', 'luna launch'),
+                    entry(4, 4545, 'Private Other', 'private-launch'),
+                    entry(5, None, 'Private missing ID', 'gog launch'),
+                ])+b'\x08')+b'\x08'
+                shortcuts.write_bytes(payload)
+                expected = {
+                    '4294967173': {'store': 'gog', 'name': 'Private GOG'},
+                    '4242': {'store': 'epic', 'name': 'Private Epic'},
+                    '4343': {'store': 'amazon', 'name': 'Private Amazon'},
+                    '4444': {'store': 'amazon', 'name': 'Private Luna'},
+                    '4545': {'store': None, 'name': 'Private Other'},
+                }
+                observed = current('get_all_store_mappings')
+                assert observed == ({} if args.reproduce_nonsteam_path_regression else expected), {
+                    'observed': observed, 'expected': expected, 'actualHome': str(home)}
+                assert shortcuts.read_bytes() == payload
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    original_backend = original.read(record['folder']+'/main.py')
+                    installed_backend = (plugin/'main.py').read_bytes()
+                    assert (installed_backend == original_backend) is args.reproduce_nonsteam_path_regression
+                    unchanged = {}
+                    for item in original.infolist():
+                        if item.is_dir() or item.filename == record['folder']+'/main.py':
+                            continue
+                        name = item.filename.split('/', 1)[1]
+                        raw = (plugin/name).read_bytes()
+                        assert raw == original.read(item)
+                        unchanged[name] = hashlib.sha256(raw).hexdigest()
+                if not args.reproduce_nonsteam_path_regression:
+                    shortcuts.write_bytes(b'invalid private binary vdf')
+                    assert current('get_all_store_mappings') == {}
+                    assert shortcuts.read_bytes() == b'invalid private binary vdf'
+                    shortcuts.write_bytes(payload)
+                    assert current('get_all_store_mappings') == expected
+                from nonsteam_badges_private import stop as stop_badges
+                stops = []
+                sibling = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(90)'],
+                                           start_new_session=True)
+                processes.append(sibling)
+                def mappings_after_eof():
+                    assert current('get_all_store_mappings') == expected
+                def stop_shortcut_loader():
+                    observation = stop_badges(backend, log,
+                        disconnect=not stops and not args.reproduce_nonsteam_path_regression,
+                        after_disconnect=(mappings_after_eof if not stops and not (
+                            args.reproduce_nonsteam_path_regression or args.reproduce_nonsteam_unload_regression) else None))
+                    stops.append(observation)
+                    assert observation['loaderReturncode'] == 0 and not observation['exactDescendantsRemaining'], observation
+                    assert sibling.poll() is None, 'unrelated private process must survive loader stop'
+                    if args.reproduce_nonsteam_unload_regression:
+                        assert observation['forcedPluginKills'] == 1 and not observation['cleanShutdownVerified'], observation
+                        assert 5 <= observation['seconds'] < 8, observation
+                    elif not args.reproduce_nonsteam_path_regression:
+                        assert observation['cleanShutdownVerified'], observation
+                stop_shortcut_loader()
+                if not args.reproduce_nonsteam_unload_regression:
+                    backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
+                    processes.append(backend)
+                    restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Non-Steam Badges discovery')
+                    assert len(restarted) == 1 and restarted[0]['name'] == record['name']
+                    assert current('get_all_store_mappings') == ({} if args.reproduce_nonsteam_path_regression else expected)
+                    assert shortcuts.read_bytes() == payload
+                    stop_shortcut_loader()
+                assert sibling.poll() is None
+                sibling.terminate()
+                sibling.wait(timeout=5)
+                log.flush()
+                console = (home/'runtime.log').read_text()
+                assert console.count('Starting Decky version v3.3.0') == console.count('[main][INFO]: Shutdown finished.') == (1 if args.reproduce_nonsteam_unload_regression else 2)
+                for marker in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
+                               'Task was destroyed but it is pending', 'Bad file descriptor'):
+                    assert marker not in console, marker
+                report['privateShortcuts'] = dict(actualUserHome=True,
+                    originalBackendUnmodified=args.reproduce_nonsteam_path_regression,
+                    originalBackendSha256=hashlib.sha256(original_backend).hexdigest(),
+                    installedBackendSha256=hashlib.sha256(installed_backend).hexdigest(),
+                    signedAppIdNormalized=not args.reproduce_nonsteam_path_regression,
+                    storeClassification=not args.reproduce_nonsteam_path_regression,
+                    missingAppIdSkipped=not args.reproduce_nonsteam_path_regression,
+                    malformedVdfRefused=not args.reproduce_nonsteam_path_regression,
+                    mappingsPreservedAcrossLoaderRestart=not (args.reproduce_nonsteam_path_regression or args.reproduce_nonsteam_unload_regression),
+                    originalHardcodedHomeFailureReproduced=args.reproduce_nonsteam_path_regression,
+                    privateShortcutsPreserved=True, unchangedArchiveFiles=unchanged,
+                    payloadSha256=hashlib.sha256(payload).hexdigest(),
+                    ownedLoaderStops=stops, loaderConsole=console,
+                    loaderConsoleSha256=hashlib.sha256(console.encode()).hexdigest(),
+                    loaderConsoleErrorFree=all(s['cleanShutdownVerified'] for s in stops),
+                    controlledEofForcedKillReproduced=args.reproduce_nonsteam_unload_regression,
+                    unrelatedSiblingPreserved=True,
+                    browserVerified=False, steamPageBadgesVerified=False,
+                    steamSearchVerified=False, activeSteamAccountSelectionVerified=False,
+                    realFrameContacted=False, physicalControllerVerified=False)
+                if args.reproduce_nonsteam_unload_regression:
+                    report['expectedRegression'] = dict(previousHomeOnlySourceRestored=True, forcedPluginKills=1, qualifiedCompatibilityPass=False)
+                report['result'] = (('previous home-only backend forced-kill after controlled child EOF reproduced' if args.reproduce_nonsteam_unload_regression else 'original hardcoded-home empty mapping failure reproduced' if args.reproduce_nonsteam_path_regression
+                                    else 'published Decky API1 private shortcut mappings and restart persistence passed')+
+                                    '; browser badges, active Steam account, Steam search, Frame and VR unverified')
             elif case['probe'] == 'tabmaster-private-settings':
                 # Exact published backend, synthetic users and private disk only.
                 until_ready(lambda: current('get_setting', 'framey-ready', 'ready') == 'ready',
