@@ -1377,7 +1377,13 @@
     close.onclick=dismiss; item.append(close);
     if (typeof onClick === 'function') {
       const open = document.createElement('button'); open.type='button'; open.textContent='Open';
-      open.onclick=()=>{onClick(); dismiss();}; item.append(open);
+      let opening = false;
+      open.onclick=()=>{
+        if (dismissed || opening) return;
+        // Retire the action before plugin code can synchronously reenter it.
+        opening = true;
+        try {onClick();} finally {dismiss();}
+      }; item.append(open);
     }
     toastRoot.append(item);
     const timer = setTimeout(dismiss, Math.min(30000,Math.max(3000,Number(duration)||5000)));

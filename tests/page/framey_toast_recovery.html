@@ -53,6 +53,9 @@
     flush(()=>button(richNode,'Open').click());
     assert(opened===1&&!richNode.isConnected&&healthyCleanups===1,'failed toast Open/dismiss did not clean its roots');
     assert(notices.children.length===1&&notices.textContent.includes('Healthy peer body'),'failed toast damaged another toast');
+    const retiredOpen=button(richNode,'Open');
+    flush(()=>retiredOpen.click());
+    assert(opened===1,'detached Open must not run after dismissal');
     flush(()=>peer.dismiss());rich.dismiss();
     assert(!notices.children.length,'healthy peer did not dismiss');
     const fresh=create({title:'Fresh notification',body:React.createElement('span',null,'Fresh healthy content')});
@@ -64,7 +67,8 @@
     result.textContent=JSON.stringify({passed:true,isolatedFieldFailures:cases,
       errorsStringsAndFalsyThrows:true,healthyFieldsPreserved:true,healthyStatePreserved:true,
       failedEffectsCleaned:true,dismissAndOpenPreserved:true,independentToasts:true,
-      freshToastRecovers:true,hiddenToastInert:true,syntheticRenderFailures:true,realFrameContacted:false});
+      freshToastRecovers:true,hiddenToastInert:true,detachedOpenRetired:true,
+      syntheticRenderFailures:true,realFrameContacted:false});
   }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
 })();
 </script>
