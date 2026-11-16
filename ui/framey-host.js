@@ -802,8 +802,9 @@
     R.createElement('label', null,
       label != null && R.createElement('strong', null, label), ProgressBar(props)),
     description != null && R.createElement('div', null, description));
-  const ProgressBarWithInfo = ({sOperationText, ...props}) => R.createElement('div', null,
-    ProgressBarItem(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText));
+  const ProgressBarWithInfo = ({sOperationText, sTimeRemaining, ...props}) => R.createElement('div', null,
+    ProgressBarItem(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText),
+    sTimeRemaining == null ? null : R.createElement('div', {'data-framey-progress-detail':true}, sTimeRemaining));
   const MenuItem = ({children, selected, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
       'aria-pressed':selected == null ? undefined : !!selected,

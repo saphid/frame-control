@@ -67,6 +67,11 @@ class ProgressBrowser(unittest.TestCase):
                          r'[^\n]*?bottomSeparator: "none" \}\)', frontend)
         self.assertIsNotNone(info)
         self.assertIsNotNone(item)
+        count_info = re.search(
+            r'window\.SP_REACT\.createElement\(deckyFrontendLib\.ProgressBarWithInfo, '
+            r'\{ nProgress: achievements\.percentage, sOperationText: appStore\.GetAppOverviewByAppID\(appId\)\.display_name, '
+            r'sTimeRemaining: [\s\S]*?bottomSeparator: "none" \}\)', frontend)
+        self.assertIsNotNone(count_info)
         refresh_plugin = next(p for p in PLUGINS if p['id'] == 132)
         refresh_data = archive(refresh_plugin)
         self.assertEqual(hashlib.sha256(refresh_data).hexdigest(), refresh_plugin['sha256'])
@@ -84,7 +89,8 @@ class ProgressBrowser(unittest.TestCase):
         for token, source in [('__REACT__', (ROOT/'ui/vendor/react-18.3.1.min.js').read_text()),
                               ('__REACT_DOM__', (ROOT/'ui/vendor/react-dom-18.3.1.min.js').read_text()),
                               ('__HOST__', without_start), ('__OFFICIAL_INFO__', info.group()),
-                              ('__OFFICIAL_ITEM__', item.group()), ('__OFFICIAL_REFRESH__', refresh.group())]:
+                              ('__OFFICIAL_ITEM__', item.group()), ('__OFFICIAL_REFRESH__', refresh.group()),
+                              ('__OFFICIAL_COUNT_INFO__', count_info.group())]:
             self.assertEqual(page.count(token), 1)
             page = page.replace(token, source.replace('</script', r'<\/script'))
         with tempfile.TemporaryDirectory(prefix='framey-progress-') as folder:
