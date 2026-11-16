@@ -21,12 +21,18 @@ import time
 
 REPO = Path(__file__).resolve().parents[1]
 SOURCE = 'dd2223e799bb3db8256285e353d5a0ad2f4bd014'
+ROOTFS_SHA = '2f5bd5c38043a9a79b7cad7c7574b54360a5186ad7437d171ff808088dfa841c'
 LOADER_SHA = '8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6'
 PAYLOADS = REPO / 'tests/decky-runtime/unix_diagnostic'
 PINS = {
     'observer.py': '14c6d0bc218b09e187995a1973efd497902fe125f9afebcbc8104a64589afcb5',
     'base_observer.py': 'd0610c3eb26b5af7a5a2d0f9f020f8b7829e6b816b5261dcaaf3ba1419f53053',
-    'guest.py': '1e5e9ff9d348a649a5704c3ad26f9fd022bb9cc10c2c0308e518bdefee7e6512',
+    'guest.py': '6ccc8d1c443cc9b6021c2984df46e16272165624c24d5f7af802c261d4e8924a',
+    'live_boundary.py': '3ec7a3bdc52f1968945eaf402d121f23fadf56da18ba366e88d2a0fb3bc46e4f',
+    'loopback_observation.py': 'e2b6cb2b65f8b6f89453aa5d90ac13bb61f7938fdf762ac767824959bb4e4b47',
+    'retain_report.py': '70f0390c773f91617ff1a318a1158d4c90934e3d9fe91ae8a6394b43143940b8',
+    'observe_fixture.py': 'ce7859ac93817bd2a00590955388b73e8fae248bfd2015a6d99d9c85d120cbb3',
+    'sidecar_transport.py': 'ac7dfdede37bc2ee1964944387a6dfd1755ea516b3e8eb3db597a8f79e9d350a',
 }
 SOURCES = [
     'ui', 'tests/decky-runtime', 'tests/fixtures/framey-terminal-python314-arm',
@@ -164,6 +170,8 @@ def main():
     packer = module('diagnostic_exact_main_packer', packer_path)
     codec = module('diagnostic_exact_main_codec', codec_path)
     rootfs_digest = sha(args.rootfs_tar)
+    if rootfs_digest != ROOTFS_SHA:
+        raise ValueError('Previously audited rootfs mismatch')
     inputs = dict(sourceRevision=SOURCE,
                   sourceTree=subprocess.check_output(['git', 'rev-parse', SOURCE + '^{tree}'], cwd=REPO).decode().strip(),
                   diagnosticRevision=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO).decode().strip(),
@@ -175,7 +183,10 @@ def main():
                   publishedNativeOuterDeadlineSeconds=120, originalDefaultDiscoveryDeadlineSeconds=20,
                   serviceDeadlineSeconds=180, qemuDeadlineSeconds=240, memoryMiB=6144, cpus=2,
                   networkDevice=False, hostDevices=False, hostMounts=False, browserRequested=False,
-                  observerEnabledDiagnostic=True, qualificationPassed=False)
+                  observerEnabledDiagnostic=True, loopbackObservationEnabledDiagnostic=True,
+                  loopbackPayloadSha256={name: PINS[name] for name in PINS if name not in ('observer.py', 'base_observer.py', 'guest.py')},
+                  reusedRootfsArtifactId=14201758003, reusedRootfsRunId=43814749117,
+                  qualificationPassed=False)
     (output / 'inputs.json').write_text(json.dumps(inputs, indent=2) + '\n')
     initrd, kernel_path, packet = output / 'initrd.gz', output / 'vmlinuz', output / 'guest-result.packet'
     started = time.monotonic()
@@ -187,7 +198,8 @@ def main():
         kernel = packer.pack(args.rootfs_tar, initrd,
                              {'PluginLoader': loader, 'source.tar': source_tar,
                               'inputs.json': json.dumps(inputs).encode(), 'observer.py': payload['observer.py'],
-                              'base_observer.py': payload['base_observer.py'], 'guest_result.py': codec_path.read_bytes()},
+                              'base_observer.py': payload['base_observer.py'], 'guest_result.py': codec_path.read_bytes(),
+                              **{name: content for name, content in payload.items() if name not in ('observer.py', 'base_observer.py', 'guest.py')}},
                              marker=b'Framey private trace capability v1\n', bootstrap=payload['guest.py'],
                              user_probe=b'# no separate probe\n', normal_root=True,
                              timeout=180, root_size_mib=3072, browser=True)

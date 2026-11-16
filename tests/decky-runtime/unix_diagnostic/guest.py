@@ -13,6 +13,7 @@ import traceback
 sys.path.insert(0, '/input')
 from guest_result import PORT, write_result
 import observer
+import sidecar_transport
 print('FRAMEY_PRIVATE_ARM_NATIVE_PHASE=imports-ready',flush=True)
 
 assert os.getuid() == 0 and os.getpid() != 1
@@ -32,6 +33,11 @@ try:
     assert hashlib.sha256(Path('/input/PluginLoader').read_bytes()).hexdigest() == inputs['loaderSha256']
     assert hashlib.sha256(Path(observer.__file__).read_bytes()).hexdigest() == inputs['observerSha256']
     assert hashlib.sha256(Path('/input/base_observer.py').read_bytes()).hexdigest() == inputs['scopeHelperSha256']
+    assert inputs['loopbackObservationEnabledDiagnostic'] is True
+    for name, digest in inputs['loopbackPayloadSha256'].items():
+        assert name in {'live_boundary.py', 'loopback_observation.py', 'retain_report.py', 'observe_fixture.py', 'sidecar_transport.py'}
+        assert hashlib.sha256(Path('/input', name).read_bytes()).hexdigest() == digest
+    assert set(inputs['loopbackPayloadSha256']) == {'live_boundary.py', 'loopback_observation.py', 'retain_report.py', 'observe_fixture.py', 'sidecar_transport.py'}
     root = Path('/repo')
     root.mkdir(exist_ok=True)
     assert root.is_dir() and not root.is_symlink() and not any(root.iterdir())
@@ -66,7 +72,7 @@ try:
     command = ['runuser', '-u', 'tester', '--', 'env', 'HOME=/home/tester',
                'PYTHONDONTWRITEBYTECODE=1', 'PYTHONUNBUFFERED=1', 'XDG_RUNTIME_DIR=/run/user/1100',
                'DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1100/bus', 'python3',
-               '/repo/tests/decky-runtime/check.py', '65', '-', '--terminal-candidate']
+               '-B', '/input/observe_fixture.py']
     report['publishedLoaderExecuted'] = True
     result = subprocess.run(command, capture_output=True, text=True, timeout=120)
     report['probeExitStatus'] = result.returncode
@@ -90,15 +96,28 @@ except BaseException as error:
     report.update(errorType=type(error).__name__, error=str(error)[:2000],
                   errorTraceback=traceback.format_exc(limit=4))
 finally:
-    if active is not None and active.report.get('captureActive'):
-        report['observerCapture'] = active.finish()
+    try:
+        if active is not None and active.report.get('captureActive'):
+            report['observerCapture'] = active.finish()
+    except BaseException as error:
+        report['observerCleanupErrorType'] = type(error).__name__
+        report['success'] = False
     if manager_started:
-        stop = subprocess.run(['systemctl', 'stop', 'user@1100.service'],
-                              capture_output=True, text=True, timeout=40)
-        report['ownedUserManagerStopped'] = stop.returncode == 0
-        print('FRAMEY_PRIVATE_ARM_NATIVE_PHASE=user-manager-stop-returned',flush=True)
-        if stop.returncode:
+        try:
+            stop = subprocess.run(['systemctl', 'stop', 'user@1100.service'],
+                                  capture_output=True, text=True, timeout=40)
+            report['ownedUserManagerStopped'] = stop.returncode == 0
+            print('FRAMEY_PRIVATE_ARM_NATIVE_PHASE=user-manager-stop-returned',flush=True)
+            if stop.returncode:
+                report['success'] = False
+        except BaseException as error:
+            report['ownedUserManagerStopped'] = False
+            report['userManagerStopErrorType'] = type(error).__name__
             report['success'] = False
+    try:
+        report['loopbackDiagnostic'] = sidecar_transport.collect()
+    except BaseException:
+        report['loopbackDiagnostic'] = dict(state='unavailable', reason='transport-error', qualificationPassed=False)
     ports = [p for p in Path('/sys/class/virtio-ports').glob('vport*p*/name') if p.read_text().strip() == PORT]
     assert len(ports) == 1
     with Path('/dev', ports[0].parent.name).open('wb', buffering=0) as stream:

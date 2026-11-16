@@ -1,55 +1,83 @@
 # Native ARM Terminal diagnostic branch
 
-This directory is an opt-in investigation for issue #746. The branch
-`diagnose/framey-native-arm-unix-nxmf` is not a merge candidate. Its replacement
-`.github/workflows/decky-runtime.yml` has only a manual dispatch trigger and one
-branch-restricted `ubuntu-24.04-arm` job. Do not merge that replacement into main.
-Default-branch workflows and release qualification remain unchanged.
+This opt-in investigation for issue #746 lives only on
+`diagnose/framey-native-arm-unix-nxmf`. Do not merge the branch or replacement
+workflow into main. It has one manual `observe=true`, exact-branch-restricted
+`ubuntu-24.04-arm` job, read-only contents/actions permissions and no cancellation.
 
-The runner archives exactly main commit
-`dd2223e799bb3db8256285e353d5a0ad2f4bd014`, loads its own packer and result codec,
-and checks the reviewed observer/helper/bootstrap digests before boot. The
-published Decky 3.3.0 ARM loader is pinned by SHA256 and ELF architecture. Docker
-builds the exact-main Containerfile on the native ARM runner, including normal
-Debian package configuration; its exported rootfs digest and image metadata
-and the complete exported TAR are retained as workflow artifacts on success or failure.
-The staged TAR is removed only after upload; container and image cleanup remain
-immediate. This differs from the earlier extracted-package ARM image and
-from cross-architecture TCG on x86. It does not isolate those environment factors
-or explain prior failures.
+The runner archives fixed accepted main
+`dd2223e799bb3db8256285e353d5a0ad2f4bd014`, uses its exact packer/result codec,
+and checks all eight reviewed payload digests and the published Decky 3.3.0 ARM
+loader SHA256/ELF machine. This revision reuses retained rootfs artifact
+`14201758003` from original run `43814749117`. It requires rootfs SHA256
+`2f5bd5c38043a9a79b7cad7c7574b54360a5186ad7437d171ff808088dfa841c`;
+there is no new Docker build or rootfs preparation. That immutable original
+artifact remains the exact input proof on success/failure. New report evidence
+is always uploaded before the task-owned staged copy is removed.
 
-QEMU runs a separate guest with two CPUs and 6144 MiB RAM, TCG, no network device,
-no host devices, and no shared host mounts. The unmodified published fixture
-runs as guest UID 1100; only the observer runs as root inside that owned guest.
-Host tracefs and host user services are never used. Limits stay eight seconds
-per RPC, 120 seconds for the native fixture, 180 seconds for the guest service,
-240 seconds for QEMU, 16 KiB trace buffer per CPU and one bounded 32 KiB trace
-read. Cleanup has separate bounded SIGTERM/SIGKILL waits of eight/five seconds;
-those do not extend the observation window. Only the tracked Popen group and
-its task-owned boot files are removed. Original execution errors survive cleanup
-failures, which remain failed and are recorded in `assessment.json`.
+QEMU runs a networkless owned guest with 2 CPUs/6144 MiB, TCG, no host devices
+and no shared host mounts. The observer runs as guest root; the private driver
+runs as UID1100 and imports identical check.py source before explicitly calling
+its original main with 65/-/--terminal-candidate. This adds a different module
+namespace, driver frames and instrumentation; uninstrumented equivalence is
+not claimed. Main's published fixture and default workflow bytes stay unchanged.
 
-The result reports execution, capture completeness and qualification separately.
-`qualificationPassed` is always false. The observer covers filtered driver
-invocations and normalization events, including stream and seqpacket paths; it
-cannot establish universal syscall coverage or event-time PID/start identity.
-Capture-end task availability is a separate fact. Event endpoint names are hashed;
-raw trace text and kernel pointers are not retained. The ordinary fixture's
-synthetic input/output and startup logs are retained for source-bound analysis.
-No real Frame, browser interaction, wearer or controller proof is established.
+The synchronous adapter observes the existing loader Popen, fixed token HTTP
+and published-discovery calls. It adds no network request, sampler thread or
+process. Passive bounded `/proc/net/tcp` reads occur only at existing token
+boundaries at least 500 ms after the previous read completed. Listener records
+describe only the guest IPv4 loopback/wildcard port1337 network namespace;
+no process ownership, exact bind time or continuous readiness is established.
+Read start/end and later record clocks are separate. Timing perturbation is
+possible and negligible overhead is unproved.
 
-The observer/helper/bootstrap bytes are copied unchanged from the separately
-reviewed private sources: observer `14c6d0bc218b09e187995a1973efd497902fe125f9afebcbc8104a64589afcb5`,
-helper `d0610c3eb26b5af7a5a2d0f9f020f8b7829e6b816b5261dcaaf3ba1419f53053`,
-bootstrap `1e5e9ff9d348a649a5704c3ad26f9fd022bb9cc10c2c0308e518bdefee7e6512`.
+`token-http-returned` means urlopen returned response HEADERS only. Original
+body read/decode happens afterward and may fail/block. Token-body completion,
+authentication, discovery or WebSocket readiness is not implied. No WebSocket
+stage hooks are installed. The source-defined discovery20 deadline is checked
+before each read; an in-flight late positive return still succeeds unchanged.
+All original values, exceptions and stage timeout arguments remain forwarded.
 
-Pure host fault controls (no VM, loader, tracefs or network):
+Observation records are limited to256 and32KiB, with read16385 sentinel bounds.
+The original native report has its own32KiB sidecar cap. Disabled hooks perform
+no passive reads or sidecar writes. Fixture globals are isolated by proxies,
+with stdlib globals untouched, and restored in finally. Original failure reports
+are retained after original cleanup, without converting failure to success.
+
+The guest collects three fixed source-bound sidecars after owned cleanup,
+including failed probes. The reader requires no-follow/nonblocking regular
+files, UID1100/mode0600/single-link, unchanged stat metadata and a32769-byte
+maximum read. It refuses duplicate keys, nonobject/nonfinite JSON including
+exponent overflow, partial bytes and receipt hash/size mismatches. Missing or
+incomplete evidence remains unavailable. Observer/manager cleanup errors remain
+separate failures and cannot bypass collection. Packet/device failures still
+fail at the VM bound. A complete sidecar or capture never establishes native pass.
+
+Unchanged bounds: RPC8/discovery20/HTTP60/native120/service180/VM240 seconds;
+manager stop40; trace ring16KiB perCPU/read32KiB. Owned host cleanup uses separate
+TERM8/KILL5 waits without extending the observation window, preserves execution
+errors, and finalizes evidence/boot-file removal after cleanup failures.
+
+The kernel observer/helper remain14c6/d061. They cover filtered Unix driver
+invocations and normalizations, not IP discovery or universal syscall coverage.
+Capture-end availability does not prove event-time task/start identity. No raw
+trace lines, arbitrary endpoint names or kernel pointers are exported. The
+ordinary native report retains its original console fields independently.
+
+Run pure fault controls from the repository root (no VM/network/loader):
 
 ```sh
-python3 -m unittest discover -s tests -p test_framey_native_diagnostic.py -v
+python3 -B -m unittest discover -s tests -p test_framey_native_diagnostic.py -v
+python3 -B -m unittest discover -s tests/decky-runtime/unix_diagnostic -p 'test_*.py' -v
 ```
 
-The sealed original main Terminal ARM eight-second RPC failure, HTTP sixty-second
-readiness failure, cross-architecture 240-second observation failure and all
-release/headset holds remain in force. A successful instrumented observation
-would supply a diagnostic timeline, not qualify main or establish a repair.
+Source review e33884f7 approved the exact runtime payload/runner/workflow and
+replayed10guest/transport+9runner+1rootfs controls, plus8independent fault
+methods and3architecture controls. The initial exponent-overflow finding and
+red evidence remain sealed separately. Final publication/source checks and a
+fresh no-duplicate guard must precede a single changed observation.
+
+Original main Terminal8s/HTTP60s failures and the original native diagnostic20s
+discovery failure remain failed. This diagnostic supplies observations, not a
+historical-cause, repair, main, release, actual Frame, wearer/controller or VR
+claim. All qualification/release/headset holds remain in force.

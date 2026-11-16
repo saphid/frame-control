@@ -43,7 +43,7 @@ class Process:
 
 
 class DiagnosticTests(unittest.TestCase):
-    def invoke(self, outcomes, signal_error=None):
+    def invoke(self, outcomes, signal_error=None, rootfs_digest=None):
         """Exercise actual main/finalization with synthetic files and mocked Popen."""
         archive_bytes = io.BytesIO()
         with tarfile.open(fileobj=archive_bytes, mode='w') as archive:
@@ -80,6 +80,7 @@ class DiagnosticTests(unittest.TestCase):
             with patch.object(sys, 'argv', ['runner', '--rootfs-tar', str(rootfs), '--loader', str(loader), '--output', str(output)]), \
                  patch.object(runner, 'host_guard'), patch.object(runner.shutil, 'which', return_value='modeled-qemu'), \
                  patch.object(runner, 'LOADER_SHA', hashlib.sha256(fake_loader).hexdigest()), \
+                 patch.object(runner, 'ROOTFS_SHA', rootfs_digest or hashlib.sha256(rootfs.read_bytes()).hexdigest()), \
                  patch.object(runner, 'module', side_effect=[types.SimpleNamespace(pack=pack), types.SimpleNamespace(PORT='modeled', decode=lambda _: {'success': True})]), \
                  patch.object(runner.subprocess, 'check_output', side_effect=git), \
                  patch.object(runner.subprocess, 'Popen', side_effect=start), \
@@ -95,6 +96,10 @@ class DiagnosticTests(unittest.TestCase):
         self.assertEqual((code, waits, signals), (0, [240], []))
         self.assertTrue(result['success'])
         self.assertFalse(result['qualificationPassed'])
+
+    def test_changed_audited_rootfs_is_refused_before_execution(self):
+        with self.assertRaisesRegex(ValueError, 'Previously audited rootfs mismatch'):
+            self.invoke([0], rootfs_digest='0' * 64)
 
     def test_original_timeout_survives_term_timeout_and_kill(self):
         code, result, waits, signals = self.invoke(['timeout', 'timeout', -9])

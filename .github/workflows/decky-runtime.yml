@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: framey-native-unix-observation-${{ github.ref }}
@@ -38,24 +39,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends qemu-system-arm
-      - name: Exact-main image, isolated Terminal observation and owned cleanup
+      - name: Reuse immutable previously audited ARM rootfs
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '14201758003'
+          run-id: '43814749117'
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/reused-native-rootfs
+          merge-multiple: true
+      - name: Same image, opt-in loopback boundary observation
         run: |
-          image="framey-native-observation:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          container="framey-native-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          cleanup() {
-            docker rm -f "$container" >/dev/null 2>&1 || true
-            docker image rm "$image" >/dev/null 2>&1 || true
-          }
-          trap cleanup EXIT
-          git show dd2223e799bb3db8256285e353d5a0ad2f4bd014:tests/decky-runtime/Containerfile.flatpak-vm > "$RUNNER_TEMP/Containerfile.native-observation"
-          docker build -q -t "$image" --build-arg KERNEL_PACKAGE=linux-image-arm64 \
-            --build-arg 'BROWSER_PACKAGES=chromium chromium-sandbox' \
-            -f "$RUNNER_TEMP/Containerfile.native-observation" tests/decky-runtime
-          docker image inspect "$image" > "$RUNNER_TEMP/native-observation-image.json"
-          docker create --name "$container" --network none --cap-drop ALL --entrypoint /bin/true "$image"
-          docker export "$container" > "$RUNNER_TEMP/native-observation-rootfs.tar"
-          python3 scripts/framey-observe-native-terminal.py \
-            --rootfs-tar "$RUNNER_TEMP/native-observation-rootfs.tar" \
+          python3 -B scripts/framey-observe-native-terminal.py \
+            --rootfs-tar "$RUNNER_TEMP/reused-native-rootfs/native-observation-rootfs.tar" \
             --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" \
             --output "$RUNNER_TEMP/native-observation"
       - uses: actions/upload-artifact@v4
@@ -64,15 +59,8 @@ jobs:
           name: native-arm-observation-${{ github.sha }}
           path: |
             ${{ runner.temp }}/native-observation/
-            ${{ runner.temp }}/native-observation-image.json
-            ${{ runner.temp }}/Containerfile.native-observation
           if-no-files-found: warn
-      - uses: actions/upload-artifact@v4
+      # The original rootfs artifact remains the exact input proof, not a new image.
+      - name: Remove owned staged copy after evidence upload
         if: always()
-        with:
-          name: native-arm-observation-rootfs-${{ github.sha }}
-          path: ${{ runner.temp }}/native-observation-rootfs.tar
-          if-no-files-found: warn
-      - name: Remove owned staged image after evidence upload
-        if: always()
-        run: rm -f "$RUNNER_TEMP/native-observation-rootfs.tar"
+        run: rm -f "$RUNNER_TEMP/reused-native-rootfs/native-observation-rootfs.tar"
