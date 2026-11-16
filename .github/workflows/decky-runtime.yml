@@ -1,111 +1,70 @@
-name: Decky backend runtime
+# Diagnostic branch only. Do not merge this replacement workflow into main.
+name: Native ARM Terminal observation (diagnostic branch only)
 
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
+    inputs:
+      observe:
+        description: Run one instrumented observation; never release qualification
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: framey-native-unix-observation-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  decky-runtime:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm]
-    runs-on: ${{ matrix.os }}
-    # The full native suite includes 40 primary probes and growing negative
-    # controls. Keep room for image build and cleanup without relaxing probes.
-    timeout-minutes: 15
+  native-arm-observation:
+    if: github.event_name == 'workflow_dispatch' && inputs.observe && github.ref == 'refs/heads/diagnose/framey-native-arm-unix-nxmf'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: ./.github/actions/framey-runtime-inputs
-      - name: Actual Decky 3.3.0 discovery and safe backend probes
-        run: python3 scripts/framey-test-decky-runtime.py --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" --output "$RUNNER_TEMP/decky-runtime.json"
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: decky-runtime-${{ matrix.os }}
-          path: ${{ runner.temp }}/decky-runtime.json
-          if-no-files-found: warn
-
-  terminal-candidate:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: ./.github/actions/framey-runtime-inputs
-      - name: Test-only Terminal candidate with published Decky 3.3.0
-        run: python3 scripts/framey-test-decky-runtime.py --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" --case 65 --terminal-candidate --output "$RUNNER_TEMP/terminal-candidate.json"
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: terminal-candidate-${{ matrix.os }}
-          path: ${{ runner.temp }}/terminal-candidate.json
-          if-no-files-found: warn
-
-  terminal-browser:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: ./.github/actions/framey-runtime-inputs
-      - name: Matching QEMU emulator
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+      - name: Native host and exact source guard
         run: |
-          case "$(uname -m)" in
-            x86_64) emulator=qemu-system-x86 ;;
-            aarch64) emulator=qemu-system-arm ;;
-            *) exit 1 ;;
-          esac
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git cat-file -e dd2223e799bb3db8256285e353d5a0ad2f4bd014^{commit}
+      - uses: ./.github/actions/framey-runtime-inputs
+      - name: Matching emulator
+        run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends "$emulator"
-      - name: Actual Terminal through production HTTP and events in owned VM
+          sudo apt-get install -y --no-install-recommends qemu-system-arm
+      - name: Exact-main image, isolated Terminal observation and owned cleanup
         run: |
-          terminal_image="framey-terminal-browser:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          terminal_container="framey-terminal-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          trap 'docker rm -f "$terminal_container" >/dev/null 2>&1 || true; docker image rm "$terminal_image" >/dev/null 2>&1 || true' EXIT
-          case "$(uname -m)" in
-            x86_64) kernel=linux-image-amd64 ;;
-            aarch64) kernel=linux-image-arm64 ;;
-            *) exit 1 ;;
-          esac
-          docker build -q -t "$terminal_image" --build-arg "KERNEL_PACKAGE=$kernel" \
+          image="framey-native-observation:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          container="framey-native-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          cleanup() {
+            docker rm -f "$container" >/dev/null 2>&1 || true
+            docker image rm "$image" >/dev/null 2>&1 || true
+            rm -f "$RUNNER_TEMP/native-observation-rootfs.tar"
+          }
+          trap cleanup EXIT
+          git show dd2223e799bb3db8256285e353d5a0ad2f4bd014:tests/decky-runtime/Containerfile.flatpak-vm > "$RUNNER_TEMP/Containerfile.native-observation"
+          docker build -q -t "$image" --build-arg KERNEL_PACKAGE=linux-image-arm64 \
             --build-arg 'BROWSER_PACKAGES=chromium chromium-sandbox' \
-            -f tests/decky-runtime/Containerfile.flatpak-vm tests/decky-runtime
-          docker create --name "$terminal_container" --network none --cap-drop ALL --entrypoint /bin/true "$terminal_image"
-          docker export "$terminal_container" > "$RUNNER_TEMP/terminal-browser-rootfs.tar"
-          python3 scripts/framey-test-terminal-browser.py --production-http \
+            -f "$RUNNER_TEMP/Containerfile.native-observation" tests/decky-runtime
+          docker image inspect "$image" > "$RUNNER_TEMP/native-observation-image.json"
+          docker create --name "$container" --network none --cap-drop ALL --entrypoint /bin/true "$image"
+          docker export "$container" > "$RUNNER_TEMP/native-observation-rootfs.tar"
+          python3 scripts/framey-observe-native-terminal.py \
+            --rootfs-tar "$RUNNER_TEMP/native-observation-rootfs.tar" \
             --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" \
-            --rootfs-tar "$RUNNER_TEMP/terminal-browser-rootfs.tar" \
-            --output "$RUNNER_TEMP/terminal-browser"
+            --output "$RUNNER_TEMP/native-observation"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: terminal-browser-${{ matrix.os }}
+          name: native-arm-observation-${{ github.sha }}
           path: |
-            ${{ runner.temp }}/terminal-browser/inputs.json
-            ${{ runner.temp }}/terminal-browser/result.json
-            ${{ runner.temp }}/terminal-browser/console.log
-            ${{ runner.temp }}/terminal-browser/guest-result.packet
-            ${{ runner.temp }}/terminal-browser/*.png
+            ${{ runner.temp }}/native-observation/
+            ${{ runner.temp }}/native-observation-image.json
+            ${{ runner.temp }}/Containerfile.native-observation
           if-no-files-found: warn
