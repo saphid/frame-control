@@ -12,7 +12,9 @@ and checks the reviewed observer/helper/bootstrap digests before boot. The
 published Decky 3.3.0 ARM loader is pinned by SHA256 and ELF architecture. Docker
 builds the exact-main Containerfile on the native ARM runner, including normal
 Debian package configuration; its exported rootfs digest and image metadata
-are retained. This differs from the earlier extracted-package ARM image and
+and the complete exported TAR are retained as workflow artifacts on success or failure.
+The staged TAR is removed only after upload; container and image cleanup remain
+immediate. This differs from the earlier extracted-package ARM image and
 from cross-architecture TCG on x86. It does not isolate those environment factors
 or explain prior failures.
 

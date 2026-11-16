@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 2
+          fetch-depth: 0
       - name: Native host and exact source guard
         run: |
           test "$(uname -s)" = Linux
@@ -45,7 +45,6 @@ jobs:
           cleanup() {
             docker rm -f "$container" >/dev/null 2>&1 || true
             docker image rm "$image" >/dev/null 2>&1 || true
-            rm -f "$RUNNER_TEMP/native-observation-rootfs.tar"
           }
           trap cleanup EXIT
           git show dd2223e799bb3db8256285e353d5a0ad2f4bd014:tests/decky-runtime/Containerfile.flatpak-vm > "$RUNNER_TEMP/Containerfile.native-observation"
@@ -68,3 +67,12 @@ jobs:
             ${{ runner.temp }}/native-observation-image.json
             ${{ runner.temp }}/Containerfile.native-observation
           if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-arm-observation-rootfs-${{ github.sha }}
+          path: ${{ runner.temp }}/native-observation-rootfs.tar
+          if-no-files-found: warn
+      - name: Remove owned staged image after evidence upload
+        if: always()
+        run: rm -f "$RUNNER_TEMP/native-observation-rootfs.tar"
