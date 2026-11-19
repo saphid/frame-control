@@ -1,0 +1,71 @@
+{
+  "base": "a9cf1d22f2f8db7a1328b49611c012b527eeef8d",
+  "change": {
+    "allOtherProductionAndTestAstPreserved": true,
+    "listRootDictionaryRecordsStringUrlsRequired": true,
+    "loopbackAddressAndTwoSecondTimeoutPreserved": true,
+    "macOsFixturePreserved": true,
+    "onlyProductionCefAssignmentChanged": true,
+    "validNeighborsPreserved": true
+  },
+  "problem": "Malformed successful CEF target JSON can crash status or falsely advertise CEF availability.",
+  "rawEvidence": {
+    "decompressedSha256": "28fdbf826b9055c651a89477bac5bedfd143d1b3692116c72d51d1d362c34b66",
+    "path": "docs/evidence/framey-cef-target-shape-2026-11-14.json.gz",
+    "recordSha256": {
+      "/tmp/frame-coordinator-turn66-cef-source-review.json": "ea3d6d85b885fb8f12b1075fcc7d817306c6c8b2fb9467b58496db6f457d6210",
+      "/tmp/frame-coordinator-turn66-cef-source-review.py": "983cfd40a3a40e4e1b5f4b6916b736d4a11621834ee706fed0709f70efba4cd7",
+      "/tmp/frame-resume-round56-cef-target-shape/candidate-55-tests-review.json": "30f5be0224335e2cf1c2218b9e7868889d0934d73ba97421d2247c7dc08b8d53",
+      "/tmp/frame-resume-round56-cef-target-shape/candidate-55-tests.log": "dfea2109aff8df5cec37c3dbb75fd2955fc9d283f4afe708251a1924e8b4ca88",
+      "/tmp/frame-resume-round56-cef-target-shape/candidate-frame_decky.py": "ef1409f6811592b5d2247064466acd62594d5202a7576ee513883873c6a40159",
+      "/tmp/frame-resume-round56-cef-target-shape/candidate-green-review.json": "0eb0c6646b4c77d2195f1404df23fa343142cf07dfa3c5b72a5eb84441f60c58",
+      "/tmp/frame-resume-round56-cef-target-shape/candidate-green.log": "7e0c5c6090a5d7ba54eca90c3d40c05954674dd52977f44f89dcce962405b68e",
+      "/tmp/frame-resume-round56-cef-target-shape/candidate-test_frame_decky.py": "a969a06f25944e4701857d09a29252b3b39c5d36a9c6c3814dfcf5c5244c7701",
+      "/tmp/frame-resume-round56-cef-target-shape/cef-target-shape.patch": "51d7fbb4dea40ee80b56f5dfb736ebc5fe39d53837467532734bd3a98e7f74f6",
+      "/tmp/frame-resume-round56-cef-target-shape/original-frame_decky.py": "23639b72df8bd433e4d790652d4c2d6a2800c0c8a98fc651c73870a60caa946e",
+      "/tmp/frame-resume-round56-cef-target-shape/original-red-review.json": "fa5dd3ec947e9c2282a777e1609bd37c9438f583bb96da1229d1cdca49a66df2",
+      "/tmp/frame-resume-round56-cef-target-shape/original-red.log": "1b4787c3838010df0879eb3cd4dd9c636e17e76da9c45b7767ff073f6f5dd2da",
+      "/tmp/frame-resume-round56-cef-target-shape/original-test_frame_decky.py": "63987e51e30e1dea42946c65728484323278727040e4bc714ca49c65ba2b9e15",
+      "/tmp/frame-resume-round56-cef-target-shape/pr-body.md": "f83308f41f03e11476d3f1a645d6ed14fbad62afc15521dc5d2eef66df9f0435",
+      "/tmp/frame-resume-round56-cef-target-shape/review.json": "d671b9702dfab89dcdae8bf34b8aed2cf8dd607797fb3d7895e14909dea48058",
+      "/tmp/frame-resume-round59-cef-target-shape/candidate-frame_decky.py": "ef1409f6811592b5d2247064466acd62594d5202a7576ee513883873c6a40159",
+      "/tmp/frame-resume-round59-cef-target-shape/candidate-test_frame_decky.py": "66bf4d62044dcd73f43cd7352b099cd444969565c18590549f03c0db328a0787",
+      "/tmp/frame-resume-round59-cef-target-shape/cef-target-shape.patch": "51d7fbb4dea40ee80b56f5dfb736ebc5fe39d53837467532734bd3a98e7f74f6",
+      "/tmp/frame-resume-round59-cef-target-shape/patch-apply.log": "96c57e4429c7ff2516688b3790ececd41f18783c7e5aad450cd6626c4ffb8570",
+      "/tmp/frame-resume-round59-cef-target-shape/pr-body.md": "f83308f41f03e11476d3f1a645d6ed14fbad62afc15521dc5d2eef66df9f0435",
+      "/tmp/frame-resume-round59-cef-target-shape/review.json": "d98c3376f5a4d9c8ed7233fbc6c92d20c0e2d238ccfc34d7607808e818130f2e",
+      "/tmp/frame-resume-round68-next-candidates/review.json": "85ca3733326abd84a157173f59abe10d899cc915d4e18020c7de91580e7f4e3d"
+    },
+    "sha256": "9de4d7ff0421aeb4d8f0e2b871f0e6f38337f6323ce299190206c8c10bef4fce"
+  },
+  "recordedAt": "2026-11-14T23:47:53.090611+00:00",
+  "scope": {
+    "freshOwnHostedQualificationRequired": true,
+    "realFrameContacted": false,
+    "releaseQualified": false,
+    "wornVrVerified": false
+  },
+  "sourceCommit": "acfaf7be07abfed9ccb21442544170aea4e9c079",
+  "sourceSha256": {
+    ".github/workflows/checks.yml": "eac0e12bff2b1eb0cc3e26c4e4587d2868f857b09b6a047f36a39b28b6d33ea0",
+    "tests/sandbox.py": "814c4b6842675dcbb3da54aabe9dcff830f0313c1d25351b8881d48a1e6a8648",
+    "tests/test_frame_decky.py": "66bf4d62044dcd73f43cd7352b099cd444969565c18590549f03c0db328a0787",
+    "tests/test_framey_inventory.py": "fc8921486be1ca94a2d61810d0a1af8a159bdf711f329689700f71e1bf664202",
+    "ui/frame_decky.py": "ef1409f6811592b5d2247064466acd62594d5202a7576ee513883873c6a40159",
+    "ui/frame_decky_store.py": "8f9ef1da1547f7de4082b1515babd5f23b1e47aee6319e2995a323c071ed3088",
+    "ui/framey-compatibility.json": "2eca68882baef4f93bcf9d5454e7b041523533cadf6d90430f471d8f82cdadb6",
+    "ui/framey_compatibility.py": "9185d259d8fda415abe0f7c479a02ff7540c5ffb69d4a432912442314c1fe3f4"
+  },
+  "validation": {
+    "broader55TestsHistoricalPreMacOsFixtureOnly": true,
+    "exactCurrentCandidateActualPrivateHttpCases": 20,
+    "exactCurrentCandidateFocusedTests": 10,
+    "exactCurrentCandidateSkips": 0,
+    "originalExpandedHttpCases": 20,
+    "originalFailingCases": 15,
+    "originalFalseCefPositives": 2,
+    "originalStatusCrashes": 13,
+    "sourceBoundControlsReusedWithoutDuplicateRun": true,
+    "sourceBoundIndependentReview": "/tmp/frame-resume-round59-cef-target-shape/review.json"
+  }
+}

@@ -1,0 +1,67 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const act=callback=>ReactDOM.flushSync(callback);
+  const edit=(node,value)=>act(()=>{
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(node,value);
+    node.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  try {
+    for(const controlled of [false,true]) {
+      const ref=React.createRef(),changes=[];
+      let tabIndex,disabled=false,value='Local value',clicks=0;
+      const render=()=>act(()=>root.render(React.createElement(DFL.TextField,{
+        label:'Local setting',ref,tabIndex,disabled,
+        ...(controlled ? {value} : {defaultValue:value}),bShowClearAction:true,bAlwaysShowClearAction:true,
+        inlineControls:React.createElement('button',{id:'inspect',type:'button',onClick:()=>clicks++},'Inspect'),
+        onChange:event=>changes.push(event.currentTarget.value)
+      })));
+      render();
+      const node=container.querySelector('input'),handle=ref.current;
+      assert(node.tabIndex===0&&!node.hasAttribute('tabindex'),'omitted tabIndex changed native defaults');
+      tabIndex=-1;render();
+      assert(node.tabIndex===-1,'TextField tabIndex=-1 was ignored');
+      act(()=>handle.Focus());node.setSelectionRange(0,5);
+      tabIndex=0;render();
+      assert(container.querySelector('input')===node&&ref.current===handle&&node.tabIndex===0&&
+        document.activeElement===node&&node.selectionStart===0&&node.selectionEnd===5,'tabIndex update lost input/ref/focus/selection');
+      tabIndex=3;render();assert(node.tabIndex===3,'explicit native tab index was replaced');
+      tabIndex=-1;render();edit(node,'Editable draft');
+      assert(changes.at(-1)==='Editable draft','tab opt-out disabled editing');
+      value='Editable draft';render();tabIndex=undefined;render();
+      assert(!node.hasAttribute('tabindex')&&node.tabIndex===0&&node.value==='Editable draft','prop removal lost default or draft');
+      tabIndex=-1;render();
+      const clear=container.querySelector('button[aria-label="Clear Local setting"]');
+      assert(clear.tabIndex===0&&!clear.disabled&&container.querySelector('#inspect').tabIndex===0,'input tab index changed independent actions');
+      act(()=>{clear.click();container.querySelector('#inspect').click();});
+      assert(changes.at(-1)===''&&clicks===1,'input tab index blocked Clear or inline action');
+      value='Disabled';disabled=true;render();const count=changes.length;
+      edit(node,'Ignored');act(()=>clear.click());
+      assert(node.disabled&&clear.disabled&&changes.length===count,'disabled guards lost');
+      act(()=>root.render(null));
+      assert(ref.current===null&&handle.element===null,'unmount did not retire refs');
+    }
+    for(const index of [-1,0,undefined]) {
+      act(()=>root.render(React.createElement(DFL.Tabs,{autoFocusContents:true,tabs:[{id:'one',title:'One',
+        content:React.createElement(React.Fragment,null,
+          React.createElement(DFL.TextField,{label:'Entry',tabIndex:index,defaultValue:'Local'}),
+          React.createElement('button',{id:'next-action'},'Next'))}]})));
+      assert(document.activeElement===container.querySelector(index===-1 ? '#next-action' : 'input'),
+        'local Tabs entry did not honor native input tab stop');
+      act(()=>root.render(null));
+    }
+    act(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      explicitNegativeZeroAndPositive:true,omittedDefault:true,controlledAndUncontrolled:true,
+      stableInputRefFocusSelectionAndDraft:true,updatesAndRemoval:true,editingAndActionsPreserved:true,
+      disabledSuppression:true,tabEntrySkipsOptOut:true,syntheticPropsAndEvents:true,
+      publishedPluginUsageClaimed:false,realFrameContacted:false,physicalControllerTested:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

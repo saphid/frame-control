@@ -146,7 +146,7 @@ async function refreshDecky(reviewUnknown=false){const request=++deckyStatusRequ
   byId('deckyInstalled').replaceChildren();
   byId('deckyInstalled').textContent='Checking installed plugins…';
   showDeckyStore();
-  try{const state=await api('/api/decky');
+  try{const state=await api('/api/decky/panel-status');
   if(request!==deckyStatusRequest)return;
   if(!Array.isArray(state.plugins)||typeof state.running!=='boolean')
     throw Error('Installed plugin status is incomplete');

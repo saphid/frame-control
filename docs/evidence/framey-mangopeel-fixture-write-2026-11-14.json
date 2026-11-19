@@ -1,0 +1,97 @@
+{
+  "baseFailedHead": "8567b0579c7ea3c0d031c1c4234cc4ea08bc1402",
+  "change": {
+    "allOriginalAssertionsAndDeadlinesUnchanged": true,
+    "allProductionSourceUnchanged": true,
+    "largerUnexpectedFixtureRefused": true,
+    "oneUnbufferedWritePerPreset": true,
+    "privateFixtureOnly": true,
+    "twoTruncatingWritesReplaced": true,
+    "watchedInodePreserved": true
+  },
+  "rawEvidence": {
+    "binaryRecords": {
+      "failedOriginalArtifactZipBase64": {
+        "decodedSha256": "9df8452f06faf5b490857ada6d8c637d83874d7620d1b3bf43e2d203f1cd1f58",
+        "encoding": "base64"
+      }
+    },
+    "decompressedSha256": "06a0b9d8cbe285305073424d6169126b358fd4f61107f729b9f125c0a04f75d2",
+    "path": "docs/evidence/framey-mangopeel-fixture-write-2026-11-14.json.gz",
+    "recordSha256": {
+      "actualCandidateHelperProbeProof": "66aa5d03d3e28bde918dc1131455758fe041d79caaac8239b3876a60c66271a2",
+      "actualCandidateHelperProbeScript": "c09c7f7b52d779c0864dff29f2f4efccf94613684b5bf75c87ddc98b7b96efb5",
+      "candidateNativePrimaryAndNegativeLog": "ef1a8f1894002f8a8619f0da4d46ffb26e61df37b3184fbbf4e20fba74a824ac",
+      "candidateNativePrimaryAndNegativeReport": "db06c3bb66548770b6302bc1d6fd72b67252f1ece5ba7f1f6b45f07dfdc17e3d",
+      "candidatePatch": "dfca5357daa9f27a2e15dbee8aa5434911e65d9ad3a6e53d1aef0bf3a89a5d93",
+      "candidateSourceAndNativeReview": "99fd9ac86b34a06e5b035396a5319e795da2e6a937632945f1318e6d454f2286",
+      "candidateTwoPortableControls": "d5ea86bad911f658ae4d5fdec86ac5cd032dac6fcd8ed504bc4a794d0380b491",
+      "controlledWriteInterleavingProof": "e283e9169c6e1551735d7ac586b16854bcef01ff828abb72ce9d1122b1c49eaf",
+      "controlledWriteInterleavingScript": "f7f984341cf13d604cd6af8cb076117aa5390139ab8247393298b84468185683",
+      "existingThreeRuntimeCoverageControls": "5909a5678680ff0f18829ac5a46b55a29c37d056d268e0580203ed39d015c228",
+      "failedOriginalArtifactAudit": "d91fbe05bdfdd9e042a31e2941825a7e8343d06a935e1e2bc50c3d0678961d66",
+      "failedOriginalArtifactZipBase64": "e5b064cddc554599469710cc442c7d06dcbbf4f131eeb06d483f89fc594872af",
+      "failedOriginalJobLog": "01c97ef2472e5ec249b0452d78823b4d43f616337baea457952b615b9e18a45d",
+      "failedOriginalRunJobsAndArtifactReadback": "a2a4788bc04a490e7ba63a4c16392a81c8a30d3466a18af4335e11bcba0b2f1e",
+      "independentActualHelperInotifyProof": "66aa5d03d3e28bde918dc1131455758fe041d79caaac8239b3876a60c66271a2",
+      "independentFailureAndStaticReview": "db861169d7e1daa512f404e112c81d63fbc68594c9763f52cd86d47e36de314b",
+      "independentFixtureShapeControls": "7213d873afcd801d93f436a39af9cb08284dc949ba81b52c20075e4c926e5ce0",
+      "independentNativeRuntimeReview": "f72727ecffd89834b40dccba0307c486b34eb5057b8d7a80b080da93dab7857a",
+      "initialProbeExtractorScript": "78a1d75601fc000b5a1840964fe9915eb7cd49595048f42b98f2feb84890c616",
+      "sourceCommitReadback": "11c3823350c1429feaeb7c5778a6ef1ef5df9afa8a1b2a3672aa384600a66f40"
+    },
+    "sha256": "9f81d3f297eef4cf3ac6fc081aae7abf23b395c3ab3a4af9bf321d090659a6f8"
+  },
+  "recordedAt": "2026-11-14T19:40:28.893038+00:00",
+  "retainedFailure": {
+    "artifactId": 14127689264,
+    "artifactZipSha256": "9df8452f06faf5b490857ada6d8c637d83874d7620d1b3bf43e2d203f1cd1f58",
+    "attempt": 1,
+    "completedNegativeControls": 8,
+    "consoleDigestsVerified": 53,
+    "expectedEofStageReached": false,
+    "failurePoint": "MangoPeel negative control: actual inotify profile change not ready",
+    "jobId": 132554253743,
+    "primaryPassed": 45,
+    "rerun": false,
+    "runId": 43629996092
+  },
+  "scope": {
+    "actualArmCandidateNotExecutedLocally": true,
+    "freshHostedExactHeadQualificationRequired": true,
+    "historicalCiCauseEstablished": false,
+    "initialProbeExtractorCorrection": "Initial AST selector picked class-name search literal; corrected to select complete managed class; original script retained.",
+    "loaderReceiptShapeFixIncluded": false,
+    "notGenericConcurrentWriteGuarantee": true,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false
+  },
+  "sourceBeforeEvidenceCommit": "ec3a357b8b51ff3f4f1b16bdc704e428b85508f2",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "0b7cbf76ed1bdf92567104cbbe77e9d5cf323e983d93909c71d0cea62e3180c0",
+    "tests/decky-runtime/check.py": "e80bbf38cb1918fcace756d9f237c89a0e4dad9ae35fd8f3c99e90b9c89225dd",
+    "tests/decky-runtime/mangopeel.py": "5b2f8102d2b8d7abd78962a9fed6921641d0071146b57b81a410abdc03db27b5",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/fixtures/framey-official/56.zip": "71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1",
+    "tests/sandbox.py": "814c4b6842675dcbb3da54aabe9dcff830f0313c1d25351b8881d48a1e6a8648",
+    "tests/test_framey_mangopeel_fixture.py": "5bd79259d5445ab0562a799e3b2481889d6d407376344fb06da0afb64849343b",
+    "ui/frame_decky.py": "81b934dfd0b2fe4374dc281f4646e793c1653c309943aaec255a9e566dad1ef7",
+    "ui/frame_decky_store.py": "8f9ef1da1547f7de4082b1515babd5f23b1e47aee6319e2995a323c071ed3088"
+  },
+  "validation": {
+    "actualCandidateHelperControlledCompletePreset": true,
+    "actualInotifyControlledOriginalLosesSecondPreset": true,
+    "actualNativeArchitecture": "x86_64",
+    "actualNativePrimaryPass": true,
+    "existingRuntimeCoverageControls": 3,
+    "independentNativeRuntimeReviewPassed": true,
+    "independentSourceAndControlledInotifyReviewPassed": true,
+    "independentTwoPortableControlsPassed": true,
+    "negativeForcedKillSeconds": 5.237,
+    "originalEofNegativeForcedKillPass": true,
+    "portableFileControls": 2,
+    "primaryCleanStopSeconds": 0.225,
+    "skips": 0,
+    "sourceBindingsInNativeReport": 61
+  }
+}

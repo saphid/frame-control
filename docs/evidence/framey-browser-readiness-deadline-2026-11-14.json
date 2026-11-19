@@ -1,0 +1,56 @@
+{
+  "baseHead": "62790333312d7aa2d4e18928522121b885e34267",
+  "behavior": {
+    "actionBudgetSeconds": 120,
+    "allowExactlyAtDeadline": true,
+    "closeRejectedReadyPage": true,
+    "finalSnapshotBudgetSeconds": 8,
+    "readinessBudgetSeconds": 60,
+    "recordLateRejection": true,
+    "rejectReadyResultFinishedAfterDeadline": true,
+    "retriesAdded": false,
+    "rpcDeadlineSeconds": 8
+  },
+  "localValidation": {
+    "actualChromiumStartupTests": 2,
+    "candidateFailures": 0,
+    "candidateSkips": 0,
+    "candidateTests": 61,
+    "originalFailures": 1,
+    "originalTests": 8,
+    "pinnedSyncthingArchiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4"
+  },
+  "rawEvidence": {
+    "decompressedSha256": "6e10e51f3c171e66342e8a9b60c74a44066b160a62500a53e647aaed2b7f6291",
+    "path": "docs/evidence/framey-browser-readiness-deadline-2026-11-14.json.gz",
+    "recordSha256": {
+      "candidate61Green": "b74bfd5874580d27cc7ce19187a1d1e2ef5bc91cdfdc050eda52e6553fb359d4",
+      "originalLateAcceptanceControl": "6c6418c2c31cd33447f8765d366e618f0fe0ea930e97784b5c4ae25241918941",
+      "originalLateAcceptanceProof": "2fa56abffae54d9ab4ae70aa2699ced68046bfa37d17d48d1fb7ea5c4cb866d3",
+      "originalSourceRegressionRed": "7ad5098ad2c175eeeabed21c60f732abed18a97fd79905f88c1614ca8d4c0bff",
+      "retainedArmFailure": "cdb6120a3a3dfc5a694edf848c0f0e711fed4ddb81887c4f2480c984b273a330",
+      "retainedArmPayloads": "d23b8c30e712118033e4eacfa0256d798c39c8572214662a4a53fe4a8946a3d0"
+    },
+    "sha256": "0639c1fc0615a0f83a83bd78d42121f153c1d5809efec43c85135740f3e1d438"
+  },
+  "recordedAt": "2026-11-14T16:47:30.438083+00:00",
+  "scope": {
+    "freshHostedQualificationRequired": true,
+    "historicalArmFailureCauseEstablished": false,
+    "managedInstallerVerified": false,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false,
+    "retainedArmFailureHadGateFalse": true,
+    "slowStartupFixed": false,
+    "wornVrVerified": false
+  },
+  "sourceBeforeEvidenceCommit": "0c23cf24a758805bb4426609cd989b0d607269f2",
+  "sourceSha256": {
+    "tests/decky-runtime/syncthing_browser.py": "982ed0af8409e46159bc9c85b139f8f90ac37486af1934036a88dafbb68bf0f2",
+    "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+    "tests/test_syncthing_browser_readiness.py": "768358de50277b9626a0af22d888adb5715751b368c9babea35ef1f61af9c6ce",
+    "tests/test_syncthing_browser_startup.py": "a4661489e5d268ef6fd867f26dea0906f2597b3a6efedc9179cbc4b059029310",
+    "tests/test_syncthing_http_gateway.py": "1fb0dba554663468f7bdea31bece2040cba41d087243f7851df13636878c4437",
+    "ui/frame_steam.py": "dcd8508b3e9ed814bc35b44c1f1923da110b876bb6b12a1b77666e90a1ab9b33"
+  }
+}

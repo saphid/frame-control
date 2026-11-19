@@ -1,0 +1,97 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const act=callback=>ReactDOM.flushSync(callback);
+  const help='<b>Help without hover</b>';
+  const checkHelp=expected=>{
+    const node=[...container.querySelectorAll('small')].find(n=>n.textContent===expected);
+    assert(node&&node.getClientRects().length&&getComputedStyle(node).visibility==='visible','item tooltip missing or hidden');
+    assert(!container.querySelector('b'),'tooltip string became markup');
+    assert(container.querySelector('em')?.textContent==='Item description','description was replaced by help');
+  };
+  const setInput=(node,value)=>act(()=>{
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(node,String(value));
+    node.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  try {
+    for(const kind of ['button','dropdown','deferred','slider']) {
+      const calls=[],first={data:0,label:'First'},second={data:1,label:'Second'};
+      let selected=0,release,loads=0,disabled=false,tooltip;
+      const redraw=()=>{
+        const common={label:'Item label',description:React.createElement('em',null,'Item description'),tooltip,disabled};
+        const node=kind==='button' ? React.createElement(DFL.ButtonItem,{...common,onClick:e=>calls.push({type:e.type,target:e.target})},'Run item') :
+          kind==='slider' ? React.createElement(DFL.SliderField,{...common,value:selected,min:0,max:10,step:1,
+            editableValue:true,valueSuffix:' units',resetValue:2,onChange:value=>calls.push(value)}) :
+          React.createElement(kind==='dropdown' ? DFL.Dropdown : DFL.DropdownItem,{...common,rgOptions:[first,second],selectedOption:selected,
+            onChange:option=>calls.push(option),onMenuWillOpen:kind==='deferred' ? show=>{loads++;release=show;} : undefined});
+        render(node);
+      };
+      redraw();
+      assert(container.querySelectorAll('small').length===1,'omitted tooltip adds help');
+      tooltip=help;redraw();checkHelp(help);
+      if(kind==='deferred') {
+        assert(loads===0&&!container.querySelector('select'),'help bypassed deferred loader');
+        act(()=>container.querySelector('button').click());
+        tooltip='Loading help';redraw();checkHelp(tooltip);
+        assert(loads===1&&!container.querySelector('select'),'help redraw restarted or released loader');
+        act(()=>release());
+      }
+      const selector=kind==='button' ? 'button' : kind==='slider' ? 'input[type=range]' : 'select';
+      const node=container.querySelector(selector);
+      act(()=>node.focus());tooltip='Updated help';redraw();checkHelp(tooltip);
+      assert(container.querySelector(selector)===node&&document.activeElement===node,'help update replaced control or focus');
+      assert(node.value===(kind==='button'?'':'0'),'help changed current value');
+      if(kind==='button') {
+        act(()=>node.click());
+        assert(calls.length===1&&calls[0].type==='click'&&calls[0].target===node,'original button event lost');
+      } else if(kind==='slider') {
+        const editor=container.querySelector('input[type=number]'),reset=container.querySelector('button');
+        setInput(node,4);setInput(editor,5);act(()=>reset.click());
+        assert(JSON.stringify(calls)==='[4,5,2]','slider numeric edit/reset callbacks lost');
+        assert(container.textContent.includes(' units'),'slider suffix lost');
+      } else {
+        act(()=>{node.value='1';node.dispatchEvent(new Event('change',{bubbles:true}));});
+        assert(calls.length===1&&calls[0]===second,'original dropdown option lost');
+      }
+      selected=1;disabled=true;tooltip='Disabled help';redraw();checkHelp(tooltip);
+      assert(node.disabled,'disabled control reenabled by tooltip');
+      const count=calls.length;
+      if(kind==='button')act(()=>node.click());
+      else if(kind==='slider') {
+        setInput(node,7);setInput(container.querySelector('input[type=number]'),8);
+        act(()=>container.querySelector('button').click());
+      } else act(()=>{node.value='0';node.dispatchEvent(new Event('change',{bubbles:true}));});
+      assert(calls.length===count,'disabled item emitted a callback');
+      disabled=false;tooltip='';redraw();
+      assert(!container.textContent.includes('Disabled help'),'empty tooltip retained old content');
+      assert(container.querySelector(selector)===node,'empty tooltip replaced control');
+      act(()=>node.focus());tooltip=undefined;redraw();
+      assert(container.querySelectorAll('small').length===1,'removed tooltip retained help');
+      assert(container.querySelector(selector)===node&&document.activeElement===node,'tooltip removal replaced control or focus');
+      assert(node.value===(kind==='button'?'':'1'),'tooltip removal lost selection/value');
+      if(kind==='deferred')assert(loads===1,'help redraw restarted option loader');
+      render(null);
+    }
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      buttonDropdownAndSlider:true,nativeAndDeferred:true,visibleWithoutHover:true,textEscaped:true,
+      updatesEmptyAndRemoval:true,descriptionPreserved:true,disabledHelpAndSuppression:true,
+      stableControlValueAndFocus:true,originalButtonEvent:true,originalDropdownOption:true,
+      numericSliderAndEditReset:true,deferredGateAndLoaderPreserved:true,syntheticProps:true,
+      realFrameContacted:false,physicalControllerTested:false,realSettingsSaved:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

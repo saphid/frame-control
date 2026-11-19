@@ -1,0 +1,69 @@
+{
+  "head": "f9301c93882765144b74f9effd73cce549107b8a",
+  "job": 124331191103,
+  "run": 41133819814,
+  "artifact": 13016267596,
+  "artifactSha256": "91c7ca927da70b5ad1fd793196bc144e2f3926cd0ca0b2242a8bd7a7d8db0c58",
+  "jobLogSha256": "1626846946d30b02b81cb83b8008dd22b79408782d17791efae9f76898369cc5",
+  "failedExactJobAndCheckoutVerified": true,
+  "sourceFingerprintsVerified": 166,
+  "bootstrapVerified": true,
+  "fullGuestPacketVerified": true,
+  "guestPacketSha256": "cc83bb6cdb52509bc61bdf67ab33baf41939a772eb1286d975627bebbec94547",
+  "productionFailureRetained": true,
+  "statusHttpRequests": [
+    {
+      "startedAfterSeconds": 23.254,
+      "elapsedSeconds": 3.958,
+      "httpStatus": 200,
+      "running": true,
+      "pluginCount": 1
+    }
+  ],
+  "observedTerminalLists": [
+    [
+      {
+        "is_started": false,
+        "is_completed": false,
+        "title": "SixEightAlfaBravo",
+        "id": "68ab771c-083d-4a62-94b3-e6df672d182b"
+      }
+    ],
+    [
+      {
+        "is_started": true,
+        "is_completed": false,
+        "pid": 556,
+        "title": "SixEightAlfaBravo",
+        "id": "68ab771c-083d-4a62-94b3-e6df672d182b"
+      }
+    ]
+  ],
+  "failedAssertion": "Expected exactly one nonempty get_terminals response; two overlapping requests observe one terminal before/after start",
+  "inputNotReached": true,
+  "lateEventHttpStatuses": [
+    200,
+    200,
+    502
+  ],
+  "ownedDeckyStop": {
+    "mainPidBefore": 335,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 1.527
+  },
+  "ownedCleanupVerified": true,
+  "captureSha256": {
+    "failure": "43d571182228d0c29b7815f18f5c0f2922256cdfbda511f6b6f2a6123a5f3861"
+  },
+  "capturesVisuallyInspected": false,
+  "fullTerminalBrowserRoundTripReached": false,
+  "soleCauseOfLateEventHttpFailureEstablished": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false
+}

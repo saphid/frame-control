@@ -1,0 +1,17 @@
+{
+  "ownedLocalPtyOnly": true,
+  "realFrameContacted": false,
+  "forcedLatePrompt": true,
+  "results": {
+    "original": {
+      "resizeExactLinePassed": false,
+      "output": "printf 'framey-owned-terminal\\n' > framey-terminal-marker; stty size; printf 'framey-owned-output\\n'; printf 'framey-owned-stderr\\n' >&2; exit\r\n$ 31 97\r\nframey-owned-output\r\nframey-owned-stderr\r\n",
+      "shellReaped": true
+    },
+    "newline": {
+      "resizeExactLinePassed": true,
+      "output": "printf 'framey-owned-terminal\\n' > framey-terminal-marker; printf '\\n'; stty size; printf 'framey-owned-output\\n'; printf 'framey-owned-stderr\\n' >&2; exit\r\n$ \r\n31 97\r\nframey-owned-output\r\nframey-owned-stderr\r\n",
+      "shellReaped": true
+    }
+  }
+}

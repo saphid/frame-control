@@ -63,28 +63,41 @@ count. So a build reaches people only when you publish it, after testing it.
    installer builds have passed. Hold the release if any gate is failed,
    cancelled, skipped, still running, or unverified. The publisher also reads
    the exact commit's GitHub CI, native Decky runtime and ownership/watchdog gates, signed Syncthing
-   package jobs (AMD64, ARM64, browser HTTP and production-parent HTTP), and tagged build
-   job records and refuses to
+   package jobs (AMD64 and ARM64 base and browser HTTP, plus AMD64
+   production-parent HTTP), AMD64/ARM64 sample runtime and sample browser
+   persistence, and tagged build job records and refuses to
    publish unless every required job succeeded; it cannot prove physical
    headset or installer behavior on its own.
 
-   The ownership and signed-package workflows use path filters, so a
+   The ownership, signed-package and sample workflows use path filters, so a
    version-only commit may need explicit runs while `main` still points to
    the release commit:
 
    ```sh
    gh workflow run syncthing-candidate.yml --ref main
    gh workflow run syncthing-flatpak-package.yml --ref main
+   gh workflow run framey-sample-runtime.yml --ref main
+   gh workflow run framey-sample-browser.yml --ref main
    ```
 
-   Both ownership/watchdog jobs and every signed-package job must succeed at
-   the exact release commit on `main`, from a push or manual dispatch. PR results, another branch, or an
+   Both ownership/watchdog jobs, every signed-package job, both sample runtime
+   jobs and the sample browser persistence job must succeed at the exact release
+   commit on `main`, from a push or manual dispatch. PR results, another branch, or an
    older commit do not satisfy it. Every matching main checks, native Decky,
-   ownership/watchdog, signed-package and tagged installer run and attempt
+   ownership/watchdog, signed-package, sample and tagged installer run and attempt
    must pass;
    a later success does not conceal a failure, cancellation or skip. The
    signed-package evidence verifies the isolated candidate, not a managed installation or
    wearer-visible Syncthing controls.
+
+   Offline bundle preparation retains each command's elapsed time, waited-child
+   user/system CPU time and bounded failure output in `preparation.json` and
+   `FRAMEY_PREPARATION_COMMAND_JSON` log records. The CPU values describe
+   completed, waited children; they are not live progress or a success gate.
+   A command timeout still fails preparation after 600 seconds. Preserve the
+   partial report and failed attempt when investigating export failures;
+   these diagnostics do not qualify package installation or explain an older
+   timeout that did not record them.
 
    Supply the saved smoke result to the publisher. Both its dry run and publish
    command reject a result from another or dirty commit, incomplete title or
@@ -104,8 +117,9 @@ count. So a build reaches people only when you publish it, after testing it.
 
    The script checks that the tag is on GitHub, that exact-commit main CI
    (including e2e), native amd64/ARM64 Decky runtime and ownership/watchdog checks, signed Syncthing
-   AMD64/ARM64, browser HTTP and production-parent HTTP package checks, and the tagged
-   release workflow are green with no failed, cancelled, skipped or running
+   AMD64/ARM64 base and browser HTTP, plus AMD64 production-parent HTTP
+   package checks, AMD64/ARM64 sample runtime and sample browser persistence,
+   and the tagged release workflow are green with no failed, cancelled, skipped or running
    jobs in any exact-tag push run or attempt, and that all ten installers are
    attached, each with the SHA-256 digest GitHub records. It checks the saved
    independent installer report against the current draft and requires its

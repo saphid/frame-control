@@ -1,0 +1,74 @@
+{
+  "base": "a4ad1afbb84f32fb5f0c717c8b637d8c39a8a167",
+  "change": {
+    "collisionAndTransactionSemanticsPreserved": true,
+    "maximumAcceptedBytes": 16384,
+    "maximumBinaryReadBytes": 16385,
+    "onlyPeerManifestReaderBounded": true,
+    "utf8DecodeAfterOverflowRefusal": true
+  },
+  "problem": "Under-lock peer manifest size check did not bound subsequent text read; growing oversized JSON could be parsed for a name collision while inventory skips it.",
+  "rawEvidence": {
+    "decompressedSha256": "70542f04ed09c039f26c036e606c9e4efde0aba51d3c924aa73dce9bb5eb4fa2",
+    "path": "docs/evidence/framey-store-peer-manifest-read-bound-2026-11-15.json.gz",
+    "recordSha256": {
+      "/tmp/frame-coordinator-turn67-store-peer-source-review.json": "cef16a43c41bf59eda673d01e33166e02baf10fc450348be9f2447c26464380b",
+      "/tmp/frame-coordinator-turn67-store-peer-source-review.py": "2286a8a4da530e0f9417cd3b3a30192f4adf4e1829aa703fc666cdd28edce38f",
+      "/tmp/frame-coordinator-turn74-store-peer-exact-base-tests.json": "131b2aabb8f98d9421b6c66b01fd6e9126ca83830cec3e141d814b0bb506ae82",
+      "/tmp/frame-coordinator-turn74-store-peer-four-tests.log": "ed38d5fb579d27216487382486bb90f49431dfe13f15f994540c486dc3ccd40b",
+      "/tmp/frame-coordinator-turn74-store-peer-source-review.json": "ba463ae56e6b30292909d6b6758b47b34ec50fbcaad063e10697c89b9e1efe79",
+      "/tmp/frame-resume-round69-store-peer-manifest/candidate-green.log": "2fe921f8f5d6d8da658e33c6b5697c815e868daaed4dfb81b2d93959ced73924",
+      "/tmp/frame-resume-round69-store-peer-manifest/new-tests.txt": "4bdb352383890b9a1ddca4b564706320be023901644b8fb99db331d027643b88",
+      "/tmp/frame-resume-round69-store-peer-manifest/observe-original.py": "56791adbafc64923252958d651d59e9d8ca3a84332b33e00238e3977e9ba72f5",
+      "/tmp/frame-resume-round69-store-peer-manifest/original-real-file-race.json": "f2a6a1e35ac2252a43a7c0a37521f823a1b8a8edfa3f9bafd38376cdade726f3",
+      "/tmp/frame-resume-round69-store-peer-manifest/original-red.log": "4bc00e075e57a43bc1c52a4250230ab9a14b2d513d23399fad349d744626deef",
+      "/tmp/frame-resume-round69-store-peer-manifest/peer-manifest-read-limit.patch": "ef47efeff56f40a6c231262e951b481a91ec96f6023e77033cd3dd5fa62c4b41",
+      "/tmp/frame-resume-round69-store-peer-manifest/pr-body.md": "d0ebf8be3bd31cbd6702b3e005fe069eb5f76815a53f201ed9fe1d01c71ba98d",
+      "/tmp/frame-resume-round69-store-peer-manifest/review.json": "579ff366d48f2bc5ad73b7ef8f660563178221fb4ec1277f41443a11f211419f",
+      "/tmp/frame-resume-round69-store-peer-manifest/snapshot/tests/framey_official.py": "3f5324362e687295de7c76b07cbfced0a4849591cd9e28e97568c2b09741d530",
+      "/tmp/frame-resume-round69-store-peer-manifest/snapshot/tests/sandbox.py": "814c4b6842675dcbb3da54aabe9dcff830f0313c1d25351b8881d48a1e6a8648",
+      "/tmp/frame-resume-round69-store-peer-manifest/snapshot/tests/test_frame_decky_store.py": "79bedd7cfd9d778fc1f4f0d21f72857be819b706c7242c8dc9f6225f295e83f1",
+      "/tmp/frame-resume-round69-store-peer-manifest/snapshot/ui/frame_decky.py": "23639b72df8bd433e4d790652d4c2d6a2800c0c8a98fc651c73870a60caa946e",
+      "/tmp/frame-resume-round69-store-peer-manifest/snapshot/ui/frame_decky_store.py": "10463d80e01c70656939714443a5533038b093e562d740a216bc9376cefd6a64",
+      "/tmp/frame-resume-round69-store-peer-manifest/snapshot/ui/framey-compatibility.json": "2eca68882baef4f93bcf9d5454e7b041523533cadf6d90430f471d8f82cdadb6",
+      "/tmp/frame-resume-round69-store-peer-manifest/snapshot/ui/framey_compatibility.py": "9185d259d8fda415abe0f7c479a02ff7540c5ffb69d4a432912442314c1fe3f4"
+    },
+    "sha256": "bfbcdffbbd7d685e6e2caa233ab950758ef74ae52860707d0b35becc65c4343e"
+  },
+  "recordedAt": "2026-11-15T00:48:29.552187+00:00",
+  "reproductionBase": "a9cf1d22f2f8db7a1328b49611c012b527eeef8d",
+  "scope": {
+    "freshOwnHostedQualificationRequired": true,
+    "historicalFailureClaimed": false,
+    "realFrameContacted": false,
+    "releaseQualified": false,
+    "wornVrVerified": false
+  },
+  "sourceCommit": "1acc1978876a4fc2b0844f73e7ee75365a6ce108",
+  "sourceSha256": {
+    ".github/workflows/checks.yml": "eac0e12bff2b1eb0cc3e26c4e4587d2868f857b09b6a047f36a39b28b6d33ea0",
+    "tests/framey_official.py": "3f5324362e687295de7c76b07cbfced0a4849591cd9e28e97568c2b09741d530",
+    "tests/sandbox.py": "814c4b6842675dcbb3da54aabe9dcff830f0313c1d25351b8881d48a1e6a8648",
+    "tests/test_frame_decky_store.py": "79bedd7cfd9d778fc1f4f0d21f72857be819b706c7242c8dc9f6225f295e83f1",
+    "ui/frame_decky.py": "ef1409f6811592b5d2247064466acd62594d5202a7576ee513883873c6a40159",
+    "ui/frame_decky_store.py": "10463d80e01c70656939714443a5533038b093e562d740a216bc9376cefd6a64",
+    "ui/framey-compatibility.json": "2eca68882baef4f93bcf9d5454e7b041523533cadf6d90430f471d8f82cdadb6",
+    "ui/framey_compatibility.py": "9185d259d8fda415abe0f7c479a02ff7540c5ffb69d4a432912442314c1fe3f4"
+  },
+  "validation": {
+    "actualPrivateFileGrowthObserved": true,
+    "candidateReadBoundBytes": 16385,
+    "exactAcceptedBaseFocusedMethods": 4,
+    "exactAcceptedBaseLog": "/tmp/frame-coordinator-turn74-store-peer-four-tests.log",
+    "exactAcceptedBaseSkips": 0,
+    "existingCollisionAndReceiptCasesRetained": true,
+    "focusedMethods": 4,
+    "inventoryAndAcceptedManifestLimitBytes": 16384,
+    "newMethods": 2,
+    "newSubcases": 16,
+    "originalFailingSubcases": 10,
+    "originalObservedReadBytes": 16385,
+    "originalRequestedReadBytes": -1,
+    "serviceShimOnly": true
+  }
+}

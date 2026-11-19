@@ -1,0 +1,202 @@
+{
+  "success": true,
+  "sourceRevision": "19c351fd888ea4a3fb767dc4ac63268f85636e3a",
+  "sourceFingerprintsVerified": 165,
+  "productionSourceUnchanged": true,
+  "packetBytes": 1604491,
+  "packetSha256": "51eaddc9fe102201ca97f2ef50a7c170f4dafce1ddd69331676673ca884cc6f7",
+  "resultSha256": "3831866e23f6ef3354be036e7919bd7508755d2cd2e1df276dc18e73868ff932",
+  "productionMethodRequests": 14,
+  "productionEventRequests": 7,
+  "nativeEvents": 4,
+  "deliveredEvents": 4,
+  "nativeLifecycle": {
+    "firstPid": 319,
+    "reloadPid": 322,
+    "config": {
+      "__version__": 1,
+      "default_shell": "/bin/sh"
+    },
+    "outputSha256": "90a25c23f30c43fce7126fde2d8c82c3e745753b40db2a1a37a4cd39dee82d00",
+    "reloadBefore": {
+      "pid": 322,
+      "uid": 1100,
+      "state": "S",
+      "ppid": 317,
+      "startTicks": 9718,
+      "cmdline": "/bin/sh\u0000"
+    },
+    "reloadAfter": null,
+    "calls": [
+      {
+        "method": "get_terminals",
+        "result": []
+      },
+      {
+        "method": "get_shells",
+        "result": [
+          "/bin/sh",
+          "/usr/bin/sh",
+          "/bin/bash",
+          "/usr/bin/bash",
+          "/bin/rbash",
+          "/usr/bin/rbash",
+          "/usr/bin/dash"
+        ]
+      },
+      {
+        "method": "set_default_shell",
+        "result": true
+      },
+      {
+        "method": "get_default_shell",
+        "result": "/bin/sh"
+      },
+      {
+        "method": "get_config",
+        "result": {
+          "__version__": 1,
+          "default_shell": "/bin/sh"
+        }
+      },
+      {
+        "method": "create_terminal",
+        "result": true
+      },
+      {
+        "method": "get_terminal",
+        "result": {
+          "is_started": true,
+          "is_completed": false,
+          "pid": 319,
+          "title": "AlfaOneBravoTwo"
+        }
+      },
+      {
+        "method": "subscribe_terminal",
+        "result": true
+      },
+      {
+        "method": "change_terminal_window_size",
+        "result": true
+      },
+      {
+        "method": "send_terminal_input",
+        "result": true
+      },
+      {
+        "method": "private_pty_output",
+        "result": {
+          "markerHex": "6672616d65792d6f776e65642d7465726d696e616c0a",
+          "output": "printf 'framey-owned-terminal\\n' > framey-terminal-marker; stty size; printf 'framey-owned-output\\n'; printf 'framey-owned-stderr\\n' >&2\r\n31 97\r\nframey-owned-output\r\nframey-owned-stderr\r\n$ "
+        }
+      },
+      {
+        "method": "unsubscribe_terminal",
+        "result": true
+      },
+      {
+        "method": "remove_terminal",
+        "result": true
+      },
+      {
+        "method": "get_terminals",
+        "result": []
+      },
+      {
+        "method": "create_terminal",
+        "result": true
+      },
+      {
+        "method": "get_terminal",
+        "result": {
+          "is_started": true,
+          "is_completed": false,
+          "pid": 322,
+          "title": "AlfaOneBravoTwo"
+        }
+      }
+    ],
+    "privateInputOutput": true,
+    "resizeVerified": true,
+    "explicitRemoveReaped": true,
+    "reloadReaped": true,
+    "unrelatedProcessPreserved": true,
+    "configPersistedAcrossPluginReload": true,
+    "realFrameContacted": false,
+    "browserVerified": false,
+    "physicalControllerVerified": false
+  },
+  "renderedTerminalRows": [
+    "$ printf 'framey-browser-terminal\\n' > framey-browser-terminal-marker; stty size; printf 'framey-browser-output\\n'",
+    "18 125",
+    "framey-browser-output",
+    "$",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "browserShell": {
+    "pid": 570,
+    "uid": 1100,
+    "ancestryToDeckyService": [
+      570,
+      352,
+      351,
+      340,
+      338
+    ]
+  },
+  "browserShellReaped": true,
+  "captures": {
+    "terminal": "fad9eb6ea94173949e45d35ae1a952890157b8d8c1344e3763914d4acd6fe260",
+    "output": "93f7154c40ec74c5e92466bb19cf00b4cf9e1b198725e5c6b5345ad9dd64dd16",
+    "removed": "3f14e90489b9344a9647a54ea95e4721a983ed9d6a59603400c181d019332994"
+  },
+  "syntheticCef": true,
+  "syntheticManagedReceipt": true,
+  "productionHttpVerified": true,
+  "productionEventsVerified": true,
+  "productionAdapterVerified": false,
+  "realSteamCef": false,
+  "arm64BrowserVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "allCapturesInspected": true,
+  "ownedDeckyStop": {
+    "mainPidBefore": 338,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 2.897
+  },
+  "statusHttpRequests": [
+    {
+      "startedAfterSeconds": 44.826,
+      "elapsedSeconds": 8.162,
+      "httpStatus": 200,
+      "running": true,
+      "pluginCount": 1
+    }
+  ],
+  "successfulDeckyUnitStopVerified": true,
+  "sshTraceCount": 51,
+  "sshFailures": 0,
+  "statusProfilesStopped": true,
+  "statusProfileCount": 22
+}

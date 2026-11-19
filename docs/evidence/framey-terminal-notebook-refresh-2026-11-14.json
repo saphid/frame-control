@@ -1,0 +1,33 @@
+{
+  "sourceCommit": "62a3117192daeb750e14c182faf8663d809648df",
+  "normallyIncludes": [
+    706,
+    707,
+    708
+  ],
+  "notebookRepairCommit": "d4d0c3d46e2aa4b7c9df45297f26ec1aefd80518",
+  "terminalSourcesPreservedFrom": "7d0b23b44e3144d047c0554972a0155aab8e7d1a",
+  "terminalSourcesPreserved": [
+    "ui/framey-host.js",
+    "ui/frame_steam.py",
+    "scripts/framey-test-terminal-browser.py",
+    "tests/decky-runtime/terminal_browser.py",
+    "tests/decky-runtime/terminal_http.py",
+    "tests/decky-runtime/terminal_lifecycle.py"
+  ],
+  "focusedTests": 58,
+  "initialBrowserSkip": 1,
+  "browserRetriedWithCachedChromium": true,
+  "browserTests": 0,
+  "fullNativeAndBothArchHttpCiRequired": true,
+  "realFrameContacted": false,
+  "historicalArm64TriggerEstablished": false,
+  "v0463MustRemainUnpublished": true,
+  "logSha256": {
+    "frame-coordinator-492-notebook-combined-tests.log": "b0335be101bfdd91f8e4ffcbf1cd3d58d03eaf0cbd49a3daf259ebf4b2d910e6",
+    "frame-coordinator-492-notebook-browser-tests.log": "70b452645c4146cc8c31b1246499df05101ce301e953c396372fc74c1d676bd0"
+  },
+  "browserOutcome": "one browser test timed out after30s; minimal private-profile launch also timed out after10s; no DOM success claimed",
+  "browserTimedOut": true,
+  "freshHostedBrowserQualificationRequired": true
+}

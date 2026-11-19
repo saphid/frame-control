@@ -1,0 +1,68 @@
+{
+  "pr": 703,
+  "head": "0808589f5df113885ee2c95524f6e4be4da8c6a4",
+  "mainBefore": "a3c6f491f876ec1fee71ed6aec3d428b55804611",
+  "merge": "98775cd2987c9c0bfb2993d5f70525a413ef7702",
+  "testedTree": "8e50685184fe77b680f0edd5235219c03c1e9902",
+  "actualTreeAndParentsVerified": true,
+  "hostedChecksPassed": 23,
+  "actualMainPanelTestsPassed": 38,
+  "localCdpBrowserPassed": true,
+  "localStandardCliTimeoutsRetained": 2,
+  "hostedOriginalBrowserRanAndPassed": true,
+  "nativeArtifactAudit": {
+    "decky-runtime-ubuntu-latest": {
+      "head": "0808589f5df113885ee2c95524f6e4be4da8c6a4",
+      "artifactId": 14107641716,
+      "zipSha256": "6fa989ddb6d5de3f6ea62870d537de7b6545d02df23990339ba9b9b0ca39035d",
+      "sourceHashesVerified": 55,
+      "primaryCases": 41,
+      "controls": 35,
+      "consoleDigestsVerified": 76,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-703-native-decky-runtime-ubuntu-latest.json"
+    },
+    "terminal-candidate-ubuntu-24.04-arm": {
+      "head": "0808589f5df113885ee2c95524f6e4be4da8c6a4",
+      "artifactId": 14107625120,
+      "zipSha256": "4beb0cdee2cb42e4636b731f427329a285db1dbe1a28b2cfcb906a8fa293f080",
+      "sourceHashesVerified": 67,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-703-native-terminal-candidate-ubuntu-24.04-arm.json"
+    },
+    "decky-runtime-ubuntu-24.04-arm": {
+      "head": "0808589f5df113885ee2c95524f6e4be4da8c6a4",
+      "artifactId": 14107126363,
+      "zipSha256": "9b5fab826cd6be1a81f19aefc6ec35ad3804516313d5277f4d45927e78ecbf7c",
+      "sourceHashesVerified": 55,
+      "primaryCases": 41,
+      "controls": 35,
+      "consoleDigestsVerified": 76,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-703-native-decky-runtime-ubuntu-24.04-arm.json"
+    },
+    "terminal-candidate-ubuntu-latest": {
+      "head": "0808589f5df113885ee2c95524f6e4be4da8c6a4",
+      "artifactId": 14106886000,
+      "zipSha256": "b7ef91d1642c9ce76c941ccdd284112be1b48e511ec3b60a0c7406f65b01fa43",
+      "sourceHashesVerified": 67,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-703-native-terminal-candidate-ubuntu-latest.json"
+    }
+  },
+  "rawReport": "framey-checkbox-merge-98775cd2-2026-11-14.json.gz",
+  "rawReportSha256": "cde7a2e8d4e205de3ca8ceed4a20d95771766cd14635050cdf3280af8810132a",
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "physicalInputVerified": false
+}

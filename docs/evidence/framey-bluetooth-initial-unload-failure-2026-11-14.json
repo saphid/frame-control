@@ -1,0 +1,21 @@
+{
+  "head": "ed4b15bf036c0f14b86412f69dad63072eddd7b7",
+  "failedJob": "https://github.com/saphid/frame-control/actions/runs/43564939132/job/132356600809",
+  "failedArtifactId": 14103750731,
+  "greenArm64ArtifactId": 14103613060,
+  "oldReportSourceBindings": 54,
+  "explicitlyReadAdditionalSourceSha256": {
+    "tests/decky-runtime/bluetooth_bluez.py": "7b29a8c63de90c01c7ba0d3aca8eb9bd70949cac66b1e48c6ce5e4ccd06b34e0",
+    "tests/fixtures/framey-bluez/service.py": "2ad3d00af74dc92f33d6fd604565ffd27dca64f6609472e8bdf02498ae56e003"
+  },
+  "amd64BluetoothForcedPluginKills": 1,
+  "amd64BluetoothUnloadMarkerAbsent": true,
+  "greenArm64BluetoothStopSeconds": 0.214,
+  "greenArm64CompleteDescendantAudit": false,
+  "rawSha256": "a18e070a7292a45ed7be2c52875edd35a67ce3f30a785d0e167b24db694c12ab",
+  "compressedSha256": "a096e25622ab0f4fd296e1e760f9538fc8c9d679f63b5c657917c6d977c4f4bd",
+  "naturalFailureTriggerProven": false,
+  "historicalArm64ShutdownCauseProven": false,
+  "realFrameContacted": false,
+  "rawFile": "framey-bluetooth-initial-unload-failure-2026-11-14.json.gz"
+}

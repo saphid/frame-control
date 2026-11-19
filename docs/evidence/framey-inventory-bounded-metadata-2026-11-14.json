@@ -1,0 +1,91 @@
+{
+  "baseMain": "119dfef6314ab95f06749f09c9bad72d35c96f41",
+  "change": {
+    "acceptedJsonBytes": 16384,
+    "allPerFileChecksInsideOSErrorValueErrorContainment": true,
+    "binaryReadWithExplicitUtf8": true,
+    "invalidManifestSkippedAndPeersPreserved": true,
+    "invalidReceiptLeavesPluginVisibleWithoutOwnership": true,
+    "inventoryOutputProjectionUnchanged": true,
+    "knownOversizedMetadataNotRead": true,
+    "maximumReadBytes": 16385,
+    "moduleAstOutsidePluginScanUnchanged": true,
+    "sharedReceiptAndManifestReader": true
+  },
+  "originalIssueHead": "7c60a6f393f5616229c96c5520a07b0adf9affb5",
+  "rawEvidence": {
+    "decompressedSha256": "5ad68297344fcfdb2c7cc1d8c0d6fc36c8edd9b6045cfb156d13f4437696aa7b",
+    "path": "docs/evidence/framey-inventory-bounded-metadata-2026-11-14.json.gz",
+    "recordSha256": {
+      "candidateCompatibility34Green": "71539df680f3eff0e6f525927320a41eafe89916179ae18e55c2bfbdac661fb9",
+      "candidateDeckyStatusTransaction6Green": "3668236c565ac7a2b0868d94cab9ded8496656d4ba7507be2d0ba24d9c80829c",
+      "candidateInventory11Green": "940647dd7083dca322b3a35f5bf138f12690f2c5520a0f5d4fe247c1c617802d",
+      "coordinatorCandidateReview": "577917dc2083d943cd8bd36a091dd6394a19768b5c6df038be8f65294bb61f34",
+      "independent14RealFileControls": "e806b18c3bf2b24158e2fbd770b96a676c7f6adb27a0317aba598e378add9616",
+      "independent14RealFileControlsScript": "58ed996a0c7f50ccb707da3f253b442cceae8e5abae6e0302040a0d01edbce81",
+      "originalInventory11Red": "4d3145c9a84d24337fb965c9d5654875d8a1c02a3d8e531171f9af122bca88be",
+      "originalManifestGrowthProof": "e871c4115b94a3cf878de01b5b075c036e561589ff197cdfde29d3db6b21d6b0",
+      "originalManifestGrowthScript": "b12b4a3a157be06b05fa0ab00170da2e0bcd9e856ab964cdff1cd6529f465977",
+      "originalManifestRemovalProof": "cdf217a4cc314c4b4cfa2211ffb7f554654934ba7cc66de40f7dcf5f714fe55b",
+      "originalManifestRemovalScript": "5b7d7e64a75a026e96b5730d086e66f5c3e4090697bdf73e2107896dd60c4fad",
+      "originalReceiptGrowthProof": "93ffe58aba393bcdb28a23811d7ff0dbde595dcb996e05c8753c010ae636d9cc",
+      "originalReceiptGrowthScript": "8b531c8416ef6521ffd36ad5555c196c46c5162659cdb538bf5e610e6e7518dd",
+      "reviewedCandidatePatch": "5b3420e624720fd3c53cd52fa3437c2a0921bcee3fa971921b62ed3e87f74885",
+      "sourceCommitReadback": "ad9c5aa2fb80a2514441cd813d85a5f27f694f6ea4b4ebc58f06b55bae10dbe7"
+    },
+    "sha256": "1bbd5793b01e7abf7d5cd203d8f642e1afb4dd7a9ab32b8f77b230939763500f"
+  },
+  "recordedAt": "2026-11-14T19:02:22.519560+00:00",
+  "retainedOriginalFailures": {
+    "manifestGrowthReadBeyondLimit": true,
+    "manifestRemovalAbortedScan": true,
+    "originalNewControlsErrors": 1,
+    "originalNewControlsFailures": 2,
+    "receiptGrowthReadBeyondLimit": true
+  },
+  "scope": {
+    "earlierArmStartupCauseEstablished": false,
+    "freshHostedQualificationRequired": true,
+    "loaderServiceReceiptShapeNotChanged": true,
+    "localSourceBoundCandidateOnly": true,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false,
+    "transactionReceiptReaderUnchanged": true,
+    "wornVrVerified": false
+  },
+  "sourceBeforeEvidenceCommit": "fddb32279fa1a6077a742364728c4aa4a65b95a8",
+  "sourceSha256": {
+    "docs/framey-compatibility.md": "0252b375a11f9f2c260fac1f88280e631c24a085e8667a16de4105d0dd056d6d",
+    "scripts/framey-compatibility-doc.py": "b13b5ce802ac02d583fef6bae2426f7b615a6906d46d100a13ce8afbdb88510b",
+    "tests/sandbox.py": "814c4b6842675dcbb3da54aabe9dcff830f0313c1d25351b8881d48a1e6a8648",
+    "tests/test_frame_decky.py": "6477b307bdde54c9cee4327c0724f9db224e024e7914e5c781d3fbff91684096",
+    "tests/test_framey_compatibility.py": "637767dc6c2d6fc5efebc7b881f2b371f91793b3f696ddaff08adeb0545f0481",
+    "tests/test_framey_inventory.py": "fc8921486be1ca94a2d61810d0a1af8a159bdf711f329689700f71e1bf664202",
+    "ui/frame_decky.py": "81b934dfd0b2fe4374dc281f4646e793c1653c309943aaec255a9e566dad1ef7",
+    "ui/frame_decky_store.py": "8f9ef1da1547f7de4082b1515babd5f23b1e47aee6319e2995a323c071ed3088",
+    "ui/framey-compatibility.json": "2eca68882baef4f93bcf9d5454e7b041523533cadf6d90430f471d8f82cdadb6",
+    "ui/framey_compatibility.py": "9185d259d8fda415abe0f7c479a02ff7540c5ffb69d4a432912442314c1fe3f4"
+  },
+  "validation": {
+    "actualNonAsciiUtf8BoundaryData": true,
+    "bothMetadataTypes": [
+      "normal",
+      "exact16384bytes",
+      "oversized16385bytes",
+      "growthAfterSizeSnapshot",
+      "invalidUtf8",
+      "nonObjectJson",
+      "removedAfterStat"
+    ],
+    "compatibility": 34,
+    "deckyStatusAndTransaction": 6,
+    "existingInventoryMethodsIdentical": 6,
+    "existingOversizedGuardStrengthenedFromReadTextToOpen": true,
+    "independentRealFileControls": 14,
+    "inventory": 11,
+    "localTests": 51,
+    "neighborMetadataPreserved": true,
+    "newInventoryTests": 4,
+    "skips": 0
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "base": "504721ce3b40f4a225b8bdc882240920587809c1",
+  "change": {
+    "fixtureAstOutsideHelpersAndCleanupBranchUnchanged": true,
+    "ignoresDeadZombies": true,
+    "killLauncherAndGroupSharedWaitSeconds": 10,
+    "ownedGroupTermThenKill": true,
+    "preservesUnrelatedGroups": true,
+    "productionUnchanged": true,
+    "readinessCodeAndDeadlineUnchanged": true,
+    "requiresNoLiveOwnedGroupBeforeProfileRemoval": true,
+    "termLauncherWaitSeconds": 10
+  },
+  "limits": {
+    "historicalArmReadinessCauseEstablished": false,
+    "hostedOwnHeadQualification": false,
+    "originalFailureArtifactsQualified": false,
+    "productionRepairClaim": false,
+    "realFrameOrWornProof": false
+  },
+  "problem": "The private signed-browser fixture could reap an exited or TERM-exited launcher while leaving its ignoring child alive in the owned process group, able to write the temporary profile.",
+  "rawEvidence": {
+    "decompressedSha256": "c75d8b5f3a61e57aa785cb3170cab091c6632f2853dfb19bddf1a7c232dba0c6",
+    "path": "docs/evidence/framey-signed-browser-owned-cleanup-2026-11-15.json.gz",
+    "recordSha256": {
+      "/tmp/frame-coordinator-turn102-cleanup-pr/tests/decky-runtime/syncthing_browser.py": "aa90872a04ad9a7592c9e5c19dfb2754aa105992bc17474db4f1f5ab3a014c30",
+      "/tmp/frame-coordinator-turn102-cleanup-pr/tests/test_syncthing_owned_browser_cleanup.py": "a1dec241527c05fd45ac6a0bfc1901e57833828450a746c8c1976f0a964aed03",
+      "/tmp/frame-coordinator-turn102-owned-browser-cleanup/base/tests/decky-runtime/syncthing_browser.py": "3e6f9f65438afe9717646ad154a7074bf5c7733bdda19260b25981366c603ffb",
+      "/tmp/frame-coordinator-turn102-owned-browser-cleanup/candidate-expanded.log": "4f05540475c5c6df479723846cf8dc4c06b347256cc050585ab5cc8cc028f298",
+      "/tmp/frame-coordinator-turn102-owned-browser-cleanup/candidate.log": "b93879a99f5d79842fdb674dbab0d8b70290d5e3dce8df84010341e27b6f2b18",
+      "/tmp/frame-coordinator-turn102-owned-browser-cleanup/final-candidate.patch": "cf77c0a3fe6c7ca0598396c6ddabb2dda635bfb8a90103b009c207797756c70b",
+      "/tmp/frame-coordinator-turn102-owned-browser-cleanup/final-red.log": "9f1b9475dd79758bd741ee6e4979d67b2cc2cb2738184e2bb69e1092d606681f",
+      "/tmp/frame-coordinator-turn102-owned-browser-cleanup/focused-worktree.log": "86f3b175792772207c86dfd0d13f71439cc25272cbd62e0e6b1326757d6379ba",
+      "/tmp/frame-coordinator-turn102-owned-browser-cleanup/original.log": "981dbc08c0e2e5d282fb42ad783b7f6359744010290b5ca509d02373b5884103"
+    },
+    "sha256": "aa4f677508f296307f6d910a3155e6292d82e771f28ddc353d04cc68cd772fd7"
+  },
+  "sourceSha256": {
+    "tests/decky-runtime/syncthing_browser.py": "aa90872a04ad9a7592c9e5c19dfb2754aa105992bc17474db4f1f5ab3a014c30",
+    "tests/test_syncthing_owned_browser_cleanup.py": "a1dec241527c05fd45ac6a0bfc1901e57833828450a746c8c1976f0a964aed03"
+  },
+  "validation": {
+    "deadlineAndDeadMemberControlsPassed": true,
+    "finalOriginalRed": {
+      "failures": 2,
+      "methods": 2,
+      "skips": 0
+    },
+    "focusedSuite": {
+      "executed": 23,
+      "methods": 25,
+      "skipReason": "Two existing opt-in Chromium startup tests; not browser replay evidence.",
+      "skips": 2
+    },
+    "initialOriginalControls": {
+      "failures": 2,
+      "methods": 5,
+      "skips": 0
+    },
+    "newCandidateMethods": {
+      "executed": 8,
+      "methods": 8,
+      "skips": 0
+    },
+    "realOwnedGroups": 4,
+    "unrelatedSessionsPreserved": 4
+  }
+}

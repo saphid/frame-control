@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-31T01:23:41.427136+00:00",
+  "sourceRevision": "2213be399e61b68590a0aac3f5fd6243d541a613",
+  "previousHead": "ebe0bd7378f86d155704ca9d78d6be5c44cdca93",
+  "normalMainMerge": "358e423a62300689543e2083d5213af763c03a46",
+  "allPreviousHeadWorkflowsTerminalBeforeMerge": true,
+  "all116VersionsDigestsRatingsAndInstallPoliciesPreserved": true,
+  "all115OtherFullRecordsMatchMain": true,
+  "shottyChangedFields": [
+    "reason",
+    "runtimeEvidence",
+    "verification"
+  ],
+  "shottyRemainsPartial": true,
+  "originalShottyEvidenceByteIdentical": true,
+  "allSevenNativeRuntimeInputsByteIdenticalToMain": true,
+  "runtimeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "85aa5c2adddd5ad00ae7c81e88da846b7453716ed818620bdcd74e8025e01a3e",
+    "tests/decky-runtime/check.py": "9c2fc1ac81f98c85a735cc7e645eea1bfd4c8a5d6f575ce695d73caf74e396b3",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "a91072dec4a3e4525364d1c4a4ac2ee42cbfd889aca53352472cdebd80cfe5f7",
+    "tests/framey_official.py": "3618bcd1faca19bb53494891036faef2014d803d7cbe381287253b0ce039a938",
+    "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "compatibilityAndPinnedArchiveTests": 21,
+  "testLogSha256": "c5492b4fd53b861fc76a602abe8e471905ee2a1d91e62421184e80a20e30d51e",
+  "generatedDocumentationCheckPassed": true,
+  "storeClaimCorrection": {
+    "storeId": 130,
+    "version": "1.0.1",
+    "datedSnapshot": "2026-10-30",
+    "github102IsSeparate": true,
+    "freshLiveStoreLookup": "HTTP403; no fresh store claim"
+  },
+  "priorHeadQualificationHistoricalOnly": true,
+  "freshExactHeadCiNativeE2eAndAllTriggeredPackagesRequired": true,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "releaseAuthorized": false
+}

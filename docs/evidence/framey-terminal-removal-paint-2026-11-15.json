@@ -1,0 +1,77 @@
+{
+  "base": "a4ad1afbb84f32fb5f0c717c8b637d8c39a8a167",
+  "change": {
+    "animationFramesBeforeRemovedEvidence": 2,
+    "deadlinesUnchanged": true,
+    "privateProbeOnly": true,
+    "productionUnchanged": true,
+    "reappearedRowsRefused": true
+  },
+  "problem": "Private Terminal browser probe can report empty removal DOM before a render opportunity. Original #729 ARM PNG still contains a row although its DOM/backend removal checks passed.",
+  "rawEvidence": {
+    "decompressedSha256": "cbca017bbea607f27dc211d65678aea592ae00b197603d5df13e72619b5c17c3",
+    "path": "docs/evidence/framey-terminal-removal-paint-2026-11-15.json.gz",
+    "recordEncoding": "Each record has encoding utf8 or base64; SHA256 binds decoded original bytes.",
+    "recordSha256": {
+      "/tmp/frame-coordinator-turn76-729-arm-browser-visual-discrepancy.json": "f4eec1cc6770effe5ad2e9db75b99857b7ff4b328a445a43eff499509ded79ac",
+      "/tmp/frame-coordinator-turn76-729-arm-native/terminal-browser-ubuntu-24.04-arm/removed.png": "afd781cc50e406f3b3558516acde28f1d13a91541111a028d759422c2f84f585",
+      "/tmp/frame-coordinator-turn76-729-arm-native/terminal-browser-ubuntu-24.04-arm/zip-download-audit.json": "c7ab24d906414229d10c262fd183ca8f731d3194f6012c8baf3ffa5af4b56949",
+      "/tmp/frame-coordinator-turn78-terminal-paint-review/native-exact-base-tests.log": "c4233555ca74f7702dd13b209a8f05fc7d41205610cefb7245a934f2db184bc7",
+      "/tmp/frame-coordinator-turn78-terminal-paint-source-review.json": "d890f6b07f2185d497b86a9a5440d7548db82bc1055507c6c56f3eeabaafe812",
+      "/tmp/frame-resume-round74-prepare-paint-candidate.py": "315187565cc92dbd5ea497e2c326cbc1c2af2398c8e224d5ec11be37ab551f3e",
+      "/tmp/frame-resume-round74-run-paint-replay-lxso1.py": "c809ef7a5a9a150c27127187d12434d1a3ea71f5db8514ef28210e5144403b52",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/assessment.json": "40491fbd637f2f5091a9b1b2d7683fa407dd45784f4d0d9f5a5339e96d56b72d",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/base-focused.log": "f11ba28a139fca8b2c42008eb7a8db7a4de2c46a1ec007ff22d3f6ffc174e10f",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/base-probe.js": "c836694706b543ecf089eda4d789ee758d1915505593d988470755f309e27439",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/base-removed.png": "f570cc5e5c230939acbd9792dd753c69cba10e549daba2e0099a503f52ef59ed",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/base/tests/decky-runtime/terminal_browser.py": "f721918f053df4c4d360f901cf96ee8f197e442cc237704c8ec4498cb89e0780",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/base/tests/test_terminal_browser_paint.py": "2e030b0a9b7f6e77b55defd30ba3011c8e90450211b827cc710ce4ce1a1f1a92",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/candidate-focused.log": "92e7f76af5509562748d8bf0f5d4fdb5ed32fc2888edb074e17504ff3d78d1ca",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/candidate-probe.js": "f1abca627b14c25399d1c1d1f744e6ff29e062c0dbe22f7f5857c2e91539a95e",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/candidate-removed.png": "f570cc5e5c230939acbd9792dd753c69cba10e549daba2e0099a503f52ef59ed",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/candidate.patch": "b75fcfa27726ba9a2a910b60b9840278da6f48fc2af25ab2a52fc8089224bec8",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/candidate/tests/decky-runtime/terminal_browser.py": "7f489e05991bcfa439fd2be6a3172598deebb9f5a1207fce0f25e9eda2ecf6b3",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/candidate/tests/test_terminal_browser_paint.py": "2e030b0a9b7f6e77b55defd30ba3011c8e90450211b827cc710ce4ce1a1f1a92",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/lxso1-browser-proof.json": "48ddf0110cdccce30d1131fef865d0ae6efb0f24df5e1f4a42ad5c5658fdecb1",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/lxso1-browser-transport-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/scheduler-proof.json": "565f8758f8135e9ad426ed8fbceb317eff3d4b3da487629bb31fa7b3894b1906",
+      "/tmp/frame-resume-round74-terminal-paint-candidate/source-proof.json": "edf7a314adf55a523a32adb3f62c70bf4923a2770837a2c5b871c3d2d9b97185",
+      "/tmp/frame-resume-round74-terminal-paint-replay.py": "a818da01c290d43372660817cebe91ee71ef60549da5242ab7ed3c48ecf85900",
+      "/tmp/frame-resume-round74-terminal-paint-test.cjs": "aedcfc20499ae00f20c49d1fffdf618f40e815395a3e298180d452b74dd0a428"
+    },
+    "sha256": "7ad7b90077a3fccb2c99ad7a26962a45177476b80a56d95e1cac1d127bac94d4"
+  },
+  "recordedAt": "2026-11-15T01:24:51.310452+00:00",
+  "scope": {
+    "managedInstallEnabled": false,
+    "realFrameContacted": false,
+    "releaseQualified": false,
+    "syntheticControlledScheduler": true,
+    "wornVrVerified": false
+  },
+  "sourceCommit": "dde3f48bf0dd2ceee96a8a44bc538c419be78632",
+  "sourceSha256": {
+    ".github/workflows/checks.yml": "eac0e12bff2b1eb0cc3e26c4e4587d2868f857b09b6a047f36a39b28b6d33ea0",
+    ".github/workflows/decky-runtime.yml": "3751c42845f3774601d55dbf8455421c5a89c5a2abcb7b43d6c88337c91463d6",
+    "scripts/framey-test-terminal-browser.py": "d0211b167881e88de0f16f35c91ce5728d7cf36bc07ea72747c8a746fb0aec7d",
+    "tests/decky-runtime/guest_result.py": "c0c30f043a6d0af017ae8c42b5c60f36c65a7390ce314a311e3fbeb859fff86d",
+    "tests/decky-runtime/terminal_browser.py": "7f489e05991bcfa439fd2be6a3172598deebb9f5a1207fce0f25e9eda2ecf6b3",
+    "tests/decky-runtime/terminal_http.py": "9852d6647126e2b785d9fa0f9947e0c5a40bf5df2eb1fd83e14a893376788c5c",
+    "tests/test_terminal_browser_paint.py": "2e030b0a9b7f6e77b55defd30ba3011c8e90450211b827cc710ce4ce1a1f1a92",
+    "ui/framey-host.js": "59dde85f3bab982c28036f0e9b1f3324d1ba40c75d50f734d93ec6f2cc807bc7"
+  },
+  "validation": {
+    "bothOriginalAndCandidateBrowserReplaysPassed": true,
+    "coordinatorExactAcceptedBaseSchedulerMethods": 3,
+    "historicalHostedCauseEstablished": false,
+    "hostedStaleCaptureReproduced": false,
+    "independentRealChromeVersion": "150.0.7871.128",
+    "newHostedHeadQualificationRequired": true,
+    "opaqueChildChromeCases": 2,
+    "original729ArmArtifactApproved": false,
+    "originalSchedulerFailures": 2,
+    "originalSchedulerMethods": 3,
+    "replayCapturesIdenticalAndVisuallyEmpty": true,
+    "schedulerSkips": 0
+  }
+}

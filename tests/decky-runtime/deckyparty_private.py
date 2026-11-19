@@ -84,7 +84,8 @@ def reload(backend, log, server_pids, rpc, until_ready, index, *, regression):
         expectedRegression=regression)
     assert not observation['exactPluginChildrenRemaining'], observation
     if regression:
-        assert forced == 1 and not observation['unloadHookCompleted'], observation
+        # Decky retries its warning/kill loop until the same process exits.
+        assert forced >= 1 and not observation['unloadHookCompleted'], observation
         # The old plugin may leave its owned server alive. Only reap the exact
         # previously recorded session inside this disposable container.
         cleaned = []

@@ -30,7 +30,7 @@ assert.equal(poll().events.at(-1).args[0],99);
 for(let index=0;index<20;index++)emit('Simple Timer','tick','x'.repeat(8000));
 assert.ok(JSON.stringify(poll()).length<50*1024);
 poll('one','Simple Timer',[]);assert.equal(handlers.size,1);
-now+=16000;for(const timer of [...timers.values()])timer();
+now+=61000;for(const timer of [...timers.values()])timer();
 assert.equal(handlers.size,0);assert.equal(timers.size,0);
 poll();assert.equal(handlers.size,1);
 // A Decky frontend reconnect must register against the replacement backend.
@@ -38,6 +38,24 @@ let replaced=0;
 window.DeckyBackend={...backend,addEventListener(name,fn){replaced++;backend.addEventListener(name,fn);}};
 poll();assert.equal(replaced,1);assert.equal(handlers.size,1);
 poll('one','Simple Timer',[]);assert.equal(handlers.size,0);
+
+// Receipt verification and event RPC can take 15s + 25s. A live panel must
+// retain queued output while a valid slow poll completes, without duplicates.
+for(const delay of [20000,41000]) {
+  poll('slow','Decky Terminal',['terminal_output#slow']);
+  emit('Decky Terminal','terminal_output#slow','queued before delayed poll');
+  now+=delay;for(const timer of [...timers.values()])timer();
+  const delayed=poll('slow','Decky Terminal',['terminal_output#slow']);
+  assert.deepEqual(delayed.events,[{sequence:1,event:'terminal_output#slow',args:['queued before delayed poll']}]);
+  assert.equal(handlers.size,1,'a delayed poll keeps the same backend subscription');
+  assert.deepEqual(poll('slow','Decky Terminal',['terminal_output#slow'],1).events,[]);
+  // Emitting data alone must not keep an abandoned panel alive indefinitely.
+  now+=59000;emit('Decky Terminal','terminal_output#slow','no client polling');
+  for(const timer of [...timers.values()])timer();
+  assert.equal(handlers.size,1);
+  now+=2000;for(const timer of [...timers.values()])timer();
+  assert.equal(handlers.size,0);assert.equal(timers.size,0);
+}
 
 // Output is scoped to both the actual plugin and the selected Terminal ID.
 poll('terminal','Decky Terminal',['terminal_output#private-pty']);

@@ -1,0 +1,71 @@
+{
+  "base": "dddea56a13b77a0c9d57fbac6d3507858f6ab4a6",
+  "change": "Supply an owned temporary os-release file to the new full-status receipt test using the existing status-test pattern.",
+  "failedAttempt": 1,
+  "failedHead": "0819b4278d76ccb0b92afca4422fdb3411d856e3",
+  "failedJob": 132595301170,
+  "failedRun": 43643272922,
+  "hostedFailure": {
+    "allFailuresSameNewFullStatusMethod": true,
+    "error": "FileNotFoundError: /etc/os-release",
+    "skips": 152,
+    "subcaseFailures": 14,
+    "testsRun": 2477
+  },
+  "rawEvidence": {
+    "decompressedSha256": "7ddfe3a99a90a053520d73c02ab695bf256829bfcb83ca855117072fe8f4adef",
+    "path": "docs/evidence/framey-loader-receipt-macos-fixture-2026-11-14.json.gz",
+    "recordSha256": {
+      "/tmp/frame-coordinator-turn63-723-checks-failure-jobs.json": "e46b48c72d66d31a1c8129a319c9e9d46e7c47b69665e293cbc2f33de9f6a2f8",
+      "/tmp/frame-coordinator-turn63-723-macos-failure.log": "8428d63cfc35788c93281ef8062e10b549a7c020a5c218fc5b3b6eb120f8c24a",
+      "/tmp/frame-coordinator-turn63-failed-head-readback.json": "84c34a8296b342f2fb3de181ca7c2b2c0156ecf13080751422059e0e159a02e8",
+      "/tmp/frame-coordinator-turn63-loader-macos-fixture/candidate-missing-os-release-review.json": "b4aa459f2bc01ec9a34efade12ee8a1f4387af48bff440cb336e2c03a9cf32c7",
+      "/tmp/frame-coordinator-turn63-loader-macos-fixture/candidate-missing-os-release.log": "546c789a6975bb631ea81ea4cec41bcc8aca5e5b67126eaa991cecd337fae443",
+      "/tmp/frame-coordinator-turn63-loader-macos-fixture/compatibility-tests.log": "f701988fa53e514d6b812807b94ef386b924d7fce6acd7876fdeba725c8e6cba",
+      "/tmp/frame-coordinator-turn63-loader-macos-fixture/inventory-tests.log": "645b50b019512276ea7b61df2e67326170f485970234984390afd963c583c30f",
+      "/tmp/frame-coordinator-turn63-loader-macos-fixture/loader-tests.log": "56bb00189ed8a63069e5cd875f827e4fb97a112a078ac618f56ab94d03e334d6",
+      "/tmp/frame-coordinator-turn63-loader-macos-fixture/original-missing-os-release-review.json": "2a775596ab35006e4f596aee478c1c203c9d91ec7f1f9069b69dab8b8bdba6f3",
+      "/tmp/frame-coordinator-turn63-loader-macos-fixture/original-missing-os-release.log": "379c0384d8aae8eb3108f30a11af2cf123cd556e6d6c54f579386066b2ceaa1b",
+      "/tmp/frame-coordinator-turn63-loader-macos-fixture/review.json": "ea48730881213a9adc156f352010c915c0fefd2992f85e5dc7f9b2181871fd65",
+      "/tmp/frame-coordinator-turn63-loader-macos-fixture/test-os-release-fixture.patch": "bf29703e9edb386dcb117ab97db72d877ee44d062fadadf0f6997a8646e5e677",
+      "/tmp/frame-coordinator-turn63-loader-macos-repro.py": "7e7bf5d0bbc362f0bb16fd60cad181a9bbb368c48fc5231354e2fa331b515591",
+      "/tmp/frame-coordinator-turn63-review-loader-macos.py": "f100263772fc01f21826701f8fd8ed143922af877ba77dc9565ff6dfcae91557",
+      "/tmp/frame-resume-round57-macos-fixture-review.json": "03eefce3617a8fb6f46f5541ff95eb74d34137989de65b69e95f2590fc45a036"
+    },
+    "sha256": "88f60e2f0ca0e28caf8d40662d38376d88e39b561e5c31d84c8c72bd88905390"
+  },
+  "recordedAt": "2026-11-14T21:58:34.979781+00:00",
+  "scope": {
+    "frameOrVrQualification": false,
+    "freshOwnHostedQualificationRequired": true,
+    "oldHeadRerun": false,
+    "previousArtifactsQualifyFailedHeadOnly": true,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false,
+    "runtimeOrDeadlineChanges": false
+  },
+  "sourceCommit": "c076609f5182306f65a2a9d24243effa9017bd9a",
+  "sourceSha256": {
+    "tests/decky-runtime/terminal_candidate.py": "c88cc891b1ae84765eba03ccc59a911e2e3af1c9c7c5587609020ae582e60f01",
+    "tests/decky-runtime/terminal_lifecycle.py": "19e6f31a072968a0e6d00c8d82f210689e586e9d61876dfae9a735b7c4ead346",
+    "tests/sandbox.py": "814c4b6842675dcbb3da54aabe9dcff830f0313c1d25351b8881d48a1e6a8648",
+    "tests/test_frame_decky.py": "1cbec01552ce3e49363a53bc0989f876c4f6b9ffb97408c3093d2dc7f93be86d",
+    "tests/test_framey_compatibility.py": "637767dc6c2d6fc5efebc7b881f2b371f91793b3f696ddaff08adeb0545f0481",
+    "tests/test_framey_inventory.py": "fc8921486be1ca94a2d61810d0a1af8a159bdf711f329689700f71e1bf664202",
+    "tests/test_framey_mangopeel_fixture.py": "e0f959001770048fd3775197186b7a5443bce9dc40a38da1c9d7f065947a65ae",
+    "ui/frame_decky.py": "23639b72df8bd433e4d790652d4c2d6a2800c0c8a98fc651c73870a60caa946e"
+  },
+  "validation": {
+    "actualCandidateMacOSExecution": false,
+    "allOriginalAssertionsPreserved": true,
+    "candidateMissingOsReleaseSubcaseFailures": 0,
+    "independentSourceReviewPassed": true,
+    "localTests": 55,
+    "oneTestMethodChanged": true,
+    "originalMissingOsReleaseSubcaseFailures": 14,
+    "productionBytesUnchanged": true,
+    "realLoopbackHttpExecuted": true,
+    "same29SubprocessCallsPerRun": true,
+    "skips": 0
+  }
+}

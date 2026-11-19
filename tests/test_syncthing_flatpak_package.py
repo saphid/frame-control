@@ -2,6 +2,7 @@
 
 import contextlib
 import copy
+import ast
 import hashlib
 import importlib.util
 import io
@@ -13,6 +14,7 @@ import signal
 import sys
 import tarfile
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
@@ -27,6 +29,40 @@ class PreparedPackage(unittest.TestCase):
         spec = importlib.util.spec_from_file_location("flatpak_package", path)
         cls.module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cls.module)
+
+    def test_arm64_browser_reaches_native_prerequisite_check(self):
+        class PrerequisiteReached(Exception):
+            pass
+
+        argv = ['probe', '--rootfs-tar', '/unused/rootfs', '--bundles', '/unused/bundles',
+                '--key', '/unused/key', '--output', '/unused/output',
+                '--candidate-helper', '/unused/helper', '--browser-setup']
+        with patch.object(sys, 'argv', argv), \
+                patch.object(self.module.platform, 'system', return_value='Linux'), \
+                patch.object(self.module.platform, 'machine', return_value='aarch64'), \
+                patch.object(self.module.shutil, 'which', side_effect=PrerequisiteReached):
+            with self.assertRaises(PrerequisiteReached):
+                self.module.main()
+
+    def test_browser_budget_matches_guest_without_extending_native_arm64_limits(self):
+        path = Path(__file__).parent/'decky-runtime/syncthing_flatpak_package_root.py'
+        expected = next(node.value for node in ast.walk(ast.parse(path.read_text()))
+                        if isinstance(node, ast.Assign) and any(
+                            isinstance(target, ast.Name) and target.id == 'expected_user_limit'
+                            for target in node.targets))
+        for arch, browser, seconds in [('x86_64', False, 840), ('x86_64', True, 1440),
+                                       ('aarch64', False, 2400), ('aarch64', True, 2400)]:
+            with self.subTest(arch=arch, browser=browser):
+                limits = self.module.probe_budgets(arch, browser)
+                guest_os = SimpleNamespace(uname=lambda: SimpleNamespace(machine=arch))
+                guest_limit = eval(compile(ast.Expression(expected), str(path), 'eval'),
+                                   {'os': guest_os, 'browser': browser})
+                self.assertEqual(limits['userSeconds'], seconds)
+                self.assertEqual(limits['userSeconds'], guest_limit)
+                self.assertLess(limits['userSeconds'], limits['unitSeconds'])
+                self.assertLess(limits['unitSeconds'], limits['hostSeconds'])
+        self.assertEqual(self.module.probe_budgets('aarch64', True),
+                         self.module.BUDGETS['aarch64'])
 
     def prepared(self, arch):
         return {
@@ -339,11 +375,11 @@ class PreparedPackage(unittest.TestCase):
 
     def browser(self):
         report = dict.fromkeys(('success', 'actualDeckyRpc', 'syntheticInput', 'ownedBrowserReaped',
-                                'bridgeStopped', 'setupCommitted', 'discoveredApiKeySaved'), True)
+                                'bridgeStopped', 'setupCommitted', 'discoveredApiKeySaved', 'validatedApiKeySaved'), True)
         report.update(dict.fromkeys(('browserSandboxDisabled', 'realFrameContacted',
                                      'hostBusExposed', 'installerEnabled'), False))
-        report.update(savedPort=8384, panelSha256='a'*64, manualPortFallbackUsed=False,
-                      stages=[{'stage': s, 'errors': [], 'text': 'Private service sync', 'manualPortFallbackUsed': False} for s in
+        report.update(savedPort=8384, panelSha256='a'*64, manualPortFallbackUsed=False, manualApiKeyFallbackUsed=False,
+                      stages=[{'stage': s, 'errors': [], 'text': 'Private service sync', 'manualPortFallbackUsed': False, 'manualApiKeyFallbackUsed': False} for s in
                               ('running', 'stopped', 'restarted', 'stopped')],
                       actualPackagedProcessObservations=[{'stage': 'running', 'pids': [100, 101]},
                                                          {'stage': 'restarted', 'pids': [200, 201]}],
@@ -383,6 +419,23 @@ class PreparedPackage(unittest.TestCase):
             report = self.browser()
             report['manualPortFallbackUsed'] = value
             with self.assertRaisesRegex(ValueError, 'port path'):
+                self.module.verify_browser(report, 'a'*64)
+
+    def test_browser_api_key_paths_require_validated_value_and_consistent_evidence(self):
+        for manual in (False, True):
+            report = self.browser()
+            report['manualApiKeyFallbackUsed'] = manual
+            report['discoveredApiKeySaved'] = not manual
+            for stage in report['stages']:
+                stage['manualApiKeyFallbackUsed'] = manual
+            self.module.verify_browser(report, 'a'*64)
+            for field, value in [('validatedApiKeySaved', False),
+                                 ('discoveredApiKeySaved', manual),
+                                 ('manualApiKeyFallbackUsed', None)]:
+                with self.subTest(manual=manual, field=field), self.assertRaises(ValueError):
+                    self.module.verify_browser({**report, field: value}, 'a'*64)
+            report['stages'][0]['manualApiKeyFallbackUsed'] = not manual
+            with self.assertRaisesRegex(ValueError, 'API key path'):
                 self.module.verify_browser(report, 'a'*64)
 
     def test_browser_readiness_accepts_only_bounded_425_then_success(self):

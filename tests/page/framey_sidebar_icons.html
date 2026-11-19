@@ -67,9 +67,59 @@ addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(
     assert(!tabs()[0].querySelector('svg,span')&&tabs()[0].textContent==='Second','icon removal left stale content');
     render(sidebar(makePages('<img src=x onerror=alert(1)>',true)));
     assert(!tabs()[0].querySelector('img')&&tabs()[0].textContent.includes('<img src=x'),'string icon became HTML');
+
+    // Controlled selection must wait for the parent's prop and report the
+    // page's stable identifier. Routes remain selection aliases locally.
+    const controlledRequests=[];
+    const controlledPages=[{identifier:'left',route:'/left',title:'Left',content:'Left body'},'separator',
+      {identifier:'right',route:'/right',title:'Right',content:'Right body'},
+      {identifier:'hidden',visible:false,title:'Hidden',content:'Hidden body'}];
+    const controlled=(page,extra={})=>SP_REACT.createElement(DFL.SidebarNavigation,{
+      title:SP_REACT.createElement('em',null,'Controlled settings'),pages:controlledPages,page,
+      onPageRequested:value=>controlledRequests.push(value),...extra});
+    render(controlled('right',{showTitle:false}));
+    assert(panel().textContent==='Right body','controlled initial identifier ignored');
+    assert(!container.querySelector('h2'),'showTitle=false left a sidebar heading');
+    ReactDOM.flushSync(()=>tabs()[0].click());
+    assert(controlledRequests.join(',')==='left','controlled page callback missing or wrong');
+    assert(panel().textContent==='Right body','controlled click changed content before parent update');
+    render(controlled('left'));
+    assert(panel().textContent==='Left body','controlled page prop update ignored');
+    assert(container.querySelector('h2 em').textContent==='Controlled settings','default title or rich title lost');
+    assert(controlledRequests.length===1,'prop update emitted a page request');
+    render(controlled('/right'));
+    assert(panel().textContent==='Right body','route selection alias ignored');
+    render(controlled('hidden'));
+    assert(tabs().length===2&&panel().textContent==='Left body','hidden controlled target became selectable');
+    render(controlled('missing'));
+    assert(panel().textContent==='Left body','missing controlled target did not fall back');
+    const emptyId=[{identifier:'',route:'/empty',title:'Empty identifier',content:'Empty identifier body'},
+      {identifier:'other',title:'Other',content:'Other body'}];
+    render(controlled('',{pages:emptyId}));
+    assert(panel().textContent==='Empty identifier body','empty explicit identifier was discarded');
+    render(controlled('other',{pages:emptyId}));
+    ReactDOM.flushSync(()=>tabs()[0].click());
+    assert(controlledRequests.at(-1)==='','empty identifier callback was changed');
+    assert(panel().textContent==='Other body','controlled empty-id request changed the visible page');
+    const canonicalPriority=[{identifier:'named',route:'/named',title:'Named',content:'Named body'},
+      {identifier:'0',route:'/zero',title:'Zero',content:'Zero body'}];
+    render(controlled('0',{pages:canonicalPriority}));
+    assert(panel().textContent==='Zero body','an index alias shadowed an explicit identifier');
+    const positionalPages=[{title:'Position one',content:'Position one body'},'separator',
+      {title:'Position three',content:'Position three body'}];
+    render(controlled('2',{pages:positionalPages}));
+    assert(panel().textContent==='Position three body','original index selection included separator incorrectly');
+    ReactDOM.flushSync(()=>tabs()[0].click());
+    assert(controlledRequests.at(-1)==='0','fallback index callback was not a string');
+    render(controlled(undefined,{pages:positionalPages,onPageRequested:value=>controlledRequests.push('new:'+value)}));
+    ReactDOM.flushSync(()=>tabs()[1].click());
+    assert(panel().textContent==='Position three body'&&controlledRequests.at(-1)==='new:2','uncontrolled selection or latest callback lost');
+    render(controlled(undefined,{pages:[],showTitle:false}));
+    assert(tabs().length===0&&panel().textContent==='','empty page list did not render safely');
+
     assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
     ReactDOM.flushSync(()=>root.unmount());
-    document.getElementById('result').textContent=JSON.stringify({passed:true,publishedIcons:7,
+    document.getElementById('result').textContent=JSON.stringify({passed:true,publishedIcons:7,controlledPageAndCallbacks:true,identifierRouteIndexSelection:true,titleVisibility:true,
       publishedGeometryAndSize:true,iconClickSelection:true,syntheticChildActions:childActions,
       reactContentAndUpdates:true,separatorAndVisibility:true,stableRouteSelection:true,
       realBackendContacted:false,realFrameContacted:false});

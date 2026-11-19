@@ -1,0 +1,62 @@
+{
+  "baseHead": "cbcf1ad117401c03e0e08d94d6b0f9327cdee0f3",
+  "change": "Import inbound http.server only inside the VM exercise; outbound snapshot reader omits its six exclusive modules.",
+  "localValidation": {
+    "actualChromiumStartupTests": 2,
+    "candidateSkips": 0,
+    "candidateTests": 62,
+    "localAmd64FiveSampleImportMediansSeconds": {
+      "candidate": 0.038296512328088284,
+      "original": 0.0409923754632473
+    },
+    "originalFreshInterpreterFailures": 1,
+    "removedModules": [
+      "copy",
+      "html",
+      "html.entities",
+      "http.server",
+      "mimetypes",
+      "socketserver"
+    ]
+  },
+  "rawEvidence": {
+    "decompressedSha256": "d0715e368ff99c2eaf43fc82c46f572d65f8cd5db0c5590afca74d8ec5f2bf5b",
+    "path": "docs/evidence/framey-final-reader-import-scope-2026-11-14.json.gz",
+    "recordSha256": {
+      "candidate62Green": "1f8bed13bdac26696bbb7bb565dbb300554a293f7e110142b09cad3a9717f56b",
+      "candidateImportTime": "b4012a86cb8422a03e91c509c01fb672d39f058950adf216bd3e8a03fbeff0d4",
+      "candidateProfileSource": "510cc514c4118db64afddf9ef86f771d3066c4e7d2e987b5feb845f89b4c3688",
+      "independentDeadlineBoundaryReview": "cbef3b9656dc4f3636960d3241d5cc73d0f61baefe712555567d457ba8c870a9",
+      "originalFreshInterpreterRed": "c1f4c7115bd26b240146f8ab27ddfc27d7023a853683ff61045a880db3b490f6",
+      "originalImportTime": "19ab66ab7885321dfd66f64998a894ee675d1fbd33ec66a7878496be61530c41",
+      "originalProfileSource": "982ed0af8409e46159bc9c85b139f8f90ac37486af1934036a88dafbb68bf0f2",
+      "profileReport": "b16b356de4462f1b2e8ebbbf394badaf1d7f75f435309c73655217e628aa56e8",
+      "profileScript": "9e28796cd5754c06d9c816b7afe434536ddb5ec61d7358d681b1061d82cd4692"
+    },
+    "sha256": "1a940dea18901d8d5060899d55f52e7488ca872b9b70ae586d1f62e2fbdea1d3"
+  },
+  "recordedAt": "2026-11-14T16:52:58.621103+00:00",
+  "scope": {
+    "actionBudgetSeconds": 120,
+    "armPerformanceImprovementEstablished": false,
+    "freshHostedQualificationRequired": true,
+    "historicalArmCauseEstablished": false,
+    "managedInstallerVerified": false,
+    "readinessAcceptanceChanged": false,
+    "readinessBudgetSeconds": 60,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false,
+    "retriesAdded": false,
+    "rpcDeadlineSeconds": 8,
+    "snapshotBudgetSeconds": 8,
+    "wornVrVerified": false
+  },
+  "sourceBeforeEvidenceCommit": "5163f14acc74de23ea77b6d90e9914fdd4a63689",
+  "sourceSha256": {
+    "tests/decky-runtime/syncthing_browser.py": "510cc514c4118db64afddf9ef86f771d3066c4e7d2e987b5feb845f89b4c3688",
+    "tests/test_syncthing_browser_readiness.py": "768358de50277b9626a0af22d888adb5715751b368c9babea35ef1f61af9c6ce",
+    "tests/test_syncthing_browser_startup.py": "a4661489e5d268ef6fd867f26dea0906f2597b3a6efedc9179cbc4b059029310",
+    "tests/test_syncthing_http_gateway.py": "dc8286bf521b07f1cc45b2b20d521b76264432b184b042fb420313dfda2ca63a",
+    "ui/frame_steam.py": "dcd8508b3e9ed814bc35b44c1f1923da110b876bb6b12a1b77666e90a1ab9b33"
+  }
+}

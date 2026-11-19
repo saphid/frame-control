@@ -17,7 +17,8 @@ def command(page, method, params, session_id=None):
             return reply['result']
 
 
-def install_child_harness(page, panel_url, source):
+def install_child_harness(page, panel_url, source,
+                          ready_expression="typeof window.manualPortFallbackUsed==='boolean'"):
     # Sandboxed panels can be out-of-process iframes. A new-document script
     # registered on the parent does not install a driver in that target.
     targets = command(page, 'Target.getTargets', {})['targetInfos']
@@ -25,7 +26,7 @@ def install_child_harness(page, panel_url, source):
                if target['type'] == 'iframe' and target['url'] == panel_url]
     assert len(matches) <= 1
     session = None
-    params = dict(expression=source+";typeof window.manualPortFallbackUsed==='boolean'",
+    params = dict(expression=source+';('+ready_expression+')',
                   returnByValue=True, awaitPromise=True)
     try:
         if matches:
@@ -91,6 +92,8 @@ def exercise(cef, base, ui_key, browser_pid, legacy_rpc, runtime_identity, servi
     assert Path('/proc/'+str(decky_pid)+'/exe').resolve() == Path.home()/'decky/PluginLoader'
     discovered = cef.eval("DeckyBackend.call('loader/get_plugins')")
     assert any(plugin['name'] == 'Syncthing' for plugin in discovered)
+    expected_api_key = json.loads(legacy_rpc('get_settings_json'))['api_key']
+    assert isinstance(expected_api_key, str) and expected_api_key
     legacy_rpc('set_setting', setting='is_setup', value=False)
     legacy_rpc('set_setting', setting='api_key', value='')
     # Only DOM input and evidence collection are injected. The HTTP-served
@@ -105,8 +108,8 @@ addEventListener('message',e=>{
  if(e.data?.type==='test:stage')window.parentProbeStage=e.data;
  if(e.data?.type==='test:failure')window.parentProbeFailure=e.data.error;
 });
-window.parentProbeAdvance=action=>{window.parentProbeStage=null;
- document.getElementById('frameyFrame').contentWindow.postMessage({type:'test:advance',action},'*');};
+window.parentProbeAdvance=(action,apiKey)=>{window.parentProbeStage=null;
+ document.getElementById('frameyFrame').contentWindow.postMessage({type:'test:advance',action,apiKey},'*');};
 }'''
     target = command(cef, 'Target.createTarget', dict(url=base+'/parent-bootstrap'))['targetId']
     page = None
@@ -150,7 +153,7 @@ window.parentProbeAdvance=action=>{window.parentProbeStage=null;
         report['childHarness']['domWaitMilliseconds'] = 120000
         previous = []
         for label, action in [('running', 'setup'), ('stopped', 'stop'), ('restarted', 'start'), ('stopped', 'stop')]:
-            page.eval('window.parentProbeAdvance('+json.dumps(action)+')')
+            page.eval('window.parentProbeAdvance('+json.dumps(action)+','+json.dumps(expected_api_key)+')')
             def advanced():
                 failure = page.eval('window.parentProbeFailure')
                 assert failure is None, failure
@@ -175,6 +178,8 @@ window.parentProbeAdvance=action=>{window.parentProbeStage=null;
         report.update(stages=stages, screenshots=shots, actualPackagedProcessObservations=observations,
                       sandboxedRendererPids=sandboxed_renderers(browser_pid),
                       manualPortFallbackUsed=stages[0]['manualPortFallbackUsed'],
+                      manualApiKeyFallbackUsed=stages[0]['manualApiKeyFallbackUsed'],
+                      validatedApiKeySaved=json.loads(legacy_rpc('get_settings_json'))['api_key']==expected_api_key,
                       parentErrors=errors, iframe=frame, success=True)
     finally:
         report.update(stages=stages, actualPackagedProcessObservations=observations)

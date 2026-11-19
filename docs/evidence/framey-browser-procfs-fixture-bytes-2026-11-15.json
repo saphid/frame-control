@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "date": "2026-11-15",
+  "sourceCommit": "925a0b4c59b6b9f9d1fcf6fe72e53d22b66d9442",
+  "summary": "Write synthetic Linux procfs wait-channel fixtures as explicit bytes so Windows newline translation cannot change their contract.",
+  "sourceSha256": {
+    "tests/test_syncthing_browser_process_diagnostics.py": "5016659c659f579605b5f3d26ad85fcfd7f0dce7c919ce651f753d09c20d4cae",
+    "tests/decky-runtime/syncthing_browser.py": "bea453ac753c2985b9c2a08dea51c9393d392d155b725e557d973ef6bf1bcedd"
+  },
+  "originalWindowsFailure": {
+    "head": "925a0b4c59b6b9f9d1fcf6fe72e53d22b66d9442",
+    "originalRun": 43713271593,
+    "originalJob": 132809281465,
+    "originalAttempt": 1,
+    "jobName": "server-tests (windows-latest, 3.12)",
+    "assertion": "Expected do_poll LF bytes, observed do_poll CRLF bytes from the synthetic text-mode fixture.",
+    "failingMethod": "test_records_only_owned_session_with_exact_process_counters",
+    "observedHostedTests": 2520,
+    "observedHostedSkips": 526,
+    "hostedFailures": 1,
+    "windowsFixtureNewlineCauseEstablished": true,
+    "historicalArmReadinessCauseEstablished": false,
+    "originalFailureRemainsFailed": true
+  },
+  "oneFixtureLineChanged": true,
+  "allNineTestMethodAstsUnchanged": true,
+  "productionReadinessObserverAndBudgetsUnchanged": true,
+  "controlledWindowsTranslationOriginalFailures": 1,
+  "controlledWindowsTranslationCandidateMethodsPassed": 9,
+  "nativeLinuxCandidateMethodsPassed": 9,
+  "existingReadinessMethodsPassed": 16,
+  "localSkips": 0,
+  "localFullSuiteRerun": false,
+  "localFullSuiteRerunReason": "Only one fixture write primitive changes; all nine diagnostic methods run with and without forced Windows translation, all sixteen readiness methods pass, and fresh hosted full suites are required.",
+  "hostedOriginalFailureRetained": true,
+  "freshOwnHeadOriginalCiAndArtifactsRequired": true,
+  "realWindowsCandidateProof": false,
+  "realFrameOrWornProof": false,
+  "historicalOrGeneralArmReadinessRepairEstablished": false,
+  "wholeHeadQualified": false,
+  "releaseQualified": false,
+  "rawEvidence": {
+    "path": "framey-browser-procfs-fixture-bytes-2026-11-15.json.gz",
+    "sha256": "8432df03c74bf66aac0ed279d1ca5cbc1c178d12c44f97c33620da73bc3a534b",
+    "recordCount": 9,
+    "uncompressedSha256": "adcd0e78c95345b97f3333425a858bc71101350be29da629970d66ce451afb58"
+  }
+}

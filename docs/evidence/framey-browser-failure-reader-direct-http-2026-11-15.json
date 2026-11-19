@@ -1,0 +1,127 @@
+{
+  "sourceCommit": "aca26916a896b7b719c4b03ec28ffd93eba970c5",
+  "change": "Use the existing direct HTTP transport for failure-only CDP target discovery instead of importing the general URL opener",
+  "changedSourceSha256": {
+    "tests/decky-runtime/syncthing_browser.py": "85b744577c314787bf959b83a618d8a73270c45fe62ae0399d6e1cc342a732c6",
+    "tests/test_syncthing_http_gateway.py": "cfa2f3646e75ea1bd8b7f4d8914add11d30c875157d8bfc1afd38430e6ce1292",
+    "tests/test_syncthing_browser_diagnostic_imports.py": "3af8353d7f7bd124657c385109f44ab2793d6530823f025d92061c84ec6f6dd6"
+  },
+  "normalRuntimeAstOutsideTwoFailureOnlyFunctionsUnchanged": true,
+  "originalArmFailure": {
+    "head": "aca26916a896b7b719c4b03ec28ffd93eba970c5",
+    "artifactId": 14184806588,
+    "originalJob": 132979273458,
+    "originalRun": 43768618553,
+    "attempt": 1,
+    "originalConclusion": "failure",
+    "exactSourceBindingsVerified": 137,
+    "inputSourceBindingsVerified": 132,
+    "canonicalDedicatedGuestPacketReconstructed": true,
+    "failedStage": "Browser CDP/panel readiness unavailable",
+    "startupClock": {
+      "origin": "bridge-monotonic",
+      "readinessBudgetSeconds": 60,
+      "browserLaunchStartedAfterSeconds": 0.057,
+      "browserLaunchReturnedAfterSeconds": 0.069,
+      "readinessDeadlineAfterSeconds": 60.069,
+      "readinessFinishedAfterSeconds": 60.476,
+      "readinessPassed": false
+    },
+    "lastReadinessAttempt": {
+      "phase": "panel-snapshot",
+      "outcome": "failure",
+      "connectionReused": false,
+      "elapsedSeconds": 28.943,
+      "startedAfterSeconds": 31.326,
+      "finishedAfterSeconds": 60.269,
+      "error": "timed out",
+      "browserEventWaitBudgetSeconds": 27.867
+    },
+    "parentPanelReadyReceivedAfterSeconds": 60.365,
+    "parentPanelReadyLateBySeconds": 0.296,
+    "uiStagesCompleted": 0,
+    "finalStateQuery": {
+      "timeoutSeconds": 8,
+      "timedOut": true,
+      "snapshots": [],
+      "phases": [
+        "interpreter-started"
+      ],
+      "importModulesStarted": [
+        "urllib.request",
+        "hashlib",
+        "http.client",
+        "ssl",
+        "tempfile",
+        "frame_steam"
+      ]
+    },
+    "readerReachedModuleImportedPhase": false,
+    "readerReachedTargetsReadPhase": false,
+    "allOriginalDeadlinesRetained": true,
+    "lateParentMessageDoesNotQualifyReadiness": true,
+    "readinessCauseEstablished": false,
+    "importCostVersusSchedulingCauseEstablished": false,
+    "productionOrStartupRepairEstablished": false,
+    "artifactZipSha256": "8bcebab7df9f2353496398f625aa728d7531a92c88d0efe323f08bf09f73df96"
+  },
+  "originalArmFailureRetained": true,
+  "oldHeadApprovedRuntimeArtifacts": 13,
+  "oldHeadExpectedRuntimeArtifacts": 14,
+  "oldHeadWholeHeadQualified": false,
+  "controlledOriginalReaderFailsWithoutUrlOpener": true,
+  "controlledCandidateReachesTargetsWithoutUrlOpener": true,
+  "actualFreshInterpreterReport": {
+    "timeoutSeconds": 8,
+    "timedOut": false,
+    "returnCode": 0,
+    "snapshots": [
+      {
+        "target": "parent",
+        "unavailable": true
+      },
+      {
+        "target": "iframe",
+        "unavailable": true
+      }
+    ],
+    "phases": [
+      "interpreter-started",
+      "module-imported",
+      "targets-read"
+    ],
+    "importModulesStarted": [
+      "frame_steam",
+      "http.client",
+      "ssl"
+    ]
+  },
+  "focusedMethods": 60,
+  "focusedSkips": 0,
+  "focusedSeconds": 3.57,
+  "initialFocusedFailures": 2,
+  "initialFailuresWereMinimalFixtureDependencies": true,
+  "allInitialFixtureFailuresAndCorrectionRetained": true,
+  "readinessOrDeadlineChanges": false,
+  "metadataMaximumBytes": 65536,
+  "sourceMaximumBytes": 65536,
+  "queryMaximumBytes": 8192,
+  "originalTotalReaderSeconds": 8,
+  "originalMetadataTimeoutSeconds": 2,
+  "historicalArmFailureTimingReproduced": false,
+  "historicalOrGeneralStartupCauseEstablished": false,
+  "historicalOrGeneralStartupRepairEstablished": false,
+  "newHeadNeedsOwnOriginalCiAndArtifacts": true,
+  "retainedMainOriginalFailuresUnqualified": true,
+  "wholeHeadQualified": false,
+  "mergeGatePassed": false,
+  "releaseQualified": false,
+  "pluginOrVmRuntimeReruns": 0,
+  "hostedReruns": 0,
+  "realFrameOrWornProof": false,
+  "rawArchive": {
+    "path": "docs/evidence/framey-browser-failure-reader-direct-http-2026-11-15-raw.json.gz",
+    "sha256": "239ac461a7334f7884f9a5c49724a916843726b81dead6c650d04f25d2957d6f",
+    "records": 13
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "base": "dddea56a13b77a0c9d57fbac6d3507858f6ab4a6",
+  "change": {
+    "allIdentityUnloadAndServerChecksPreserved": true,
+    "deadlineChanges": false,
+    "onlyTwoNegativeWarningPredicatesChanged": true,
+    "positiveZeroWarningRuleUnchanged": true,
+    "productionChanges": false,
+    "rawWarningCountsRetained": true
+  },
+  "nativeReportRedaction": {
+    "allConsoleAndLifecycleRecordsUnchanged": true,
+    "disposableFixturePasswordsOnly": true,
+    "originalLocalReportSha256": "a31ecb5a801718cb54e0b21781f8e8b06083969a96de4a3a98faf6e69d5998db",
+    "publishedRedactedReportSha256": "3c9ae8e9297178aad31c339e878a9387e0468e8dd65d3492dc28ac7decb2f17f",
+    "uniquePasswordsRedacted": 1
+  },
+  "originalFailure": {
+    "artifact": 14134325424,
+    "attempt": 1,
+    "completedCases": 84,
+    "failedNegativeControlOrdinal": 85,
+    "head": "a50c146b009d1df0b730c8dffea027a55d4ea9ed",
+    "job": 132596846279,
+    "observedWarningRecords": 2,
+    "primaryCasesPassed": 45,
+    "run": 43643773477,
+    "zipSha256": "2403ceae9e60e4feac968c121da999ff1f074f4f5073cde387115224f80244b4"
+  },
+  "rawEvidence": {
+    "decompressedSha256": "e8c484c4d6dd71ad111384b1fff1a381a62c9cbfdd24f024cd8c7baf4cd4fd9f",
+    "path": "docs/evidence/framey-deckyparty-warning-retries-2026-11-14.json.gz",
+    "recordSha256": {
+      "coordinatorFourControlsLog": "c3bc1787a8c9b924ef025ea12368b4e3b892900669f9c51facad8854ddfbef36",
+      "coordinatorInitialWrongDirectoryInvocation": "29c5de9b4839c6c93298564b7e1298590936fd92d1f3c0f482bfa0a22df9034c",
+      "coordinatorNativeLog": "56671f683bc5632be4bed420036a86acacd4c943601790a281f0c945ae1b963b",
+      "coordinatorNativeRedactedReport": "3c9ae8e9297178aad31c339e878a9387e0468e8dd65d3492dc28ac7decb2f17f",
+      "coordinatorNativeReview": "74643a247c15e4d38700c91285b42910253784c4617ed8766c63176391e4e130",
+      "coordinatorOriginalFailureReview": "1dd14230ab71274674c31a7c52222c13c624ec3d8d13a26105579c1fc02cb424",
+      "coordinatorOriginalFailureVerifier": "57ddc47b51bccd87b2d9e2f513d97c6d8619fc29b9cf147a5ae68b096166dc04",
+      "coordinatorPrebuildLog": "7ea183f3caac2d2eacdc92ef3c66c2bc3c078fd6f7f51c9c0fe28c9e80d3cf36",
+      "coordinatorSourceReview": "16e4ca9443f0157e7dcaf06c30f4929489f6201e6dfb5e758d4e064198eda055",
+      "coordinatorSourceReviewScript": "e2d4b6971f69eb493b11322cce9cf2e178055f2ab8dbc0208708a9569579e259",
+      "independentCandidateReloadLog": "21fba32af1971651bd5b48c024afcbe2c2c2b4666a77095e97427f7538dd4a5c",
+      "independentOriginalFailureReview": "acef708a909bee2ef5f48da6547a2375d844a1815b815f5efa6b04c4aaafd9c9",
+      "independentOriginalReloadLog": "7db36de76c803a71d9baa0bd62b3c7fc7a6bea688bda5bfbd9ddc3c086617c0f",
+      "independentPatch": "8f85285ec8c4844c62877b6fbf1aa5f1038997030fbc0477baaf4ac272c15b7c",
+      "independentReloadReview": "0d2ec4adf3df195af58ee601e48f54b8ddefa456a7f3bde9d6789b55cda8d38c",
+      "independentReloadRunner": "ae53b22658da95e82af5f2a87b90ebc010202e844ad5d19b0b9579138888cc44",
+      "independentReview": "521b6717fed84953072749353e0ff60ccaa23ee14038a43cd051f8d549d59831",
+      "independentUpstreamReplay": "dde61f5b7cbe618a9b17ee0876c040db43b790fc8915e903be874f792da15392",
+      "independentUpstreamReplayReview": "bec2915c6ef4c97422ae99cc471e0abdc63c459dbbe45352e9b5b699167554ca",
+      "independentUpstreamTree": "d0fc070e987edceebb3b740f9a5c42f3527ea9a8a37789cf02d170744e8b1823",
+      "originalFailedJobLog": "41147d1037feb1641f72b4063050f5f42e9022ca8dd55be4c314af6ae8b7eaa1",
+      "originalFailedZipMetadata": "536124459940058bce52a92110740623d9cf388a82c1439aa0ab1722f095c610",
+      "pinnedUpstreamPluginApi": "0a2a2b4fe0ca90ee1340a979b61a6fa24f10b3b21c8e0b7d01ef4efeec47f6c7",
+      "pinnedUpstreamPluginSource": "a15487dabf4ac402c13b01c5673dc41ff7bef119103c2f7b21957eb1ab1e2214"
+    },
+    "sha256": "27d3176db56a15a4a329823093f99138f58024ee25c9d3158d61d24122cd0253"
+  },
+  "recordedAt": "2026-11-14T22:15:32.275994+00:00",
+  "scope": {
+    "actualHistoricalKernelExitDelayReproduced": false,
+    "newOwnHostedQualificationRequired": true,
+    "oldHeadRerun": false,
+    "previousFailedHeadsNotQualified": true,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false,
+    "twoWarningMechanismControlledNotNativeReproduced": true,
+    "vrVerified": false
+  },
+  "sourceCommit": "e14aff5a50df09989aaefa4fabd1649130a1c7d0",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "0b7cbf76ed1bdf92567104cbbe77e9d5cf323e983d93909c71d0cea62e3180c0",
+    "tests/decky-runtime/cases.json": "0b134ecc47ef777339163c6658d622670278f346ca1d100fec97c2bf19d0a885",
+    "tests/decky-runtime/check.py": "8c43256df5756b2d7cdbfa14afe6e59c9d35e4b0226c58a9ee911fcefd98dc5e",
+    "tests/decky-runtime/deckyparty_private.py": "74f07ab175d2b68940585549b53dd4b74b9e1fd6d419e48fc4c8e74287653651",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/sandbox.py": "814c4b6842675dcbb3da54aabe9dcff830f0313c1d25351b8881d48a1e6a8648",
+    "tests/test_framey_deckyparty_runtime.py": "edf4fba083580cab326c960d9f1d0a0433b7415972792eef7debe73e00c81a75",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8"
+  },
+  "validation": {
+    "actualAmd64NativeCandidateCases": 2,
+    "candidateControlsPassed": 4,
+    "controlledProcessIdentitiesInUnitTests": true,
+    "nativeParentOnlyCleanStopsVerified": true,
+    "nativeSourceBindings": 61,
+    "negativeRawWarnings": 1,
+    "newRegressionMethods": 4,
+    "originalFailsOnlyTwoWarningNegative": true,
+    "ownedNegativeServerCleanupVerified": true,
+    "positiveCleanReloads": 3,
+    "positiveForcedWarnings": 0,
+    "realPrivateUnixSocketsAndLogs": true,
+    "reloadScenarios": 11,
+    "sixFinalGateTruthControlsPassed": true,
+    "skips": 0,
+    "unchangedTaggedUpstreamMethodsReplayed": true,
+    "upstreamBlob": "bed92f3402262d3b7e40a7378e8fd79de32bf772",
+    "upstreamSourceSha256": "a15487dabf4ac402c13b01c5673dc41ff7bef119103c2f7b21957eb1ab1e2214"
+  }
+}

@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import platform
 import shutil
+import signal
 import subprocess
 import tarfile
 import tempfile
@@ -25,6 +26,26 @@ SOURCE_COMMIT = '464fd7ca05ee0bea8daa8d5d125dfc672cf08942'
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def fetch_locked_dependencies(manifest, cache):
+    """Bound Cargo and its external Git children to one owned process group."""
+    command = ['cargo', 'fetch', '--locked', '--manifest-path', str(manifest)]
+    process = subprocess.Popen(command,
+        env={**os.environ, 'CARGO_HOME':str(cache), 'CARGO_NET_GIT_FETCH_WITH_CLI':'true'},
+        start_new_session=True)
+    try:
+        code = process.wait(timeout=180)
+        if code:
+            raise subprocess.CalledProcessError(code, command)
+    finally:
+        # Killing only Cargo leaves its Git child running after a timeout.
+        # This session contains only the fetch and its descendants.
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        process.wait(timeout=5)
 
 
 def prepare(folder):
@@ -107,8 +128,7 @@ def main():
         manifest = source/'backend/decky-syncthing-watchdog/Cargo.toml'
         lock = manifest.with_name('Cargo.lock').read_bytes()
         if args.fetch:
-            subprocess.run(['cargo', 'fetch', '--locked', '--manifest-path', str(manifest)],
-                           env={**os.environ, 'CARGO_HOME':str(cache)}, check=True, timeout=180)
+            fetch_locked_dependencies(manifest, cache)
         else:
             for name in ('registry', 'git'):
                 shutil.copytree(args.dependency_cache/name, cache/name)

@@ -1,0 +1,64 @@
+name: Framey settings sample runtime
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'examples/framey-settings/**'
+      - 'scripts/framey-test-sample-runtime.py'
+      - 'scripts/framey-test-decky-runtime.py'
+      - 'scripts/framey-pack-sample.py'
+      - 'scripts/framey-check-archive.py'
+      - 'tests/decky-runtime/**'
+      - 'tests/framey_official.py'
+      - 'ui/frame_decky_store.py'
+      - 'ui/frame_decky.py'
+      - 'ui/framey_compatibility.py'
+      - 'ui/framey-compatibility.json'
+      - '.github/actions/framey-runtime-inputs/**'
+      - '.github/workflows/framey-sample-runtime.yml'
+  pull_request:
+    paths:
+      - 'examples/framey-settings/**'
+      - 'scripts/framey-test-sample-runtime.py'
+      - 'scripts/framey-test-decky-runtime.py'
+      - 'scripts/framey-pack-sample.py'
+      - 'scripts/framey-check-archive.py'
+      - 'tests/decky-runtime/**'
+      - 'tests/framey_official.py'
+      - 'ui/frame_decky_store.py'
+      - 'ui/frame_decky.py'
+      - 'ui/framey_compatibility.py'
+      - 'ui/framey-compatibility.json'
+      - '.github/actions/framey-runtime-inputs/**'
+      - '.github/workflows/framey-sample-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  sample-runtime:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: ./.github/actions/framey-runtime-inputs
+      - name: Actual sample settings through published Decky
+        run: python3 scripts/framey-test-sample-runtime.py --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" --output "$RUNNER_TEMP/framey-sample-runtime.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: framey-sample-runtime-${{ matrix.os }}
+          path: ${{ runner.temp }}/framey-sample-runtime.json
+          if-no-files-found: error

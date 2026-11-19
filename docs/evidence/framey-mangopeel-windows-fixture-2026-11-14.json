@@ -1,0 +1,69 @@
+{
+  "change": {
+    "allAssertionsPreserved": true,
+    "oneTestSetupCallChanged": "profile.write_text(previous) -> profile.write_bytes(previous.encode())",
+    "originalNativeDeadlinesAndNegativeControlsUnchanged": true,
+    "productionAndRuntimeHelperUnchanged": true
+  },
+  "rawEvidence": {
+    "decompressedSha256": "7cd734ac01ecd8201dc4df74befba3ab3704d6e9e9e966048b44ae54cd2c4758",
+    "path": "docs/evidence/framey-mangopeel-windows-fixture-2026-11-14.json.gz",
+    "recordSha256": {
+      "candidateLinuxTwoTests": "2292ed1826200528fe91a030af17662114d2ec76b7be5ab43034d5af9e8abd5d",
+      "candidateWindowsNewlineEmulation": "2d0a6e3d42a2cac94bc3d805bf63eaa974918de2691134799074972cab108660",
+      "coordinatorCandidateTwoTests": "d5ea86bad911f658ae4d5fdec86ac5cd032dac6fcd8ed504bc4a794d0380b491",
+      "coordinatorSourceReview": "f726af9b7a02ef67fcea88d29658a8084145db614d3c5d49dc8e07ef167f6537",
+      "failedHeadLiveJobsReadback": "e4e7ba14cb4e8465645653c2a749ab413cf0954d73c0fd83c93ac1dd67efb616",
+      "failedWindowsJobLog": "e0e2591239cc66f1b72e33426aa98dae96a381756e7d0edd1a2f169a6f37bd43",
+      "independentPatch": "3da60176445b53b3e07932ea4c623164dfae8f5e39d7b1e045a16802a0d4e5e0",
+      "independentReview": "7021b5e5f058305e0de2684bb1fd117d86d4f113afea3663de4084cab5352edf",
+      "independentReviewScript": "4115244eca12e5f334e699be00257ef142231d0186a8e143afe7d2870b11f001",
+      "originalLinuxTwoTests": "28ccba7aa8dfa088ab2d4a74909ac354addecc17d341fa3e2ce277cc9eb89aba",
+      "originalWindowsNewlineEmulation": "f06139ed0e8bfd6d47c92d631e40ad1b4a76311a012571779475a4e06633ad06",
+      "sourceCommitReadback": "a31989d8804227310cbe88166896e6f1f0895a81e4bde0837ec3453e54599699"
+    },
+    "sha256": "6b432ae70fa7a9ec2902268a025df4525617caf3258988447488cd1d04264d32"
+  },
+  "recordedAt": "2026-11-14T20:00:38.720369+00:00",
+  "retainedFailure": {
+    "attempt": 1,
+    "cause": "Windows text-mode setup wrote CRLF; raw-byte assertion expected LF. Helper output matched expected LF in both failures.",
+    "failures": 2,
+    "head": "9c888acc91889ecadf53198da419491713a57ddd",
+    "job": 132565186605,
+    "rerun": false,
+    "run": 43633513127,
+    "skips": 511,
+    "tests": 2468
+  },
+  "scope": {
+    "freshExactHeadHostedChecksRequired": true,
+    "historicalFirstNativeFailureCauseEstablished": false,
+    "loaderReceiptFixIncluded": false,
+    "previousHeadPartialArtifactsQualifyNewHead": false,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false,
+    "windowsMachineExecutedLocally": false,
+    "windowsNewlineConversionEmulatedOnRealFiles": true
+  },
+  "sourceBeforeEvidenceCommit": "1c35d93803c87bb958c4fb6657f996e15129fd0d",
+  "sourceSha256": {
+    ".github/workflows/checks.yml": "eac0e12bff2b1eb0cc3e26c4e4587d2868f857b09b6a047f36a39b28b6d33ea0",
+    "scripts/framey-test-decky-runtime.py": "0b7cbf76ed1bdf92567104cbbe77e9d5cf323e983d93909c71d0cea62e3180c0",
+    "tests/decky-runtime/check.py": "e80bbf38cb1918fcace756d9f237c89a0e4dad9ae35fd8f3c99e90b9c89225dd",
+    "tests/decky-runtime/mangopeel.py": "5b2f8102d2b8d7abd78962a9fed6921641d0071146b57b81a410abdc03db27b5",
+    "tests/sandbox.py": "814c4b6842675dcbb3da54aabe9dcff830f0313c1d25351b8881d48a1e6a8648",
+    "tests/test_framey_mangopeel_fixture.py": "e0f959001770048fd3775197186b7a5443bce9dc40a38da1c9d7f065947a65ae",
+    "ui/frame_decky.py": "81b934dfd0b2fe4374dc281f4646e793c1653c309943aaec255a9e566dad1ef7"
+  },
+  "validation": {
+    "independentCandidateLinuxTests": 2,
+    "independentCandidateWindowsEmulationTests": 2,
+    "independentGreenSkips": 0,
+    "independentOneLineRestorationVerified": true,
+    "independentOriginalLinuxTests": 2,
+    "independentOriginalWindowsEmulationFailures": 2,
+    "localCandidateTests": 2,
+    "localSkips": 0
+  }
+}

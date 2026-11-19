@@ -1,0 +1,91 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const act=callback=>ReactDOM.flushSync(callback);
+  function Icon({title,color}) {
+    return React.createElement(React.Fragment,null,
+      React.createElement('svg',{viewBox:'0 0 10 10',className:'local-icon',style:{color}},
+        React.createElement('title',null,title),React.createElement('path',{d:'M1 1L9 9'})),
+      React.createElement('span',{className:'icon-caption'},title));
+  }
+  const icon=(title,color)=>React.createElement(Icon,{title,color});
+  const checkIcon=(title,color)=>{
+    const svg=container.querySelector('svg');
+    assert(svg&&svg.getAttribute('viewBox')==='0 0 10 10','dropdown item lost its React SVG icon');
+    assert(svg.querySelector('path')?.getAttribute('d')==='M1 1L9 9','icon geometry lost');
+    assert(svg.classList.contains('local-icon')&&svg.style.color===color,'icon class/style lost');
+    assert(svg.querySelector('title')?.textContent===title&&container.querySelector('.icon-caption')?.textContent===title,
+      'icon component/fragment content lost');
+  };
+  try {
+    for(const deferred of [false,true]) {
+      const first={data:0,label:'First'},second={data:'second',label:'Second'},changes=[];
+      let release,loads=0,selected=first.data;
+      const control=props=>React.createElement(DFL.DropdownItem,{label:'Local choice',
+        description:React.createElement('em',null,'Local description'),rgOptions:[first,second],selectedOption:selected,
+        renderButtonValue:label=>React.createElement('span',{className:'selected-value'},label),
+        onChange:option=>changes.push(option),
+        onMenuWillOpen:deferred ? show=>{loads++;release=show;} : undefined,...props});
+      render(control({icon:icon('First icon','red')}));
+      checkIcon('First icon','red');
+      assert(container.querySelector('strong')?.textContent==='Local choice'&&container.querySelector('em')?.textContent==='Local description',
+        'label or description lost');
+      if(deferred) {
+        assert(!container.querySelector('select'),'icon bypassed deferred loading gate');
+        act(()=>container.querySelector('button').click());
+        checkIcon('First icon','red');
+        assert(loads===1&&!container.querySelector('select'),'loading state changed');
+        act(()=>release());
+      }
+      const select=container.querySelector('select');
+      assert(select&&select.selectedOptions[0]?.textContent==='First','selected zero option lost');
+      act(()=>select.focus());
+      render(control({icon:icon('Updated <icon>','blue')}));
+      checkIcon('Updated <icon>','blue');
+      assert(!container.querySelector('icon'),'icon text became markup');
+      assert(container.querySelector('select')===select&&document.activeElement===select&&select.selectedOptions[0]?.textContent==='First',
+        'icon update replaced select, selection or focus');
+      const choose=option=>act(()=>{
+        select.value=[...select.options].find(node=>node.textContent===option.label).value;
+        select.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+      choose(second);
+      assert(changes.length===1&&changes[0]===second,'icon changed original option callback');
+      selected=second.data;render(control({icon:icon('Disabled icon','green'),disabled:true}));
+      checkIcon('Disabled icon','green');
+      assert(select.disabled&&container.querySelector('.selected-value')?.textContent==='Second','disabled state or value renderer lost');
+      choose(first);
+      assert(changes.length===1,'disabled dropdown emitted a change');
+      render(control({icon:'<b>Plain icon</b>'}));
+      assert(container.textContent.includes('<b>Plain icon</b>')&&!container.querySelector('b'),'string icon became markup');
+      assert(container.querySelector('select')===select&&!select.disabled,'reenabled select replaced');
+      act(()=>select.focus());render(control({}));
+      assert(!container.querySelector('svg')&&!container.querySelector('.icon-caption')&&!container.textContent.includes('Plain icon'),
+        'removed icon remained');
+      assert(container.querySelector('select')===select&&document.activeElement===select&&select.selectedOptions[0]?.textContent==='Second',
+        'icon removal replaced select, selection or focus');
+      if(deferred)assert(loads===1,'icon redraw restarted the option loader');
+      render(null);
+    }
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      nativeAndDeferred:true,reactComponentAndFragment:true,svgPropsPreserved:true,updatesAndRemoval:true,
+      textEscaped:true,disabledIconVisible:true,disabledChangesSuppressed:true,originalOptionIdentity:true,
+      stableSelectSelectionAndFocus:true,deferredGateAndLoaderPreserved:true,syntheticProps:true,
+      realFrameContacted:false,physicalControllerTested:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

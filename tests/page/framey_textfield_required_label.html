@@ -1,0 +1,58 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), container=document.getElementById('fixture');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const root=ReactDOM.createRoot(container), ref=React.createRef(), changes=[];
+  const render=props=>ReactDOM.flushSync(()=>root.render(React.createElement(DFL.TextField,{
+    label:'Device name',description:'Local example.',defaultValue:'Private draft',ref,
+    onChange:event=>changes.push(event.currentTarget.value),...props
+  })));
+  const input=()=>container.querySelector('input');
+  const heading=()=>container.querySelector('strong');
+  const annotation=()=>heading().querySelector('span');
+  try {
+    render({requiredLabel:'Required <name> & value'});
+    assert(heading().textContent==='Device name Required <name> & value',
+      'requiredLabel must be displayed beside the label');
+    assert(!container.querySelector('name'),'annotation string was interpreted as HTML');
+    assert(!input().required,'requiredLabel must not impose native validation');
+    const original=input(), handle=ref.current;
+    assert(container.querySelector('label').contains(original),'native label association lost');
+    ReactDOM.flushSync(()=>{
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(original,'Changed draft');
+      original.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    assert(JSON.stringify(changes)==='["Changed draft"]','native change callback lost');
+    handle.Focus();
+    render({requiredLabel:React.createElement('em',{title:'Author annotation'},'Needed')});
+    assert(annotation().querySelector('em')?.title==='Author annotation','rich annotation lost');
+    assert(input()===original&&ref.current===handle&&input().value==='Changed draft',
+      'annotation update replaced input, ref or draft');
+    assert(document.activeElement===original,'annotation update stole focus');
+    render({requiredLabel:'Still needed',disabled:true});
+    assert(input().disabled&&annotation().textContent==='Still needed','disabled field lost annotation');
+    render({requiredLabel:0,required:true});
+    assert(annotation().textContent==='0'&&input().required,'zero annotation or explicit required lost');
+    for(const props of [{requiredLabel:null},{requiredLabel:undefined},{requiredLabel:false},{}]) {
+      render(props);
+      assert(heading().textContent==='Device name'&&!annotation(),'removed annotation left stale markup');
+      assert(input()===original&&input().value==='Changed draft','annotation removal reset draft');
+      assert(!input().required,'removed native required remained set');
+    }
+    render({label:React.createElement('i',null,'Rich name'),requiredLabel:React.createElement('b',null,'Needed')});
+    assert(heading().querySelector('i')?.textContent==='Rich name'&&
+      heading().querySelector('b')?.textContent==='Needed','rich label and annotation must coexist');
+    ReactDOM.flushSync(()=>root.unmount());
+    assert(ref.current===null&&handle.element===null,'unmount did not retire input refs');
+    result.textContent=JSON.stringify({passed:true,documentedApi:'@decky/ui 4.16.0 TextField.requiredLabel',
+      richAnnotation:true,escapedText:true,disabledAnnotation:true,annotationUpdatesAndRemoval:true,
+      nativeRequiredIndependent:true,nativeInputDraftRefAndFocusPreserved:true,nativeChangePreserved:true,
+      syntheticProps:true,realFrameContacted:false});
+  }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

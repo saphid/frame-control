@@ -1,0 +1,117 @@
+{
+  "baseBeforeReuse": "12a8363e3d122af1985ea1a6b827d71cc4a40652",
+  "behavior": {
+    "actionBudgetSeconds": 120,
+    "brokenSocketClosedBeforeReplacement": true,
+    "cachedReadyResultAfterDeadlineRejected": true,
+    "finalSnapshotBudgetSeconds": 8,
+    "pendingSocketCapacity": 1,
+    "productionReadinessPollSeconds": 0.2,
+    "readinessBudgetSeconds": 60,
+    "rpcDeadlineSeconds": 8,
+    "rpcOrMutationRetriesAdded": false,
+    "timeoutAndCleanupClosePendingSockets": true
+  },
+  "localValidation": {
+    "actualBrowserTestMethods": 2,
+    "actualVmReadinessHelperUsedByBrowserTests": true,
+    "candidateSkips": 0,
+    "candidateTests": 65,
+    "initialCheckerAndDiagnosticExpectationFailuresRetained": true,
+    "originalReuseFailures": 2,
+    "originalReuseTests": 10
+  },
+  "rawEvidence": {
+    "decompressedSha256": "2e254726bde9055d7790342157df59c659b3d67b148c60038c0df03871662ec3",
+    "path": "docs/evidence/framey-readiness-connection-reuse-2026-11-14.json.gz",
+    "recordSha256": {
+      "correctedWitnessLog": "fc473ead931cce607602d8c9bac02d959069a676b986acdc1a7f7f68fee9f2f8",
+      "correctedWitnessProof": "d2b4c8af3904f0e189b398e7c3aeeb2d6dd9d0c7cb5797f4f1a56556df9e6bc0",
+      "correctedWitnessScript": "eb07ef08ad736508297ee8be5222cfe16ac66d1862eea48c99be6b1dad252985",
+      "final65Green": "279aac751778bb2d655f4676c8bca56ff82373c47b57298d49cc8cffb3140bcf",
+      "initialBrowserGreenWithOldRecordExpectation": "bd701edcac8d14533cc2a6137cea2b3e6657ad5ff28d6b21e437d1ee6d7b87a7",
+      "initialReuseRed": "634d0ab52e1b97532d2f932a6750f5de80c8e4218b04b70dbb25503d9eb651d6",
+      "initialUnitGreenWithOldRecordExpectation": "0c08c056f9d47c029403f2f7c35ab292ac9724252bc464f5fb799325a4378ae7",
+      "initialWitnessCheckerFailure": "dc1781165d1de25debcdb598843c718067885421704406e4f221a02b076c0561",
+      "initialWitnessScript": "08e4504e25ca9279fa8baecd9b150e5f67289a9ca99d1d4e5d1c353dd30e1fd0",
+      "priorPublishedImportAndDeadlineReview": "24ae0a726ca223d61465e8cd11e279129b100dccb819183c9e4d3163b9b48bbe",
+      "retainedPreRuntimeCargoFailure": "f8a2400f07b3ce365881f5dfdfb3890923287f24c275319ec24679346692cbd8",
+      "scopeCorrectedReuseRed": "d1b2891f09003eb2e52d51967a5e00972cfc3c0cd95e08b76a6e82accbfd1b26"
+    },
+    "sha256": "69bff0cd406073249f4413e4f5ff66d3c3c62b9950be01c98917209d979ff2d9"
+  },
+  "recordedAt": "2026-11-14T17:11:01.016392+00:00",
+  "scope": {
+    "actualArmFailureCauseEstablished": false,
+    "armPerformanceImprovementEstablished": false,
+    "freshHostedQualificationRequired": true,
+    "managedInstallerVerified": false,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false,
+    "wornVrVerified": false
+  },
+  "sourceBeforeEvidenceCommit": "7f199e21dd9bebbe2d869a8adc518566578d4710",
+  "sourceSha256": {
+    "scripts/framey-test-syncthing-flatpak-package.py": "6849e4eddee91ee5414526e68c3ad48d4d4104611d00c63be8092fd100c5427b",
+    "tests/decky-runtime/syncthing_browser.py": "3e6f9f65438afe9717646ad154a7074bf5c7733bdda19260b25981366c603ffb",
+    "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+    "tests/test_syncthing_browser_readiness.py": "894e969967c2364e8f1ccd5415b10d8ff9f5e6131b3fef7fa2d397da59406aca",
+    "tests/test_syncthing_browser_startup.py": "1d1db86bb2c7618f0436cf796f8d7dfa0d0edda04946149d5e2246bb22058aba",
+    "tests/test_syncthing_http_gateway.py": "e3c2bd5fadca1d08aa7c3124619a3c868239efbd5f6a65cdac38727595119b04",
+    "ui/frame_steam.py": "dcd8508b3e9ed814bc35b44c1f1923da110b876bb6b12a1b77666e90a1ab9b33",
+    "ui/framey-host.js": "c804854546d35b19004baba33a02f563dad195ed6c494adb7bab1b5505cef16e"
+  },
+  "witness": {
+    "artificialParentDeliveryDelaySeconds": 3,
+    "measurements": [
+      {
+        "constructorCalls": 32,
+        "constructorFailures": 1,
+        "constructorSeconds": 0.0986402565613389,
+        "mode": "churn",
+        "pendingProbes": 30,
+        "pendingSnapshots": 30,
+        "probeSeconds": 0.03526485338807106,
+        "readyProbes": 1,
+        "totalSeconds": 3.936452202498913
+      },
+      {
+        "constructorCalls": 2,
+        "constructorFailures": 1,
+        "constructorSeconds": 0.025777332484722137,
+        "mode": "reuse",
+        "pendingProbes": 31,
+        "pendingSnapshots": 31,
+        "probeSeconds": 0.0425197733566165,
+        "readyProbes": 1,
+        "totalSeconds": 3.8935463689267635
+      },
+      {
+        "constructorCalls": 32,
+        "constructorFailures": 1,
+        "constructorSeconds": 0.06645775772631168,
+        "mode": "churn",
+        "pendingProbes": 30,
+        "pendingSnapshots": 30,
+        "probeSeconds": 0.03455514460802078,
+        "readyProbes": 1,
+        "totalSeconds": 3.909236832521856
+      },
+      {
+        "constructorCalls": 2,
+        "constructorFailures": 1,
+        "constructorSeconds": 0.03255040477961302,
+        "mode": "reuse",
+        "pendingProbes": 31,
+        "pendingSnapshots": 31,
+        "probeSeconds": 0.04258828144520521,
+        "readyProbes": 1,
+        "totalSeconds": 3.9042074540629983
+      }
+    ],
+    "pinnedFrontend": true,
+    "purpose": "Demonstrate redundant attachments; no ARM timing or root-cause claim.",
+    "sourceAtWitness": "12a8363e3d122af1985ea1a6b827d71cc4a40652",
+    "witnessPollSeconds": 0.1
+  }
+}

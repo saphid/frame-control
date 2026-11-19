@@ -1,0 +1,55 @@
+{
+  "at": "2026-11-15T13:37:46.105910+00:00",
+  "sourceCommit": "e7bf3c94127008a3ef86dfe2a6d2a747ec8ff140",
+  "sourceSha256": {
+    "tests/decky-runtime/check.py": "d28ce497d5bd3dcaeaff78f93212e3a10baa3f415788da7481fe3456cbdd9b00",
+    "tests/decky-runtime/surround_route_diagnostic.py": "cfbb47c44b7284d8e24703a194f88c36eca0a7724d59dc2a17d1ad02cfb9c5ad",
+    "scripts/framey-test-decky-runtime.py": "66bf536bce4ea6ac57de00536ffd2951f79500baf0946ef3b91fd836d8f98739",
+    "tests/test_surround_routing_diagnostics.py": "dda59f7a50641331a22ae15f36520be597c1d6637c7002b470a64ac89f7c97e3"
+  },
+  "scope": "Diagnostic-only private audio harness; no production routing change",
+  "originalFailedRun": 43714778282,
+  "originalFailedJob": 132813815328,
+  "originalFailedArtifact": 14162147057,
+  "originalFailureCauseEstablished": false,
+  "originalFailureRetained": true,
+  "originalSurroundProbeAndTwentySecondWaitUnchanged": true,
+  "noRetry": true,
+  "commandStatusAndOutputPreserved": true,
+  "postFailureOnlyStateQueries": true,
+  "postFailureQueryLimitSeconds": 3,
+  "postFailureQueryCount": 3,
+  "privateRuntimeSnapshotDifferencesExplicitlyBound": true,
+  "finalRuntimeReplayClaimed": false,
+  "baselinePrivateRoutingPassed": true,
+  "originalArmFailureReproduced": false,
+  "controlledFaultReachedOriginalRoutingAssertion": true,
+  "controlledFaultIsNotHistoricalReproduction": true,
+  "ownedContainersAndImagesAbsent": true,
+  "focusedMethods": 8,
+  "focusedSkips": 0,
+  "existingSurroundMethods": 9,
+  "localFullSuiteMethods": 2537,
+  "localFullSuiteSeconds": 425.19,
+  "localFullSuiteSkips": 70,
+  "websiteTests": 2,
+  "hostedQualificationRequired": true,
+  "realFrameOrWornProof": false,
+  "rawEvidence": {
+    "path": "framey-surround-route-diagnostics-2026-11-15.json.gz",
+    "sha256": "b8c4c075d5dd7a9b1219b2bb3bd1f9acfbed2b894cbc39fe15b0c88c80c5b55a",
+    "uncompressedSha256": "afea692578df7c53d24241f5c5164f7a98bfbb96220510eeb1f4f2a1c2a9fab2",
+    "recordCount": 17
+  },
+  "completedPriorHeadGuard": {
+    "path": "/tmp/frame-coordinator-turn136-e7bf-final-failed-head-review.json",
+    "sha256": "31c222b8665296c54e4ecb6c68d0c166d2460ac9c6b7922212f29ed0a352aaa6",
+    "ownArtifactApprovals": 15,
+    "expectedArtifacts": 16,
+    "successfulOriginalJobs": 25,
+    "failedOriginalJobs": [
+      132813815328
+    ],
+    "mergeGatePassed": false
+  }
+}

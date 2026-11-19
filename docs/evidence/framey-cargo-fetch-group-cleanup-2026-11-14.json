@@ -1,0 +1,114 @@
+{
+  "change": {
+    "cargoDirectChildReaped": true,
+    "cleanupWaitSeconds": 5,
+    "explicitGitCliRetained": true,
+    "fetchTimeoutSeconds": 180,
+    "frozenOfflineBuildAndPinsUnchanged": true,
+    "killOwnedProcessGroupOnEveryExit": true,
+    "lockedFetchRetained": true,
+    "ownedCargoSession": true,
+    "retryOrFallbackAdded": false,
+    "tlsVerificationNotDisabled": true
+  },
+  "rawEvidence": {
+    "decompressedSha256": "4a26f60d2a020c1542fb4b5b6c342aaf66b9b923ecf47d3479d5854300ea7c2d",
+    "path": "docs/evidence/framey-cargo-fetch-group-cleanup-2026-11-14.json.gz",
+    "recordSha256": {
+      "candidateSourceReview": "ac02658036fc66a5e7185789509dba19750a7c41d2f1b8f6cf30d716506ef1ea",
+      "committedControlsInitialSandboxToolchainError": "b2488bc9d639d3f0738e54c43268579283682c3a56cdc66404de233c2842a47a",
+      "committedControlsSandboxCorrectedGreen": "3cbd40c4c8cc9c5ab521d1d3fd806f8d9b11718321b1bfa2db420d9bb3c54d6a",
+      "committedFourControlsFinalGreen": "f8ec0d4a3ab5c216165d6f2d63320cfe4dd922d4d65fe8866934d5158cff0fb1",
+      "existingOwnership19Green": "21aab311cdeddd1be815d28a32a82802a883ceb20ee279ccedf4b319fce38eb2",
+      "historicalTransportManifest": "b23078f2c7a365033dd894e3385308ee3a6c476558c8160360c9df830f9cf4a2",
+      "independentCargoLog_interrupt": "2c50dd6f54bf61b79daf964e23943184fe6184ca7322bb27b7aff2c2a156a7e7",
+      "independentCargoLog_nonzero": "629ec340d3382099289020aa6a9b6a2c1ddff01221c4ee3b158bc2ea9b7bf52d",
+      "independentCargoLog_success": "75c096d20d3cf406e20d9d426f45f50bedab1d4f9243bf0aa72dd2f2e5b3e895",
+      "independentCargoLog_timeout": "2c50dd6f54bf61b79daf964e23943184fe6184ca7322bb27b7aff2c2a156a7e7",
+      "independentCleanupLog": "149d334deb77a9d727fb473f9d23de606f2ab006bd7c535ed89689322b906b44",
+      "independentCleanupProof": "045439ec56f0f824aabc09b676628c7507a6c0259c1a0d1dd96589eab6aed084",
+      "independentCleanupScript": "77976c7465b63f35e5a43f2f34a7b9c1cab57f32ba39f1047b8ca818f35c2210",
+      "independentInitialTooShortFixtureLog": "231f1b47432c2383a7c309943407fd3e4cc329ca13b9ed1a0e2815e6eb643648",
+      "independentInitialTooShortFixtureScript": "9b155ffac2bf9cf43c3c1162715e1cf4b831ce95f440f40b1a2e8f5e456d2ee9",
+      "independentPinnedWitnessReview": "3830beada795a272e4082b40234c63351c6058921b0afe15ba1f9793a78017d4",
+      "originalLeakBuilder": "2cd971f7d07a3eaa6a36c82851ddc5423cef3994ef9039b3b21f2f5137bd66c6",
+      "originalLeakLog": "2c50dd6f54bf61b79daf964e23943184fe6184ca7322bb27b7aff2c2a156a7e7",
+      "originalLeakProbeScript": "46560993ae6bb6ebd4fb214608cec78c7ce0fe1d4e0e6bc9e34a0cfb8da9f57b",
+      "originalLeakProof": "7fd3e11702391e472bef2feb628c43d004d0067f5b1b8ea06422e49eb5bd139e",
+      "pinnedFetchLog": "644762b6766578edb398e2f2f7425dd941418e55e536e6199e39867dd158cbcf",
+      "pinnedFetchProof": "23ebc39ebceddd16d62ce7025973602e7149690822c7abc22dc350f8278b51c2",
+      "pinnedFetchScript": "6f70d6be76700a74e8cbf046f06d991e6c1eb165b3e5670a1e5d088413876164",
+      "pinnedFetchTerminalLog": "23ebc39ebceddd16d62ce7025973602e7149690822c7abc22dc350f8278b51c2",
+      "pinnedGitForwardingMarkers": "270826d41d0a807d41e14d413e764fd30dab7a7bcd1e478ea94b9e812671042b",
+      "pinnedOfflineMetadata": "08c9d0052aaf51f91e98e06fd9b00a4f703d2a7abcf62382c040bed85303b28b"
+    },
+    "sha256": "75c4f24484698d5febddb37d842061d52f234cf04b595aa6d0beeb6ae4706ec8"
+  },
+  "recordedAt": "2026-11-14T17:50:22.019800+00:00",
+  "rejectedTimeoutHead": "08aacd42c22b11cf2343cc9fb41a94b775017679",
+  "retainedFailures": {
+    "historical710CargoSslAndArmReadinessFailuresUnresolved": true,
+    "independentInitialFixtureTimeoutTooShortForCargoRetries": true,
+    "initialCommittedControlSandboxToolchainError": true,
+    "initialSandboxCorrection": "Locate installed toolchain through RUSTUP_HOME while leaving sandbox HOME intact; no source/assertion change",
+    "oldProbeExplicitlyReapedLeakedChild": true,
+    "oldSourceTimeoutLeftGitAlive": true,
+    "oldSuccessfulFetchStillValid": true
+  },
+  "scope": {
+    "armReadinessCauseEstablished": false,
+    "descendantReapingByHarnessIsNotProductionReapingClaim": true,
+    "freshExactHeadHostedQualificationRequired": true,
+    "managedInstallerVerified": false,
+    "nativeDependencyBuildExecuted": false,
+    "originalCiSslCauseEstablished": false,
+    "prior08aaTimeoutQualificationHeld": true,
+    "productionUsesSubreaper": false,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false,
+    "wornVrVerified": false
+  },
+  "sourceBeforeEvidenceCommit": "dca41d363e2e49edb3b0f84dbd4cf7adc2ffc571",
+  "sourceSha256": {
+    ".github/workflows/syncthing-candidate.yml": "269778f50aac58638991de08050419ad9e07f5bab8e70d688a5a701f6cf4be38",
+    ".github/workflows/syncthing-flatpak-package.yml": "2120cad283ca5c37c956daf05e591502bf2005dcb4fb7d47e18ebc1ef748a9b4",
+    "scripts/build-framey-syncthing.py": "1ec2e8f04b6df8076263f2362f41200795602f2b938ed107e07b16c90054a79e",
+    "tests/sandbox.py": "814c4b6842675dcbb3da54aabe9dcff830f0313c1d25351b8881d48a1e6a8648",
+    "tests/test_framey_syncthing_build.py": "561dfa955a7851acae5cf2e8b738190f8b5128a8893a461db6d9ec8070a4d6d2",
+    "tests/test_framey_syncthing_candidate.py": "279585cdede44889fc962d04baf9fd1e7d6258f8a0fa384277611d968fe41789",
+    "ui/vendor/syncthing-0.2.7/main.py": "ea1c15f587b3dbece3fee67918e1187a71750aa74637a054a34be643265fb645",
+    "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+    "ui/vendor/syncthing-0.2.7/source.tar.gz": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "ui/vendor/syncthing-0.2.7/watchdog.patch": "b3ca4663f13d77d87e45d4eaeb92758944cd4165180d578d2cd685f061482b1f"
+  },
+  "validation": {
+    "actualGitCliFetches": 1,
+    "actualPinnedPublicFetchSeconds": 7.1283977488055825,
+    "committedRealCargoControls": 4,
+    "descendantsReapedByTestSubreaperHarness": true,
+    "existingOwnershipTests": 19,
+    "independentActualCargoControls": 4,
+    "lockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "lockUnchanged": true,
+    "modes": [
+      "timeout",
+      "nonzero",
+      "success",
+      "KeyboardInterrupt"
+    ],
+    "offlineLockedMetadataPassed": true,
+    "ownedSigtermIgnoringDescendantKilledWithSigkill": true,
+    "pinnedGitRevisions": [
+      "e73a76600ce9e51e962de5266b03be596e6c1d50"
+    ],
+    "skips": 0,
+    "testOnlyCargoRetrySetting": 0,
+    "testOnlyTimeoutSeconds": {
+      "committedTimeout": 1.5,
+      "independentTimeout": 0.8,
+      "ordinaryControlBudget": 8
+    },
+    "totalCommittedFocusedTests": 23,
+    "unrelatedSentinelPreserved": true
+  }
+}

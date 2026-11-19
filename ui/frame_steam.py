@@ -13,6 +13,7 @@ Usage: python3 - owned            # owned games + download status, JSON
 Prints one JSON object. Errors are {"error": "..."} with exit status 1.
 """
 import base64
+import http.client
 import json
 import os
 import socket
@@ -20,7 +21,7 @@ import struct
 import subprocess
 import sys
 import time
-import urllib.request
+from urllib.parse import urlsplit
 
 CDP = "http://127.0.0.1:8080/json"
 
@@ -42,10 +43,24 @@ class Page:
     """Minimal CDP-over-WebSocket client (text frames, no extensions)."""
 
     def __init__(self, title="SharedJSContext"):
+        target = urlsplit(CDP)
+        client = http.client.HTTPSConnection if target.scheme == "https" else http.client.HTTPConnection
+        connection = client(target.hostname, target.port, timeout=5)
         try:
-            pages = json.load(urllib.request.urlopen(CDP, timeout=5))
-        except OSError as e:
+            # CDP is a direct local endpoint. Avoid urllib.request's proxy,
+            # handler and opener imports on every bounded SSH method call.
+            path = target.path or "/"
+            if target.query:
+                path += "?" + target.query
+            connection.request("GET", path)
+            response = connection.getresponse()
+            if response.status != 200:
+                raise OSError(f"HTTP {response.status} {response.reason}")
+            pages = json.load(response)
+        except (OSError, http.client.HTTPException) as e:
             raise Fail(f"Steam's UI isn't answering on {CDP} ({e}); is Steam running?")
+        finally:
+            connection.close()
         url = next((p["webSocketDebuggerUrl"] for p in pages if p.get("title") == title), None)
         if not url:
             raise Fail(f"no {title} page; Steam may still be starting")

@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -27,6 +28,14 @@ class CapturedGuestProbe(unittest.TestCase):
                 "sys.stdout.flush(); "
                 "sys.stderr.buffer.write(b'e'*12000+b'\\xef\\xbf\\xbdowned stderr sentinel'); "
                 "sys.stderr.flush(); time.sleep(30)"]
+        clock_samples = []
+
+        def observe_clock():
+            value = time.monotonic()
+            clock_samples.append(value)
+            return value
+
+        self.scope['time'] = SimpleNamespace(monotonic=observe_clock)
         children = []
         popen = subprocess.Popen
 
@@ -43,7 +52,10 @@ class CapturedGuestProbe(unittest.TestCase):
         evidence = self.scope['PROGRESS']['timedOutCommand']
         self.assertEqual(evidence['argv'], argv)
         self.assertEqual(evidence['timeoutSeconds'], 2)
-        self.assertGreaterEqual(evidence['elapsedSeconds'], 2)
+        self.assertEqual(len(clock_samples), 2)
+        self.assertEqual(evidence['elapsedSeconds'],
+                         round(clock_samples[1] - clock_samples[0], 3))
+        self.assertGreaterEqual(evidence['elapsedSeconds'], 0)
         self.assertEqual(len(evidence['stdout']), 10000)
         self.assertEqual(len(evidence['stderr']), 10000)
         self.assertTrue(evidence['stdout'].endswith('owned stdout sentinel'))
@@ -70,3 +82,18 @@ class CapturedGuestProbe(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'exit=23: .*owned failure'):
             self.scope['command'](argv, timeout=10)
         self.assertEqual(self.scope['PROGRESS'], {})
+
+    def test_timeout_records_observed_elapsed_without_clamping_to_budget(self):
+        error = subprocess.TimeoutExpired(['owned probe'], 2,
+                                          output=b'owned stdout', stderr=b'owned stderr')
+        with patch.object(subprocess, 'run', side_effect=error) as run:
+            with patch.object(time, 'monotonic', side_effect=[100.0, 101.985]):
+                with self.assertRaises(subprocess.TimeoutExpired) as caught:
+                    self.scope['run_captured'](['owned probe'], timeout=2)
+        self.assertIs(caught.exception, error)
+        run.assert_called_once_with(['owned probe'], capture_output=True,
+                                    text=True, timeout=2)
+        self.assertEqual(self.scope['PROGRESS']['timedOutCommand'], {
+            'argv': ['owned probe'], 'timeoutSeconds': 2, 'elapsedSeconds': 1.985,
+            'stdout': 'owned stdout', 'stderr': 'owned stderr',
+        })

@@ -1,0 +1,495 @@
+{
+  "main": "a3c6f491f876ec1fee71ed6aec3d428b55804611",
+  "integration": "0ceb344c96ed316bc62e33233a31dee17edacfbb",
+  "branches": {
+    "bluetooth": "a07e7f8ea8c1ff32c5ead570303dc520bb8006d2",
+    "badges": "d673d9762182ce355de7098593a0426a40e8b738",
+    "playtime": "dc809c21f90fc48509371bc10860e588d4fb7094"
+  },
+  "primaryCases": 44,
+  "allMainCasesRetainedInOrder": true,
+  "changedCatalogIds": [
+    18,
+    66,
+    133
+  ],
+  "otherCatalogRowsUnchanged": 113,
+  "existingProbeHashesPreserved": {
+    "tests/decky-runtime/alarme_lifecycle.py": "9309c428b91b3c741c589f1e27e83dd9534b9d69b43c451f1541cb6255bec264",
+    "tests/decky-runtime/animation_private.py": "cce93505a3eb2b759d7ee4c6cff8f979572d41bf342f5a3ba98ea9633aa5354c",
+    "tests/decky-runtime/battery_private.py": "9ca0c40c87a70a47dba5ca6e98af9e5e06e4895804c93dc3e24da1a88f81ae0d",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/deck_shelves_private.py": "7601ff4ae19850dccf80ebc0f63ae7829af193367ac82d1357782e6c7e8f3b78",
+    "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+    "tests/decky-runtime/deckyspy_private.py": "acd2172c4618bc4228be43f2cf051a20f848fa0a4e93e43e591b071607e45cbb",
+    "tests/decky-runtime/desktop_apps_private.py": "e7d09b645b5367a5e4a99af35fe734df680479aca9b4bb5e2bcb21904b8c96f0",
+    "tests/decky-runtime/discord_private.py": "e7abd8c6a8ad5b85167b7ee73fca254e1857952d771bc1ae4a9d103f8c8cfb8c",
+    "tests/decky-runtime/download_all_private.py": "0258433b119d97beb0334cfaf115adb981ac7a86eb9f7795eb4d404e53a55a51",
+    "tests/decky-runtime/emuchievements_private.py": "42390c0a87ca64a3e21a8d5ed75d79acd45325108102aad18c823b089321d6fd",
+    "tests/decky-runtime/fileserver_private.py": "2ed2e13d271679c5958e2c747c683e08a5cafce3f30e23f597a924612d639b39",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/game_sync_private.py": "097b860de03d340fd9b857d87f67a5b0271381307d8cc97280a1f4c79985cb5b",
+    "tests/decky-runtime/guest_result.py": "c0c30f043a6d0af017ae8c42b5c60f36c65a7390ce314a311e3fbeb859fff86d",
+    "tests/decky-runtime/localsend_private.py": "f33dd326e92859192c3880ca4ef681a67cf1d97b9919a642f2b7c5762ba95f37",
+    "tests/decky-runtime/ludusavi_private.py": "c620d2c5a8bdb8a4fa52df378e4426a466d1e7271c800243aacd1486eb9482f9",
+    "tests/decky-runtime/music_control_private.py": "ffe421d2f1545922aaa95d27d7b29e0d53291a772fee72da7274d03f4d074f70",
+    "tests/decky-runtime/network_sentinel_private.py": "9c63a043199f8944a7def73dbf11770b5957d37e905f23e3c020313470d1a686",
+    "tests/decky-runtime/notebook_pages.py": "00bebf7ab14bc548b81e300c3c5ae0717ce430611fdb0f15a4ca3233518b56ba",
+    "tests/decky-runtime/notifications_private.py": "424bfdad2024bf7b5b9c5dbc68112ae7584add730f9a0577330bb4dfa403b708",
+    "tests/decky-runtime/parent_eof_native.py": "2ea967e31b22931797a08cea8dc02680972443c5f3c0e348d068ce3c090a753a",
+    "tests/decky-runtime/parent_eof_stacks.py": "b89b429d3e0fa755e68a619597ce5a9403f855873168f0b2cb208f8fe8ea93cb",
+    "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+    "tests/decky-runtime/protondb_private.py": "fa42f20a4f9487230ec2ace56bed14c47d50866a1ace559d2c861431bf3af32d",
+    "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+    "tests/decky-runtime/reshadeck_private.py": "94bf1b762a6a0f9448a8e02c1fe6fd9be552557df61ee1a7083b7d8626bf8ee2",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/screensaver_private.py": "15aa711ce5578e8c4e691689c8174ae6e1f59a4b1cb558ba3a1803186d47c000",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "tests/decky-runtime/steam_status_private.py": "7765481fe144045aed28a1855822550bf957a02e0ab941f8b044c252ba33d26b",
+    "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
+    "tests/decky-runtime/steamgriddb_private.py": "ae815dc7e5f0e178e95c93e0bbf3eca232f3f2eb6f35af6b1b618345e332240e",
+    "tests/decky-runtime/storage_cleaner_private.py": "77b6929d666dfa8269aa67f8773a8d25758f75dc5d8efd199eb16123dcb54af8",
+    "tests/decky-runtime/suggestme_private.py": "25033cfe91cf6114871b7b4300cd21b7a13985cffef9410809f6de0af831f85c",
+    "tests/decky-runtime/surround_private.py": "4aba2c5f2e08fa8b47fe544e002398be57fdfb93787062216efefd0987eddc32",
+    "tests/decky-runtime/syncthing_browser.py": "dae302a24e9f867718a777fe6e8c1eaf3072209a5fca7c5ac3d8848a3a21be91",
+    "tests/decky-runtime/syncthing_candidate.py": "b08243097773be9122d08b8c63e38dc3ed10f7a052626a96416ec52feccd66ee",
+    "tests/decky-runtime/syncthing_flatpak_package.py": "5498078bf4e1fee0c9451354c16ecd536df23637a603582867fa3e36c054d389",
+    "tests/decky-runtime/syncthing_flatpak_package_root.py": "9b3751604339e86c2dbedddebda901b793b70e76eebcf5318fa9a5a10192c0ff",
+    "tests/decky-runtime/syncthing_http.py": "b107a0dfae9d37775da025409ebfca566ffb4c7655641b21ce7613b38e3f669d",
+    "tests/decky-runtime/syncthing_http_parent.py": "b7f6599fd6cf90934585e43f238fbd3b7581b4fe4e0c2c9f15d497073f351224",
+    "tests/decky-runtime/syncthing_migration.py": "3c24a27cf2ed55b05d157a503c6c4b353119f188a19f1eff0bc6050bedb663df",
+    "tests/decky-runtime/syncthing_migration_stacks.py": "2c608fbb4ad61940e0d99cf4311dc87b7d59ea7443521a486128bf1de0d2e0b4",
+    "tests/decky-runtime/syncthing_runtime.py": "05224a4f7cfd6c39ff314996619f2ad2452bb11ea091d4ae86b68076ae5a2380",
+    "tests/decky-runtime/syncthing_service.py": "d118cb1bb06d7c8b2621052d712aed78f0b8523b34ea6e3f1565d5e1cfdbf383",
+    "tests/decky-runtime/syncthing_service_root.py": "7860ab6124766191e0bc644ee70c798ce25af3781d690adade1722d1366b76d1",
+    "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+    "tests/decky-runtime/terminal_candidate.py": "a99fa777574e7cb53a755ae561e24ce1e70428ce8885c7f44a72052bd41b5b1f",
+    "tests/decky-runtime/terminal_lifecycle.py": "e804a71b2c8fb42f2e950a1e89b722c9ac7c1a9d7a078305e1f5b3af25a8aeb8",
+    "tests/decky-runtime/theme_music_private.py": "9e3acc7e4085a9e63e4eb8754ed5348a50287488e5ea969c57d7c700a8741875",
+    "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+    "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+    "tests/decky-runtime/volume_mixer_private.py": "9b57b5b42445bac803a4308fb357c705048d92c8adbec63ae4710e34ce9f7f37",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a"
+  },
+  "historicalEvidencePreserved": {
+    "docs/evidence/framey-bluetooth-child-ipc-2026-11-14.json.gz": "b5ca1e8fc6d24bb4e254caf0226c823caa7f21604322aa9d0c4a6528d7e86aac",
+    "docs/evidence/framey-bluetooth-child-ipc-2026-11-14.md": "2c2107bc2c90ca9b56011fd3c91c667088ded9c1f15ff48876b6d57087bdde3b",
+    "docs/evidence/framey-bluetooth-initial-unload-failure-2026-11-14.json": "49ed13bdc502ab98596a68005dada894191bdb8f71b81d54bb6b4af19c406769",
+    "docs/evidence/framey-bluetooth-initial-unload-failure-2026-11-14.json.gz": "a096e25622ab0f4fd296e1e760f9538fc8c9d679f63b5c657917c6d977c4f4bd",
+    "docs/evidence/framey-nonsteam-badges-main-e528-ipc-2026-11-14.json.gz": "49ac6d4ca08b61f5d54ca44919bdd7ccf84a8cdd4dd4cd5039f5fc93d2ecc9f1",
+    "docs/evidence/framey-nonsteam-badges-main-e528-ipc-2026-11-14.md": "e765cd31ab4d114152540528841f22b90cb3947c2b80cba4c1b4b1199d75edb7",
+    "docs/evidence/framey-nonsteam-badges-main0082d79-refresh-2026-10-31-raw.json.gz": "8fa0cb69f60c5189225965693fe8a2daa97a3ecd74b7d2ee3813cd9c8bc574ab",
+    "docs/evidence/framey-nonsteam-badges-main0082d79-refresh-2026-10-31.json": "09081b2ad6990bed8004690695a04571cf10e265f662cb75dab3171f147f77a0",
+    "docs/evidence/framey-nonsteam-badges-main1371-integration-2026-11-14.json": "998068dce9bcf3a4d1c2f565bdefcdd2664bed2ba5927208f3a3ac46ac8476ed",
+    "docs/evidence/framey-nonsteam-badges-main1371-integration-2026-11-14.json.gz": "9c8abf1ee4bdb997dfe9d807d3d814f2b5c37cb6d9a96b46401646ca49729b91",
+    "docs/evidence/framey-nonsteam-badges-main1371-integration-2026-11-14.md": "59c05c750406b33f6841edcf2fb643328acf51e3f3de8eee0ce49aa28d710f11",
+    "docs/evidence/framey-nonsteam-badges-main1c1e4f5-refresh-2026-10-31.json": "e1d5d78f2ac380ef9a921ada820407dc8c1ba8aebd5e52bb25161a6ddd8fa459",
+    "docs/evidence/framey-nonsteam-badges-main1c1e4f5-refresh-2026-10-31.log": "05f6f6ae1d3a943ae9b1b5e69edd3e630a08d3b3ff93ab4865fb830825ff8dab",
+    "docs/evidence/framey-nonsteam-badges-main358-native-2026-10-31.json": "81d7a2b3b510e3049554a68810ba07e8600000e9fc628355a3d6c6a6b588e8d1",
+    "docs/evidence/framey-nonsteam-badges-main358-refresh-2026-10-31.json": "281d1eb06267a46fe2e8d11c850890cc8c5c3df823be6b8ca5b00d77e3bd319e",
+    "docs/evidence/framey-nonsteam-badges-main5184172-refresh-2026-10-31.json": "22f59b4afa67b58b29970a242a033ef961127c90db444a73eb4b404783bbf89f",
+    "docs/evidence/framey-nonsteam-badges-main8ebe-refresh-2026-10-31.json": "bb2bd4a75774844e6384eccc93aa40bbcfd916052023199035611b005c995160",
+    "docs/evidence/framey-nonsteam-badges-maind3ae60e-refresh-2026-10-31-raw.json.gz": "bdfd7e5a0e31dbaf9b8cc9e578d5180c9e406784b74e5c4fb6d31a29e71dc154",
+    "docs/evidence/framey-nonsteam-badges-maind3ae60e-refresh-2026-10-31.json": "783041714b83074ae3a34cca9354e0200a13d63e87bc1739ff90fd9f71577ea3",
+    "docs/evidence/framey-nonsteam-badges-maind64-refresh-2026-11-01-raw.json.gz": "bf6bbd3d22913d1db27f7742e34aa7b92f44ead81d098c7d1749403478fe4707",
+    "docs/evidence/framey-nonsteam-badges-maind64-refresh-2026-11-01.md": "742492eba97aa2452dc7b28f3d270a2a218279410631436e6bbb3972bd992b8a",
+    "docs/evidence/framey-nonsteam-badges-maindd12031-refresh-2026-10-31.json": "cd05df847437673f8cbdd73fd2d0f441290086f4130db0ee464ff9a77c1cb595",
+    "docs/evidence/framey-nonsteam-badges-notebook-unload-failure-2026-11-14.json": "7ad916075db8319c41531e9c61e059c9699aa5c63d533cd980a499edf316bcd9",
+    "docs/evidence/framey-nonsteam-badges-notebook-unload-failure-2026-11-14.json.gz": "ebeb383a275e49ef1f6d63d99b0db4f37f158528c0afe23f37071ccf937c3312",
+    "docs/evidence/framey-nonsteam-badges-original-path-failure-2026-10-30.json": "5d50a5ec5bec3c45f243e85aa39a939b415e63028ea1015d5c8718b59a3b9aa0",
+    "docs/evidence/framey-nonsteam-badges-user-paths-2026-10-31.json": "efc207c695ff146f94877cd6e16777bd41ab9739ebff0f46568267b095346d28",
+    "docs/evidence/framey-nonsteam-badges-user-paths-2026-10-31.md": "c124fb3fe3c18e13f6dda15292e25126f8e7d5f027b13062da69b7f5024bf3e8",
+    "docs/evidence/framey-playtime-main0082d79-refresh-2026-10-31-raw.json.gz": "73c6fdd3802b2950b787280d9736834cda5158fa13bb17b79d6f375b2c8c8392",
+    "docs/evidence/framey-playtime-main0082d79-refresh-2026-10-31.json": "75e502d5016100bdd68c679cd4ad0d4331ab77a8094f1fdd460cc83cd464a34c",
+    "docs/evidence/framey-playtime-main2b4d147-integration-2026-11-01-raw.json.gz": "01a2e1ba04124f7c1fe0ef849dc99847be6324a38ad98fee60577e0303a17cf6",
+    "docs/evidence/framey-playtime-main2b4d147-integration-2026-11-01.json": "e9e211e332835540c4fdef6b871232de3b65adb48e4eff998216436eb5ec9a3d",
+    "docs/evidence/framey-playtime-main2b4d147-integration-2026-11-01.md": "f9ad9048a6ac9e45eb48059317e71befd06eb19ff841aaabadc244b938768dff",
+    "docs/evidence/framey-playtime-main3d6145c-integration-2026-11-01-raw.json.gz": "cd240b76903fecb97d6643494df2b6b36d1ad66f86c054f50a54d12f598252b3",
+    "docs/evidence/framey-playtime-main3d6145c-integration-2026-11-01.json": "d6ee85315218a3c6bf2d08473bae2d60b3d0803ac2df1505dd59638985c665bb",
+    "docs/evidence/framey-playtime-main3d6145c-integration-2026-11-01.md": "20ef2191c53fbf9a7d72ce26ffa26f1945c9620ad0e2cde6add83636f46b861c",
+    "docs/evidence/framey-playtime-main46a6-integration-2026-11-14.json.gz": "e643a20afe95a57960193c55f31da9fc824aa8c87826749feefed3b3a5998739",
+    "docs/evidence/framey-playtime-main46a6-integration-2026-11-14.md": "d6671040e08baddb9c10088a8ab2db985f2c45509c2b3806bae892c9300a916e",
+    "docs/evidence/framey-playtime-main897-integration-2026-11-01-raw.json.gz": "03a56aceb88e7e4dfe6892b34811de43b8468b9f356c2f4e25c528a61e8d819d",
+    "docs/evidence/framey-playtime-main897-integration-2026-11-01.json": "0ec38ad6acce24ce64cb211164f93f8bf334fc1a5ffed9a4ff27a958478d97e9",
+    "docs/evidence/framey-playtime-main897-integration-2026-11-01.md": "9fcc0f8a9833e816d4763370a9e1961fbfd3efb72329a36dcb8e38d2158d571a",
+    "docs/evidence/framey-playtime-main9b2f3c2-integration-2026-11-01-raw.json.gz": "310115d9df99878c1168a06736111493b5a548d7f93eaa253ffadbe60719f0d0",
+    "docs/evidence/framey-playtime-main9b2f3c2-integration-2026-11-01.json": "a4a7815c0fde3b09f41afd5a910a19a33f27093a9d55ad7ee682ae7204be76ee",
+    "docs/evidence/framey-playtime-main9b2f3c2-integration-2026-11-01.md": "ea257bb794a8ea1d5d9a0189f6987cf8640c3593b8b28f8e5b59ace957ed7d56",
+    "docs/evidence/framey-playtime-mainad070-integration-2026-11-01-raw.json.gz": "1b512bddb8a6c20449709cc6c5bf9c81b8987d3af5973329444e325227a939ce",
+    "docs/evidence/framey-playtime-mainad070-integration-2026-11-01.json": "08a72e499d44de430d95217f8e403e78aa8a79ab53310068fcd9a463a1f33931",
+    "docs/evidence/framey-playtime-mainad070-integration-2026-11-01.md": "656aa55fe174845c56574e389fdad23302ffcd0f04b9dbc4de039c69470f6071",
+    "docs/evidence/framey-playtime-maind3ae60e-refresh-2026-10-31-raw.json.gz": "507813badeb163ac72eed169e37d14a0cbd85523ee959017831a6406b69737fb",
+    "docs/evidence/framey-playtime-maind3ae60e-refresh-2026-10-31.json": "ef17f6e4633a1a8d7ef0fad4875e5aeaca0fadff41ffcf2fa86179148cb1dbdb",
+    "docs/evidence/framey-playtime-maind64-integration-2026-11-01-raw.json.gz": "3342cc9d780a621d92a7ef8afb7d524ce1793834911eeb8c75748f24a816afb1",
+    "docs/evidence/framey-playtime-maind64-integration-2026-11-01.json": "537846a880078430d2748798697724d36341cab87f16c983971269e2a48365c1",
+    "docs/evidence/framey-playtime-maind64-integration-2026-11-01.md": "d6e9f2d9dfca92b8693d96c3979fdf946e66237c54b7512ed405cfc81dd00b76",
+    "docs/evidence/framey-playtime-maindba4-native-2026-11-14.json": "b5d08f849e278164f596d9660d2a88ddfe4d2f808646b7a829789e56e1bd270d",
+    "docs/evidence/framey-playtime-maindba4-native-2026-11-14.json.gz": "b41c147b133c611e722c4376eee2b05fd7cc7f2ec2b222a45c1c07bc2f672970",
+    "docs/evidence/framey-playtime-maindba4-native-2026-11-14.md": "466236bab885a22aab03611ce8cb1db5e7a9f6983aa022581526195e7a82902e",
+    "docs/evidence/framey-playtime-private-sessions-2026-10-31.json": "2a355176a2a259dcf1af9a5846aa59879896d16f26a1aa023a124c92345942f9",
+    "docs/evidence/framey-playtime-private-sessions-2026-10-31.md": "ae34b6501c8f376e4fa3b202228daaf5ef1ae3de8c98b2edad556258b8abe154"
+  },
+  "newProbesMatchOriginalBranches": true,
+  "frontendMatchesMain": true,
+  "native": {
+    "18": {
+      "sourceHashesVerified": 60,
+      "casesIncludingControls": 2,
+      "rpcCalls": 17,
+      "positiveParentOnlyStops": [
+        {
+          "parentOnlySignal": true,
+          "loaderPid": 11,
+          "returncode": 0,
+          "elapsedSeconds": 0.225,
+          "descendantsBefore": {
+            "24": {
+              "state": "S",
+              "parent": 23,
+              "start": "469665269"
+            },
+            "12": {
+              "state": "S",
+              "parent": 11,
+              "start": "469665210"
+            },
+            "22": {
+              "state": "S",
+              "parent": 12,
+              "start": "469665255"
+            },
+            "23": {
+              "state": "S",
+              "parent": 12,
+              "start": "469665255"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 22,
+              "returncode": 0
+            },
+            {
+              "pid": 23,
+              "returncode": 0
+            }
+          ],
+          "closedUnixPeers": [
+            "/tmp/plugin_socket_1794645902.775404"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "postEofRpcVerified": true,
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Bluetooth (v3.1.1)\n[plugin][INFO]: Stopping response listener for Bluetooth (v3.1.1)\nCalling Loader unload function for Bluetooth (v3.1.1).\nAttempting to unload with plugin Bluetooth (v3.1.1)'s \"_unload\" function.\n\nBluetooth plugin unloaded\nUnloaded Bluetooth (v3.1.1)\n\n[plugin][INFO]: Plugin Bluetooth (v3.1.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "337b4c2c00648ea9c6ef898f7d98403ea47ae65b7273fc1ccf31a4751c4eb1eb",
+          "cleanShutdownVerified": true
+        },
+        {
+          "parentOnlySignal": true,
+          "loaderPid": 26,
+          "returncode": 0,
+          "elapsedSeconds": 0.235,
+          "descendantsBefore": {
+            "27": {
+              "state": "S",
+              "parent": 26,
+              "start": "469665547"
+            },
+            "37": {
+              "state": "S",
+              "parent": 27,
+              "start": "469665588"
+            },
+            "38": {
+              "state": "S",
+              "parent": 27,
+              "start": "469665588"
+            },
+            "39": {
+              "state": "S",
+              "parent": 38,
+              "start": "469665605"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 37,
+              "returncode": 0
+            },
+            {
+              "pid": 38,
+              "returncode": 0
+            }
+          ],
+          "closedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "postEofRpcVerified": false,
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Bluetooth (v3.1.1)\n[plugin][INFO]: Stopping response listener for Bluetooth (v3.1.1)\nCalling Loader unload function for Bluetooth (v3.1.1).\nAttempting to unload with plugin Bluetooth (v3.1.1)'s \"_unload\" function.\n\nBluetooth plugin unloaded\nUnloaded Bluetooth (v3.1.1)\n\n[plugin][INFO]: Plugin Bluetooth (v3.1.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "337b4c2c00648ea9c6ef898f7d98403ea47ae65b7273fc1ccf31a4751c4eb1eb",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "genericCleanupFlag": false
+    },
+    "133": {
+      "sourceHashesVerified": 60,
+      "casesIncludingControls": 3,
+      "rpcCalls": 6,
+      "positiveParentOnlyStops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "469674107"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "469674152"
+            },
+            "21": {
+              "state": "S",
+              "parent": 10,
+              "start": "469674152"
+            },
+            "22": {
+              "state": "S",
+              "parent": 21,
+              "start": "469674166"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 20,
+              "returncode": 0
+            },
+            {
+              "pid": 21,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.225,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1794645991.7467623"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "postEofRpcVerified": true,
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "96d948aeb6f60b6ea2966766f7627b0e8a24726df614119e5929d4534e775534",
+          "cleanShutdownVerified": true
+        },
+        {
+          "loaderPid": 24,
+          "descendantsBefore": {
+            "25": {
+              "state": "S",
+              "parent": 24,
+              "start": "469674440"
+            },
+            "35": {
+              "state": "S",
+              "parent": 25,
+              "start": "469674473"
+            },
+            "36": {
+              "state": "S",
+              "parent": 25,
+              "start": "469674473"
+            },
+            "37": {
+              "state": "S",
+              "parent": 36,
+              "start": "469674487"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 35,
+              "returncode": 0
+            },
+            {
+              "pid": 36,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.225,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "postEofRpcVerified": false,
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "96d948aeb6f60b6ea2966766f7627b0e8a24726df614119e5929d4534e775534",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "genericCleanupFlag": false
+    },
+    "66": {
+      "sourceHashesVerified": 60,
+      "casesIncludingControls": 1,
+      "rpcCalls": 22,
+      "positiveParentOnlyStops": [
+        {
+          "returncode": 0,
+          "elapsedSeconds": 0.2139494400471449,
+          "parentOnlySignal": true,
+          "ownedProcessCount": 5,
+          "adoptedChildExits": [
+            {
+              "pid": 20,
+              "returncode": 0
+            },
+            {
+              "pid": 21,
+              "returncode": 0
+            }
+          ],
+          "ownedProcessIdentitiesReaped": true
+        },
+        {
+          "returncode": 0,
+          "elapsedSeconds": 0.21398838516324759,
+          "parentOnlySignal": true,
+          "ownedProcessCount": 5,
+          "adoptedChildExits": [
+            {
+              "pid": 34,
+              "returncode": 0
+            },
+            {
+              "pid": 35,
+              "returncode": 0
+            }
+          ],
+          "ownedProcessIdentitiesReaped": true
+        }
+      ],
+      "genericCleanupFlag": false,
+      "independentReadonlySqliteChecks": 2
+    },
+    "124": {
+      "sourceHashesVerified": 60,
+      "casesIncludingControls": 2,
+      "rpcCalls": 39,
+      "positiveParentOnlyStops": [
+        {
+          "parentOnlySignal": true,
+          "loaderPid": 9,
+          "returncode": 0,
+          "elapsedSeconds": 0.216,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "469691729"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "469691776"
+            },
+            "21": {
+              "state": "S",
+              "parent": 10,
+              "start": "469691776"
+            },
+            "22": {
+              "state": "S",
+              "parent": 21,
+              "start": "469691792"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 20,
+              "returncode": 0
+            },
+            {
+              "pid": 21,
+              "returncode": 0
+            }
+          ],
+          "closedUnixPeers": [
+            "/tmp/plugin_socket_1794646167.9899302"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down AlarMe (v1.6.3)\n[plugin][INFO]: Stopping response listener for AlarMe (v1.6.3)\nCalling Loader unload function for AlarMe (v1.6.3).\nAttempting to unload with plugin AlarMe (v1.6.3)'s \"_unload\" function.\n\nAlarMe: Plugin unloaded\nUnloaded AlarMe (v1.6.3)\n\nExpecting value: line 1 column 1 (char 0)\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin AlarMe (v1.6.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "2297b1ac400717cec4296ba87bf4c397e606010af8d98a23064d72997fa58e3f",
+          "cleanShutdownVerified": true
+        },
+        {
+          "parentOnlySignal": true,
+          "loaderPid": 24,
+          "returncode": 0,
+          "elapsedSeconds": 0.225,
+          "descendantsBefore": {
+            "25": {
+              "state": "S",
+              "parent": 24,
+              "start": "469692513"
+            },
+            "35": {
+              "state": "S",
+              "parent": 25,
+              "start": "469692548"
+            },
+            "36": {
+              "state": "S",
+              "parent": 25,
+              "start": "469692548"
+            },
+            "37": {
+              "state": "S",
+              "parent": 36,
+              "start": "469692562"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 35,
+              "returncode": 0
+            },
+            {
+              "pid": 36,
+              "returncode": 0
+            }
+          ],
+          "closedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down AlarMe (v1.6.3)\n[plugin][INFO]: Stopping response listener for AlarMe (v1.6.3)\nCalling Loader unload function for AlarMe (v1.6.3).\nAttempting to unload with plugin AlarMe (v1.6.3)'s \"_unload\" function.\n\nAlarMe: Plugin unloaded\nUnloaded AlarMe (v1.6.3)\n\n[plugin][INFO]: Plugin AlarMe (v1.6.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "1d54918ec8f394511d2e142e340fa8e2cdab8e46bd4743f0ecd4e561ea40ae7f",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "genericCleanupFlag": false
+    }
+  },
+  "focusedTestsPassed": 157,
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "freshHostedAmd64Arm64Required": true,
+  "rawReport": "framey-backend-combined-2026-11-14.json.gz",
+  "rawReportSha256": "cfd5ae316d8ac9a7efe413781c34246716b287a674441497ebb499d0f56f66b0",
+  "terminalCandidateSourceHashesVerified": 72,
+  "terminalCandidateConsoleGatePassed": true,
+  "e2eModule": "test_framey",
+  "e2eTestsPassed": 3,
+  "e2eSeconds": 129,
+  "e2eWithBuildSeconds": 198
+}

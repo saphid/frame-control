@@ -1,0 +1,27 @@
+{
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "85aa5c2adddd5ad00ae7c81e88da846b7453716ed818620bdcd74e8025e01a3e",
+    "tests/decky-runtime/check.py": "b2d681b9a7e73aa577f7ba24bec2000b628befa0a33a46517ee097d0d866f423",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "26e8fda18b6063ef1584c5e73d53088d220e2ddd02ad45ebaa58daa5cd1cc665",
+    "tests/framey_official.py": "1dd35709125be5c52815de83bad87a5e1b439c58ffd755042a0feaf33892a71e",
+    "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "cases": [],
+  "sourceRevision": "e69ddff72c515c8f5123a9ad8e0eff432b90ab3e",
+  "runnerExitCode": 1,
+  "originalBackendUnmodified": true,
+  "actualUserHome": "/home/tester",
+  "actualObservedMappings": {},
+  "expectedMappings": 5,
+  "hardcodedDeckPathFailureReproduced": true,
+  "logSha256": "e4ea73e524bdcef85d170cd13d8b39f5d5002b46e31c5e7f7d3eceb2ee3340e6",
+  "runtimeLogTail": "DEPRECATED: The legacy builder is deprecated and will be removed in a future release.\n            Install the buildx component to build images with BuildKit:\n            https://docs.docker.com/go/buildx/\n\nsha256:21238d0d4f08a144de7ce607afe6561cf8b257b041d5dc1d2bb83644d57919cc\nTraceback (most recent call last):\n  File \"/tmp/framey-nonsteam-badges-mppkd9qczt/scripts/framey-test-decky-runtime.py\", line 142, in <module>\n    main()\n  File \"/tmp/framey-nonsteam-badges-mppkd9qczt/scripts/framey-test-decky-runtime.py\", line 129, in main\n    raise RuntimeError(f'Decky runtime case {plugin_id} {version or \"store\"} failed:\\n{result.stdout}\\n{result.stderr}')\nRuntimeError: Decky runtime case 133 store failed:\n\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\n\nTraceback (most recent call last):\n  File \"/repo/tests/decky-runtime/check.py\", line 1439, in <module>\n    main()\n    ~~~~^^\n  File \"/repo/tests/decky-runtime/check.py\", line 621, in main\n    assert observed == expected, {'observed': observed, 'expected': expected,\n           ^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'observed': {}, 'expected': {'4294967173': {'store': 'gog', 'name': 'Private GOG'}, '4242': {'store': 'epic', 'name': 'Private Epic'}, '4343': {'store': 'amazon', 'name': 'Private Amazon'}, '4444': {'store': 'amazon', 'name': 'Private Luna'}, '4545': {'store': None, 'name': 'Private Other'}}, 'actualHome': '/home/tester'}\n\n",
+  "realFrameContacted": false,
+  "completeRawLoaderShutdownConsole": false,
+  "ownedContainerAndImageCleanupRunnerBound": true
+}

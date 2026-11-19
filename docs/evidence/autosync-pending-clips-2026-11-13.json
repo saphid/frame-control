@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-13T12:09:44.344109+00:00",
+  "base": "8c785d43d2f076b7301ef54fc2c449b1ee4a644a",
+  "baseSourceSha256": "276f4bef0e0d65d1ee1f8bfbd8ddf31523e1df655239be2105dd083a192b0a44",
+  "sourceSha256": {
+    "ui/frame_autosync.py": "b65e4db67ef583c88bc4cd4ecf2e2ef1fdc7cb3cfa34e735c2c178620658e381",
+    "tests/test_autosync.py": "45de080acd976f12cc4e81b86567741b1a9e8ee7c20b5c02aea9c900c33b5fbb",
+    "docs/recording.md": "943f41ab4383bc8cb74108eede862060dac534fe8061d5fbc74578cab00ddf11"
+  },
+  "baseControl": {
+    "tests": 1,
+    "failingSubcases": 2,
+    "failures": "Manual request cleared before the unsettled clip could be retried",
+    "logSha256": "057f066017f0ff975873177968b36f973c493f9b638fba135a756ea37dff6d33"
+  },
+  "candidate": {
+    "tests": 78,
+    "autosyncTests": 37,
+    "modules": [
+      "test_autosync",
+      "test_framey_panel",
+      "test_framey_view_recovery_browser"
+    ],
+    "skips": 0,
+    "passed": true,
+    "logSha256": "193527df62c56b1b2b7b6d900dd70f651018b9ae2812db46944e1b0986ea27e0"
+  },
+  "regression": "test_copy_everything_waits_for_clips_to_finish_with_auto_switches_off",
+  "unknownAndRecentIdleCovered": true,
+  "automaticSwitchesRemainOff": true,
+  "savedCopiesSkippedWhileWaiting": true,
+  "manualRequestFinishesAfterSettling": true,
+  "noFurtherListingsAfterCompletion": true,
+  "realFrameContacted": false,
+  "realFilesTransferred": false,
+  "mobileBackgroundSyncVerified": false,
+  "releaseQualified": false,
+  "automaticSwitchRevisionGuardAlsoCovered": true,
+  "previousEvidenceCommit": "192585a022b36dff685c9a79d453f3cf093d8ad7"
+}

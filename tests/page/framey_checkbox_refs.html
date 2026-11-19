@@ -1,0 +1,60 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const act=callback=>ReactDOM.flushSync(callback),render=element=>act(()=>root.render(element));
+  const first=React.createRef(),second=React.createRef(),seen=[],changes=[],clicks=[];
+  const callback=node=>seen.push(node);
+  const checkbox=(ref,extra={})=>React.createElement(DFL.DialogCheckbox,{ref,label:'Local setting',
+    description:React.createElement('em',null,'Local help'),tooltip:'More help',defaultChecked:true,
+    className:'local-checkbox',style:{display:'block',width:240},
+    onClick:event=>clicks.push(event.currentTarget),onChange:value=>changes.push(value),...extra});
+  try {
+    render(checkbox(first));
+    const wrapper=container.firstElementChild,input=wrapper.querySelector('input');
+    assert(first.current===wrapper,'DialogCheckbox dropped its object ref');
+    assert(wrapper.tagName==='LABEL'&&wrapper.getBoundingClientRect().width===240,'ref lost native label or measurement');
+    assert(wrapper.className==='local-checkbox'&&wrapper.querySelector('em')?.textContent==='Local help'&&
+      wrapper.textContent.includes('More help'),'wrapper props or help changed');
+    act(()=>first.current.click());
+    assert(!input.checked&&JSON.stringify(changes)==='[false]'&&clicks.length===1&&clicks[0]===input,
+      'ref label activation lost boolean callback or original input event');
+    input.focus();render(checkbox(second));
+    assert(first.current===null&&second.current===wrapper&&document.activeElement===input,
+      'object ref replacement lost cleanup or focus');
+    render(checkbox(callback,{tooltip:'Updated help',style:{display:'block',width:260}}));
+    assert(second.current===null&&seen.length===1&&seen[0]===wrapper,'callback attachment failed');
+    assert(container.querySelector('input')===input&&!input.checked&&wrapper.style.width==='260px'&&
+      wrapper.textContent.includes('Updated help'),'ref change replaced input, state or props');
+    render(checkbox(callback,{disabled:true}));
+    act(()=>wrapper.click());act(()=>input.click());
+    assert(changes.length===1&&clicks.length===1&&seen.length===1,'disabled ref activation invoked callbacks or reattached ref');
+    assert(DFL.findModuleByExport(value=>value===DFL.DialogCheckbox)?.DialogCheckbox===DFL.DialogCheckbox,
+      'forwarded checkbox disappeared from local module discovery');
+    render(null);
+    assert(seen.length===2&&seen[1]===null&&!wrapper.isConnected,'callback ref did not retire on unmount');
+    function Controlled({disabled=false}) {
+      const [checked,setChecked]=React.useState(false);
+      return React.createElement(DFL.DialogCheckbox,{ref:first,label:'Controlled',checked,disabled,
+        onChange:value=>{changes.push(value);setChecked(value);}});
+    }
+    render(React.createElement(Controlled));const controlled=first.current;
+    act(()=>controlled.click());
+    assert(controlled.querySelector('input').checked&&changes.at(-1)===true,'controlled ref activation failed');
+    render(React.createElement(Controlled,{disabled:true}));act(()=>first.current.click());
+    assert(first.current===controlled&&changes.length===2,'disabled controlled input changed');
+    act(()=>root.unmount());assert(first.current===null,'object ref did not retire on root unmount');
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      nativeLabelMeasurement:true,objectAndCallbackRefReplacement:true,unmountClearsRefs:true,
+      labelActivationOnce:true,originalInputClickEvent:true,booleanChanges:true,disabledSuppression:true,
+      stableInputFocusAndUncontrolledState:true,controlledState:true,helpAndStylePreserved:true,
+      localModuleDiscovery:true,syntheticPropsAndCallbacks:true,publishedRefUsageClaimed:false,
+      realFrameContacted:false,physicalControllerTested:false,vrKeyboardVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

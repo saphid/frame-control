@@ -1,0 +1,244 @@
+{
+  "schema": 1,
+  "date": "2026-11-15",
+  "sourceCommit": "61ef4b54538e5e7c6bf7c40611c11a32855b38b4",
+  "summary": "Exercise the published manual API-key form with only the disposable fixture key; distinguish manual entry from automatic discovery and require the saved key to match.",
+  "sourceSha256": {
+    "scripts/framey-test-syncthing-flatpak-package.py": "c722907ea8a1c28c5d0007da7061f962cfcc90778a17a55cd9ae5cd7da3283dd",
+    "tests/decky-runtime/syncthing_browser.py": "7983360011b3ea4fec1c9817f9c7068070ab28be3d1f3b6e606a9a8b36a80d4e",
+    "tests/decky-runtime/syncthing_http_parent.py": "33c2c8470c42555f3a04d29374e6e5c5f13582df1f6c551fd695d9f24e9cdb90",
+    "tests/decky-runtime/syncthing_service.py": "2a937217132ae0a82f90b795577dcda1c52a37b88e1aaa2b6b77180d75735844",
+    "tests/test_syncthing_browser_setup.py": "011fd89c41d0108d5f1a95092154ecc1674f63a6a52867533954b8df37e40795",
+    "tests/test_syncthing_flatpak_package.py": "5959f004cb53df943b1ed96e499309f7f45c0406c1790b8ae414dae047793d05",
+    "tests/test_syncthing_http_gateway.py": "3da2c6b9206863ad60eab6ed792051beb603fd588705cc0c118d001646331812"
+  },
+  "originalFailure": {
+    "head": "61ef4b54538e5e7c6bf7c40611c11a32855b38b4",
+    "artifactId": 14157733102,
+    "originalRun": 43702837504,
+    "originalJob": 132777491842,
+    "originalAttempt": 1,
+    "assertion": "Browser DOM readiness timed out",
+    "startupClock": {
+      "origin": "bridge-monotonic",
+      "readinessBudgetSeconds": 60,
+      "browserLaunchStartedAfterSeconds": 0.06,
+      "browserLaunchReturnedAfterSeconds": 0.074,
+      "readinessDeadlineAfterSeconds": 60.074,
+      "readinessFinishedAfterSeconds": 59.524,
+      "readinessPassed": true
+    },
+    "lastReadinessAttempt": {
+      "phase": "panel-snapshot",
+      "outcome": "ready",
+      "connectionReused": false,
+      "elapsedSeconds": 29.016,
+      "startedAfterSeconds": 30.507,
+      "finishedAfterSeconds": 59.523,
+      "browserEventWaitBudgetSeconds": 28.9
+    },
+    "uiStages": 0,
+    "manualPortFallbackUsed": true,
+    "manualApiKeyScreenVisible": true,
+    "automaticApiKeyScanHttpStatus": 200,
+    "apiKeyScanResponseBodyNotRecorded": true,
+    "scanFailureCauseEstablished": false,
+    "probeLacksManualApiKeyBranch": true,
+    "finalBrowserState": {
+      "timeoutSeconds": 8,
+      "timedOut": false,
+      "returnCode": 0,
+      "snapshots": [
+        {
+          "target": "parent",
+          "state": {
+            "documentState": "complete",
+            "atMs": 141801,
+            "elapsedMs": 124684,
+            "ready": true,
+            "state": {
+              "parentInstalled": true,
+              "iframeLoads": 1,
+              "cacheRequests": 1,
+              "seedReplies": 1,
+              "readyMessages": 1
+            },
+            "failure": "Browser DOM readiness timed out",
+            "errors": [],
+            "events": [
+              {
+                "type": "rpc-reply",
+                "method": "set_setting",
+                "id": 5,
+                "atMs": 37879
+              },
+              {
+                "type": "rpc-reply",
+                "method": "set_setting",
+                "id": 7,
+                "atMs": 38070
+              },
+              {
+                "type": "framey:call",
+                "method": "framey_http_fetch",
+                "id": 8,
+                "atMs": 38771
+              },
+              {
+                "type": "rpc-reply",
+                "method": "framey_http_fetch",
+                "id": 8,
+                "atMs": 56698
+              },
+              {
+                "type": "framey:call",
+                "method": "framey_http_fetch",
+                "id": 9,
+                "atMs": 57428
+              },
+              {
+                "type": "rpc-reply",
+                "method": "framey_http_fetch",
+                "id": 9,
+                "atMs": 58244
+              },
+              {
+                "type": "framey:call",
+                "method": "get_settings_json",
+                "id": 10,
+                "atMs": 58358
+              },
+              {
+                "type": "rpc-reply",
+                "method": "get_settings_json",
+                "id": 10,
+                "atMs": 58627
+              },
+              {
+                "type": "framey:call",
+                "method": "set_setting",
+                "id": 11,
+                "atMs": 59795
+              },
+              {
+                "type": "rpc-reply",
+                "method": "set_setting",
+                "id": 11,
+                "atMs": 60496
+              },
+              {
+                "type": "framey:call",
+                "method": "framey_http_fetch",
+                "id": 12,
+                "atMs": 61467
+              },
+              {
+                "type": "rpc-reply",
+                "method": "framey_http_fetch",
+                "id": 12,
+                "atMs": 61979
+              },
+              {
+                "type": "framey:call",
+                "method": "get_settings_json",
+                "id": 13,
+                "atMs": 62144
+              },
+              {
+                "type": "rpc-reply",
+                "method": "get_settings_json",
+                "id": 13,
+                "atMs": 62482
+              },
+              {
+                "type": "test:stage",
+                "method": null,
+                "atMs": 119546
+              },
+              {
+                "type": "test:failure",
+                "method": null,
+                "atMs": 119552
+              }
+            ]
+          }
+        },
+        {
+          "target": "iframe",
+          "state": {
+            "documentState": "complete",
+            "atMs": 124232,
+            "rootText": "Syncthing\nBack to plugin\nWelcome\nSetup\nStarting\nPort\nAPI Key\nBasic Auth\nAutostart\nFinish\nAPI Key\n\nThe API key for Syncthing's API could not be detected. Please enter the currently configured API key. You can find this value in the settings of the Syncthing web UI.\n\nAPI Key\nContinue",
+            "errorText": "",
+            "probeInstalled": true,
+            "runtimeInstalled": true
+          }
+        }
+      ],
+      "phases": [
+        "interpreter-started",
+        "module-imported",
+        "targets-read",
+        "parent-connected",
+        "iframe-connected"
+      ]
+    },
+    "browserGroupAndBridgeCleanupPassed": true,
+    "qemuReaped": true,
+    "exactSourceBindings": 137,
+    "inputSourceBindings": 132,
+    "dedicatedGuestPacketReconstructed": true,
+    "failureScreenshotSha256": "224e4715b9f223efc2fdb4b932e416b9a1cf304d2c23d0fc9f5eaff66ea6dea1",
+    "failureScreenshotVisuallyInspected": true
+  },
+  "productionSourcesChanged": false,
+  "unchangedReadinessAndCleanupFunctions": [
+    "ready_page",
+    "stop_browser",
+    "wait_browser_group",
+    "startup_diagnostics",
+    "record_startup_progress",
+    "print_final_browser_state",
+    "final_browser_state",
+    "screenshot",
+    "browser_documents"
+  ],
+  "unchangedServiceAstExceptExpectedFixtureArgument": true,
+  "unchangedPackageAstOutsideTwoStrictVerifiers": true,
+  "existingTestMethodAstsPreserved": {
+    "tests/test_syncthing_flatpak_package.py": 35,
+    "tests/test_syncthing_http_gateway.py": 52
+  },
+  "newDriverMethods": 4,
+  "originalDriverFunctionalManualTimeoutRegressions": 2,
+  "otherOriginalNewEvidenceControlFailures": 2,
+  "controlledDriverMethodsPassed": 4,
+  "controlledDriverSkips": 0,
+  "focusedMethods": 217,
+  "focusedSkips": 2,
+  "fullSuiteMethods": 2520,
+  "fullSuiteSkips": 70,
+  "fullSuiteSeconds": 428.67,
+  "pinnedFrontendArchiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+  "nativeBrowser": "Google Chrome 150.0.7871.128",
+  "nativeSyntheticReactCases": 5,
+  "nativeOriginalManualCasesRemainPending": 2,
+  "nativeCandidateAutomaticAndManualCasesSaveExpectedKey": 3,
+  "manualPathEvidenceIsExplicit": true,
+  "savedKeyMustMatchExpectedPrivateFixture": true,
+  "fixtureKeyValuesNotRetainedInReports": true,
+  "allOwnedReplayBrowsersAndServersStopped": true,
+  "originalBudgetsAndRpcRoutesPreserved": true,
+  "automaticScanFailureCauseEstablished": false,
+  "historicalGeneralArmStartupRepairEstablished": false,
+  "newHeadHostedQualificationRequired": true,
+  "wholeHeadQualified": false,
+  "releaseQualified": false,
+  "realFrameOrWornProof": false,
+  "rawEvidence": {
+    "path": "framey-browser-manual-key-2026-11-15.json.gz",
+    "sha256": "078f73d950b319aab187e451b20689f10a739fe76c52caae914b5d359aa69a02",
+    "recordCount": 16,
+    "uncompressedSha256": "fad461aadabf613b902650e3351bc71862328bb93a59496b57cce3c7dbc33e0b"
+  }
+}

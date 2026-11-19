@@ -1,0 +1,64 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const focus=node=>ReactDOM.flushSync(()=>node.focus());
+  try {
+    for(const name of ['ProgressBar','ProgressBarItem','ProgressBarWithInfo']) {
+      const control=props=>React.createElement(DFL[name],{
+        label:React.createElement('strong',null,'Local progress'),
+        description:React.createElement('em',null,'Local description'),
+        sOperationText:React.createElement('span',null,'Local operation'),...props});
+      render(control({focusable:true,nProgress:25}));
+      const node=container.querySelector('progress');
+      assert(node.tabIndex===0,name+' ignored the focus opt-in');
+      assert(node.value===25&&node.max===100,name+' changed determinate progress');
+      assert(!node.hasAttribute('focusable'),name+' leaked Decky prop to native DOM');
+      focus(node);
+      assert(document.activeElement===node,name+' native focus failed');
+      render(control({focusable:true,nProgress:75}));
+      assert(container.querySelector('progress')===node&&document.activeElement===node&&node.value===75,
+        name+' progress update replaced or unfocused the control');
+      render(control({focusable:true,indeterminate:true}));
+      assert(!node.hasAttribute('value')&&document.activeElement===node,name+' indeterminate state lost focus');
+      render(control({focusable:false,nProgress:0}));
+      assert(node.tabIndex===-1&&node.hasAttribute('value')&&node.value===0,name+' opt-out or numeric zero failed');
+      // A native negative tabindex still permits explicit imperative focus.
+      node.blur();focus(node);
+      assert(document.activeElement===node,name+' opt-out blocked imperative focus');
+      node.blur();
+      render(control({nProgress:100}));
+      assert(!node.hasAttribute('tabindex')&&node.tabIndex===-1&&node.value===100,name+' prop removal left a tab stop');
+      focus(node);
+      assert(document.activeElement!==node,name+' omitted prop retained native focus opt-in');
+      render(control({focusable:true,nProgress:50}));focus(node);
+      assert(document.activeElement===node&&node.tabIndex===0,name+' opt-in did not recover');
+      if(name!=='ProgressBar') {
+        assert(container.querySelector('strong')?.textContent==='Local progress',name+' label lost');
+        assert(container.querySelector('em')?.textContent==='Local description',name+' description lost');
+      }
+      if(name==='ProgressBarWithInfo')assert(container.querySelector('[role="status"]')?.textContent==='Local operation',
+        'operation text lost');
+      render(null);
+      assert(!node.isConnected&&document.activeElement!==node,name+' unmount retained focus');
+    }
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      variants:3,explicitOptIn:true,explicitOptOut:true,nativeFocus:true,propRemoval:true,
+      stableNodeAndFocus:true,indeterminateAndNumericZero:true,richItemContentPreserved:true,unmount:true,
+      syntheticProps:true,realFrameContacted:false,physicalControllerTested:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

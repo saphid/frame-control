@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-31T12:23:19.199467+00:00",
+  "sourceRevision": "93026f2a181848afab755ca91fb9a660d843e643",
+  "previousHead": "14b960aa863576394eb3c24de3734d6a781ccbeb",
+  "failedJob": 124531478619,
+  "failedRun": 41199210771,
+  "failedCheckout": "0931d65fc77c1d3758ece20f6d324844ccd20d3f",
+  "failedCheckoutTreeMatchesPreviousHead": true,
+  "failedWindowsTests": 1952,
+  "failedWindowsSkips": 308,
+  "failedWindowsFailures": 1,
+  "failure": "Native Windows separators in archive-manifest test",
+  "testSourceSha256": "c4000eb7c1a7ce8b47bb9b002690529f39db388a6d765e59546ead2c4425879d",
+  "testSource": "\"\"\"A frozen guest must contain the local modules imported by its entry point.\"\"\"\nimport sandbox  # noqa: F401\nimport ast\nimport importlib.util\nfrom pathlib import Path\nimport unittest\n\nROOT = Path(__file__).resolve().parents[1]\nspec = importlib.util.spec_from_file_location('terminal_vm_sources',\n    ROOT/'scripts/framey-test-terminal-browser.py')\nrunner = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(runner)\n\n\nclass TerminalVmSources(unittest.TestCase):\n    def test_entry_point_local_imports_are_in_both_guest_archives(self):\n        entry = ROOT/'tests/decky-runtime/check.py'\n        tree = ast.parse(entry.read_text())\n        local_imports = set()\n        for node in tree.body:\n            names = ([v.name for v in node.names] if isinstance(node, ast.Import) else\n                     [node.module] if isinstance(node, ast.ImportFrom) and node.module else [])\n            for name in names:\n                path = entry.with_name(name.split('.')[0]+'.py')\n                if path.is_file():\n                    local_imports.add(path.relative_to(ROOT).as_posix())\n        self.assertIn('tests/decky-runtime/runtime_console.py', local_imports)\n        for arch in ('x86_64', 'aarch64'):\n            for production_http in (False, True):\n                with self.subTest(arch=arch, production_http=production_http):\n                    sources = set(runner.source_names(production_http, arch))\n                    self.assertLessEqual(local_imports, sources)\n                    self.assertTrue(all((ROOT/name).is_file() for name in sources))\n",
+  "correction": "Use Path.relative_to(ROOT).as_posix() for POSIX archive member names",
+  "focusedLogs": {
+    "manifest": "test_entry_point_local_imports_are_in_both_guest_archives (test_terminal_vm_sources.TerminalVmSources.test_entry_point_local_imports_are_in_both_guest_archives) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.091s\n\nOK\n",
+    "cdp": "test_chunked_discovery_selects_title_and_completes_websocket_eval (test_steam_cdp.SteamCdp.test_chunked_discovery_selects_title_and_completes_websocket_eval) ... ok\ntest_cold_helper_import_omits_general_url_opener (test_steam_cdp.SteamCdp.test_cold_helper_import_omits_general_url_opener) ... ok\ntest_malformed_json_also_closes_discovery_connection (test_steam_cdp.SteamCdp.test_malformed_json_also_closes_discovery_connection) ... ok\ntest_unavailable_and_truncated_discovery_fail_before_websocket_and_close (test_steam_cdp.SteamCdp.test_unavailable_and_truncated_discovery_fail_before_websocket_and_close) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.093s\n\nOK\n"
+  },
+  "jobLogSha256": "ab1b9ade04603256d5aed4ec46339d3ae9cdcb7e74f7dc79f48a63221c71b502",
+  "failureExcerpt": "2026-10-31T12:20:45.9009810Z FAIL: test_entry_point_local_imports_are_in_both_guest_archives (test_terminal_vm_sources.TerminalVmSources.test_entry_point_local_imports_are_in_both_guest_archives)\n2026-10-31T12:20:45.9010696Z ----------------------------------------------------------------------\n2026-10-31T12:20:45.9011119Z Traceback (most recent call last):\n2026-10-31T12:20:45.9011870Z   File \"D:\\a\\frame-control\\frame-control\\tests\\test_terminal_vm_sources.py\", line 27, in test_entry_point_local_imports_are_in_both_guest_archives\n2026-10-31T12:20:45.9012751Z     self.assertIn('tests/decky-runtime/runtime_console.py', local_imports)\n2026-10-31T12:20:45.9014021Z AssertionError: 'tests/decky-runtime/runtime_console.py' not found in {'tests\\\\decky-runtime\\\\runtime_console.py'}\n2026-10-31T12:20:45.9014509Z \n2026-10-31T12:20:45.9014722Z ----------------------------------------------------------------------\n2026-10-31T12:20:45.9015074Z Ran 1952 tests in 323.632s\n2026-10-31T12:20:45.9015233Z \n2026-10-31T12:20:45.9015375Z FAILED (failures=1, skipped=308)\n",
+  "unchangedRuntimeFingerprints": 168,
+  "previousRuntimeEvidence": "framey-terminal-cdp-startup-2026-10-31.json",
+  "nativeRuntimeRepeated": false,
+  "localWindowsExecution": false,
+  "freshHostedWindowsRequired": true,
+  "priorArmFailureStillFailed": true,
+  "main": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "realFrameContacted": false
+}

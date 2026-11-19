@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKER = ROOT / 'scripts/framey-pack-sample.py'
 CHECKER = ROOT / 'scripts/framey-check-archive.py'
 SAMPLE = ROOT / 'examples/framey-settings'
-FILES = ('plugin.json', 'main.py', 'dist/index.js')
+FILES = ('plugin.json', 'main.py', 'py_modules/framey_decky_ipc.py', 'dist/index.js')
 
 
 class SamplePackaging(unittest.TestCase):

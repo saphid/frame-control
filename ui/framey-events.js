@@ -1,5 +1,8 @@
 /* Executed in Steam CEF, using Decky 3.3.0's loader/plugin_event envelope. */
 (function(payload) {
+  // A poll may spend 15s verifying its receipt, then 25s reading events.
+  // Retain its bounded queue through that round trip and the next poll gap.
+  const sessionIdleMs = 60000;
   const backend = window.DeckyBackend;
   if (!backend?.addEventListener || !backend?.removeEventListener)
     throw Error('Decky backend events are unavailable');
@@ -42,7 +45,7 @@
     backend.addEventListener('loader/plugin_event', item.listener);
     if (!bridge.timer) bridge.timer = setInterval(() => {
       for (const [session, state] of bridge.sessions)
-        if (Date.now() - state.touched > 15000) bridge.remove(session);
+        if (Date.now() - state.touched > sessionIdleMs) bridge.remove(session);
     }, 5000);
   }
   item.names = new Set(payload.events);

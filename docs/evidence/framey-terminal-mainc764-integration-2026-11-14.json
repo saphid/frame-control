@@ -1,0 +1,483 @@
+{
+  "currentIntegration": "55fc407d87a5a7ea10ff511f8b16a28ee0f1ae74",
+  "httpTestedIntegration": "15f4973dd0481cfa6050d849b86e67b4cded50f3",
+  "httpAudit": {
+    "head": "15f4973dd0481cfa6050d849b86e67b4cded50f3",
+    "architecture": "x86_64",
+    "sourceFingerprintsVerified": 177,
+    "bootstrapVerified": true,
+    "resultPacketSha256": "ee5b852eb2640d4b0085e2c0766f0e5aeabaed74c9052960c08aa555aab06cbb",
+    "resultPacketVerified": true,
+    "actualNativeLifecycleVerified": true,
+    "productionHttpAndEventRoundTripVerified": true,
+    "statusRequests": [
+      {
+        "startedAfterSeconds": 66.509,
+        "elapsedSeconds": 5.754,
+        "httpStatus": 200,
+        "running": true,
+        "pluginCount": 1
+      }
+    ],
+    "ownedDeckyStop": {
+      "mainPidBefore": 337,
+      "timeoutStopUSec": "1min 30s",
+      "killMode": "mixed",
+      "beforeStopDiagnostics": {
+        "unit": "frame-control-decky.service",
+        "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-decky.service",
+        "processes": [
+          {
+            "pid": 337,
+            "state": "S",
+            "parentPid": 280,
+            "userTicks": 390,
+            "systemTicks": 588,
+            "startTicks": 18694,
+            "threads": [
+              {
+                "tid": 337,
+                "wchan": "do_wait",
+                "stackError": "PermissionError"
+              }
+            ],
+            "threadsTruncated": false
+          },
+          {
+            "pid": 339,
+            "state": "S",
+            "parentPid": 337,
+            "userTicks": 926,
+            "systemTicks": 279,
+            "startTicks": 19683,
+            "threads": [
+              {
+                "tid": 339,
+                "wchan": "do_epoll_wait",
+                "stackError": "PermissionError"
+              },
+              {
+                "tid": 343,
+                "wchan": "futex_wait_queue",
+                "stackError": "PermissionError"
+              }
+            ],
+            "threadsTruncated": false
+          },
+          {
+            "pid": 349,
+            "state": "S",
+            "parentPid": 339,
+            "userTicks": 347,
+            "systemTicks": 553,
+            "startTicks": 20882,
+            "threads": [
+              {
+                "tid": 349,
+                "wchan": "pipe_read",
+                "stackError": "PermissionError"
+              }
+            ],
+            "threadsTruncated": false
+          },
+          {
+            "pid": 350,
+            "state": "S",
+            "parentPid": 339,
+            "userTicks": 332,
+            "systemTicks": 66,
+            "startTicks": 20887,
+            "threads": [
+              {
+                "tid": 350,
+                "wchan": "do_epoll_wait",
+                "stackError": "PermissionError"
+              }
+            ],
+            "threadsTruncated": false
+          },
+          {
+            "pid": 351,
+            "state": "S",
+            "parentPid": 350,
+            "userTicks": 1129,
+            "systemTicks": 223,
+            "startTicks": 21309,
+            "threads": [
+              {
+                "tid": 351,
+                "wchan": "do_epoll_wait",
+                "stackError": "PermissionError"
+              },
+              {
+                "tid": 570,
+                "wchan": "futex_wait_queue",
+                "stackError": "PermissionError"
+              },
+              {
+                "tid": 571,
+                "wchan": "futex_wait_queue",
+                "stackError": "PermissionError"
+              }
+            ],
+            "threadsTruncated": false
+          }
+        ],
+        "logs": [],
+        "processesTruncated": false
+      },
+      "activeState": "inactive",
+      "result": "success",
+      "mainPidAfter": 0,
+      "execMainCode": "0",
+      "execMainStatus": "0",
+      "elapsedSeconds": 4.778
+    },
+    "allOwnedCleanupVerified": true,
+    "captureSha256": {
+      "terminal": "2c5ed223410968fa9fc9e10be95a23bae900120dae9475fe667906cdc30af3f3",
+      "output": "5eb478f4d13aed53835020da9cedd778fef2d356f6fdaf90a7a22123a9e2a9be",
+      "removed": "3f14e90489b9344a9647a54ea95e4721a983ed9d6a59603400c181d019332994"
+    },
+    "capturesVisuallyInspected": true,
+    "syntheticCef": true,
+    "syntheticManagedReceipt": true,
+    "syntheticInput": true,
+    "managedInstallVerified": false,
+    "productionAdaptationEnabled": false,
+    "realSteamCef": false,
+    "realFrameContacted": false,
+    "physicalControllerVerified": false,
+    "nativeArmVerified": false,
+    "horizontalOverflowObserved": true
+  },
+  "focusedTestsBeforeMangoPeel": 127,
+  "focusedTestsAfterMangoPeel": 128,
+  "httpInputFilesChangedAfterMangoPeel": [
+    "scripts/framey-test-decky-runtime.py",
+    "tests/decky-runtime/cases.json",
+    "tests/decky-runtime/check.py",
+    "tests/framey_official.py",
+    "ui/frame_decky_store.py",
+    "ui/framey-compatibility.json"
+  ],
+  "priorBothArchitectureHosted": {
+    "ubuntu-latest": {
+      "head": "238c3eda9b09ca1bca7b4784979d170a56a94f66",
+      "architecture": "x86_64",
+      "sourceFingerprintsVerified": 177,
+      "bootstrapVerified": true,
+      "resultPacketSha256": "2539830ed95b941f7f952fe7dc1f1b042e5283381ffd4d4ba20e980e32720524",
+      "resultPacketVerified": true,
+      "actualNativeLifecycleVerified": true,
+      "productionHttpAndEventRoundTripVerified": true,
+      "statusRequests": [
+        {
+          "startedAfterSeconds": 32.782,
+          "elapsedSeconds": 1.561,
+          "httpStatus": 200,
+          "running": true,
+          "pluginCount": 1
+        }
+      ],
+      "ownedDeckyStop": {
+        "mainPidBefore": 336,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "beforeStopDiagnostics": {
+          "unit": "frame-control-decky.service",
+          "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-decky.service",
+          "processes": [
+            {
+              "pid": 336,
+              "state": "S",
+              "parentPid": 277,
+              "userTicks": 230,
+              "systemTicks": 339,
+              "startTicks": 8765,
+              "threads": [
+                {
+                  "tid": 336,
+                  "wchan": "do_wait",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            },
+            {
+              "pid": 338,
+              "state": "S",
+              "parentPid": 336,
+              "userTicks": 485,
+              "systemTicks": 66,
+              "startTicks": 9338,
+              "threads": [
+                {
+                  "tid": 338,
+                  "wchan": "do_epoll_wait",
+                  "stackError": "PermissionError"
+                },
+                {
+                  "tid": 342,
+                  "wchan": "futex_wait_queue",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            },
+            {
+              "pid": 348,
+              "state": "S",
+              "parentPid": 338,
+              "userTicks": 120,
+              "systemTicks": 43,
+              "startTicks": 9856,
+              "threads": [
+                {
+                  "tid": 348,
+                  "wchan": "pipe_read",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            },
+            {
+              "pid": 349,
+              "state": "S",
+              "parentPid": 338,
+              "userTicks": 121,
+              "systemTicks": 27,
+              "startTicks": 9857,
+              "threads": [
+                {
+                  "tid": 349,
+                  "wchan": "do_epoll_wait",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            },
+            {
+              "pid": 350,
+              "state": "S",
+              "parentPid": 349,
+              "userTicks": 370,
+              "systemTicks": 60,
+              "startTicks": 10009,
+              "threads": [
+                {
+                  "tid": 350,
+                  "wchan": "do_epoll_wait",
+                  "stackError": "PermissionError"
+                },
+                {
+                  "tid": 554,
+                  "wchan": "futex_wait_queue",
+                  "stackError": "PermissionError"
+                },
+                {
+                  "tid": 555,
+                  "wchan": "futex_wait_queue",
+                  "stackError": "PermissionError"
+                },
+                {
+                  "tid": 584,
+                  "wchan": "futex_wait_queue",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            }
+          ],
+          "logs": [],
+          "processesTruncated": false
+        },
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 2.371
+      },
+      "allOwnedCleanupVerified": true,
+      "captureSha256": {
+        "terminal": "33404627ea42b02151d247df6d9f9aa56ca490e078f44946f71ce814aec67218",
+        "output": "0717d9cd1f30377e89ad74ef26a15827d5c6939b17c8732caa2c0271a998af7f",
+        "removed": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3"
+      },
+      "capturesVisuallyInspected": true,
+      "syntheticCef": true,
+      "syntheticManagedReceipt": true,
+      "syntheticInput": true,
+      "managedInstallVerified": false,
+      "productionAdaptationEnabled": false,
+      "realSteamCef": false,
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "nativeArmVerified": false,
+      "horizontalOverflowObserved": true,
+      "officialCompatibilityCatalogNotPromoted": true
+    },
+    "ubuntu-24.04-arm": {
+      "head": "238c3eda9b09ca1bca7b4784979d170a56a94f66",
+      "architecture": "aarch64",
+      "sourceFingerprintsVerified": 177,
+      "bootstrapVerified": true,
+      "resultPacketSha256": "5bce6347b3b6a8a41189b8ad7550ca7dbd75ce670357c744c6cba1e20b4b0fe1",
+      "resultPacketVerified": true,
+      "actualNativeLifecycleVerified": true,
+      "productionHttpAndEventRoundTripVerified": true,
+      "statusRequests": [
+        {
+          "startedAfterSeconds": 89.989,
+          "elapsedSeconds": 13.364,
+          "httpStatus": 200,
+          "running": true,
+          "pluginCount": 1
+        }
+      ],
+      "ownedDeckyStop": {
+        "mainPidBefore": 330,
+        "timeoutStopUSec": "1min 30s",
+        "killMode": "mixed",
+        "beforeStopDiagnostics": {
+          "unit": "frame-control-decky.service",
+          "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-decky.service",
+          "processes": [
+            {
+              "pid": 330,
+              "state": "S",
+              "parentPid": 272,
+              "userTicks": 197,
+              "systemTicks": 384,
+              "startTicks": 21331,
+              "threads": [
+                {
+                  "tid": 330,
+                  "wchan": "do_wait",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            },
+            {
+              "pid": 332,
+              "state": "S",
+              "parentPid": 330,
+              "userTicks": 1040,
+              "systemTicks": 277,
+              "startTicks": 21924,
+              "threads": [
+                {
+                  "tid": 332,
+                  "wchan": "do_epoll_wait",
+                  "stackError": "PermissionError"
+                },
+                {
+                  "tid": 336,
+                  "wchan": "futex_wait_queue",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            },
+            {
+              "pid": 342,
+              "state": "S",
+              "parentPid": 332,
+              "userTicks": 195,
+              "systemTicks": 67,
+              "startTicks": 23080,
+              "threads": [
+                {
+                  "tid": 342,
+                  "wchan": "pipe_read",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            },
+            {
+              "pid": 343,
+              "state": "S",
+              "parentPid": 332,
+              "userTicks": 222,
+              "systemTicks": 74,
+              "startTicks": 23083,
+              "threads": [
+                {
+                  "tid": 343,
+                  "wchan": "do_epoll_wait",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            },
+            {
+              "pid": 344,
+              "state": "S",
+              "parentPid": 343,
+              "userTicks": 2141,
+              "systemTicks": 840,
+              "startTicks": 23390,
+              "threads": [
+                {
+                  "tid": 344,
+                  "wchan": "do_epoll_wait",
+                  "stackError": "PermissionError"
+                },
+                {
+                  "tid": 587,
+                  "wchan": "futex_wait_queue",
+                  "stackError": "PermissionError"
+                },
+                {
+                  "tid": 588,
+                  "wchan": "futex_wait_queue",
+                  "stackError": "PermissionError"
+                },
+                {
+                  "tid": 649,
+                  "wchan": "futex_wait_queue",
+                  "stackError": "PermissionError"
+                }
+              ],
+              "threadsTruncated": false
+            }
+          ],
+          "logs": [],
+          "processesTruncated": false
+        },
+        "activeState": "inactive",
+        "result": "success",
+        "mainPidAfter": 0,
+        "execMainCode": "0",
+        "execMainStatus": "0",
+        "elapsedSeconds": 10.38
+      },
+      "allOwnedCleanupVerified": true,
+      "captureSha256": {
+        "terminal": "936467ab866928adf85a9f2c16f3d60f2dadfd721a2d5fe6adb63ffaa6e6cd29",
+        "output": "596be0a818d7923a66c43151acb01d7dd0d5e370fb2684d4fb66aeb9dc8f6bfe",
+        "removed": "3f14e90489b9344a9647a54ea95e4721a983ed9d6a59603400c181d019332994"
+      },
+      "capturesVisuallyInspected": true,
+      "syntheticCef": true,
+      "syntheticManagedReceipt": true,
+      "syntheticInput": true,
+      "managedInstallVerified": false,
+      "productionAdaptationEnabled": false,
+      "realSteamCef": false,
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "nativeArmVerified": true,
+      "horizontalOverflowObserved": true,
+      "officialCompatibilityCatalogNotPromoted": true
+    }
+  },
+  "rawReport": "framey-terminal-mainc764-integration-2026-11-14.json.gz",
+  "rawReportSha256": "e996616c35c7d2bd8a975be895b89e022197d485967f7326402ad0e2a4abc906",
+  "freshHostedRequired": true,
+  "realFrameContacted": false,
+  "wornVrVerified": false
+}

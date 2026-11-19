@@ -1,0 +1,70 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"><button id="opener">Open fixture</button></div>
+<div id="framey-error"></div><div id="framey-toasts"></div><div id="framey-modal"></div>
+<div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  const act=callback=>ReactDOM.flushSync(callback);
+  const kinds={DialogBody:'DIV',DialogBodyText:'P',DialogHeader:'H2',DialogSubHeader:'H3',
+    DialogFooter:'FOOTER',DialogLabel:'LABEL',DialogControlsSection:'SECTION',DialogControlsSectionHeader:'H3'};
+  function Child() {
+    const [count,setCount]=React.useState(0);
+    return React.createElement('button',{type:'button',onClick:()=>setCount(n=>n+1)},`Local ${count}`);
+  }
+  try {
+    for(const [name,tag] of Object.entries(kinds)) {
+      const component=DFL[name],first=React.createRef(),second=React.createRef(),seen=[];
+      const callback=node=>seen.push(node);
+      const local=(ref,extra={})=>React.createElement(component,{ref,className:'local-dialog',
+        style:{display:'block',width:240,height:60,overflowY:'auto'},'data-local':'kept',...extra},
+        React.createElement(Child),React.createElement('span',{style:{display:'block',height:200}},'Local content'));
+      render(local(first));const node=container.firstElementChild;
+      assert(first.current===node,`${name} dropped its object ref`);
+      assert(node.tagName===tag,`${name} changed its existing native tag`);
+      assert(node.getBoundingClientRect().width===240&&node.scrollHeight>node.clientHeight,`${name} ref cannot measure native content`);
+      node.scrollTop=40;assert(first.current.scrollTop===40,`${name} ref cannot scroll`);
+      act(()=>node.querySelector('button').click());
+      assert(node.querySelector('button').textContent==='Local 1','child action lost');
+      render(local(second));
+      assert(first.current===null&&second.current===node,`${name} failed object ref replacement`);
+      render(local(callback));
+      assert(second.current===null&&seen.length===1&&seen[0]===node,`${name} failed callback ref attachment`);
+      render(local(callback,{className:'updated-dialog',style:{display:'block',width:260,height:70,overflowY:'auto'}}));
+      assert(container.firstElementChild===node&&seen.length===1&&node.scrollTop===40,
+        `${name} redraw replaced the node/ref or reset scroll`);
+      assert(node.className==='updated-dialog'&&node.style.width==='260px'&&node.dataset.local==='kept'&&
+        node.querySelector('button').textContent==='Local 1',`${name} redraw lost props or child state`);
+      assert(DFL.findModuleByExport(value=>value===component)?.[name]===component,`${name} missing from local module lookup`);
+      render(null);
+      assert(seen.length===2&&seen[1]===null&&!node.isConnected,`${name} unmount did not detach callback ref`);
+    }
+    const opener=document.getElementById('opener'),ref=React.createRef();opener.focus();
+    let handle;
+    act(()=>{handle=DFL.showModal(React.createElement(DFL.DialogBody,{ref},'Local dialog content'));});
+    const body=ref.current;
+    assert(body?.tagName==='DIV'&&body.closest('[role=dialog]'),'modal did not attach DialogBody ref');
+    act(()=>handle.Update(React.createElement(DFL.DialogBody,{ref},'Updated dialog content')));
+    assert(ref.current===body&&body.textContent==='Updated dialog content','modal update replaced native body');
+    act(()=>handle.Close());await handle.ClosedPromise;
+    assert(ref.current===null&&!body.isConnected&&document.activeElement===opener,'modal close lost ref cleanup or focus restoration');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    act(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      allEightDeclaredContainers:true,nativeTagsPreserved:true,measurementAndScroll:true,
+      objectAndCallbackRefReplacement:true,stableNodeScrollAndChildState:true,propsPreserved:true,
+      localModuleLookup:true,unmountClearsRefs:true,modalUpdateAndClose:true,modalFocusRestored:true,
+      syntheticPropsAndCallbacks:true,publishedPluginUsageClaimed:false,realFrameContacted:false,
+      physicalControllerTested:false,vrKeyboardVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

@@ -22,6 +22,8 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
   let achievements={percentage:37.5,achieved:3,total:8};
   const info=()=>__OFFICIAL_INFO__;
   const item=()=>__OFFICIAL_ITEM__;
+  const appId=123, appStore={GetAppOverviewByAppID:id=>({display_name:'Synthetic achievement game '+id})};
+  const countInfo=()=>__OFFICIAL_COUNT_INFO__;
   let progress={current:0,total:0};
   const refresh=()=>__OFFICIAL_REFRESH__;
   const render=element=>ReactDOM.flushSync(()=>root.render(element));
@@ -36,6 +38,11 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     assert([...bar.labels].some(label=>label.textContent.includes('Loading')),'published progress label missing');
     assert(container.querySelector('[role=status]').textContent==='Synthetic game','operation text missing');
 
+    assert(container.querySelector('[data-framey-progress-detail]')?.textContent==='3/8',
+      'published loading processed/total count missing');
+    loadingData={...loadingData,processed:5,total:9};render(info());
+    assert(container.querySelector('[data-framey-progress-detail]').textContent==='5/9',
+      'published processed/total count did not update');
     loadingData={...loadingData,errored:false,description:'Synthetic retry underway',percentage:0,fetching:true};
     render(info());bar=container.querySelector('progress');
     assert(!bar.hasAttribute('value'),'indeterminate progress acquired a value');
@@ -43,6 +50,29 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
       'old error remained after published props changed');
     assert(container.textContent.includes('Synthetic retry underway'),'updated description missing');
 
+    assert(container.querySelector('[data-framey-progress-detail]').textContent==='',
+      'published empty loading count retained stale text');
+    render(countInfo());bar=container.querySelector('progress');
+    let count=container.querySelector('[data-framey-progress-detail]');
+    assert(bar.value===37.5 && count.textContent==='3/8','published per-game achievement count missing');
+    assert(count.querySelector('div').style.paddingRight==='10px','published achievement count markup lost');
+    assert(container.querySelector('[role=status]').textContent==='Synthetic achievement game 123',
+      'published game operation text changed');
+    achievements={percentage:100,achieved:8,total:8};render(countInfo());
+    assert(container.querySelector('progress').value===100 &&
+      container.querySelector('[data-framey-progress-detail]').textContent==='8/8',
+      'published per-game count did not update');
+    render(React.createElement(DFL.ProgressBarWithInfo,{nProgress:1,sTimeRemaining:0}));
+    assert(container.querySelector('[data-framey-progress-detail]').textContent==='0','numeric zero detail lost');
+    render(React.createElement(DFL.ProgressBarWithInfo,{nProgress:2,sTimeRemaining:'<b>plain detail</b>'}));
+    count=container.querySelector('[data-framey-progress-detail]');
+    assert(count.textContent==='<b>plain detail</b>' && !count.querySelector('b'),'detail text was parsed as HTML');
+    render(React.createElement(DFL.ProgressBarWithInfo,{nProgress:3,sTimeRemaining:null}));
+    assert(!container.querySelector('[data-framey-progress-detail]'),'removed detail retained stale content');
+    render(React.createElement(DFL.ProgressBarWithInfo,{nProgress:4}));
+    assert(container.textContent==='' && !container.querySelector('[data-framey-progress-detail]'),
+      'ordinary progress acquired fabricated completion text');
+    achievements={percentage:37.5,achieved:3,total:8};
     render(item());bar=container.querySelector('progress');
     assert(bar.value===37.5 && container.textContent==='3/8','published achievement count missing');
     achievements={percentage:100,achieved:8,total:8};
@@ -74,7 +104,9 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     render(null);
     assert(fixtureFailures.length===0,fixtureFailures.join('; '));
     result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedErrorDescription:true,
-      publishedAchievementCounts:true,descriptionMarkupAndStyles:true,labelPreserved:true,
+      publishedAchievementCounts:true,publishedLoadingCounts:true,publishedPerGameCountMarkup:true,
+      progressDetailZeroAndEscapedText:true,progressDetailUpdateAndRemoval:true,
+      noEstimatedTimeFabricated:true,descriptionMarkupAndStyles:true,labelPreserved:true,
       updatedDescription:true,indeterminatePreserved:true,publishedUnknownTotalIndeterminate:true,
       knownZeroAndCompletionPreserved:true,unknownTotalClearsStaleValue:true,omittedProgressIndeterminate:true,
       syntheticData:true,realRefreshRun:false,realFrameContacted:false,

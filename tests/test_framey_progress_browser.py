@@ -19,6 +19,34 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(sys.platform.startswith('linux') and BROWSER, 'Linux Chrome/Chromium is needed for real React/DOM')
 class ProgressBrowser(unittest.TestCase):
+    def test_declared_progress_focusable_props_control_local_native_focus(self):
+        # @decky/ui 4.16.0 declares focusable on ProgressBarProps and
+        # ProgressBarItemProps (also inherited by ProgressBarWithInfoProps).
+        # These props are synthetic; existing tests replay published controls.
+        host = (ROOT/'ui/framey-host.js').read_text()
+        without_start = re.sub(r'\n  start\(\);\n\}\)\(\);\s*$', '\n})();', host)
+        self.assertNotEqual(without_start, host)
+        page = (ROOT/'tests/page/framey_progress_focusable.html').read_text()
+        for token, source in [('__REACT__', (ROOT/'ui/vendor/react-18.3.1.min.js').read_text()),
+                              ('__REACT_DOM__', (ROOT/'ui/vendor/react-dom-18.3.1.min.js').read_text()),
+                              ('__HOST__', without_start)]:
+            self.assertEqual(page.count(token), 1)
+            page = page.replace(token, source.replace('</script', r'<\/script'))
+        with tempfile.TemporaryDirectory(prefix='framey-progress-focusable-') as folder:
+            document = Path(folder)/'fixture.html'
+            document.write_text(page)
+            run = run_browser([BROWSER, '--headless', '--disable-gpu', '--no-first-run',
+                               '--no-default-browser-check', '--disable-background-networking',
+                               '--user-data-dir='+str(Path(folder)/'profile'), '--dump-dom',
+                               '--virtual-time-budget=1000', document.as_uri()])
+        self.assertEqual(run.returncode, 0, run.stderr[-2000:])
+        result = re.search(r'<pre id="result">([^<]*)</pre>', run.stdout)
+        self.assertIsNotNone(result, run.stderr[-2000:])
+        report = json.loads(html.unescape(result.group(1)))
+        self.assertIs(report.get('passed'), True, report)
+        report.update(hostSha256=hashlib.sha256(host.encode()).hexdigest())
+        print('Framey progress focusable browser proof: '+json.dumps(report, sort_keys=True))
+
     def test_radiyo_spinner_visibility_follows_published_playback_style(self):
         plugin = next(p for p in PLUGINS if p['id'] == 24)
         data = archive(plugin)
@@ -67,6 +95,11 @@ class ProgressBrowser(unittest.TestCase):
                          r'[^\n]*?bottomSeparator: "none" \}\)', frontend)
         self.assertIsNotNone(info)
         self.assertIsNotNone(item)
+        count_info = re.search(
+            r'window\.SP_REACT\.createElement\(deckyFrontendLib\.ProgressBarWithInfo, '
+            r'\{ nProgress: achievements\.percentage, sOperationText: appStore\.GetAppOverviewByAppID\(appId\)\.display_name, '
+            r'sTimeRemaining: [\s\S]*?bottomSeparator: "none" \}\)', frontend)
+        self.assertIsNotNone(count_info)
         refresh_plugin = next(p for p in PLUGINS if p['id'] == 132)
         refresh_data = archive(refresh_plugin)
         self.assertEqual(hashlib.sha256(refresh_data).hexdigest(), refresh_plugin['sha256'])
@@ -84,7 +117,8 @@ class ProgressBrowser(unittest.TestCase):
         for token, source in [('__REACT__', (ROOT/'ui/vendor/react-18.3.1.min.js').read_text()),
                               ('__REACT_DOM__', (ROOT/'ui/vendor/react-dom-18.3.1.min.js').read_text()),
                               ('__HOST__', without_start), ('__OFFICIAL_INFO__', info.group()),
-                              ('__OFFICIAL_ITEM__', item.group()), ('__OFFICIAL_REFRESH__', refresh.group())]:
+                              ('__OFFICIAL_ITEM__', item.group()), ('__OFFICIAL_REFRESH__', refresh.group()),
+                              ('__OFFICIAL_COUNT_INFO__', count_info.group())]:
             self.assertEqual(page.count(token), 1)
             page = page.replace(token, source.replace('</script', r'<\/script'))
         with tempfile.TemporaryDirectory(prefix='framey-progress-') as folder:

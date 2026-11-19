@@ -1,0 +1,43 @@
+{
+  "verifiedAt": "2026-11-14T06:08:50.644215+00:00",
+  "success": true,
+  "architecture": "x86_64",
+  "decky": "v3.3.0",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "archiveSha256": "d551822162bd749f4f41e3eed321c748e6b808035c7c1ba4d37fbf63e3455704",
+  "sourceSha256": {
+    "scripts/framey-test-sample-runtime.py": "25a2e67e94613f47b06f8f4b7e7ad567b516d2637820ccd40dfca7532b27eb4e",
+    "scripts/framey-test-decky-runtime.py": "86bfc81f1bd447150bbe47842bf9804a6224c7accefb2f9691a67e14be20597a",
+    "scripts/framey-pack-sample.py": "18864e0f004a3bc1cf24b8e9b88e0b3416d934afb55735dfbf7929a285b56bdf",
+    "scripts/framey-check-archive.py": "65158d0ddae9b5e518668d960e2beb4b64811c1f9344061bd50366e2c402ef88",
+    "tests/decky-runtime/sample_settings.py": "83cee873574934eef6f6f107dff58eb6f015111a0eff3f8542db00a4f542f4c7",
+    "tests/decky-runtime/Containerfile": "f547357ca4832b87d5b72a7df8a235102e140d081963f7f292e9d8a84c712257",
+    "tests/decky-runtime/check.py": "361cb71f234956706de5471cbe639fd5e3f55cb9a20124f163d5de260b2b0076",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/framey_official.py": "81202dde0bf80b1c0c76a2f15fa669a5328b7f7a4d52c61ce519221fa99e59de",
+    "ui/frame_decky_store.py": "f64819b72387b3b29ccd2de5e1abffef6b171fe82f6eab9040345d2ae63e0393",
+    "ui/frame_decky.py": "cde181432f07d348c8c5b803c181165f95d75d4cc395c56ecb69d31354c592f3",
+    "ui/framey_compatibility.py": "9185d259d8fda415abe0f7c479a02ff7540c5ffb69d4a432912442314c1fe3f4",
+    "ui/framey-compatibility.json": "af62f7431f4d0f9f3a2aaf790d3f0a51e3b14675fdf0ce346f642a3e44684cff",
+    ".github/workflows/framey-sample-runtime.yml": "3e5a45d5df4d64998e12457d42f104278e2ca1a945dd203ee19ad2acf246c385",
+    "examples/framey-settings/plugin.json": "1d3c4ade5f34555e90c97e38dc5f70b68692dc3b370207cfa108c732c51d7ce6",
+    "examples/framey-settings/main.py": "097ddc96080ef14cc9990562ec310f7dd8b33fa31ba010b7f6278eff225f7c7b",
+    "examples/framey-settings/dist/index.js": "bcfc48b96ccdb3b9582d6dca451d19f0648f99c48a89981e726eadafd5e802db"
+  },
+  "loaderRestarts": 2,
+  "parentOnlyCleanStops": 3,
+  "savedValues": [
+    true,
+    false,
+    false
+  ],
+  "rejectedRpcCalls": 12,
+  "sourceFilesVerified": 19,
+  "rawReport": "framey-sample-native-settings-2026-11-14.json.gz",
+  "rawReportSha256": "d7267cac5ba5049fbcba7cc1509344c9ef37b6907097c3439c1262ba3aa32819",
+  "realFrameContacted": false,
+  "browserVerified": false,
+  "arm64Verified": false
+}

@@ -1,0 +1,258 @@
+{
+  "baseMain": "5f1e8dc9d0e6101a7e7a43c0472ff52574fba372",
+  "diagnosticChange": {
+    "boundedFailureTailLimit": 3000,
+    "commandTimeoutSecondsUnchanged": 600,
+    "cpuScope": "os.times waited-child user/system delta; no live progress or causal attribution",
+    "initializationFailuresNowRetained": true,
+    "pinnedCommitsUnchanged": true,
+    "retriesAdded": false,
+    "signatureAndContentChecksRetained": true
+  },
+  "localWitness": {
+    "commands": [
+      {
+        "args": [
+          "ostree",
+          "--repo=/output/bundles/repo",
+          "init",
+          "--mode=archive-z2"
+        ],
+        "elapsedSeconds": 0.02644958905875683,
+        "startedSeconds": 1.0747520960867405,
+        "success": true,
+        "timeoutSeconds": 600
+      },
+      {
+        "args": [
+          "ostree",
+          "--repo=/output/bundles/repo",
+          "remote",
+          "add",
+          "--gpg-import=/output/bundles/flathub-key.gpg",
+          "flathub",
+          "https://dl.flathub.org/repo/"
+        ],
+        "elapsedSeconds": 0.07806965243071318,
+        "startedSeconds": 1.1012621000409126,
+        "success": true,
+        "timeoutSeconds": 600
+      },
+      {
+        "args": [
+          "ostree",
+          "--repo=/output/bundles/repo",
+          "refs",
+          "--create=app/me.kozec.syncthingtk/x86_64/stable",
+          "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+        ],
+        "elapsedSeconds": 0.020886799320578575,
+        "startedSeconds": 1.2215996701270342,
+        "success": true,
+        "timeoutSeconds": 600
+      },
+      {
+        "args": [
+          "ostree",
+          "--repo=/output/bundles/repo",
+          "refs",
+          "--create=runtime/org.gnome.Platform/x86_64/49",
+          "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+        ],
+        "elapsedSeconds": 0.021199727430939674,
+        "startedSeconds": 1.2532100677490234,
+        "success": true,
+        "timeoutSeconds": 600
+      },
+      {
+        "args": [
+          "ostree",
+          "--repo=/output/bundles/repo",
+          "fsck",
+          "--all",
+          "--verify-bindings"
+        ],
+        "elapsedSeconds": 14.15145999006927,
+        "startedSeconds": 1.274479384534061,
+        "success": true,
+        "timeoutSeconds": 600
+      },
+      {
+        "args": [
+          "flatpak",
+          "build-bundle",
+          "--arch=x86_64",
+          "--gpg-keys=/output/bundles/flathub-key.gpg",
+          "/output/bundles/repo",
+          "/output/bundles/app.flatpak",
+          "me.kozec.syncthingtk",
+          "stable"
+        ],
+        "elapsedSeconds": 14.163345794193447,
+        "startedSeconds": 15.426036175340414,
+        "success": true,
+        "timeoutSeconds": 600
+      },
+      {
+        "args": [
+          "flatpak",
+          "build-bundle",
+          "--arch=x86_64",
+          "--gpg-keys=/output/bundles/flathub-key.gpg",
+          "--runtime",
+          "/output/bundles/repo",
+          "/output/bundles/runtime.flatpak",
+          "org.gnome.Platform",
+          "49"
+        ],
+        "elapsedSeconds": 468.3542326623574,
+        "startedSeconds": 29.611045494675636,
+        "success": true,
+        "timeoutSeconds": 600
+      }
+    ],
+    "elapsedSeconds": 498.7024671379477,
+    "flatpakVersion": "1.16.6",
+    "historicalHostedFailureExplained": false,
+    "imageDigest": "sha256:e82ac77b3a73382557f71dd6a5926870f5629be52968ca19ce9933ccdeca9e8b",
+    "localImageDiffersFromFailedCiImage": true,
+    "ostreeVersion": "2025.2",
+    "packageInstalled": false,
+    "packageLaunched": false,
+    "preparation": {
+      "architecture": "x86_64",
+      "bundles": {
+        "app": {
+          "bytes": 9872520,
+          "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+          "sha256": "3ae0435f967e22fd8a3958331e0620e5f3960ebdc247e93db3545714b1bef727"
+        },
+        "runtime": {
+          "bytes": 292381320,
+          "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+          "sha256": "cdac7e435c911f7a8626b5bf48206a69217c405029332f2790dca20256549813"
+        }
+      },
+      "commits": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      "fsck": "Validating refs...\nValidating refs in collections...\nEnumerating commits...\nVerifying content integrity of 2 commit objects...\nfsck objects (1/19643) 0%\nfsck objects (1769/19643) 9%\nfsck objects (3554/19643) 18%\nfsck objects (5948/19643) 30%\nfsck objects (7396/19643) 37%\nfsck objects (9177/19643) 46%\nfsck objects (10683/19643) 54%\nfsck objects (12666/19643) 64%\nfsck objects (13816/19643) 70%\nfsck objects (15170/19643) 77%\nfsck objects (17204/19643) 87%\nfsck objects (18897/19643) 96%\nfsck objects (19643/19643) 100%\nobject fsck of 2 commits completed successfully - no errors found.\n",
+      "keySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+      "packageInstalled": false,
+      "packageLaunched": false,
+      "payloadIntegrityVerified": true,
+      "signatures": {
+        "app": 1,
+        "runtime": 1
+      },
+      "sourceSha256": {
+        "framey-fetch-syncthing-flatpak.py": "b1418937ac0812593eb516bd143b3988c4e63002a5535c52b04c6b90b319233d",
+        "framey-prepare-syncthing-flatpak.py": "c4317b618e28f148d51ec4c3394d82b7fb1f031c35b0a96b674c9b9899419b1a",
+        "framey-verify-syncthing-flatpak.py": "ad19c3d296066b608f540aa5ce84bfab8398c04fad611472ec3e06da0850d4d8"
+      }
+    },
+    "runtimeObservedCpuSecondsRange": [
+      0.4,
+      464.62
+    ],
+    "runtimeSampleCount": 94,
+    "runtimeSamplePeakRssBytes": 595292160,
+    "runtimeSamplesWithNoVisibleRuntimeBundle": 94,
+    "sourceHead": "4d6d0ff1f6b505b8d7945a4448d301dc3601f2ff",
+    "sourceNote": "Original source before diagnostics, identical preparation/fetch/verifier at current main. Wrapper only times original run and samples proc; network disabled.",
+    "success": true,
+    "unmodifiedPreparationSha256": "c4317b618e28f148d51ec4c3394d82b7fb1f031c35b0a96b674c9b9899419b1a"
+  },
+  "rawEvidence": {
+    "decompressedSha256": "80a58093eb375938205f06323adf988e8228573d156ac79cb423fa619d783f55",
+    "path": "docs/evidence/framey-offline-bundle-command-diagnostics-2026-11-14.json.gz",
+    "recordSha256": {
+      "candidatePreparationGreen8": "a3730cadc3f3c1654b9bc94b8943be1e537553645c37ec09918c199167cfca43",
+      "fetchSummary": "75971f754465601f1c623e667ea07cdc42b321af5deddb91d899052cdc062c63",
+      "imageVersions": "a40ce31f5ea1f2acccc533d7d62b610c309ad803954006f8795e564f8ab29be2",
+      "independentCandidateReview": "f998a316729da62f7e848146473cd113ab1c35c1843ddeebde67ab1d86921f3c",
+      "independentPreparationGreen8": "d8459a57389f46d1d6d7332d27a171805e179d0bdb06b7d18ebad3908b96581e",
+      "initialNoExecErrors": "02502e19b2c78980d6a98ffff8a33e95749c0319d95a04b5d379af614104bc9e",
+      "mainSnapshotGreen110": "b849da5e137b98c1e990a802b5f18a85f6983e758afc3cdfff72dd8baec1f102",
+      "offlineConsole": "9d0e87fedcb1f5e3eef012d33ef824b7bea2101311316c50e8f31e866d9ca73f",
+      "offlineSamples": "d3120c6036681ce3dd2d554b81b149c385b77d870bd1ca8ef744940f54624f5c",
+      "offlineWitness": "0b0aafdf3ec5c2e0996299af712fd2122ce9d3325193b5bf35c0a7cb4ee965bf",
+      "originalNegative5": "44027303e6ba3c51b8a392f44f3074af839188db95726063b45c06081b26e6bf",
+      "retainedHostedFailure": "645cd7ce82cd4a86ac17e7f17150f890d1b03ee028eda9fd3bbe2c446ffac778",
+      "retainedHostedFailureLog": "533dfeb904c857ffec3dda09b3761b30fcf112ed1c5b47c4e34ebf49defedd55",
+      "terminalSnapshotGreen110": "23a4f20d31afdceb1d231bbe0c22fe43353ded664a3960da6f30fd68ae48e4ce",
+      "witnessSource": "eb7c5ebc1fc14a759f62598b9489cb61f9aebf1dab915dca1997fb5ce1bf6516"
+    },
+    "sha256": "b7d881cb05f6fb8be027a0f1193b69307e68a61432b7d9c245ff024982d9a472"
+  },
+  "recordedAt": "2026-11-14T16:04:27.398054+00:00",
+  "retainedHostedFailure": {
+    "artifact": 14119704681,
+    "failure": "runtime flatpak build-bundle exceeded600seconds before QEMU",
+    "head": "09465872dff677f1ea3b015b6dfb94cff7711363",
+    "job": 132492202693,
+    "rootCauseProven": false,
+    "run": 43609803324
+  },
+  "scope": {
+    "controllerVerified": false,
+    "frameContacted": false,
+    "freshHostedHeadQualificationRequired": true,
+    "managedInstallerEnabled": false,
+    "oldFailureErased": false,
+    "releaseHoldCleared": false,
+    "runtimeTimeoutCauseFixed": false,
+    "withdrawnV0463Preserved": true,
+    "wornVrVerified": false
+  },
+  "sourceCommit": "1f8ca9420f83f9eb9d8d1aeffed595d1245b4e66",
+  "sourceSha256": {
+    ".github/workflows/syncthing-flatpak-package.yml": "2120cad283ca5c37c956daf05e591502bf2005dcb4fb7d47e18ebc1ef748a9b4",
+    "docs/releasing.md": "406ec03fa248f1abb79132e202e50c17400020b16dd5cba1844b0e23b1f51878",
+    "scripts/framey-fetch-syncthing-flatpak.py": "b1418937ac0812593eb516bd143b3988c4e63002a5535c52b04c6b90b319233d",
+    "scripts/framey-prepare-syncthing-flatpak.py": "b31fcbd6053f5c0908362b692dfcf5bae5dfc907287c5b6808444462f5e386e1",
+    "scripts/framey-verify-syncthing-flatpak.py": "ad19c3d296066b608f540aa5ce84bfab8398c04fad611472ec3e06da0850d4d8",
+    "tests/decky-runtime/Containerfile.flatpak-bundles": "58a8e6ef0e3b18d83f9bff165482ad62e2ec317903e75b8ae9cd9329a142146e",
+    "tests/test_syncthing_flatpak_cleanup.py": "31b69918f09e4fc35c231bcafc1e4d2aa831990bd6d0c62e0a2092ab4ac8e31a",
+    "tests/test_syncthing_flatpak_fetch.py": "de27635371396ad7721657f8fa7284835294173438adae79d38c2fc6b8592080",
+    "tests/test_syncthing_flatpak_migration_payload.py": "de63d5a02f9e7540126cdc6535993b05acc18e23605de37cc4ecba37a1025c27",
+    "tests/test_syncthing_flatpak_migration_stacks.py": "a05d3973ecd6d2f86195ab5748cff6ea97e7ca0483873aaa54578b2695f0e781",
+    "tests/test_syncthing_flatpak_package.py": "89309e17c6a16b2396ad347b0be81c7aa9d3969028a4500f380bee8ad9fc83f3",
+    "tests/test_syncthing_flatpak_prepare.py": "793f8ac0bf563130e88d382223832cb83ea292a4498a2263aeca190775e3bb9c"
+  },
+  "validation": {
+    "focusedMainSnapshot": {
+      "inputCommit": "5f1e8dc9d0e6101a7e7a43c0472ff52574fba372",
+      "onlyOverlays": [
+        "scripts/framey-prepare-syncthing-flatpak.py",
+        "tests/test_syncthing_flatpak_prepare.py",
+        "docs/releasing.md"
+      ],
+      "skips": 0,
+      "tests": 110
+    },
+    "focusedTerminalSnapshot": {
+      "inputCommit": "4d6d0ff1f6b505b8d7945a4448d301dc3601f2ff",
+      "skips": 0,
+      "tests": 110
+    },
+    "independentPreparation": {
+      "skips": 0,
+      "tests": 8
+    },
+    "initialFullSuite": {
+      "cause": "Non-executable tmpfs blocked sampler fixtures; unchanged suite passes with exec mount.",
+      "errors": 2
+    },
+    "originalNegative": {
+      "errors": 5,
+      "tests": 8
+    },
+    "preparation": {
+      "realShortTimeoutReapedWithoutRetry": true,
+      "skips": 0,
+      "tests": 8
+    }
+  }
+}

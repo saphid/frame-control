@@ -1,0 +1,98 @@
+{
+  "pr": 698,
+  "head": "7e82dbf3f1ff792591ee99968d9caf1319ef5c03",
+  "mainBefore": "bbbf7260265e94d00a9a11d0454e29778a9522d4",
+  "merge": "7777eedf4e54796430b94d25e3745ee8e5a8acce",
+  "testedTree": "3533d2abe861cc64f12fb7e46b079b229b4b9a4a",
+  "actualTreeAndParentsVerified": true,
+  "hostedChecksPassed": 27,
+  "nativeArtifactAudit": {
+    "decky-runtime-ubuntu-24.04-arm": {
+      "head": "7e82dbf3f1ff792591ee99968d9caf1319ef5c03",
+      "artifactId": 14109111477,
+      "zipSha256": "95e595f478a3ee7b1c837a90f3569e7ea3ee4870d663cc27afa387fd006faff0",
+      "sourceHashesVerified": 60,
+      "primaryCases": 44,
+      "controls": 39,
+      "consoleDigestsVerified": 83,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-698-exact7e82-native-decky-runtime-ubuntu-24.04-arm.json"
+    },
+    "terminal-candidate-ubuntu-latest": {
+      "head": "7e82dbf3f1ff792591ee99968d9caf1319ef5c03",
+      "artifactId": 14109090120,
+      "zipSha256": "aa9a2909eb42b704c5e3522c20be148e4ca0a9c211f9524c60e6ae9c45d4e2bf",
+      "sourceHashesVerified": 72,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-698-exact7e82-native-terminal-candidate-ubuntu-latest.json"
+    },
+    "decky-runtime-ubuntu-latest": {
+      "head": "7e82dbf3f1ff792591ee99968d9caf1319ef5c03",
+      "artifactId": 14108703518,
+      "zipSha256": "ddc644ef1b2b6a7203108614298235fee0b1f7fe7d46bf1e600777a6deb36f83",
+      "sourceHashesVerified": 60,
+      "primaryCases": 44,
+      "controls": 39,
+      "consoleDigestsVerified": 83,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-698-exact7e82-native-decky-runtime-ubuntu-latest.json"
+    },
+    "terminal-candidate-ubuntu-24.04-arm": {
+      "head": "7e82dbf3f1ff792591ee99968d9caf1319ef5c03",
+      "artifactId": 14108238906,
+      "zipSha256": "a91ae5d2171082c91de47a6bfa5b67b4b1d66fcd8fd9e2701ee96097cddc0eb9",
+      "sourceHashesVerified": 72,
+      "primaryCases": 1,
+      "controls": 0,
+      "consoleDigestsVerified": 1,
+      "allPrimaryConsolesPassGate": true,
+      "fullDescendantCleanupNotInferred": true,
+      "report": "/tmp/frame-coordinator-698-exact7e82-native-terminal-candidate-ubuntu-24.04-arm.json"
+    }
+  },
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "physicalInputVerified": false,
+  "sampleArtifactAudit": {
+    "framey-sample-runtime-ubuntu-latest": {
+      "head": "7e82dbf3f1ff792591ee99968d9caf1319ef5c03",
+      "artifactId": 14109005756,
+      "zipSha256": "8eb918b7a29042c9bea22dbd851649a186d240cd9f93546bde83ff3c51e27a37",
+      "inputHashesVerified": 19,
+      "deterministicArchiveVerified": true,
+      "rpcRecords": 18,
+      "expectedRefusals": 12,
+      "restarts": 2,
+      "savedSnapshotsVerified": 3,
+      "cleanParentOnlyStops": 3,
+      "recordedRemainingDescendants": 0,
+      "consoleDigestsVerified": 4,
+      "realFrameContacted": false
+    },
+    "framey-sample-runtime-ubuntu-24.04-arm": {
+      "head": "7e82dbf3f1ff792591ee99968d9caf1319ef5c03",
+      "artifactId": 14108219436,
+      "zipSha256": "22f64fbb03d9adf0ddca4fb15ae2083d59e117e3512fb9366fadeda5a08e4a66",
+      "inputHashesVerified": 19,
+      "deterministicArchiveVerified": true,
+      "rpcRecords": 18,
+      "expectedRefusals": 12,
+      "restarts": 2,
+      "savedSnapshotsVerified": 3,
+      "cleanParentOnlyStops": 3,
+      "recordedRemainingDescendants": 0,
+      "consoleDigestsVerified": 4,
+      "realFrameContacted": false
+    }
+  },
+  "actualMainIntegrationTreeIdenticalToCheckedHead": true,
+  "actualMainSampleTestsPassed": 14,
+  "rawReport": "framey-sample-merge-7777eedf-2026-11-14.json.gz",
+  "rawReportSha256": "c289b841fb5107166a08b4cc5dd2030b02cd31d012202630635f14d1e7fc5dbc"
+}

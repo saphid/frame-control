@@ -1,0 +1,1278 @@
+{
+  "sourceRevision": "56ceb6978c5ed2ceb5a962ad12688b5bd175fbe7",
+  "architecture": "x86_64",
+  "reportSha256": "96dd51659534a76ff502b532968e8d7e11afb964f0397668f2c049474e38f08f",
+  "allSevenRuntimeSourceHashesVerified": true,
+  "helperSourceSha256": "3b2e6c6267829926d668af367323a4c14920708ab520c27c74ebfb5b52dc9cb7",
+  "actualApi1RpcCounts": [
+    39,
+    38
+  ],
+  "exactOriginalAndRepairedBackendDigestsVerified": true,
+  "originalFailureRetained": true,
+  "fourParentOnlyLoaderStopsUnderOneSecond": true,
+  "logAndPrivateFileAssertionsSourceBound": true,
+  "rawLoaderConsoleRetained": false,
+  "focusedNativeCase124Passed": true,
+  "simpleTimer96EarlierRunDoesNotQualifyAlarme": true,
+  "cases": [
+    {
+      "id": 124,
+      "name": "AlarMe",
+      "version": "1.6.3",
+      "sha256": "17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe",
+      "shim": "alarme-paused-restart",
+      "calls": [
+        {
+          "method": "get_version",
+          "result": "1.6.3"
+        },
+        {
+          "method": "update_settings",
+          "result": {
+            "snooze_duration": 5,
+            "time_format_24h": true,
+            "timer_sound": "alarm.mp3",
+            "timer_volume": 0,
+            "timer_subtle_mode": true,
+            "timer_auto_suspend": false,
+            "timer_prevent_sleep": false,
+            "pomodoro_sound": "alarm.mp3",
+            "pomodoro_volume": 100,
+            "pomodoro_subtle_mode": false,
+            "pomodoro_prevent_sleep": false,
+            "pomodoro_work_duration": 25,
+            "pomodoro_break_duration": 5,
+            "pomodoro_long_break_duration": 15,
+            "pomodoro_sessions_until_long_break": 4,
+            "missed_alerts_enabled": true,
+            "missed_alerts_window": 24,
+            "reminder_suspend_behavior": "continue",
+            "pomodoro_suspend_behavior": "continue",
+            "snooze_activation_delay": 2.0,
+            "overlay_enabled": false,
+            "overlay_display_mode": "always",
+            "overlay_position": "default",
+            "overlay_custom_x": 10,
+            "overlay_custom_y": 12,
+            "overlay_text_size": 13,
+            "overlay_opacity": 0.4,
+            "overlay_max_alerts": 2,
+            "overlay_time_window": 1,
+            "overlay_show_timers": true,
+            "overlay_show_alarms": true,
+            "overlay_show_pomodoros": true,
+            "overlay_show_reminders": true,
+            "overlay_show_stopwatch": false,
+            "overlay_compact_mode": false,
+            "overlay_show_prevent_sleep_badge": true,
+            "overlay_show_missed_badge": true,
+            "presets_enabled": true,
+            "presets_max_visible": 6,
+            "tab_order": [
+              "timers",
+              "alarms",
+              "pomodoro",
+              "reminders",
+              "stopwatch"
+            ]
+          }
+        },
+        {
+          "method": "get_active_timers",
+          "result": []
+        },
+        {
+          "method": "get_sleep_inhibitor_status",
+          "result": {
+            "active": false,
+            "items": []
+          }
+        },
+        {
+          "method": "create_timer",
+          "result": "4ff488fd"
+        },
+        {
+          "method": "pause_timer",
+          "result": true
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "4ff488fd",
+              "label": "Private paused timer",
+              "seconds": 120,
+              "end_time": 1793406961.8021667,
+              "created_at": 1793406841.8021739,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99823784828186,
+              "remaining": 119.99823784828186
+            }
+          ]
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "4ff488fd",
+              "label": "Private paused timer",
+              "seconds": 120,
+              "end_time": 1793406961.8021667,
+              "created_at": 1793406841.8021739,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99823784828186,
+              "remaining": 119.99823784828186
+            }
+          ]
+        },
+        {
+          "method": "resume_timer",
+          "result": true
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "4ff488fd",
+              "label": "Private paused timer",
+              "seconds": 120,
+              "end_time": 1793406962.1048894,
+              "created_at": 1793406841.8021739,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": false,
+              "remaining": 119.99660277366638
+            }
+          ]
+        },
+        {
+          "method": "cancel_timer",
+          "result": true
+        },
+        {
+          "method": "cancel_timer",
+          "result": false
+        },
+        {
+          "method": "get_active_timers",
+          "result": []
+        },
+        {
+          "method": "create_timer",
+          "result": "659fced7"
+        },
+        {
+          "method": "get_active_timers",
+          "result": []
+        },
+        {
+          "method": "get_presets",
+          "result": [
+            {
+              "id": "preset-5",
+              "seconds": 300,
+              "label": "5 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-10",
+              "seconds": 600,
+              "label": "10 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-15",
+              "seconds": 900,
+              "label": "15 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-30",
+              "seconds": 1800,
+              "label": "30 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-60",
+              "seconds": 3600,
+              "label": "1 hour",
+              "subtle_mode": false,
+              "auto_suspend": false
+            }
+          ]
+        },
+        {
+          "method": "save_preset",
+          "result": {
+            "id": "b68421e4",
+            "seconds": 83,
+            "label": "Private preset",
+            "subtle_mode": true,
+            "auto_suspend": false,
+            "prevent_sleep": false
+          }
+        },
+        {
+          "method": "save_preset",
+          "result": {
+            "id": "b68421e4",
+            "seconds": 83,
+            "label": "Private preset",
+            "subtle_mode": true,
+            "auto_suspend": false,
+            "prevent_sleep": false
+          }
+        },
+        {
+          "method": "get_presets",
+          "result": [
+            {
+              "id": "b68421e4",
+              "seconds": 83,
+              "label": "Private preset",
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false
+            },
+            {
+              "id": "preset-5",
+              "seconds": 300,
+              "label": "5 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-10",
+              "seconds": 600,
+              "label": "10 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-15",
+              "seconds": 900,
+              "label": "15 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-30",
+              "seconds": 1800,
+              "label": "30 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-60",
+              "seconds": 3600,
+              "label": "1 hour",
+              "subtle_mode": false,
+              "auto_suspend": false
+            }
+          ]
+        },
+        {
+          "method": "stopwatch_start",
+          "result": {
+            "status": "running",
+            "start_time": 1793406844.618727,
+            "elapsed_ms": 0,
+            "laps": [],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 0.8640289306640625
+          }
+        },
+        {
+          "method": "stopwatch_lap",
+          "result": {
+            "status": "running",
+            "start_time": 1793406844.618727,
+            "elapsed_ms": 0,
+            "laps": [
+              {
+                "label": "Lap 1",
+                "absolute_ms": 202.0425796508789,
+                "split_ms": 202.0425796508789
+              }
+            ],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 203.0940055847168,
+            "total_lap_count": 1,
+            "lap_limit_reached": false
+          }
+        },
+        {
+          "method": "stopwatch_lap",
+          "result": {
+            "status": "running",
+            "start_time": 1793406844.618727,
+            "elapsed_ms": 0,
+            "laps": [
+              {
+                "label": "Lap 1",
+                "absolute_ms": 202.0425796508789,
+                "split_ms": 202.0425796508789
+              },
+              {
+                "label": "Lap 2",
+                "absolute_ms": 404.3734073638916,
+                "split_ms": 202.3308277130127
+              }
+            ],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 405.3792953491211,
+            "total_lap_count": 2,
+            "lap_limit_reached": false
+          }
+        },
+        {
+          "method": "stopwatch_pause",
+          "result": {
+            "status": "paused",
+            "start_time": null,
+            "elapsed_ms": 406.1858654022217,
+            "laps": [
+              {
+                "label": "Lap 1",
+                "absolute_ms": 202.0425796508789,
+                "split_ms": 202.0425796508789
+              },
+              {
+                "label": "Lap 2",
+                "absolute_ms": 404.3734073638916,
+                "split_ms": 202.3308277130127
+              }
+            ],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 406.1858654022217,
+            "total_lap_count": 2,
+            "lap_limit_reached": false
+          }
+        },
+        {
+          "method": "create_timer",
+          "result": "40001cd5"
+        },
+        {
+          "method": "pause_timer",
+          "result": true
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "40001cd5",
+              "label": "Private restart pause",
+              "seconds": 120,
+              "end_time": 1793406965.0265124,
+              "created_at": 1793406845.026519,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99766302108765,
+              "remaining": 119.99766302108765
+            }
+          ]
+        },
+        {
+          "method": "create_timer",
+          "result": "119f268f"
+        },
+        {
+          "method": "pause_timer",
+          "result": true
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "119f268f",
+              "label": "Private elapsed pause",
+              "seconds": 1,
+              "end_time": 1793406846.0311866,
+              "created_at": 1793406845.031193,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 0.9974467754364014,
+              "remaining": 0.9974467754364014
+            },
+            {
+              "id": "40001cd5",
+              "label": "Private restart pause",
+              "seconds": 120,
+              "end_time": 1793406965.0265124,
+              "created_at": 1793406845.026519,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99766302108765,
+              "remaining": 119.99766302108765
+            }
+          ]
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "119f268f",
+              "label": "Private elapsed pause",
+              "seconds": 1,
+              "end_time": 1793406846.0311866,
+              "created_at": 1793406845.031193,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 0.9974467754364014,
+              "remaining": 0.9974467754364014
+            },
+            {
+              "id": "40001cd5",
+              "label": "Private restart pause",
+              "seconds": 120,
+              "end_time": 1793406965.0265124,
+              "created_at": 1793406845.026519,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99766302108765,
+              "remaining": 119.99766302108765
+            }
+          ]
+        },
+        {
+          "method": "get_presets",
+          "result": [
+            {
+              "id": "b68421e4",
+              "seconds": 83,
+              "label": "Private preset",
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false
+            },
+            {
+              "id": "preset-5",
+              "seconds": 300,
+              "label": "5 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-10",
+              "seconds": 600,
+              "label": "10 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-15",
+              "seconds": 900,
+              "label": "15 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-30",
+              "seconds": 1800,
+              "label": "30 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-60",
+              "seconds": 3600,
+              "label": "1 hour",
+              "subtle_mode": false,
+              "auto_suspend": false
+            }
+          ]
+        },
+        {
+          "method": "stopwatch_get_state",
+          "result": {
+            "status": "paused",
+            "start_time": null,
+            "elapsed_ms": 406.1858654022217,
+            "laps": [
+              {
+                "label": "Lap 1",
+                "absolute_ms": 202.0425796508789,
+                "split_ms": 202.0425796508789
+              },
+              {
+                "label": "Lap 2",
+                "absolute_ms": 404.3734073638916,
+                "split_ms": 202.3308277130127
+              }
+            ],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 406.1858654022217,
+            "total_lap_count": 2,
+            "lap_limit_reached": false
+          }
+        },
+        {
+          "method": "cancel_timer",
+          "result": true
+        },
+        {
+          "method": "resume_timer",
+          "result": true
+        },
+        {
+          "method": "stopwatch_reset",
+          "result": {
+            "status": "idle",
+            "start_time": null,
+            "elapsed_ms": 0,
+            "laps": [],
+            "current_elapsed_ms": 0
+          }
+        },
+        {
+          "method": "remove_preset",
+          "result": true
+        },
+        {
+          "method": "get_presets",
+          "result": [
+            {
+              "id": "preset-5",
+              "seconds": 300,
+              "label": "5 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-10",
+              "seconds": 600,
+              "label": "10 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-15",
+              "seconds": 900,
+              "label": "15 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-30",
+              "seconds": 1800,
+              "label": "30 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-60",
+              "seconds": 3600,
+              "label": "1 hour",
+              "subtle_mode": false,
+              "auto_suspend": false
+            }
+          ]
+        },
+        {
+          "method": "get_active_timers",
+          "result": []
+        },
+        {
+          "method": "get_sleep_inhibitor_status",
+          "result": {
+            "active": false,
+            "items": []
+          }
+        }
+      ],
+      "discovered": [
+        {
+          "name": "AlarMe",
+          "version": "1.6.3",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "alarmeLifecycle": {
+        "timerPauseResumeCancel": true,
+        "singleSilentCompletion": true,
+        "pausedTimerRestartPreserved": true,
+        "originalPausedRestartTicks": false,
+        "elapsedPausedDeadlinePreservedAndResumed": true,
+        "originalElapsedPausedTimerDeleted": false,
+        "presetDeduplicatedAndRestarted": true,
+        "stopwatchLapsAndPausedRestart": true,
+        "ownedFixtureStateCleaned": true,
+        "publishedBackendUnmodified": false,
+        "realFrameContacted": false,
+        "soundVerified": false,
+        "sleepInhibitionVerified": false,
+        "browserVerified": false,
+        "physicalControllerVerified": false,
+        "ownedLoaderStops": [
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.164
+          },
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.214
+          }
+        ],
+        "completeLoaderShutdownLogged": true,
+        "unchangedPublishedFiles": [
+          "LICENSE",
+          "plugin.json",
+          "dist/index.js"
+        ],
+        "backendSha256": "cdc87b9626157be5e7b90ecfda7ca35e9a7d9778ee8b7b2f1751d28eac34ab39"
+      },
+      "result": "published Decky discovery and private silent timer, preset, stopwatch and restart lifecycle passed; audio, inhibition, browser and VR unverified"
+    },
+    {
+      "id": 124,
+      "name": "AlarMe",
+      "version": "1.6.3",
+      "sha256": "17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe",
+      "shim": "alarme-paused-restart",
+      "calls": [
+        {
+          "method": "get_version",
+          "result": "1.6.3"
+        },
+        {
+          "method": "update_settings",
+          "result": {
+            "snooze_duration": 5,
+            "time_format_24h": true,
+            "timer_sound": "alarm.mp3",
+            "timer_volume": 0,
+            "timer_subtle_mode": true,
+            "timer_auto_suspend": false,
+            "timer_prevent_sleep": false,
+            "pomodoro_sound": "alarm.mp3",
+            "pomodoro_volume": 100,
+            "pomodoro_subtle_mode": false,
+            "pomodoro_prevent_sleep": false,
+            "pomodoro_work_duration": 25,
+            "pomodoro_break_duration": 5,
+            "pomodoro_long_break_duration": 15,
+            "pomodoro_sessions_until_long_break": 4,
+            "missed_alerts_enabled": true,
+            "missed_alerts_window": 24,
+            "reminder_suspend_behavior": "continue",
+            "pomodoro_suspend_behavior": "continue",
+            "snooze_activation_delay": 2.0,
+            "overlay_enabled": false,
+            "overlay_display_mode": "always",
+            "overlay_position": "default",
+            "overlay_custom_x": 10,
+            "overlay_custom_y": 12,
+            "overlay_text_size": 13,
+            "overlay_opacity": 0.4,
+            "overlay_max_alerts": 2,
+            "overlay_time_window": 1,
+            "overlay_show_timers": true,
+            "overlay_show_alarms": true,
+            "overlay_show_pomodoros": true,
+            "overlay_show_reminders": true,
+            "overlay_show_stopwatch": false,
+            "overlay_compact_mode": false,
+            "overlay_show_prevent_sleep_badge": true,
+            "overlay_show_missed_badge": true,
+            "presets_enabled": true,
+            "presets_max_visible": 6,
+            "tab_order": [
+              "timers",
+              "alarms",
+              "pomodoro",
+              "reminders",
+              "stopwatch"
+            ]
+          }
+        },
+        {
+          "method": "get_active_timers",
+          "result": []
+        },
+        {
+          "method": "get_sleep_inhibitor_status",
+          "result": {
+            "active": false,
+            "items": []
+          }
+        },
+        {
+          "method": "create_timer",
+          "result": "5e7bc345"
+        },
+        {
+          "method": "pause_timer",
+          "result": true
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "5e7bc345",
+              "label": "Private paused timer",
+              "seconds": 120,
+              "end_time": 1793406976.7164545,
+              "created_at": 1793406856.7164605,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99840545654297,
+              "remaining": 119.99840545654297
+            }
+          ]
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "5e7bc345",
+              "label": "Private paused timer",
+              "seconds": 120,
+              "end_time": 1793406976.7164545,
+              "created_at": 1793406856.7164605,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99840545654297,
+              "remaining": 119.99840545654297
+            }
+          ]
+        },
+        {
+          "method": "resume_timer",
+          "result": true
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "5e7bc345",
+              "label": "Private paused timer",
+              "seconds": 120,
+              "end_time": 1793406977.019199,
+              "created_at": 1793406856.7164605,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": false,
+              "remaining": 119.99716258049011
+            }
+          ]
+        },
+        {
+          "method": "cancel_timer",
+          "result": true
+        },
+        {
+          "method": "cancel_timer",
+          "result": false
+        },
+        {
+          "method": "get_active_timers",
+          "result": []
+        },
+        {
+          "method": "create_timer",
+          "result": "e0a660fd"
+        },
+        {
+          "method": "get_active_timers",
+          "result": []
+        },
+        {
+          "method": "get_presets",
+          "result": [
+            {
+              "id": "preset-5",
+              "seconds": 300,
+              "label": "5 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-10",
+              "seconds": 600,
+              "label": "10 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-15",
+              "seconds": 900,
+              "label": "15 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-30",
+              "seconds": 1800,
+              "label": "30 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-60",
+              "seconds": 3600,
+              "label": "1 hour",
+              "subtle_mode": false,
+              "auto_suspend": false
+            }
+          ]
+        },
+        {
+          "method": "save_preset",
+          "result": {
+            "id": "52a29ed8",
+            "seconds": 83,
+            "label": "Private preset",
+            "subtle_mode": true,
+            "auto_suspend": false,
+            "prevent_sleep": false
+          }
+        },
+        {
+          "method": "save_preset",
+          "result": {
+            "id": "52a29ed8",
+            "seconds": 83,
+            "label": "Private preset",
+            "subtle_mode": true,
+            "auto_suspend": false,
+            "prevent_sleep": false
+          }
+        },
+        {
+          "method": "get_presets",
+          "result": [
+            {
+              "id": "52a29ed8",
+              "seconds": 83,
+              "label": "Private preset",
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false
+            },
+            {
+              "id": "preset-5",
+              "seconds": 300,
+              "label": "5 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-10",
+              "seconds": 600,
+              "label": "10 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-15",
+              "seconds": 900,
+              "label": "15 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-30",
+              "seconds": 1800,
+              "label": "30 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-60",
+              "seconds": 3600,
+              "label": "1 hour",
+              "subtle_mode": false,
+              "auto_suspend": false
+            }
+          ]
+        },
+        {
+          "method": "stopwatch_start",
+          "result": {
+            "status": "running",
+            "start_time": 1793406859.5337675,
+            "elapsed_ms": 0,
+            "laps": [],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 1.031637191772461
+          }
+        },
+        {
+          "method": "stopwatch_lap",
+          "result": {
+            "status": "running",
+            "start_time": 1793406859.5337675,
+            "elapsed_ms": 0,
+            "laps": [
+              {
+                "label": "Lap 1",
+                "absolute_ms": 202.52227783203125,
+                "split_ms": 202.52227783203125
+              }
+            ],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 204.04505729675293,
+            "total_lap_count": 1,
+            "lap_limit_reached": false
+          }
+        },
+        {
+          "method": "stopwatch_lap",
+          "result": {
+            "status": "running",
+            "start_time": 1793406859.5337675,
+            "elapsed_ms": 0,
+            "laps": [
+              {
+                "label": "Lap 1",
+                "absolute_ms": 202.52227783203125,
+                "split_ms": 202.52227783203125
+              },
+              {
+                "label": "Lap 2",
+                "absolute_ms": 405.3168296813965,
+                "split_ms": 202.79455184936523
+              }
+            ],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 405.9631824493408,
+            "total_lap_count": 2,
+            "lap_limit_reached": false
+          }
+        },
+        {
+          "method": "stopwatch_pause",
+          "result": {
+            "status": "paused",
+            "start_time": null,
+            "elapsed_ms": 406.59403800964355,
+            "laps": [
+              {
+                "label": "Lap 1",
+                "absolute_ms": 202.52227783203125,
+                "split_ms": 202.52227783203125
+              },
+              {
+                "label": "Lap 2",
+                "absolute_ms": 405.3168296813965,
+                "split_ms": 202.79455184936523
+              }
+            ],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 406.59403800964355,
+            "total_lap_count": 2,
+            "lap_limit_reached": false
+          }
+        },
+        {
+          "method": "create_timer",
+          "result": "8e8a0011"
+        },
+        {
+          "method": "pause_timer",
+          "result": true
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "8e8a0011",
+              "label": "Private restart pause",
+              "seconds": 120,
+              "end_time": 1793406979.9416535,
+              "created_at": 1793406859.9416595,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99802565574646,
+              "remaining": 119.99802565574646
+            }
+          ]
+        },
+        {
+          "method": "create_timer",
+          "result": "9e85c8c8"
+        },
+        {
+          "method": "pause_timer",
+          "result": true
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "9e85c8c8",
+              "label": "Private elapsed pause",
+              "seconds": 1,
+              "end_time": 1793406860.9454856,
+              "created_at": 1793406859.9454923,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 0.9960095882415771,
+              "remaining": 0.9960095882415771
+            },
+            {
+              "id": "8e8a0011",
+              "label": "Private restart pause",
+              "seconds": 120,
+              "end_time": 1793406979.9416535,
+              "created_at": 1793406859.9416595,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99802565574646,
+              "remaining": 119.99802565574646
+            }
+          ]
+        },
+        {
+          "method": "get_active_timers",
+          "result": [
+            {
+              "id": "8e8a0011",
+              "label": "Private restart pause",
+              "seconds": 120,
+              "end_time": 1793406979.9416535,
+              "created_at": 1793406859.9416595,
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false,
+              "paused": true,
+              "paused_remaining": 119.99802565574646,
+              "remaining": 119.99802565574646
+            }
+          ]
+        },
+        {
+          "method": "get_presets",
+          "result": [
+            {
+              "id": "52a29ed8",
+              "seconds": 83,
+              "label": "Private preset",
+              "subtle_mode": true,
+              "auto_suspend": false,
+              "prevent_sleep": false
+            },
+            {
+              "id": "preset-5",
+              "seconds": 300,
+              "label": "5 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-10",
+              "seconds": 600,
+              "label": "10 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-15",
+              "seconds": 900,
+              "label": "15 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-30",
+              "seconds": 1800,
+              "label": "30 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-60",
+              "seconds": 3600,
+              "label": "1 hour",
+              "subtle_mode": false,
+              "auto_suspend": false
+            }
+          ]
+        },
+        {
+          "method": "stopwatch_get_state",
+          "result": {
+            "status": "paused",
+            "start_time": null,
+            "elapsed_ms": 406.59403800964355,
+            "laps": [
+              {
+                "label": "Lap 1",
+                "absolute_ms": 202.52227783203125,
+                "split_ms": 202.52227783203125
+              },
+              {
+                "label": "Lap 2",
+                "absolute_ms": 405.3168296813965,
+                "split_ms": 202.79455184936523
+              }
+            ],
+            "prevent_sleep": false,
+            "current_elapsed_ms": 406.59403800964355,
+            "total_lap_count": 2,
+            "lap_limit_reached": false
+          }
+        },
+        {
+          "method": "cancel_timer",
+          "result": true
+        },
+        {
+          "method": "stopwatch_reset",
+          "result": {
+            "status": "idle",
+            "start_time": null,
+            "elapsed_ms": 0,
+            "laps": [],
+            "current_elapsed_ms": 0
+          }
+        },
+        {
+          "method": "remove_preset",
+          "result": true
+        },
+        {
+          "method": "get_presets",
+          "result": [
+            {
+              "id": "preset-5",
+              "seconds": 300,
+              "label": "5 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-10",
+              "seconds": 600,
+              "label": "10 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-15",
+              "seconds": 900,
+              "label": "15 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-30",
+              "seconds": 1800,
+              "label": "30 minutes",
+              "subtle_mode": false,
+              "auto_suspend": false
+            },
+            {
+              "id": "preset-60",
+              "seconds": 3600,
+              "label": "1 hour",
+              "subtle_mode": false,
+              "auto_suspend": false
+            }
+          ]
+        },
+        {
+          "method": "get_active_timers",
+          "result": []
+        },
+        {
+          "method": "get_sleep_inhibitor_status",
+          "result": {
+            "active": false,
+            "items": []
+          }
+        }
+      ],
+      "discovered": [
+        {
+          "name": "AlarMe",
+          "version": "1.6.3",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "alarmeLifecycle": {
+        "timerPauseResumeCancel": true,
+        "singleSilentCompletion": true,
+        "pausedTimerRestartPreserved": false,
+        "originalPausedRestartTicks": true,
+        "elapsedPausedDeadlinePreservedAndResumed": false,
+        "originalElapsedPausedTimerDeleted": true,
+        "presetDeduplicatedAndRestarted": true,
+        "stopwatchLapsAndPausedRestart": true,
+        "ownedFixtureStateCleaned": true,
+        "publishedBackendUnmodified": true,
+        "realFrameContacted": false,
+        "soundVerified": false,
+        "sleepInhibitionVerified": false,
+        "browserVerified": false,
+        "physicalControllerVerified": false,
+        "ownedLoaderStops": [
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.214
+          },
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.214
+          }
+        ],
+        "completeLoaderShutdownLogged": true,
+        "unchangedPublishedFiles": [
+          "LICENSE",
+          "plugin.json",
+          "dist/index.js"
+        ],
+        "backendSha256": "ff456c2620b5b85473b4ca642551df49b490a2770e0af5c2706c6069c9f73d27"
+      },
+      "result": "original paused timer incorrectly ticks after restart; regression reproduced"
+    }
+  ],
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "1a3b07425a4413aee054e7d921adc9e0e58152cd5f73c23b1282a2a6a90d7a2f",
+    "tests/decky-runtime/check.py": "117487d6538eaa272a7e2aea1772aa08c206797893ff2b3cc4aa17bb58880e22",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "7d5483c1e5d1174b9876b95b0c380b2ba4955b5d734d865ce48b588003efec1a",
+    "tests/framey_official.py": "1b051d34e352ba083900946ff6e002c804d45aa2616881973766530b613973fe",
+    "ui/frame_decky_store.py": "561b32b4cc9d4af8504c29b7ffce5a03562ce46820f7be3a91ee843ec9a02262",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false
+}

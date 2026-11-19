@@ -14,20 +14,28 @@ TAG = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+(?:[-.][A-Za-z0-9.-]+)?\Z")
 
 
 PLUGIN_SCAN = r'''
+def read_plugin_metadata(path):
+    try:
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 16384:
+            return None
+        # The size snapshot cannot bound a file that grows before the read.
+        with path.open('rb') as source: data = source.read(16385)
+        if len(data) > 16384: return None
+        return json.loads(data.decode('utf-8'))
+    except (OSError, ValueError): return None
+
+
 def plugins(folder):
     found = []
     if folder.is_dir() and not folder.is_symlink():
         for child in sorted(folder.iterdir()):
             if child.is_symlink() or not child.is_dir(): continue
             info = child / 'plugin.json'
-            if info.is_symlink() or not info.is_file() or info.stat().st_size > 16384: continue
             try:
-                data = json.loads(info.read_text())
+                data = read_plugin_metadata(info)
                 if not isinstance(data, dict): continue
                 marker = child / '.frame-control-store.json'
-                try:
-                    owned = json.loads(marker.read_text()) if marker.is_file() and not marker.is_symlink() else {}
-                except (OSError, ValueError): owned = {}
+                owned = read_plugin_metadata(marker)
                 # Valid JSON can still be a list or scalar. A bad receipt
                 # cannot claim ownership or abort the remaining inventory.
                 if not isinstance(owned, dict): owned = {}
@@ -51,8 +59,27 @@ print(json.dumps({'plugins':plugins(pathlib.Path.home()/'.local/share/frame-cont
 '''
 
 
+# The installed-panel view needs service state and receipts, not CEF/OS
+# diagnostics. Keep it independent of those cold imports and network probes.
+PANEL_STATUS_PROBE = 'import json, pathlib, subprocess\n' + PLUGIN_SCAN + r'''
+home = pathlib.Path.home()
+managed = home / '.local/share/frame-control/decky'
+service = home / '.config/systemd/user/frame-control-decky.service'
+release = managed / '.frame-control/receipt.json'
+legacy = managed / 'settings/release.json'
+try:
+    metadata = json.loads((release if release.exists() else legacy).read_text())
+    version = metadata.get('version') if isinstance(metadata, dict) and metadata.get('managedBy') == 'Frame Control' else None
+except (OSError, ValueError): version = None
+running = subprocess.run(['systemctl', '--user', 'is-active', 'frame-control-decky.service'],
+    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2).returncode == 0
+print(json.dumps({'managed':service.is_file() and version is not None,
+    'running':running, 'version':version, 'plugins':plugins(managed/'plugins')}))
+'''
+
+
 PROBE = r'''
-import json, os, pathlib, platform, subprocess, urllib.request
+import http.client, json, os, pathlib, subprocess
 ''' + PLUGIN_SCAN + r'''
 home = pathlib.Path.home()
 managed = home / '.local/share/frame-control/decky'
@@ -66,16 +93,25 @@ os_release = {}
 for line in pathlib.Path('/etc/os-release').read_text().splitlines():
     if '=' in line:
         k,v = line.split('=',1); os_release[k] = v.strip('"')
+connection = http.client.HTTPConnection('127.0.0.1', 8080, timeout=2)
 try:
-    with urllib.request.urlopen('http://127.0.0.1:8080/json/list', timeout=2) as reply:
-        targets = json.load(reply)
-    cef = any(x.get('title') == 'SharedJSContext' and 'steamloopback.host' in x.get('url','') for x in targets)
-except (OSError, ValueError): cef = False
+    # This fixed loopback endpoint needs neither URL/proxy handling nor TLS.
+    # Avoid their cold imports on the bounded remote status path.
+    connection.request('GET', '/json/list')
+    reply = connection.getresponse()
+    if reply.status != 200: raise ValueError('CEF targets unavailable')
+    targets = json.load(reply)
+    cef = isinstance(targets, list) and any(
+        isinstance(x, dict) and x.get('title') == 'SharedJSContext'
+        and isinstance(x.get('url'), str) and 'steamloopback.host' in x['url']
+        for x in targets)
+except (OSError, ValueError, http.client.HTTPException): cef = False
+finally: connection.close()
 try:
     metadata = json.loads((release if release.exists() else legacy).read_text())
-    version = metadata.get('version') if metadata.get('managedBy') == 'Frame Control' else None
+    version = metadata.get('version') if isinstance(metadata, dict) and metadata.get('managedBy') == 'Frame Control' else None
 except (OSError, ValueError): version = None
-print(json.dumps({'arch':platform.machine(), 'frameOS':os_release.get('VERSION_ID'),
+print(json.dumps({'arch':os.uname().machine, 'frameOS':os_release.get('VERSION_ID'),
     'variant':os_release.get('VARIANT_ID'), 'build':os_release.get('BUILD_ID'), 'cef':cef,
     'managed':service.is_file() and version is not None, 'running':active('frame-control-decky.service', True),
     'version':version, 'upstreamInstall':pathlib.Path('/etc/systemd/system/plugin_loader.service').exists(),
@@ -97,9 +133,13 @@ transaction_lock = None
 def systemd(*args):
     p = subprocess.run(['systemctl','--user',*args], capture_output=True, text=True, timeout=20)
     if p.returncode: raise RuntimeError((p.stderr or p.stdout).strip() or 'systemd failed')
+def release_metadata(path):
+    try:
+        data = json.loads(path.read_text())
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError): return {}
 def owned():
-    try: return json.loads((receipt if receipt.exists() else legacy).read_text()).get('managedBy') == 'Frame Control' and service.is_file()
-    except (OSError, ValueError): return False
+    return release_metadata(receipt if receipt.exists() else legacy).get('managedBy') == 'Frame Control' and service.is_file()
 try:
     # The desktop and headset servers are separate processes. Lock the shared
     # user-service transaction on the Frame before inspecting or changing it.
@@ -115,7 +155,7 @@ try:
         systemd('daemon-reload')
         binary.unlink(missing_ok=True)
         receipt.unlink(missing_ok=True)
-        if legacy.exists() and json.loads(legacy.read_text()).get('managedBy') == 'Frame Control': legacy.unlink()
+        if legacy.exists() and release_metadata(legacy).get('managedBy') == 'Frame Control': legacy.unlink()
         print(json.dumps({'message':'Removed Frame Control managed Decky service and binary. Plugin files were kept. Restart Steam or the headset to clear its menu.'}))
     else:
         if action not in ('install','update'): raise RuntimeError('Invalid Decky action')
@@ -161,7 +201,7 @@ try:
               '[Install]\nWantedBy=default.target\n')
             service.write_text(text)
             receipt.write_text(json.dumps({'managedBy':'Frame Control','version':version,'sha256':digest})+'\n')
-            if legacy.exists() and json.loads(legacy.read_text()).get('managedBy') == 'Frame Control': legacy.unlink()
+            if legacy.exists() and release_metadata(legacy).get('managedBy') == 'Frame Control': legacy.unlink()
             systemd('daemon-reload')
             systemd('enable','--now','frame-control-decky.service')
             systemd('is-active','frame-control-decky.service')
@@ -189,7 +229,15 @@ def plugin_status(ssh):
 
 
 def status(ssh):
-    result = json.loads(ssh('python3 -', stdin=PROBE, timeout=15))
+    return _with_compatibility(json.loads(ssh('python3 -', stdin=PROBE, timeout=15)))
+
+
+def panel_status(ssh):
+    """Fresh service/ownership/inventory state without OS or CEF diagnostics."""
+    return _with_compatibility(json.loads(ssh('python3 -', stdin=PANEL_STATUS_PROBE, timeout=15)))
+
+
+def _with_compatibility(result):
     for plugin in result.get('plugins', []):
         plugin['compatibility'] = framey_compatibility.lookup(
             plugin.get('storeId'), plugin.get('sha256'), plugin.get('version'),

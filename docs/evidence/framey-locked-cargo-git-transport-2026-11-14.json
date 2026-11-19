@@ -1,0 +1,83 @@
+{
+  "baseMain": "61e36ffe977fad303af53403622cadc1b931773c",
+  "change": {
+    "fetchLockedRetained": true,
+    "fetchTimeoutSeconds": 180,
+    "offlineFrozenBuildCommandsUnchanged": true,
+    "onlyAstChangeExplicitGitCliSetting": true,
+    "retryOrFallbackAdded": false,
+    "tlsVerificationNotDisabled": true
+  },
+  "rawEvidence": {
+    "decompressedSha256": "0f574c3b40ba09ac8fc96a62a0577d41109f84c2caece6b37416944262a4472e",
+    "path": "docs/evidence/framey-locked-cargo-git-transport-2026-11-14.json.gz",
+    "recordSha256": {
+      "candidateExactLog": "6034c0ae5d982bfd4f43026fbbf042dabee59f72c0c029e125d2d856c602aa43",
+      "candidateExactProof": "d76384f7def6d69fc5d839c0c0122ca823143892d1b6eec1cbf701b332637e48",
+      "candidateExactScript": "19f3a1018e655ee2116c50bdf0f55d7d3c021986a6a8aa01daee432e7429f9ca",
+      "candidateFetchLog": "932da8bd853e817270623e07cb74af458e796aecda6d1b99ad3c18d67a4d444b",
+      "candidateFixedByteGitMarkers": "270826d41d0a807d41e14d413e764fd30dab7a7bcd1e478ea94b9e812671042b",
+      "candidateOfflineMetadata": "af2c6447daf74d0a783e16736ec30d9f44490058e71f5fb8955c4d8882b8a173",
+      "controlledOriginalFetchTimeout": "a7a1919478a356b6ae7032fd9074c773948a52ea2874a679b49faebf3d566e37",
+      "controlledOriginalScript": "788d32e0ce717b76ab31ef255df87584fccd3da3442ae6b4ea36f2d5298fb5bf",
+      "controlledOriginalTerminalLog": "f1d9717e434e101cafa7bdbae6d7ba606a18e863c90fe81d76eff7e1a4e1d18b",
+      "independentCandidateReview": "fa04b440b1977678decacda3194a7ba87142218ebbabd65363e6101a6ccca68f",
+      "initialHealthyBaselineLog": "783beecaa31e9e799ce8f96625c906e4c6a2aab019f97db0f3ca562e46cfd32a",
+      "initialHealthyBaselineProof": "6c3dc391c955931b232695d936ba9e32eed8ca6f7cd4156a22977a5dfda4d85d",
+      "initialHealthyBaselineScript": "c0dbbfb69947a9467c8e820cbd670bf0b4c75d416bcb2c64f0a5d0ec14f4b23b",
+      "initialInvocationCheckerFailure": "5bf9229b7e4769e9b402c7f39e92dbe2f1adaffae1d4af7fb74bae565c821b80",
+      "initialInvocationCheckerScript": "b55c9eb3b4e99c3f04806f3e0a8bedf8355f30d08ee8c70ffc3919ed09604dfb",
+      "ownedControlCleanup": "c6a4157e017f0c9bd3379cb2ab7ca73db1456b9e11db307f08cff096003f3f3c",
+      "ownership19Tests": "dccd4081c8ef7dce3b84d15057f4d56513d2d49869d96cbefbaec00166997c24",
+      "retainedCiFailureLog": "057689a5a2578fb7a0a4a3ca55c43c5cf2456eda71198f48be4cff1a51a2716c",
+      "retainedCiFailureProof": "f8a2400f07b3ce365881f5dfdfb3890923287f24c275319ec24679346692cbd8",
+      "sourceReview": "79238d670b051cfb11ca123554e18d2847ef58ca6929c5f42c2886fc7042698f"
+    },
+    "sha256": "c0ddc193999062760b7d4c2f7945ba308e6bf66de45c48d9b1735f378cdef048"
+  },
+  "recordedAt": "2026-11-14T17:27:55.776820+00:00",
+  "retainedFailures": {
+    "ciArtifactCount": 0,
+    "ciCargoExitCode": 101,
+    "ciError": "SSL unknown error class=Ssl (16)",
+    "ciHead": "ebd5c458e37cfc888fc5b1cff09ab65ad00a910f",
+    "ciJob": 132515147609,
+    "ciRun": 43617330817,
+    "distinctLocalLibraryControlTimeoutSeconds": 180,
+    "initialInvocationCheckerFailureRetained": true,
+    "originalLibraryControlNotRetried": true
+  },
+  "scope": {
+    "actualCiSslRootCauseEstablished": false,
+    "ciFailureReproducedLocally": false,
+    "freshHostedQualificationRequired": true,
+    "historicalArmReadinessCauseEstablished": false,
+    "managedInstallerVerified": false,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false,
+    "wornVrVerified": false
+  },
+  "sourceBeforeEvidenceCommit": "1af31503f53c640427ae1d94550171bf3f40d329",
+  "sourceSha256": {
+    ".github/workflows/syncthing-candidate.yml": "269778f50aac58638991de08050419ad9e07f5bab8e70d688a5a701f6cf4be38",
+    ".github/workflows/syncthing-flatpak-package.yml": "2120cad283ca5c37c956daf05e591502bf2005dcb4fb7d47e18ebc1ef748a9b4",
+    "scripts/build-framey-syncthing.py": "2cd971f7d07a3eaa6a36c82851ddc5423cef3994ef9039b3b21f2f5137bd66c6",
+    "tests/test_framey_syncthing_candidate.py": "279585cdede44889fc962d04baf9fd1e7d6258f8a0fa384277611d968fe41789",
+    "ui/vendor/syncthing-0.2.7/main.py": "ea1c15f587b3dbece3fee67918e1187a71750aa74637a054a34be643265fb645",
+    "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+    "ui/vendor/syncthing-0.2.7/source.tar.gz": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "ui/vendor/syncthing-0.2.7/watchdog.patch": "b3ca4663f13d77d87e45d4eaeb92758944cd4165180d578d2cd685f061482b1f"
+  },
+  "validation": {
+    "actualGitFetchCliInvocations": 1,
+    "ambientGitCliSettingOverridden": "false",
+    "exactCandidateFetchElapsedSeconds": 5.17400314565748,
+    "existingOwnershipTests": 19,
+    "localNativeBuildExecuted": false,
+    "lockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "lockedGitRevision": "e73a76600ce9e51e962de5266b03be596e6c1d50",
+    "offlineLockedMetadataPassed": true,
+    "ownedGroupsReaped": true,
+    "skips": 0
+  }
+}

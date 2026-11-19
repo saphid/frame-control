@@ -1,0 +1,44 @@
+{
+  "framey-sample-runtime-ubuntu-latest": {
+    "head": "e09bc740fed04720590b8ade76f0251d54eda951",
+    "artifactId": 14113776226,
+    "zipSha256": "17b9a63f44cf9117da9636e5f6c9543ab9c1257696f11c49eecc7f08936624ce",
+    "inputHashesVerified": 21,
+    "deterministicArchiveVerified": true,
+    "rpcRecords": 21,
+    "postEofRpcVerified": 3,
+    "cleanStopSeconds": [
+      0.216,
+      0.214,
+      0.214
+    ],
+    "expectedRefusals": 12,
+    "restarts": 2,
+    "savedSnapshotsVerified": 3,
+    "cleanParentOnlyStops": 3,
+    "recordedRemainingDescendants": 0,
+    "consoleDigestsVerified": 4,
+    "realFrameContacted": false
+  },
+  "framey-sample-runtime-ubuntu-24.04-arm": {
+    "head": "e09bc740fed04720590b8ade76f0251d54eda951",
+    "artifactId": 14112929204,
+    "zipSha256": "9e537c89193398d8562551f90654aa3053a9b52302ac3730a0397d6526148c18",
+    "inputHashesVerified": 21,
+    "deterministicArchiveVerified": true,
+    "rpcRecords": 21,
+    "postEofRpcVerified": 3,
+    "cleanStopSeconds": [
+      0.214,
+      0.214,
+      0.214
+    ],
+    "expectedRefusals": 12,
+    "restarts": 2,
+    "savedSnapshotsVerified": 3,
+    "cleanParentOnlyStops": 3,
+    "recordedRemainingDescendants": 0,
+    "consoleDigestsVerified": 4,
+    "realFrameContacted": false
+  }
+}

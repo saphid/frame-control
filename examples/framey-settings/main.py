@@ -36,9 +36,17 @@ def read_settings():
 
 
 class Plugin:
-    async def get_setting(self, key: str, default=False):
+    async def _main(self):
+        # Decky 3.3.0's child socket spins on peer EOF. Keep this repair inside
+        # this plugin process; the loader parent and other plugins are unchanged.
+        from framey_decky_ipc import install
+        install()
+
+    async def get_setting(self, key: str, default: bool = False):
         if key != 'enabled':
             raise ValueError('Unknown setting')
+        if type(default) is not bool:
+            raise ValueError('Expected a boolean default')
         value = read_settings().get(key)
         return value if type(value) is bool else default
 

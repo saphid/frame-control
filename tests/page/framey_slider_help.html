@@ -1,0 +1,62 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container),changes=[];
+  const render=props=>ReactDOM.flushSync(()=>root.render(React.createElement(DFL.SliderField,{
+    label:'Example level',description:'Saved by this example only.',value:50,min:0,max:100,step:25,
+    editableValue:true,resetValue:25,notchCount:5,
+    notchLabels:[{notchIndex:2,label:'Half'}],onChange:value=>changes.push(value),...props
+  })));
+  const range=()=>container.querySelector('input[type=range]');
+  const notes=()=>[...container.querySelectorAll('small')].map(node=>node.textContent);
+  const edit=(node,value)=>ReactDOM.flushSync(()=>{
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(node,String(value));
+    node.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  try {
+    const help='Choose a local level, for example <quiet> & balanced.';
+    render({tooltip:help});
+    assert(JSON.stringify(notes())===JSON.stringify(['Saved by this example only.',help]),
+      'slider help is missing beside the description');
+    const original=range(),number=container.querySelector('input[type=number]');
+    const reset=container.querySelector('button');
+    const helpNode=container.querySelector('small:last-child');
+    assert(helpNode.textContent===help&&helpNode.getBoundingClientRect().height>0,
+      'slider help is not visibly rendered without hover');
+    assert(!container.querySelector('quiet'),'slider help text was interpreted as markup');
+    assert(original.getAttribute('aria-valuetext')==='Half','help displaced the current notch caption');
+    original.focus();render({tooltip:'Updated help'});
+    assert(range()===original&&document.activeElement===original&&original.value==='50',
+      'help update replaced or reset the focused slider');
+    assert(container.querySelector('input[type=number]')===number&&container.querySelector('button')===reset,
+      'help update replaced editable/reset controls');
+    edit(original,75);edit(number,100);ReactDOM.flushSync(()=>reset.click());
+    assert(JSON.stringify(changes)==='[75,100,25]','help changed numeric or reset callbacks');
+    render({tooltip:'Help remains available while disabled.',disabled:true});
+    assert(range().disabled&&number.disabled&&reset.disabled&&notes().at(-1).includes('while disabled'),
+      'disabled slider lost help or enabled its controls');
+    edit(original,75);edit(number,100);ReactDOM.flushSync(()=>reset.click());
+    assert(changes.length===3,'disabled controls emitted a change');
+    for(const props of [{tooltip:null},{tooltip:undefined},{}]) {
+      render(props);
+      assert(JSON.stringify(notes())==='["Saved by this example only."]','removed tooltip left stale help');
+      assert(range()===original&&original.value==='50','help removal replaced or reset the slider');
+    }
+    render({tooltip:'Help only',description:undefined,editableValue:false,resetValue:undefined});
+    assert(JSON.stringify(notes())==='["Help only"]','help requires a description or optional actions');
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      documentedApi:'@decky/ui 4.16.0 SliderFieldProps extends ItemProps.tooltip',
+      visibleWithoutHover:true,descriptionPreserved:true,disabledHelp:true,escapedText:true,
+      helpUpdatesAndRemoval:true,stableNativeControlsAndFocus:true,numericCallbacksPreserved:true,
+      resetCallbackPreserved:true,notchCaptionPreserved:true,syntheticProps:true,
+      realBackendContacted:false,realFrameContacted:false,wornVisibilityVerified:false,
+      controllerInputVerified:false,vrKeyboardVerified:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

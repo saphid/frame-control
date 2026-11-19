@@ -1,0 +1,78 @@
+{
+  "sourceCommit": "551d26de0e52a9f41add92d94fd89c70f7aa46c2",
+  "changedSourceSha256": {
+    "tests/test_syncthing_http_gateway.py": "10db65f043e8c998b9c4bf742bef4a35f1d922c54836ecdbda04fabd72d9b444"
+  },
+  "change": "Correct the existing failure-reader test to charge preparation against its original deadline",
+  "testMethod": "test_hard_timeout_preserves_completed_parent_snapshot",
+  "allAstOutsideOneExistingTestMethodUnchanged": true,
+  "allProductionAndRuntimeProbeBytesUnchanged": true,
+  "controlledOriginalBudgetSeconds": 8,
+  "controlledPreparationSeconds": 0.25,
+  "controlledSubprocessRemainingSeconds": 7.75,
+  "partialSnapshotPhaseAndTimeoutAssertionsRetained": true,
+  "originalHostedFailedJobs": [
+    {
+      "jobId": 132967082445,
+      "name": "checks",
+      "run": 43764704431,
+      "attempt": 1,
+      "originalConclusion": "failure",
+      "failedMethod": "test_hard_timeout_preserves_completed_parent_snapshot",
+      "actualSubprocessRemainingSeconds": 7.991165834000071,
+      "outdatedExpectedSubprocessSeconds": 8,
+      "productionDeadlineViolationClaimed": false
+    },
+    {
+      "jobId": 132967082480,
+      "name": "server-tests (macos-latest, 3.12)",
+      "run": 43764704431,
+      "attempt": 1,
+      "originalConclusion": "failure",
+      "failedMethod": "test_hard_timeout_preserves_completed_parent_snapshot",
+      "actualSubprocessRemainingSeconds": 7.992372499999988,
+      "outdatedExpectedSubprocessSeconds": 8,
+      "productionDeadlineViolationClaimed": false
+    },
+    {
+      "jobId": 132967082649,
+      "name": "server-tests (ubuntu-latest, 3.13)",
+      "run": 43764704431,
+      "attempt": 1,
+      "originalConclusion": "failure",
+      "failedMethod": "test_hard_timeout_preserves_completed_parent_snapshot",
+      "actualSubprocessRemainingSeconds": 7.9923641450000105,
+      "outdatedExpectedSubprocessSeconds": 8,
+      "productionDeadlineViolationClaimed": false
+    }
+  ],
+  "originalHostedFailuresRetained": true,
+  "localOriginalRedReproduced": true,
+  "focusedMethods": 60,
+  "focusedSkips": 0,
+  "fullSuiteTests": 2548,
+  "fullSuiteSkips": 71,
+  "fullSuiteSeconds": 417.719,
+  "fullSuiteCleanupObservations": 4,
+  "firstSandboxLoopbackDenialsRetained": true,
+  "originalHeadRuntimeArtifactApprovals": 8,
+  "originalHeadExpectedRuntimeArtifacts": 14,
+  "originalArmTerminalBrowserArtifactHeld": 14182162961,
+  "originalArmRemovedScreenshotSha256": "9b4d0a56917520a9bd04c4eee4b4291832b09ff6b2cb9e3301c45e6b9af03cae",
+  "originalArmRemovedDomEmptyButScreenshotRowPresent": true,
+  "screenshotOrStartupCauseEstablished": false,
+  "screenshotOrStartupRepairEstablished": false,
+  "freshHeadNeedsOwnOriginalCiAndArtifacts": true,
+  "originalMainFailuresRemainUnqualified": true,
+  "wholeHeadQualified": false,
+  "mergeGatePassed": false,
+  "releaseQualified": false,
+  "newPluginOrVmRuntimeExecutions": 0,
+  "newHostedReruns": 0,
+  "physicalFrameOrWornProof": false,
+  "rawArchive": {
+    "path": "docs/evidence/framey-browser-failure-reader-budget-test-2026-11-15-raw.json.gz",
+    "sha256": "21b5a18af3d344e640b91efc0598ac7d75f3efc38e395ecd10bc20aaa7a17580",
+    "records": 10
+  }
+}

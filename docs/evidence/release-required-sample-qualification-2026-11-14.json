@@ -1,0 +1,71 @@
+{
+  "acceptedEvents": [
+    "push",
+    "workflow_dispatch"
+  ],
+  "baseCommit": "9b276419b6313debc4cf3b6db0d1361c6c9ca05b",
+  "candidateAndMainBaseTreesIdentical": true,
+  "green": {
+    "earlierFailedRunsAndAttemptsRefused": true,
+    "missingArchitectureJobRefused": true,
+    "pendingFailedCancelledSkippedRefused": true,
+    "publisherTests": 29,
+    "refusalsBeforeAnyMutation": true,
+    "releaseWorkflowTests": 12,
+    "sharedCheckoutTests": 41,
+    "skips": 0,
+    "staleCommitBranchAndPrResultsRefused": true,
+    "successfulPushAndManualRunsAccepted": true
+  },
+  "independentCandidateBase": "a1e2a9ac2ce716271d0cd281067abf8ab58500ad",
+  "originalGateSha256": "216798eb4bb19828ed8611c4d8ba69254bd3ccf5bc69ce6832707661042da0ea",
+  "problem": "The publisher ignored both dedicated sample workflows, allowing missing runtime or browser persistence qualification in publish and dry-run modes.",
+  "rawEvidence": {
+    "path": "docs/evidence/release-required-sample-qualification-2026-11-14.json.gz",
+    "recordSha256": {
+      "independentGreenPublisher": "1bdaf43d061bdec7673f7f7019d570df2fd64e7c32229cedb91e5dddf8a66a57",
+      "independentGreenWorkflow": "ab1a2f5e234b364802cb1259b20fed167227749f3c41eb136edf7162b0f45714",
+      "independentProof": "0edede45b559fb11b5f5e0c265241eb2d3bd2a95e15f765a581ce33d831bae90",
+      "independentRed": "cbc71b590fdc2240065fccbc2aa475c0d2e56608edd889af6ccec5b5179206dd",
+      "reviewedPatch": "f9f9decd77edf3ab4785259f629e653b445498d151d7c0cbf5889289381f6200",
+      "sharedCheckoutGreen": "6a8e34948432a1fb365369a6871a7ec83f317b416942dc54859387aeb94e5af5"
+    },
+    "sha256": "66a379e5b6738471319c98f41863083812be64e0616a54463e5155eb278539aa"
+  },
+  "red": {
+    "bothWorkflowsCovered": true,
+    "falseAcceptances": 4,
+    "publishAndDryRunCovered": true
+  },
+  "requiredWorkflows": {
+    "framey-sample-browser.yml": [
+      "sample-browser"
+    ],
+    "framey-sample-runtime.yml": [
+      "sample-runtime (ubuntu-24.04-arm)",
+      "sample-runtime (ubuntu-latest)"
+    ]
+  },
+  "scope": {
+    "disposableFakeGithubAndReleaseFixtures": true,
+    "hardwareQualificationProven": false,
+    "liveGithubMutation": false,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false
+  },
+  "sourceSha256": {
+    ".github/workflows/framey-sample-browser.yml": "0e011fe1240b74c2455692b4655ce51dd1983254d4b9118f02b8ef2c120fbd80",
+    ".github/workflows/framey-sample-runtime.yml": "3e5a45d5df4d64998e12457d42f104278e2ca1a945dd203ee19ad2acf246c385",
+    ".github/workflows/release.yml": "a0b483d28744e7c336f7fa97257b5e7d838d8f4d72375e9709af5f321917d561",
+    "docs/releasing.md": "c4245b040a77eaef01168e951dc1cf3796594c89b47cc7a156cc252da2c4bed9",
+    "scripts/publish-release.sh": "214cea2beab98ff547646fe6092bad89816a794ca42d20d9bb3f43d87e88d6e9",
+    "scripts/release-checksums.py": "682853c3918e410aa23928aa4136b6ac2eb836f14a93be3cd3e28f7c218172a3",
+    "scripts/release-safety-note.md": "0a72c2dbfc60d7fcf402b2220b1aceecde75579bfcdf5c2f09bc548bbf95b73e",
+    "scripts/verify-frame-smoke-result.py": "1408faf3bd79690a7a7d0304a518db8b058bb022d204fa80fd312ce301dea76d",
+    "scripts/verify-release-asset-audit.py": "86d2034216be10c53d01702b9760ca9cce0806c3a1eccdb3ac77182b47c735de",
+    "scripts/verify-release-gates.py": "e9175eabe52a5a194e398afbcb4ccde9e81a0e8a80383b33f768d1905332a0d4",
+    "tests/fakegh/gh": "ac5aff055270442c91b39c80fc2266b2d638097d1c62b8d0a864dd5abb7c0402",
+    "tests/test_publish_release.py": "7c1d4ae66eff10a0336a96523ebfcd3ee8c55f7261c90e75464da0baa9eafd62",
+    "tests/test_release_workflow.py": "6c734a9005d698d19d89df6fe62b97eecc3f5869ca9588f288398067e67c1981"
+  }
+}

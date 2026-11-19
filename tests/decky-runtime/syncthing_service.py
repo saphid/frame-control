@@ -65,6 +65,27 @@ def prop(unit, key):
 
 def decky_stop_snapshot(unit, logs, *, proc=Path('/proc'), cgroups=Path('/sys/fs/cgroup')):
     """Read bounded diagnostics only for the disposable fixture's own cgroup."""
+    def signal_status(directory):
+        # Masks describe the observed process/thread, not why a stop stalled.
+        # Do not retain names, credentials, memory maps, or other status fields.
+        try:
+            with (directory / 'status').open('rb') as stream:
+                raw = stream.read(4097)
+            bounded = raw[:4096]
+            if len(raw) > 4096 and not bounded.endswith(b'\n'):
+                bounded = bounded.rsplit(b'\n', 1)[0] if b'\n' in bounded else b''
+            masks = {}
+            for line in bounded.decode(errors='replace').splitlines():
+                key, separator, value = line.partition(':')
+                value = value.strip()
+                if (separator and key in ('SigPnd', 'ShdPnd', 'SigBlk', 'SigIgn', 'SigCgt')
+                        and 1 <= len(value) <= 16
+                        and all(character in '0123456789abcdefABCDEF' for character in value)):
+                    masks[key] = value
+            return {'masks': masks, 'truncated': len(raw) > 4096}
+        except OSError as error:
+            return {'error': type(error).__name__}
+
     if unit not in ('frame-control-decky.service', 'frame-control-migration-decky-fixture.service'):
         raise ValueError('Not an owned Decky fixture unit')
     group = prop(unit, 'ControlGroup')
@@ -87,10 +108,11 @@ def decky_stop_snapshot(unit, logs, *, proc=Path('/proc'), cgroups=Path('/sys/fs
             entry.update(state=before[0], parentPid=int(before[1]),
                          userTicks=int(before[11]), systemTicks=int(before[12]),
                          startTicks=int(before[19]), threads=[])
+            entry['signalStatus'] = signal_status(base)
             tasks = sorted((base / 'task').iterdir(), key=lambda path: int(path.name))
             entry['threadsTruncated'] = len(tasks) > 8
             for task in tasks[:8]:
-                thread = {'tid': int(task.name)}
+                thread = {'tid': int(task.name), 'signalStatus': signal_status(task)}
                 entry['threads'].append(thread)
                 for field, limit in (('wchan', 256), ('stack', 4096)):
                     try:
@@ -525,7 +547,7 @@ def main(signed_flatpak=False):
 
         if signed_flatpak and Path('/input/browser-panel.html').exists():
             from syncthing_browser import exercise
-            report['browserSetup'] = exercise(legacy_rpc, runtime_identity, service)
+            report['browserSetup'] = exercise(legacy_rpc, runtime_identity, service, key)
             saved = json.loads(legacy_rpc('get_settings_json'))
             assert saved['is_setup'] is True and saved['api_key'] == key and saved['port'] == 8384
             assert prop(service, 'MainPID') == '0'

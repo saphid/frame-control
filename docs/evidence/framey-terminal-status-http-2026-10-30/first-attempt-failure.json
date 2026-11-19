@@ -1,0 +1,15 @@
+{
+  "head": "d22e956c29928b6ed6903bcdbc848336de4b617a",
+  "sourceFingerprintsVerified": 166,
+  "packetSha256": "88114d691576452e57d257592f622aa2739077d3438ca09c756839084365adfc",
+  "packetVerified": true,
+  "ownedUserManagerStopped": true,
+  "ownedQemuReaped": true,
+  "productionStatusReached": false,
+  "browserInteractionReached": false,
+  "failedStrictPtyOutput": {
+    "markerHex": "6672616d65792d6f776e65642d7465726d696e616c0a",
+    "output": "printf 'framey-owned-terminal\\n' > framey-terminal-marker; stty size; printf 'framey-owned-output\\n'; printf 'framey-owned-stderr\\n' >&2\r\n$ 31 97\r\nframey-owned-output\r\nframey-owned-stderr\r\n$ "
+  },
+  "realFrameContacted": false
+}

@@ -43,7 +43,8 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
 
     handle=show(published());old=handlers;
     await old[0]();await settle();await handle.ClosedPromise;
-    assert(clearCalls===1&&!button('Clear'),'published action did not complete and dismiss once');
+    assert(clearCalls===1&&!button('Clear'),
+      `published action did not complete and dismiss once (calls=${clearCalls}, visible=${!!button('Clear')})`);
     await old[0]();assert(clearCalls===1,'completed confirmation repeated its backend action');
 
     pending=deferred();handle=show(published());old=handlers;

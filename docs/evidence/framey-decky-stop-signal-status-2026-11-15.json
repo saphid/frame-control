@@ -1,0 +1,81 @@
+{
+  "base": "a4ad1afbb84f32fb5f0c717c8b637d8c39a8a167",
+  "change": {
+    "existingOwnershipIdentityAndProcessThreadCapsPreserved": true,
+    "incompleteFinalLineOmitted": true,
+    "maskFields": [
+      "SigPnd",
+      "ShdPnd",
+      "SigBlk",
+      "SigIgn",
+      "SigCgt"
+    ],
+    "privateOwnedDiagnosticOnly": true,
+    "productionUnchanged": true,
+    "statusContentBytes": 4096,
+    "statusReadBytes": 4097,
+    "stopGatesBudgetsAndSignalDeliveryUnchanged": true,
+    "truncationReported": true,
+    "unavailableReadsRecorded": true
+  },
+  "problem": "Original #729 ARM signed-base migration stop exceeded the owned systemd budget after plugin unload. Existing snapshots lack signal masks; process roles and stop cause remain unproved.",
+  "rawEvidence": {
+    "decompressedSha256": "27ae17cc68f83068a6597c0324fd304c2d10b07c2fc9074a3e087fdcd8d0464a",
+    "path": "docs/evidence/framey-decky-stop-signal-status-2026-11-15.json.gz",
+    "recordEncoding": "Each UTF-8 record SHA256 binds its original decoded bytes. Failure payloads are limited to derived diagnostics and public metadata; raw credential-bearing logs/results are retained locally by hash.",
+    "recordSha256": {
+      "/tmp/frame-coordinator-turn79-729-failed/syncthing-flatpak-package-ubuntu-24.04-arm/artifact-api.json": "b867947015a0411794c7ed275d7796614a5546db211104686d3d971a9a12e88f",
+      "/tmp/frame-coordinator-turn79-729-failed/syncthing-flatpak-package-ubuntu-24.04-arm/zip-download-audit.json": "dd4df51ce07c68c289bbfc10989951671c93d161fee8b29c2028930d0a506101",
+      "/tmp/frame-coordinator-turn79-729-original-arm-base-failure-analysis.json": "d34cf49de33068a726d5c8373b26821253a84db2e82ff827b79f60889392c533",
+      "/tmp/frame-coordinator-turn79-729-original-base-canonical-transport.json": "f38f9e2d8faf775de58da11e8a633689443711ae7eaee63c64a6b3667ac91276",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/finalize-review.py": "f4f96318c947fcffdfe9ffe76d97c7d1aabf479266b225f65b230bce3de3e04a",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/full-focused-final.log": "cb80976651283d82ddf9d41b979cc27805ef3f3a56085f737fa2fe4299b29297",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/full-focused-incomplete-snapshot.log": "2e3234c07a403b2c270124d0b3d2418e6f8274f1de6c4b70889737dd478e5d60",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/green-final.log": "feec5d8230d131c1bb7b88da38535417aff5230d3ad2f5c797bb9a511e0ec457",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/original-red-initial-expectation.log": "a67d1578c209c44e50120407d03b46839adc2f603f3e3a00ca285726c454c21f",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/original-syncthing_service.py": "d118cb1bb06d7c8b2621052d712aed78f0b8523b34ea6e3f1565d5e1cfdbf383",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/red-final.log": "4ff9e6b3390481315d8d89d6d6fff05772ee5169ee3c27eb9ba15329d56b76c7",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/review.json": "36d33f0ee70bd59300cae37b0e0b33688ffad5e89802515ab1e6e70bcac25167",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/stop-signal-status.patch": "9a91553caa64d0d3a6db0fadc96377feff903b48098233096d3681eb6b63b99d",
+      "/tmp/frame-coordinator-turn79-stop-signal-candidate/tests/test_decky_stop_signal_status.py": "9037109357a175dd81b54da57653fb545edff9ab243c3c207dbb2d530ac29bd7"
+    },
+    "sha256": "c60a9f8a9afa6c77cdf4293bb8af211c53928afdf1bfea34eec71658f2ea7eb8"
+  },
+  "recordedAt": "2026-11-15T01:49:03.691613+00:00",
+  "scope": {
+    "managedInstallEnabled": false,
+    "realFrameContacted": false,
+    "releaseQualified": false,
+    "wornVrVerified": false
+  },
+  "sourceCommit": "dce997b4acd4092821c79c39e6168a6a5fe0be38",
+  "sourceSha256": {
+    ".github/workflows/checks.yml": "eac0e12bff2b1eb0cc3e26c4e4587d2868f857b09b6a047f36a39b28b6d33ea0",
+    ".github/workflows/syncthing-flatpak-package.yml": "2120cad283ca5c37c956daf05e591502bf2005dcb4fb7d47e18ebc1ef748a9b4",
+    "scripts/framey-test-syncthing-flatpak-package.py": "6849e4eddee91ee5414526e68c3ad48d4d4104611d00c63be8092fd100c5427b",
+    "tests/decky-runtime/syncthing_flatpak_package.py": "5498078bf4e1fee0c9451354c16ecd536df23637a603582867fa3e36c054d389",
+    "tests/decky-runtime/syncthing_migration.py": "3c24a27cf2ed55b05d157a503c6c4b353119f188a19f1eff0bc6050bedb663df",
+    "tests/decky-runtime/syncthing_service.py": "9b23644ee3b2ba2b9b0c701bde08508a9e5d7f7a4267a8680a0d69a9ad8058af",
+    "tests/test_decky_stop_signal_status.py": "9037109357a175dd81b54da57653fb545edff9ab243c3c207dbb2d530ac29bd7",
+    "tests/test_syncthing_flatpak_cleanup.py": "31b69918f09e4fc35c231bcafc1e4d2aa831990bd6d0c62e0a2092ab4ac8e31a"
+  },
+  "validation": {
+    "actualOwnedChildModes": [
+      "default",
+      "ignored",
+      "caught",
+      "blocked-pending"
+    ],
+    "candidatePasses": 6,
+    "focusedMethods": 27,
+    "historicalCauseEstablished": false,
+    "newHostedHeadQualificationRequired": true,
+    "newMethods": 6,
+    "originalFailures": 6,
+    "outsideDiagnosticAstUnchanged": true,
+    "processAndMainThreadMasksVerified": true,
+    "shutdownRepairEstablished": false,
+    "skips": 0,
+    "strictForcedTimeoutControlsRetained": true
+  }
+}

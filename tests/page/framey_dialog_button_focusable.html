@@ -1,0 +1,84 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture');
+  const SP_REACT=window.SP_REACT,DFL=window.DFL;
+  // The published component/helpers are verbatim. Audio is disabled by its
+  // own noAudio prop; all callbacks below are local, with no plugin backend.
+  __OFFICIAL_COMPONENT__
+  let root;
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const act=callback=>ReactDOM.flushSync(callback);
+  const key=(node,value)=>act(()=>node.dispatchEvent(new KeyboardEvent('keydown',
+    {key:value,bubbles:true,cancelable:true})));
+  try {
+    root=ReactDOM.createRoot(container);
+    const calls=[];
+    const custom=disabled=>React.createElement(CustomButton,{noAudio:true,disabled,
+      onClick:event=>calls.push(event.type)},'Local TabMaster action');
+    render(custom(false));
+    const outer=container.querySelector('.custom-button-container');
+    const inner=container.querySelector('button');
+    assert(outer.tabIndex===0&&outer.getAttribute('role')==='button','published wrapper lost its focus target');
+    assert(inner.tabIndex===-1,'published inner button adds a duplicate tab stop');
+    assert(!inner.hasAttribute('focusable'),'Decky focusable prop leaked onto native button');
+    act(()=>outer.focus());
+    assert(document.activeElement===outer&&inner.classList.contains('gpfocus'),'published focus styling missing');
+    act(()=>inner.click());
+    assert(calls.length===1&&calls[0]==='click','published pointer action did not run once');
+    key(outer,'Enter');key(outer,' ');
+    assert(calls.length===3&&calls.slice(1).every(type=>type==='keydown'),'published local keyboard action duplicated');
+    act(()=>outer.blur());
+    assert(!inner.classList.contains('gpfocus'),'published blur styling remained');
+    render(custom(true));
+    act(()=>inner.click());key(outer,'Enter');key(outer,' ');
+    assert(calls.length===3,'published disabled action ran');
+    // The Decky opt-out maps to local sequential focus only. It leaves
+    // native pointer and imperative activation intact. Native tabIndex is
+    // an explicit Framey escape hatch and takes precedence when supplied.
+    for(const name of ['DialogButton','DialogButtonPrimary','DialogButtonSecondary','Button']) {
+      const ref=React.createRef(),actions=[];
+      const button=props=>React.createElement(DFL[name],{ref,onOKButton:e=>actions.push(e.currentTarget),...props},name);
+      render(button({focusable:false}));
+      const node=container.querySelector('button');
+      assert(ref.current===node&&node.tabIndex===-1,name+' ref or opt-out missing');
+      act(()=>node.click());
+      assert(actions.length===1&&actions[0]===node,name+' opt-out suppressed native click');
+      act(()=>ref.current.focus());
+      assert(document.activeElement===node,name+' opt-out blocked imperative focus');
+      render(button({focusable:true}));
+      assert(ref.current===node&&node.tabIndex===0&&!node.hasAttribute('tabindex'),name+' opt-in did not restore native default');
+      render(button({focusable:false,tabIndex:0}));
+      assert(node.tabIndex===0,name+' explicit native tabIndex did not take precedence');
+      render(button({focusable:true,tabIndex:-1}));
+      assert(node.tabIndex===-1,name+' explicit native opt-out lost');
+      render(button({focusable:false}));
+      render(button({}));
+      assert(ref.current===node&&node.tabIndex===0&&!node.hasAttribute('tabindex'),name+' prop removal left stale opt-out');
+      render(button({focusable:false,disabled:true}));
+      act(()=>node.blur());act(()=>node.focus());act(()=>node.click());
+      assert(node.disabled&&document.activeElement!==node&&actions.length===1,name+' disabled focus/activation ran');
+      render(null);
+      assert(ref.current===null,name+' ref was not detached');
+    }
+    assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());root=null;
+    document.getElementById('result').textContent=JSON.stringify({passed:true,publishedInnerTabIndex:-1,
+      publishedOuterTabIndex:0,publishedFocusStyling:true,publishedPointerOnce:true,syntheticKeyboardOnce:true,
+      disabled:true,aliases:true,refs:true,propUpdatesAndRemoval:true,nativeTabIndexPrecedence:true,
+      realFrameContacted:false,physicalControllerTested:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

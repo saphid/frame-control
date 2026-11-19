@@ -1,0 +1,30 @@
+{
+  "sourceCommit": "5762647522ec2a41135e2248b72263d0192a8cc8",
+  "includes": [
+    706,
+    707
+  ],
+  "receiptSourcePreserved": true,
+  "sampleSourcePreserved": true,
+  "terminalUiAndProbeSourcePreserved": [
+    "ui/framey-host.js",
+    "ui/frame_steam.py",
+    "scripts/framey-test-terminal-browser.py",
+    "tests/decky-runtime/terminal_browser.py",
+    "tests/decky-runtime/terminal_http_parent.py",
+    "tests/decky-runtime/terminal_lifecycle.py",
+    "tests/decky-runtime/cases.json"
+  ],
+  "focusedTestsIncludingActualChromiumStartup": 162,
+  "storeTests": 122,
+  "totalTests": 284,
+  "skips": 0,
+  "frameContacted": false,
+  "freshHostedChecksRequired": true,
+  "localFullHttpVmReplayAtThisCombinedHead": false,
+  "logSha256": {
+    "focusedBrowser": "2eea6b9c01e8bc503bae8b8c705476f59658f92fee6b9ef7dcaf06fa0bc0433b",
+    "store": "b09965e5368e6f0be19ed3c87e9598a596038579d8190db58cab988d2f4ee7bb"
+  },
+  "compressedEvidenceSha256": "2c8a926a701863d220203e18a2ab3344a3808485fe2a7b3a09ca5099cc0eb099"
+}

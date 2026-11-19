@@ -1,0 +1,55 @@
+{
+  "baseCommit": "07c2e138d03cccaf55d8e941a0a747c2e3156c26",
+  "green": {
+    "completeFiveJobQualificationStillAccepted": true,
+    "failedCancelledSkippedArmBrowserRejectedBeforeMutation": true,
+    "missingArmBrowserRejectedBeforeMutation": true,
+    "publisherTests": 26,
+    "releaseWorkflowTests": 12,
+    "sharedCheckoutTests": 38,
+    "skips": 0
+  },
+  "originalGateSha256": "c89571f48779d4ee6e22762cf0b1f513834f5924f0eecc968b4eddd1fb6d04b8",
+  "problem": "A successful four-job signed-package run could omit the ARM64 browser HTTP job and still authorize the publisher dry run.",
+  "rawEvidence": {
+    "path": "docs/evidence/release-required-arm-browser-package-2026-11-14.json.gz",
+    "recordSha256": {
+      "independentGreenPublisher": "e91f0796ece3de3c8d7f0d8f119b6770d5e8d371b47ca6e23064cb7619242ded",
+      "independentGreenWorkflow": "ef4866f2a4310726479b679b81e9e96563710c84a8f16064266d06c9f51d24ec",
+      "independentProof": "8a59fefb9f288fa109b1e30842f559b6ebb5bd5677ef291190702ddc3f83efe5",
+      "independentRed": "c2df1118b5040aefe4716fd73d0bc0f51e2fba7c3e4e804863bd283567e4af80",
+      "reviewedPatch": "cca3c0048cb254d52082f1f68804d57efcb5534fed9b522ed54ba1ac2eb7d8e9",
+      "sharedCheckoutGreen": "6f2e6897af55f43e996f371063b075e90a2d4b768404719eb1dd4476529d0b4c"
+    },
+    "sha256": "52bc9c2674dffcc75f7cc29e1f8ac99de8eb5c6b12097be41ab32c1f566ccd87"
+  },
+  "red": {
+    "regression": "test_dry_run_also_requires_the_arm_signed_browser_job",
+    "returncode": 0,
+    "unmodifiedGateWronglyAcceptedMissingArmBrowserJob": true
+  },
+  "requiredSignedPackageJobs": [
+    "signed-package (ubuntu-24.04-arm)",
+    "signed-package (ubuntu-24.04-arm, browser HTTP)",
+    "signed-package (ubuntu-latest)",
+    "signed-package (ubuntu-latest, browser HTTP)",
+    "signed-package (ubuntu-latest, production parent HTTP)"
+  ],
+  "scope": {
+    "disposableFakeGithubAndReleaseFixtures": true,
+    "installerBehaviorProven": false,
+    "liveGithubMutation": false,
+    "physicalSmokeProven": false,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false
+  },
+  "sourceSha256": {
+    ".github/workflows/syncthing-flatpak-package.yml": "2120cad283ca5c37c956daf05e591502bf2005dcb4fb7d47e18ebc1ef748a9b4",
+    "docs/releasing.md": "62ddf5b9f13ca0d836920d32672bfc722a68ee0ceafb1eee8489b4d0a349ca05",
+    "scripts/publish-release.sh": "214cea2beab98ff547646fe6092bad89816a794ca42d20d9bb3f43d87e88d6e9",
+    "scripts/verify-release-gates.py": "216798eb4bb19828ed8611c4d8ba69254bd3ccf5bc69ce6832707661042da0ea",
+    "tests/fakegh/gh": "96aae41211c98d8ac7bf69ce66afd872d26e0cbac8e61e487d3d983a8f8e6edd",
+    "tests/test_publish_release.py": "d77b2f88916ebc13aaec0f1bbd455b36a9b7048475d4b47edfc3f0d734c139a8",
+    "tests/test_release_workflow.py": "6c734a9005d698d19d89df6fe62b97eecc3f5869ca9588f288398067e67c1981"
+  }
+}

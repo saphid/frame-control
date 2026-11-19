@@ -1,0 +1,174 @@
+{
+  "sourceCommit": "27d628708acc3cd9d041f5e83d189071ec00baae",
+  "changedSourceSha256": {
+    "tests/decky-runtime/syncthing_browser.py": "e18205935c49513e202fe91aba4977df786ee7d3c9cb2f3545abc49595d58961",
+    "tests/test_syncthing_browser_startup.py": "b225cfce82851293e5f61e6d7d56cfd9a0edb644a19466bb752424674869506e"
+  },
+  "allOtherAstUnchanged": true,
+  "browserFlag": "--disable-component-extensions-with-background-pages",
+  "traceComparison": {
+    "baseline": {
+      "path": "/tmp/frame-coordinator-turn176-native-startup-trace.json",
+      "sha256": "c167bf0091e00377dd42cc7680a276acdb45163ef10f5979801e153026f54507",
+      "bytes": 7261920,
+      "events": 18912,
+      "extensionEvaluations": [
+        {
+          "url": "chrome-extension://nkeimhogjdpnpccoofpliimaahmaaome/thunk.js",
+          "pid": 1772731,
+          "tid": 1,
+          "milliseconds": 1.152
+        },
+        {
+          "url": "chrome-extension://fignfifoniblkonapihmkfakmlgkbkcf/service_worker.js",
+          "pid": 1772752,
+          "tid": 10,
+          "milliseconds": 26.376
+        },
+        {
+          "url": "chrome-extension://fignfifoniblkonapihmkfakmlgkbkcf/tts_extension.js",
+          "pid": 1772752,
+          "tid": 10,
+          "milliseconds": 2.188
+        }
+      ],
+      "processes": [
+        {
+          "pid": 1772609,
+          "name": "Browser"
+        },
+        {
+          "pid": 1772650,
+          "name": "GPU Process"
+        },
+        {
+          "pid": 1772674,
+          "name": "Service: storage.mojom.StorageService"
+        },
+        {
+          "pid": 1772652,
+          "name": "Service: network.mojom.NetworkService"
+        },
+        {
+          "pid": 1772704,
+          "name": "Renderer"
+        },
+        {
+          "pid": 1772715,
+          "name": "Service: tracing.mojom.TracingService"
+        },
+        {
+          "pid": 1772731,
+          "name": "Extension Renderer"
+        },
+        {
+          "pid": 1772729,
+          "name": "Renderer"
+        },
+        {
+          "pid": 1772752,
+          "name": "Extension Renderer"
+        },
+        {
+          "pid": 1772764,
+          "name": "Renderer"
+        }
+      ]
+    },
+    "flagVariant": {
+      "path": "/tmp/frame-coordinator-turn176-no-background-components-native-startup-trace.json",
+      "sha256": "ff6607f08c3543f82378317de68e7187eb6efe2a54f4f0b04d539d8e6ad4ff4d",
+      "bytes": 6173355,
+      "events": 14771,
+      "extensionEvaluations": [],
+      "processes": [
+        {
+          "pid": 1792451,
+          "name": "Browser"
+        },
+        {
+          "pid": 1792492,
+          "name": "GPU Process"
+        },
+        {
+          "pid": 1792516,
+          "name": "Service: storage.mojom.StorageService"
+        },
+        {
+          "pid": 1792494,
+          "name": "Service: network.mojom.NetworkService"
+        },
+        {
+          "pid": 1792546,
+          "name": "Renderer"
+        },
+        {
+          "pid": 1792545,
+          "name": "Renderer"
+        },
+        {
+          "pid": 1792557,
+          "name": "Service: tracing.mojom.TracingService"
+        },
+        {
+          "pid": 1792577,
+          "name": "Renderer"
+        }
+      ]
+    },
+    "sameExactMainSources": true,
+    "singleNativeSamplePerVariant": true,
+    "baselineOverallProfilerPassed": false,
+    "baselineApplicationAssertionsPassed": true,
+    "variantTestPassed": true,
+    "variantOwnedCleanupVerified": true,
+    "sandboxRetained": true,
+    "originalArmFailureReproduced": false,
+    "historicalCauseEstablished": false,
+    "armSpeedupEstablished": false,
+    "releaseQualified": false
+  },
+  "controlledNativeBrowserTests": {
+    "methodsPassed": 3,
+    "skips": 0,
+    "browserLaunches": 5,
+    "sandboxedRendererRecords": 14,
+    "ownedLiveProcessesRemaining": 0,
+    "retainedFirstBatchSetupError": "Full frontend did not execute: pinned archive omitted from private packaging. Two other methods passed. Only the unexecuted frontend method ran after supplying the archive.",
+    "focusedMethodsPassed": 37,
+    "focusedBrowserMethodsSkippedLocally": 3,
+    "focusedSocketSandboxErrorRetained": true,
+    "singleSocketTestPassedOutsideRestrictedSandbox": true
+  },
+  "evidence": {
+    "rawArchive": "framey-probe-background-components-2026-11-15-raw.json.gz",
+    "rawArchiveSha256": "2752defa505cddf9d58c3d64a1b11c123c2cc37db279d3cd78de134a6e32722e",
+    "rawRecordCount": 15,
+    "rawRecordSha256": {
+      "frame-coordinator-turn176-exact-failed-browser-reconstruction.json": "17f92e3486d580b0395b0ff774c81794eccd23ee61dd278c094bd290894ffcd4",
+      "frame-coordinator-turn176-native-startup-trace-analysis.json": "385722ddf3d607b8fa7be1eda09da7b9d9d8a7985fd9bc98e412ecfd92a82fb0",
+      "frame-coordinator-turn176-native-background-component-comparison.json": "a12af00be3f51004b126520a4deeea9a58e335f7133ee64885eeb8f054f1986f",
+      "frame-coordinator-turn176-no-background-components-profile-qualification.json": "635413743792e491738bb92e5560136910773f30560c6d42d5a1b9898c990191",
+      "frame-coordinator-turn176-no-background-components-profile.log": "b305dd51c2cb371865aa697aeafe2944d396accc10bf7542d0aaf04620a0cd57",
+      "frame-coordinator-turn176-browser-components-source-review.json": "008f52c932836a21696ccc2b2dfa225e09c21970e8fd38098a6a47c115985310",
+      "frame-coordinator-turn176-browser-components-regression-qualification.json": "4d6d4b98b5b6575dc2ce120ebb12e7a3582dd7feaa9b73e2327040d7883e5ed0",
+      "frame-coordinator-turn176-browser-components-regression.log": "43db6c301d90a34627c595e52dfecd9b5c1d36405c2aae301ad03dea8a602816",
+      "frame-coordinator-turn176-browser-components-frontend-regression-qualification.json": "3c597ba37128def51ab693b28b8c8417e2257a2c36818c0d15e8e79e2157981b",
+      "frame-coordinator-turn176-browser-components-frontend-regression.log": "e60ddb0266887535182f3ff92310b57d97813aff8eded63cada84609863e9027",
+      "frame-coordinator-turn176-browser-components-focused.log": "fb0b8abf175a349199f86067df912a503828751a6ae031245484bdafc9cfbf3d",
+      "frame-coordinator-turn176-browser-components-socket-recheck.log": "34789db9f9182590d570e28015a7fcbbf97d59fe6fe5bd422fac6557fb11a9c1",
+      "frame-coordinator-turn176-actual-owned-group-cleanup.json": "57d35e40102de3f384b43bc245ce1d6ce2ed10aeb633a71862f50d8171cb00bb",
+      "frame-coordinator-turn176-exact-startup-profile.log": "e2138d4a9d93c25831d38be3f6015e6060dccd5c96bfedc1bd399637d6f34c45",
+      "frame-coordinator-turn176-exact-startup-profile-v2.log": "877f5e6191119bf1288cbbd20e813e19105a4ab907900b1d1ae1135489229876"
+    }
+  },
+  "productionChanged": false,
+  "readinessBudgetSeconds": 60,
+  "rpcBudgetSeconds": 8,
+  "historicalArmFailureReproduced": false,
+  "historicalCauseEstablished": false,
+  "armStartupRepairEstablished": false,
+  "performanceImprovementEstablished": false,
+  "realFrameContacted": false,
+  "releaseQualified": false
+}

@@ -28,9 +28,12 @@ RELEASE_JOBS = {
 }
 DECKY_JOBS = {"decky-runtime (ubuntu-latest)", "decky-runtime (ubuntu-24.04-arm)"}
 OWNERSHIP_JOBS = {"owned-watchdog (ubuntu-latest)", "owned-watchdog (ubuntu-24.04-arm)"}
+SAMPLE_RUNTIME_JOBS = {"sample-runtime (ubuntu-latest)", "sample-runtime (ubuntu-24.04-arm)"}
+SAMPLE_BROWSER_JOBS = {"sample-browser"}
 SIGNED_PACKAGE_JOBS = {
     "signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
     "signed-package (ubuntu-latest, browser HTTP)",
+    "signed-package (ubuntu-24.04-arm, browser HTTP)",
     "signed-package (ubuntu-latest, production parent HTTP)",
 }
 
@@ -120,9 +123,9 @@ def main(tag, smoke_result):
     if not smoke_result:
         raise GateError("FRAME_SMOKE_RESULT is required for the locked real Frame smoke gate")
     sha = tag_commit(tag)
-    # Path filters may omit the ownership and signed-package workflows on a
+    # Path filters may omit ownership, signed-package and sample workflows on a
     # version-only main commit; manual runs there supply the same runtime/package
-    # proof. Neither a PR result nor an older commit can satisfy this gate.
+    # and sample persistence proof. Neither a PR result nor an older commit can satisfy this gate.
     # A later successful run must not conceal failed, cancelled, skipped or
     # unfinished work at this same release commit, in any required workflow.
     requirements = (
@@ -130,6 +133,8 @@ def main(tag, smoke_result):
         ("decky-runtime.yml", "main", "push", DECKY_JOBS),
         ("syncthing-candidate.yml", "main", ("push", "workflow_dispatch"), OWNERSHIP_JOBS),
         ("syncthing-flatpak-package.yml", "main", ("push", "workflow_dispatch"), SIGNED_PACKAGE_JOBS),
+        ("framey-sample-runtime.yml", "main", ("push", "workflow_dispatch"), SAMPLE_RUNTIME_JOBS),
+        ("framey-sample-browser.yml", "main", ("push", "workflow_dispatch"), SAMPLE_BROWSER_JOBS),
         ("release.yml", tag, "push", RELEASE_JOBS),
     )
     for workflow, branch, events, required in requirements:

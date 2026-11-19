@@ -1,0 +1,34 @@
+{
+  "sourceCommit": "a716af1a78c520c33966e1d9d12ec8af98f78985",
+  "baseCommit": "5adf2271ed901aa1d522f563a89015ae718e6019",
+  "applySha256": "78a82e9a7008770f382314aff89b6f626df457a23fa4b300a194612ee9853c03",
+  "createdAt": "2026-11-14T11:31:41.843211+00:00",
+  "rawEvidence": "docs/evidence/framey-transaction-receipt-bounds-2026-11-14.json.gz",
+  "rawEvidenceSha256": "5781ffd1990dbb9b0dcd477833b6929e4e4076d79c1cdff657a1cac362009626",
+  "logSha256": {
+    "cap-red": "5b62e435e2145b2d9cef33419cfae36273f4f6ab55b9288119d2e7b4e5596ff2",
+    "peer-main-red": "d5deeca10aaef17a17e2fe40eeffca69a60b963b1907ade0ee54293ec01f3b80",
+    "focused-green": "c3e5a38a472056424e68011cae72b7b12fe203ba4097be6ced64e40a59289d0c",
+    "exact-head-green": "245368055877e7cfacd8521a49fbb6ee0a62eca01f0ddb059bcbe6ef848e4daf"
+  },
+  "red": {
+    "oversizedTargets": 4,
+    "unboundedPeerRead": 1,
+    "baseline": "unchanged main production APPLY with new regression tests"
+  },
+  "green": {
+    "exactSourceFullSuite": 122,
+    "finalReceiptSubset": 7
+  },
+  "verified": [
+    "Oversized ASCII and multibyte UTF-8 receipts refuse Update and Remove before service stop",
+    "Refusals preserve plugin files and receipt bytes and release transaction lock",
+    "Repairing receipt permits retry",
+    "Exactly 16384 bytes can authorize Update and Remove",
+    "Peer scan requests at most 16385 bytes and preserves oversized neighbor"
+  ],
+  "limits": [
+    "Synthetic homes and service commands; no real headset contacted",
+    "No native loader, controller, worn visibility, scrolling, or VR keyboard claim"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "baseCommit": "9c2ac94916bc7158f3543c4e63c26a44257a4bd3",
+  "change": "Assert the same cancellation and error instance inside the coroutine awaiting the observer. Keep identity checks for both exceptions; leave runtime instrumentation unchanged.",
+  "failedHostedRun": {
+    "attempt": 1,
+    "failures": 1,
+    "head": "9c2ac94916bc7158f3543c4e63c26a44257a4bd3",
+    "id": 43602728813,
+    "jobId": 132470836002,
+    "logSha256": "715f65d2fcd03731cfd9c5562afefdf34756ff3b23f8871d5bc3422b84f67dd5",
+    "skips": 32,
+    "tests": 2440
+  },
+  "originalTestSha256": "64bda37445b004e8c459abbc01446a27304726216836a4d34c3344bd15cecc9e",
+  "problem": "Python 3.9 replaces CancelledError at asyncio.run task-result retrieval; the old test asserted identity after that unrelated boundary.",
+  "rawEvidence": {
+    "path": "docs/evidence/framey-terminal-python39-cancellation-test-2026-11-14.json.gz",
+    "recordSha256": {
+      "greenPython312": "0611e0462d59d23758480f0920982fdd3c666cc07b156c2361cf17c9be8e416e",
+      "greenPython39": "7f77df7e46dcfe478878d5e80a8eec0abc8fe42976d90ba6c4c61009a5d88544",
+      "localRedPython39": "baaf28c696ec8894763d13f265742b2d03bb136120a2aa832ae096fe98e07aad",
+      "negativeControl": "3c52a4103ad3846d87da048fea2fdf732aa453e0f26976d7215328f74d44e306",
+      "negativeControlScript": "1dedf6631d6d6a975f3b571643af165bc5c6b966ea32a7faaa17ed55a86e1320",
+      "retainedCiFailure": "32bb713fd11f22e15922696e2e7f8e13ad2930c73cc36900377eec840254e342"
+    },
+    "sha256": "a593407c56f89d053adc1d4d3c639ddccbb20e6322225dd28868d7dd9cc340da"
+  },
+  "sourceSha256": {
+    "tests/decky-runtime/check.py": "e80bbf38cb1918fcace756d9f237c89a0e4dad9ae35fd8f3c99e90b9c89225dd",
+    "tests/decky-runtime/terminal_candidate.py": "52818088c2b9109980fde3e404d4fdbc835027389dc218e07efbc3f4761bb775",
+    "tests/decky-runtime/terminal_lifecycle.py": "0676b504ec3e86016a1e252e057802c9545aa37710b7ce069929bdc69a5979d1",
+    "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+    "tests/test_terminal_initial_rpc.py": "c53e0d320bb0291d69e663dc80c647f6a498c2fcd7437f8e508e4bb351810307"
+  },
+  "validation": {
+    "cancellationReplacementNegativeControlRejected": true,
+    "focusedTestsPerInterpreter": 11,
+    "localRedPython39": true,
+    "originalIdentityAssertionPreserved": true,
+    "python312Version": "3.12.3",
+    "python39Version": "3.9.25",
+    "receiveDeadlineUnchanged": true,
+    "releaseHoldCleared": false,
+    "retainedArmBrowserFailureCauseProven": false,
+    "retryAdded": false,
+    "runtimeObserverUnchanged": true,
+    "skips": 0
+  }
+}

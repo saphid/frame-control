@@ -12,9 +12,11 @@ import base64
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import threading
+import time
 
 import gi
 from gi.repository import Gio, GLib
@@ -39,13 +41,42 @@ def pins(arch):
     return {"app": fetcher.payload.COMMITS[arch], "runtime": RUNTIMES[arch]}
 
 
-def run(args, timeout=600):
-    result = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
-    if result.returncode:
-        raise RuntimeError(
-            str(args) + ": " + result.stdout[-3000:] + result.stderr[-3000:]
-        )
-    return result.stdout
+def run(args, timeout=600, observations=None):
+    """Retain completed-child CPU and elapsed time without retrying a command.
+
+    Child CPU is the os.times() waited-child delta, including children the
+    command itself waited for. It is not a live sample or a progress gate.
+    """
+    started = time.monotonic()
+    before = os.times()
+    observation = {"args": list(args), "timeoutSeconds": timeout,
+                   "success": False, "timedOut": False}
+    try:
+        result = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+        observation["returncode"] = result.returncode
+        if result.returncode:
+            observation["stdoutTail"] = result.stdout[-3000:]
+            observation["stderrTail"] = result.stderr[-3000:]
+            raise RuntimeError(
+                str(args) + ": " + result.stdout[-3000:] + result.stderr[-3000:]
+            )
+        observation["success"] = True
+        return result.stdout
+    except subprocess.TimeoutExpired as error:
+        observation["timedOut"] = True
+        for field, value in (("stdoutTail", error.stdout), ("stderrTail", error.stderr)):
+            # TimeoutExpired may carry bytes even when text=True.
+            observation[field] = (value[-3000:].decode("utf-8", "replace")
+                                  if isinstance(value, bytes) else (value or "")[-3000:])
+        raise
+    finally:
+        after = os.times()
+        observation.update(elapsedSeconds=time.monotonic()-started,
+                           waitedChildUserCpuSeconds=max(0, after.children_user-before.children_user),
+                           waitedChildSystemCpuSeconds=max(0, after.children_system-before.children_system))
+        if observations is not None:
+            observations.append(observation)
+        print("FRAMEY_PREPARATION_COMMAND_JSON=" + json.dumps(observation), flush=True)
 
 
 def public_key(descriptor):
@@ -237,25 +268,30 @@ def bundle(directory, output, arch):
     key.write_bytes(public_key(directory / "flathub.flatpakrepo"))
     repo = output / "repo"
     command = ["ostree", "--repo=" + str(repo)]
-    run(command + ["init", "--mode=archive-z2"])
-    run(
-        command + ["remote", "add", "--gpg-import=" + str(key), "flathub", fetcher.BASE]
-    )
-    (repo / "objects").rmdir()
-    (repo / "objects").symlink_to(objects, target_is_directory=True)
-    repository = OSTree.Repo.new(Gio.File.new_for_path(str(repo)))
-    repository.open(None)
     report = {
         "architecture": arch,
         "commits": pins(arch),
         "signatures": {},
         "bundles": {},
+        "commands": [],
+        "commandCpuScope": "os.times waited-child delta; not a live progress sample",
         "payloadIntegrityVerified": False,
         "packageInstalled": False,
         "packageLaunched": False,
         "keySha256": fetcher.payload.KEY_SHA256,
     }
+    def checked(args):
+        return run(args, observations=report["commands"])
+
     try:
+        checked(command + ["init", "--mode=archive-z2"])
+        checked(
+            command + ["remote", "add", "--gpg-import=" + str(key), "flathub", fetcher.BASE]
+        )
+        (repo / "objects").rmdir()
+        (repo / "objects").symlink_to(objects, target_is_directory=True)
+        repository = OSTree.Repo.new(Gio.File.new_for_path(str(repo)))
+        repository.open(None)
         for kind, commit in pins(arch).items():
             data = (objects / commit[:2] / (commit[2:] + ".commit")).read_bytes()
             if hashlib.sha256(data).hexdigest() != commit:
@@ -280,8 +316,8 @@ def bundle(directory, output, arch):
             if not verified.require_valid_signature() or verified.count_valid() < 1:
                 raise ValueError("No valid Flathub signature")
             report["signatures"][kind] = verified.count_valid()
-            run(command + ["refs", "--create=" + ref, commit])
-        report["fsck"] = run(command + ["fsck", "--all", "--verify-bindings"])
+            checked(command + ["refs", "--create=" + ref, commit])
+        report["fsck"] = checked(command + ["fsck", "--all", "--verify-bindings"])
         for kind, commit in pins(arch).items():
             name = fetcher.payload.APP if kind == "app" else "org.gnome.Platform"
             target = output / (kind + ".flatpak")
@@ -293,7 +329,7 @@ def bundle(directory, output, arch):
             ]
             if kind == "runtime":
                 args.append("--runtime")
-            run(
+            checked(
                 args
                 + [str(repo), str(target), name, "stable" if kind == "app" else "49"]
             )

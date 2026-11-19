@@ -1,0 +1,69 @@
+{
+  "installedPanelStatusRouteVerified": true,
+  "head": "55f42a50cca9c3a7309cf2c285f704a1c70392aa",
+  "architecture": "x86_64",
+  "sourceFingerprintsVerified": 166,
+  "bootstrapVerified": true,
+  "resultPacketSha256": "0caa2cd0ba8bfcc26f73bbb714078f9a32b5ca15fa86d64ed7ab3dce72671626",
+  "resultPacketVerified": true,
+  "actualNativeLifecycleVerified": true,
+  "productionHttpAndEventRoundTripVerified": true,
+  "statusRequests": [
+    {
+      "startedAfterSeconds": 47.611,
+      "elapsedSeconds": 3.597,
+      "httpStatus": 200,
+      "running": true,
+      "pluginCount": 1
+    }
+  ],
+  "ownedDeckyStop": {
+    "mainPidBefore": 339,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 8.272
+  },
+  "allOwnedCleanupVerified": true,
+  "captureSha256": {
+    "terminal": "d296fe615da75713bc9b228189081d84b46fbd10347837efe30aa3546b068bb9",
+    "output": "f00ccae897d201525e9f423b9295745db88f037a01f830cdc40ee959b832796e",
+    "removed": "48e3e61b0daf514063e301081175d146dd1347569c5fdf531c7e705a4eda7b67"
+  },
+  "capturesVisuallyInspected": true,
+  "syntheticCef": true,
+  "syntheticManagedReceipt": true,
+  "syntheticInput": true,
+  "managedInstallVerified": false,
+  "productionAdaptationEnabled": false,
+  "realSteamCef": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "nativeArmVerified": false,
+  "allThreeCapturesInspected": true,
+  "methodRequestCount": 14,
+  "eventRequestCount": 8,
+  "passiveProfileKindsVerified": true,
+  "passiveProfileCounts": {
+    "decky-status": 23,
+    "panel-method": 14,
+    "panel-events": 8
+  },
+  "failureOnlyDiagnosticInvoked": false,
+  "failureOnlyDiagnosticNativeRuntimeVerified": false,
+  "armTimeoutRootCauseProven": false,
+  "runnerExitCode": 0,
+  "all166SourceHashesVerified": true,
+  "rawDeckyConsoleComplete": false,
+  "cleanLoaderConsoleClaimed": false,
+  "retainedStderrMarkers": {
+    "Bad file descriptor": 0,
+    "Error during shutdown:": 0,
+    "CancelledError": 0,
+    "FileNotFoundError": 0
+  }
+}

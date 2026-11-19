@@ -57,6 +57,7 @@
   const routes = new Map();
   const routeListeners = new Set();
   const routeHistory = [];
+  let routeId = 0;
   let currentRoute = null;
   let currentParams = {};
   let nextId = 0;
@@ -395,6 +396,17 @@
   }, {passive:true});
 
   const passthrough = tag => ({children, ...props}) => R.createElement(tag, props, children);
+  // DialogCommonProps declares a ref. Expose each existing native wrapper
+  // without changing its tag, props or child lifecycle.
+  const dialogContainer = tag => R.forwardRef(function DialogContainer({children, ...props}, ref) {
+    return R.createElement(tag, {...props, ref}, children);
+  });
+  const dialogContainers = {
+    DialogBody:dialogContainer('div'), DialogBodyText:dialogContainer('p'),
+    DialogHeader:dialogContainer('h2'), DialogSubHeader:dialogContainer('h3'),
+    DialogFooter:dialogContainer('footer'), DialogLabel:dialogContainer('label'),
+    DialogControlsSection:dialogContainer('section'), DialogControlsSectionHeader:dialogContainer('h3'),
+  };
   const ScrollPanel = R.forwardRef(function ScrollPanel({children, ...props}, ref) {
     return R.createElement('div', {...props, ref}, children);
   });
@@ -405,8 +417,11 @@
   // uses it as a fallback; keep an explicit click handler authoritative and
   // pass the original click event rather than fabricating gamepad input.
   // The real forwardRef render also supports legacy render({}).type lookup.
-  const DialogButton = R.forwardRef(function DialogButton({children, disabled, onClick, onOKButton, ...props}, ref) {
+  const DialogButton = R.forwardRef(function DialogButton({children, disabled, focusable, tabIndex, onClick, onOKButton, ...props}, ref) {
+    // Composite controls can own focus on their outer wrapper. Opt the inner
+    // button out of sequential focus, unless a native tabIndex is explicit.
     return R.createElement('button', {...props, ref, type:'button', disabled:!!disabled,
+      tabIndex:tabIndex ?? (focusable===false ? -1 : undefined),
       onClick:event=>{if(!disabled)(onClick || onOKButton)?.(event);}}, children);
   });
   const Focusable = R.forwardRef(function Focusable(
@@ -464,24 +479,72 @@
   const dropdownOptionRows = (options, path=[]) => (Array.isArray(options) ? options : [])
     .flatMap(entry=>Array.isArray(entry.options)
       ? dropdownOptionRows(entry.options,[...path,entry]) : [{entry,path}]);
-  const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
-    const rows=dropdownOptionRows(rgOptions), choices=rows.map(row=>row.entry), sections=[];
+  // Native optgroup labels are strings. Render rich labels through React in
+  // hidden spans, then mirror their text into the native group heading.
+  const dropdownPlainLabel = label => typeof label==='string' || typeof label==='number'
+    ? String(label) : label==null || typeof label==='boolean' ? '' : null;
+  const DropdownGroupText = ({label, onText}) => {
+    const node=R.useRef(null);
+    R.useLayoutEffect(()=>{
+      let active=true;
+      const read=()=>{if(active && node.current)onText(node.current.textContent);};
+      read();
+      const observer=new MutationObserver(read);
+      observer.observe(node.current,{childList:true,characterData:true,subtree:true});
+      return ()=>{active=false;observer.disconnect();};
+    },[label]);
+    return R.createElement('span',{ref:node,hidden:true,'aria-hidden':true,style:{display:'none'}},label);
+  };
+  const dropdownTabIndex = focusable => typeof focusable==='boolean' ? (focusable ? 0 : -1) : undefined;
+  const DropdownNativeInput = ({rows, label, menuLabel, selectedOption, disabled, focusable, strDefaultLabel, onChange, groupText}) => {
+    const choices=rows.map(row=>row.entry), sections=[];
     rows.forEach(({entry,path},index)=>{
       if (sections.at(-1)?.path!==path) sections.push({path,options:[]});
       sections.at(-1).options.push(R.createElement('option', {key:index, value:String(index)}, entry.label));
     });
+    const groupLabel=group=>{
+      const plain=dropdownPlainLabel(group.label), cached=groupText?.get(group);
+      return plain!==null ? plain : cached && Object.is(cached.label,group.label) ? cached.text : '';
+    };
     // Native selects cannot nest optgroups. Keep each contiguous run of
     // leaves in source order, with its full group path as a visible label.
     const entries=sections.map(({path,options},index)=>path.length
-      ? R.createElement('optgroup', {key:index, label:path.map(group=>group.label).join(' › ')}, options)
+      ? R.createElement('optgroup', {key:index, label:path.map(groupLabel).join(' › ')}, options)
       : options);
     const selected=choices.findIndex(entry=>Object.is(entry.data, selectedOption));
     return R.createElement('select', {
-      value:selected < 0 ? '' : String(selected), disabled:!!disabled,
+      value:selected < 0 ? '' : String(selected), disabled:!!disabled, tabIndex:dropdownTabIndex(focusable),
       'aria-label':typeof menuLabel==='string' ? menuLabel : typeof label==='string' ? label : undefined,
       onChange:e=>{const entry=choices[Number(e.target.value)];if(!disabled && entry)onChange?.(entry);}},
       selected < 0 && R.createElement('option', {value:'', disabled:true}, strDefaultLabel || 'Choose an option'),
       entries);
+  };
+  const DropdownRichInput = props => {
+    const {richGroups}=props;
+    const [groupText,setGroupText]=R.useState(new Map());
+    const groupKeys=R.useRef(new WeakMap()), nextGroupKey=R.useRef(0);
+    R.useEffect(()=>{
+      setGroupText(previous=>[...previous.keys()].every(group=>richGroups.has(group))
+        ? previous : new Map([...previous].filter(([group])=>richGroups.has(group))));
+    });
+    const hiddenLabels=[...richGroups].map(group=>{
+      if(!groupKeys.current.has(group))groupKeys.current.set(group,++nextGroupKey.current);
+      const label=group.label;
+      return R.createElement(DropdownGroupText,{key:groupKeys.current.get(group),label,onText:text=>{
+        setGroupText(previous=>{
+          const old=previous.get(group);
+          if(old && Object.is(old.label,label) && old.text===text)return previous;
+          const next=new Map(previous);next.set(group,{label,text});return next;
+        });
+      }});
+    });
+    return R.createElement(R.Fragment,null,hiddenLabels,DropdownNativeInput({...props,groupText}));
+  };
+  const DropdownInput = props => {
+    const rows=dropdownOptionRows(props.rgOptions);
+    const richGroups=new Set(rows.flatMap(row=>row.path).filter(group=>dropdownPlainLabel(group.label)===null));
+    return richGroups.size ? R.createElement(DropdownRichInput,{...props,rows,richGroups})
+      : DropdownNativeInput({...props,rows});
   };
   // Some plugins populate rgOptions only after their onMenuWillOpen read.
   // A native select cannot wait for that async gate, so prepare choices first.
@@ -519,10 +582,10 @@
       } catch (failure) {failed(failure);}
     };
     return R.createElement('div', null,
-      R.createElement('button', {type:'button', disabled:!!props.disabled || phase==='loading', onClick:load},
+      R.createElement('button', {type:'button', tabIndex:dropdownTabIndex(props.focusable), disabled:!!props.disabled || phase==='loading', onClick:load},
         phase==='ready' ? 'Reload options' : 'Load options'),
       phase==='loading' && R.createElement('p', {role:'status'}, 'Waiting for plugin options…'),
-      phase==='loading' && R.createElement('button', {type:'button', disabled:!!props.disabled, onClick:cancel}, 'Cancel loading'),
+      phase==='loading' && R.createElement('button', {type:'button', tabIndex:dropdownTabIndex(props.focusable), disabled:!!props.disabled, onClick:cancel}, 'Cancel loading'),
       error && R.createElement('p', {role:'alert'}, error),
       phase==='ready' && DropdownInput({...props, onChange:entry=>{
         if (!current.current.disabled && gate.current.phase==='ready' && gate.current.mounted)
@@ -532,22 +595,27 @@
   const DropdownItem = props => {
     const choices=dropdownOptionRows(props.rgOptions).map(row=>row.entry);
     const selected=choices.find(entry=>Object.is(entry.data,props.selectedOption));
-    return R.createElement(Field, {label:props.label, description:props.description},
+    return R.createElement(Field, {label:props.label, description:props.description, icon:props.icon},
       // Keep the plugin's current-value view visible before a deferred read.
       // Native selection and the existing showMenu gate still own choices.
       typeof props.renderButtonValue==='function' && R.createElement('div', null,
         props.renderButtonValue(selected ? selected.label : props.strDefaultLabel || 'Choose an option')),
-      typeof props.onMenuWillOpen==='function' ? R.createElement(PreparedDropdown, props) : DropdownInput(props));
+      typeof props.onMenuWillOpen==='function' ? R.createElement(PreparedDropdown, props) : DropdownInput(props),
+      props.tooltip != null && R.createElement('small', null, props.tooltip));
   };
-  const ButtonItem = ({label, description, icon, style, children, disabled, onClick}) => R.createElement(Field, {label, description, icon, style},
+  const ButtonItem = ({label, description, tooltip, icon, style, children, disabled, onClick}) => R.createElement(Field, {label, description, icon, style},
     R.createElement('button', {type:'button', disabled:!!disabled,
-      onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
-  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange, onClick, className, style}) =>
-    R.createElement('label', {className, style},
+      onClick:e=>{if(!disabled)onClick?.(e);}}, children || label),
+    tooltip != null && R.createElement('small', null, tooltip));
+  const DialogCheckbox = R.forwardRef(function DialogCheckbox({label, description, tooltip, checked, defaultChecked, disabled, onChange, onClick, className, style}, ref) {
+    return R.createElement('label', {ref, className, style},
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
         onClick:event=>{if(!disabled)onClick?.(event);},
-        onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
-  const TextField = R.forwardRef(function TextField({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
+        onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label,
+      description != null && R.createElement('small', null, description),
+      tooltip != null && R.createElement('small', null, tooltip));
+  });
+  const TextField = R.forwardRef(function TextField({label, requiredLabel, description, tooltip, value, defaultValue, placeholder, disabled, tabIndex, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
     rangeMin, rangeMax, maxLength, minLength, pattern, required,
     bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls, style,
@@ -557,6 +625,8 @@
     // The getter also retires retained handles when the native input unmounts.
     R.useImperativeHandle(ref, () => ({
       get element() {return input.current;},
+      // Published Terminal initializes its hidden input through this alias.
+      get m_elInput() {return input.current;},
       Focus:() => input.current?.focus(),
     }), []);
     const [draft, setDraft] = R.useState(defaultValue ?? '');
@@ -568,9 +638,13 @@
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(node, '');
       node.dispatchEvent(new Event('input', {bubbles:true}));
     };
-    return R.createElement(Field, {label, description, style},
+    // Decky's requiredLabel is author-supplied React content, independent of
+    // native input validation. Keep it inside the same label as the input.
+    const annotatedLabel = requiredLabel == null || typeof requiredLabel==='boolean' ? label :
+      R.createElement(R.Fragment, null, label, ' ', R.createElement('span', null, requiredLabel));
+    return R.createElement(Field, {label:annotatedLabel, description, style},
       R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
-        ref:input, autoFocus:!!focusOnMount && !disabled,
+        ref:input, autoFocus:!!focusOnMount && !disabled, tabIndex,
         min:rangeMin, max:rangeMax, maxLength, minLength, pattern, required,
         value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
         onChange:e=>{if(!disabled){if(bShowClearAction && value==null)setDraft(e.currentTarget.value);onChange?.(e);}},
@@ -580,9 +654,9 @@
       bShowClearAction && (bAlwaysShowClearAction || String(value ?? draft).length>0) &&
         R.createElement('button', {type:'button', disabled:!!disabled, onClick:clear,
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
-      inlineControls);
+      inlineControls, tooltip != null && R.createElement('small', null, tooltip));
   });
-  const SliderField = ({label, description, icon, className, value, min=0, max=100, step=1, disabled, showValue, editableValue,
+  const SliderField = ({label, description, tooltip, icon, className, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, notchCount, notchLabels, notchTicksVisible, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
@@ -619,7 +693,8 @@
     permitted(resetValue) &&
       R.createElement('button', {type:'button', disabled:!!disabled,
         'aria-label':typeof label==='string'?`Reset ${label}`:'Reset slider value',
-        onClick:()=>{if(!disabled && permitted(resetValue))onChange?.(resetValue);}}, 'Reset'));
+        onClick:()=>{if(!disabled && permitted(resetValue))onChange?.(resetValue);}}, 'Reset'),
+    tooltip != null && R.createElement('small', null, tooltip));
   };
   const PanelSection = ({title, spinner, children}) => R.createElement('section', {'aria-busy':spinner ? true : undefined},
     title && R.createElement('h2', null, title), spinner && R.createElement(Spinner), children);
@@ -655,14 +730,19 @@
         tab.title, tab.renderTabAddon?.()))),
       R.createElement('div', {role:'tabpanel',ref:panel,tabIndex:autoFocusContents ? -1 : undefined}, current?.content));
   };
-  const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
-    title && R.createElement('h2', null, title), R.createElement(Tabs, {
-      // Decky separators are layout markers, never selectable pages. Keep the
-      // original index so hiding an earlier page does not retarget selection.
-      tabs:pages.flatMap((page,index)=>page==='separator' || page.visible===false ? [] : [{
-        id:page.route || String(index),
-        title:page.icon == null ? page.title : R.createElement(R.Fragment, null, page.icon, ' ', page.title),
-        content:page.content}])}));
+  const SidebarNavigation = ({pages=[], title, showTitle=true, page, onPageRequested}) => {
+    // Prefer explicit page identifiers. Route and original index remain local
+    // aliases so changing visibility does not change an existing selection.
+    const tabs=pages.flatMap((entry,index)=>entry==='separator' || entry.visible===false ? [] : [{
+      id:entry.identifier ?? entry.route ?? String(index),
+      aliases:[entry.identifier,entry.route,String(index)],
+      title:entry.icon == null ? entry.title : R.createElement(R.Fragment, null, entry.icon, ' ', entry.title),
+      content:entry.content}]);
+    const activeTab=page == null ? undefined : tabs.find(tab=>tab.id===page)?.id ?? tabs.find(tab=>tab.aliases.includes(page))?.id ?? page;
+    return R.createElement('section', null,
+      showTitle && title && R.createElement('h2', null, title),
+      R.createElement(Tabs, {tabs, activeTab, onShowTab:onPageRequested}));
+  };
   const emptyReorderEntries = Object.freeze([]);
   const ReorderableList = ({entries=emptyReorderEntries, onSave, interactables:Interactables,
     fieldProps, disableReordering=false}) => {
@@ -734,14 +814,16 @@
         onClick:()=>{if(valid(shown))publish({...shown,rows:shown.saved,dirty:false,error:''});}}, 'Cancel reordering'),
       shown.error && R.createElement('p', {role:'alert'}, shown.error));
   };
-  const ProgressBar = ({nProgress, value, max=100, indeterminate=false}) => R.createElement('progress', {
+  const ProgressBar = ({nProgress, value, max=100, indeterminate=false, focusable}) => R.createElement('progress', {
+    tabIndex:focusable===true ? 0 : focusable===false ? -1 : undefined,
     value:indeterminate || (value ?? nProgress)==null ? undefined : Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
   const ProgressBarItem = ({label, description, ...props}) => R.createElement('div', null,
     R.createElement('label', null,
       label != null && R.createElement('strong', null, label), ProgressBar(props)),
     description != null && R.createElement('div', null, description));
-  const ProgressBarWithInfo = ({sOperationText, ...props}) => R.createElement('div', null,
-    ProgressBarItem(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText));
+  const ProgressBarWithInfo = ({sOperationText, sTimeRemaining, ...props}) => R.createElement('div', null,
+    ProgressBarItem(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText),
+    sTimeRemaining == null ? null : R.createElement('div', {'data-framey-progress-detail':true}, sTimeRemaining));
   const MenuItem = ({children, selected, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
       'aria-pressed':selected == null ? undefined : !!selected,
@@ -865,7 +947,8 @@
         'aria-label':title},
         !props.bHideCloseIcon && R.createElement('button', {
           type:'button', disabled:!!modal.running || modalCancelDisabled(modal),
-          onClick:()=>dismissModal(modal)}, cancelText), modal.element);
+          onClick:()=>dismissModal(modal)}, cancelText),
+        R.createElement(DialogBoundary, {close:modal.close}, modal.element));
     }) : null);
   };
   function modalCallback(modal, name) {
@@ -924,10 +1007,10 @@
     return params;
   }
   function activeRoute(path) {
-    if (routes.has(path)) return {component:routes.get(path), params:{}};
-    for (const [pattern, component] of routes) {
+    if (routes.has(path)) return {...routes.get(path), params:{}};
+    for (const [pattern, registration] of routes) {
       const params = matchRoute(pattern, path);
-      if (params) return {component, params};
+      if (params) return {...registration, params};
     }
     return null;
   }
@@ -956,15 +1039,29 @@
     }
     return navigate(null);
   }
+  function refreshRoute() {
+    if (currentRoute === null) return;
+    const match = activeRoute(currentRoute);
+    if (match) showRoute(currentRoute, match);
+    else navigate(null);
+  }
   const routerHook = {
     addRoute(path, component) {
+      // React wrappers are valid component types but are objects rather than
+      // functions or already-created elements. Render them through React too.
+      const wrapped = component?.$$typeof === Symbol.for('react.memo') ||
+        component?.$$typeof === Symbol.for('react.forward_ref');
       if (!routePattern(path) ||
-          (typeof component !== 'function' && !R.isValidElement(component)))
+          (typeof component !== 'function' && !R.isValidElement(component) && !wrapped))
         throw Error('Framey route needs a local path and React component');
-      routes.set(path, component);
-      return () => routerHook.removeRoute(path);
+      const registration = {component, id:++routeId};
+      routes.set(path, registration);
+      refreshRoute();
+      // Cleanup belongs to this registration, even when the next one uses
+      // the same path and component. An older disposer cannot remove it.
+      return () => {if (routes.get(path) === registration) routerHook.removeRoute(path);};
     },
-    removeRoute(path) {routes.delete(path); if(currentRoute && !activeRoute(currentRoute)) navigate(null);},
+    removeRoute(path) {if (routes.delete(path)) refreshRoute();},
     // Steam routes and global components have no equivalent in the isolated panel.
     addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{},
   };
@@ -990,6 +1087,7 @@
       const failed = failure => {error.textContent='Dialog close callback failed: '+String(failure?.message || failure);};
       try {Promise.resolve(onClosed?.()).catch(failed);} catch (failure) {failed(failure);}
     };
+    modal.close = Close;
     modal.dismiss = () => {
       if (!modals.includes(modal)) return;
       const callback=modal.source?.props?.closeModal;
@@ -1186,11 +1284,9 @@
     ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
-    Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
-    DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
+    Marquee:passthrough('span'), ...dialogContainers,
     ControlsList,
-    DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
-    DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
+    ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
     Menu, MenuGroup, MenuItem,
     ProgressBar, ProgressBarItem, ProgressBarWithInfo,
@@ -1235,7 +1331,8 @@
   };
   localModules.set('framey/components', Object.freeze(Object.fromEntries(
     Object.entries(DFL).filter(([name,value])=>/^[A-Z]/.test(name) &&
-      (typeof value==='function' || [DialogButton,Field,Focusable,TextField,ScrollPanel,ScrollPanelGroup].includes(value))))));
+      (typeof value==='function' || [DialogButton,DialogCheckbox,Field,Focusable,TextField,ScrollPanel,ScrollPanelGroup,
+        ...Object.values(dialogContainers)].includes(value))))));
   // Some panels eagerly look up the optional Steam UI sound player. Allow the
   // lookup, but never claim playback or expose Steam's mutable audio store.
   localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({
@@ -1352,7 +1449,7 @@
       if (R.isValidElement(value) || Array.isArray(value)) {
         const root = window.ReactDOM.createRoot(node);
         roots.push(root);
-        root.render(value);
+        root.render(R.createElement(ToastBoundary, null, value));
       } else if (typeof value === 'string' || typeof value === 'number') {
         node.textContent = String(value);
       } else return;
@@ -1375,7 +1472,13 @@
     close.onclick=dismiss; item.append(close);
     if (typeof onClick === 'function') {
       const open = document.createElement('button'); open.type='button'; open.textContent='Open';
-      open.onclick=()=>{onClick(); dismiss();}; item.append(open);
+      let opening = false;
+      open.onclick=()=>{
+        if (dismissed || opening) return;
+        // Retire the action before plugin code can synchronously reenter it.
+        opening = true;
+        try {onClick();} finally {dismiss();}
+      }; item.append(open);
     }
     toastRoot.append(item);
     const timer = setTimeout(dismiss, Math.min(30000,Math.max(3000,Number(duration)||5000)));
@@ -1391,10 +1494,35 @@
     render() { return this.state.failure ? R.createElement('p', {role:'alert'},
       `This Decky panel is not compatible with Framey: ${this.state.failure}`) : this.props.children; }
   }
+  // Toast fields mount in separate React roots, outside the plugin surface.
+  // Keep failures local so healthy fields and the native dismissal survive.
+  class ToastBoundary extends PanelBoundary {
+    render() { return this.state.failure ? R.createElement('span', {role:'alert'},
+      `This notification content could not be displayed: ${this.state.failure}`) : this.props.children; }
+  }
+  class DialogBoundary extends PanelBoundary {
+    static getDerivedStateFromProps(props, state) {
+      // Only an explicit handle.Update supplies a new decorated element.
+      // Stack/busy redraws keep a failed view retired and healthy state intact.
+      return props.children === state.content ? null : {content:props.children, failure:null};
+    }
+    render() {
+      return this.state.failure ? R.createElement(R.Fragment, null, super.render(),
+        // Match handle.Close: broken plugin cancellation handlers, hidden
+        // close icons or disabled Cancel cannot strand the panel behind inert.
+        R.createElement('button', {type:'button', onClick:this.props.close}, 'Close failed dialog')) : this.props.children;
+    }
+  }
   function PluginSurface({plugin}) {
     const [view, setView] = R.useState(plugin.content ? 'panel' : 'settings');
-    const [route, setRoute] = R.useState(currentRoute);
-    R.useEffect(() => {routeListeners.add(setRoute); return () => routeListeners.delete(setRoute);}, []);
+    const [, redrawRoute] = R.useState(0);
+    const route = currentRoute, match = route ? activeRoute(route) : null;
+    R.useEffect(() => {
+      // A registry update can change the component/params at the same path.
+      const refresh = () => redrawRoute(revision => revision+1);
+      routeListeners.add(refresh);
+      return () => routeListeners.delete(refresh);
+    }, []);
     const [running, setRunning] = R.useState(null);
     const runningRef = R.useRef(false);
     const [message, setMessage] = R.useState('');
@@ -1427,11 +1555,11 @@
           disabled:running !== null, onClick:()=>runAction(action,index)}, action.label))),
       message && R.createElement('p', {role:'status'}, message),
       // A broken content view must not remove the controls that can leave it.
-      // Reset only when navigation selects another view; ordinary redraws
+      // Reset when navigation or registration selects another view; ordinary redraws
       // preserve healthy child state and do not retry a failing render.
-      R.createElement('div', null, R.createElement(PanelBoundary, {key:route ? `route:${route}` : `view:${view}`},
-        route ? (typeof activeRoute(route)?.component === 'function' ?
-          R.createElement(activeRoute(route).component) : activeRoute(route)?.component) :
+      R.createElement('div', null, R.createElement(PanelBoundary, {key:route ? `route:${route}:${match?.id}` : `view:${view}`},
+        route ? match && (R.isValidElement(match.component) ?
+          match.component : R.createElement(match.component)) :
           (view === 'settings' ? plugin.settings : plugin.content))));
   }
   window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit = {

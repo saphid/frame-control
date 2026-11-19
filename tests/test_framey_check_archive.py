@@ -26,10 +26,10 @@ class ArchiveChecker(unittest.TestCase):
 
     def run_check(self, manifest=None, extra=None, frontend=True, bundle=None,
                   name='Framey Settings Sample', damage=None, members=(), expected_runtime=None,
-                  manifest_bytes=None):
+                  manifest_bytes=None, compression=zipfile.ZIP_STORED, damage_deflate=False):
         with tempfile.TemporaryDirectory() as folder:
             archive = Path(folder) / 'plugin.zip'
-            with zipfile.ZipFile(archive, 'w') as output:
+            with zipfile.ZipFile(archive, 'w', compression=compression) as output:
                 output.writestr('framey-settings/plugin.json',
                                 manifest_bytes if manifest_bytes is not None else
                                 json.dumps(manifest or json.loads((SAMPLE / 'plugin.json').read_text())))
@@ -49,10 +49,19 @@ class ArchiveChecker(unittest.TestCase):
                 offset = entry.header_offset
                 start = (offset + 30 + int.from_bytes(data[offset+26:offset+28], 'little')
                          + int.from_bytes(data[offset+28:offset+30], 'little'))
-                data[start + entry.file_size - 1] ^= 1
+                if damage_deflate:
+                    # Keep ZIP headers and declared CRC intact, but use the
+                    # reserved DEFLATE block type so zlib rejects the stream.
+                    self.assertEqual(entry.compress_type, zipfile.ZIP_DEFLATED)
+                    data[start] = (data[start] & ~6) | 6
+                else:
+                    data[start + entry.file_size - 1] ^= 1
                 archive.write_bytes(data)
+            original = archive.read_bytes()
             run = subprocess.run([sys.executable, str(CHECKER), str(archive), '--name', name],
                                  capture_output=True, text=True, timeout=15)
+            self.assertEqual(run.stderr, '', 'The checker must report errors as JSON, without a traceback')
+            self.assertEqual(archive.read_bytes(), original, 'The checker must preserve the source archive')
             if expected_runtime is not None:
                 plugins = Path(folder)/'plugins'
                 with zipfile.ZipFile(archive) as output:
@@ -114,14 +123,46 @@ class ArchiveChecker(unittest.TestCase):
         self.assertFalse(result['ok'])
         self.assertIn('CRC', result['error'])
 
+    def test_damaged_deflate_stream_returns_json_without_changing_the_archive(self):
+        for member in ('framey-settings/plugin.json', 'framey-settings/dist/index.js',
+                       'framey-settings/assets/large.bin'):
+            with self.subTest(member=member):
+                code, result = self.run_check(extra=('framey-settings/assets/large.bin', b'x' * 150_000),
+                                              compression=zipfile.ZIP_DEFLATED,
+                                              damage=member, damage_deflate=True)
+                self.assertEqual(code, 1, result)
+                self.assertFalse(result['ok'])
+                self.assertIn('decompressing data', result['error'])
+        # An intact compressed archive remains accepted after a failed check.
+        code, result = self.run_check(compression=zipfile.ZIP_DEFLATED)
+        self.assertEqual(code, 0, result)
+        self.assertTrue(result['installerAccepted'])
+        self.assertTrue(result['panelCandidate'])
 
-    def test_large_manifest_passes_installer_but_not_panel_admission(self):
+
+    def test_large_manifest_is_rejected_to_preserve_inventory_visibility(self):
         manifest = json.loads((SAMPLE / 'plugin.json').read_text())
         manifest['description'] = 'x' * 17_000
         code, result = self.run_check(manifest=manifest)
-        self.assertEqual(code, 0, result)
-        self.assertTrue(result['installerAccepted'])
-        self.assertFalse(result['panelCandidate'])
+        self.assertEqual(code, 1, result)
+        self.assertFalse(result['ok'])
+        self.assertIn('manifest exceeds the 16 KiB inventory limit', result['error'])
+
+    def test_manifest_byte_boundary_remains_a_panel_candidate(self):
+        record = json.dumps({**json.loads((SAMPLE/'plugin.json').read_text()), 'note': '\u65e5'},
+                            ensure_ascii=False).encode('utf-8')
+        for size in (16_384, 16_385):
+            with self.subTest(size=size):
+                code, result = self.run_check(manifest_bytes=record+b' '*(size-len(record)),
+                                              expected_runtime=size==16_384)
+                if size == 16_384:
+                    self.assertEqual(code, 0, result)
+                    self.assertTrue(result['installerAccepted'])
+                    self.assertTrue(result['panelCandidate'])
+                else:
+                    self.assertEqual(code, 1, result)
+                    self.assertFalse(result['ok'])
+                    self.assertIn('manifest exceeds the 16 KiB inventory limit', result['error'])
 
     def test_api_v1_requires_legacy_iife_or_decky_initializer(self):
         manifest = json.loads((SAMPLE / 'plugin.json').read_text())

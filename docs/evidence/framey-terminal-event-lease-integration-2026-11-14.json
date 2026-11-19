@@ -1,0 +1,268 @@
+{
+  "head": "f0d6a4725909ae5057607df50e7995b519c35f44",
+  "architecture": "x86_64",
+  "sourceFingerprintsVerified": 177,
+  "bootstrapVerified": true,
+  "resultPacketSha256": "63ea27e93f32e59110d98171c446037615348c8cc7faf8b8ca73cfce69837a09",
+  "resultPacketVerified": true,
+  "actualNativeLifecycleVerified": true,
+  "productionHttpAndEventRoundTripVerified": true,
+  "statusRequests": [
+    {
+      "startedAfterSeconds": 49.599,
+      "elapsedSeconds": 3.828,
+      "httpStatus": 200,
+      "running": true,
+      "pluginCount": 1
+    }
+  ],
+  "ownedDeckyStop": {
+    "mainPidBefore": 338,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "beforeStopDiagnostics": {
+      "unit": "frame-control-decky.service",
+      "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-decky.service",
+      "processes": [
+        {
+          "pid": 338,
+          "state": "S",
+          "parentPid": 279,
+          "userTicks": 242,
+          "systemTicks": 636,
+          "startTicks": 12119,
+          "threads": [
+            {
+              "tid": 338,
+              "wchan": "do_wait",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 340,
+          "state": "S",
+          "parentPid": 338,
+          "userTicks": 671,
+          "systemTicks": 524,
+          "startTicks": 13008,
+          "threads": [
+            {
+              "tid": 340,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 344,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 350,
+          "state": "S",
+          "parentPid": 340,
+          "userTicks": 240,
+          "systemTicks": 31,
+          "startTicks": 14135,
+          "threads": [
+            {
+              "tid": 350,
+              "wchan": "pipe_read",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 351,
+          "state": "S",
+          "parentPid": 340,
+          "userTicks": 268,
+          "systemTicks": 46,
+          "startTicks": 14137,
+          "threads": [
+            {
+              "tid": 351,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        },
+        {
+          "pid": 352,
+          "state": "S",
+          "parentPid": 351,
+          "userTicks": 609,
+          "systemTicks": 78,
+          "startTicks": 14477,
+          "threads": [
+            {
+              "tid": 352,
+              "wchan": "do_epoll_wait",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 564,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            },
+            {
+              "tid": 565,
+              "wchan": "futex_wait_queue",
+              "stackError": "PermissionError"
+            }
+          ],
+          "threadsTruncated": false
+        }
+      ],
+      "logs": [],
+      "processesTruncated": false
+    },
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 3.275
+  },
+  "allOwnedCleanupVerified": true,
+  "captureSha256": {
+    "terminal": "371d80015a9fa4d63741a1378981c18b8df363ffcccc4c6e0b3d181ea37e01bc",
+    "output": "9587a5c9bf63bc837ca0065909b3dae58bbd9e7258c16f794200e0aafc41fc16",
+    "removed": "3f14e90489b9344a9647a54ea95e4721a983ed9d6a59603400c181d019332994"
+  },
+  "capturesVisuallyInspected": true,
+  "syntheticCef": true,
+  "syntheticManagedReceipt": true,
+  "syntheticInput": true,
+  "managedInstallVerified": false,
+  "productionAdaptationEnabled": false,
+  "realSteamCef": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "nativeArmVerified": false,
+  "visualFindings": "Terminal initial, output and removed views inspected; actual marker output visible; horizontal overflow persists",
+  "focusedTestsPassed": 96,
+  "sourcePreservationAudit": {
+    "main": "a3c6f491f876ec1fee71ed6aec3d428b55804611",
+    "head": "f0d6a4725909ae5057607df50e7995b519c35f44",
+    "mainCaseInventoryUnchanged": true,
+    "productionStoreUnchanged": true,
+    "catalogUnchanged": true,
+    "mergedLeaseFixUnchanged": true,
+    "historicalTerminalEvidencePreserved": {
+      "docs/evidence/framey-terminal-arm-method-failure-2026-10-30-failure.png": "b5de19fbcf55531b15fe1ab541c32f267fca933d9f72b4cf0446f6ca0bd199ac",
+      "docs/evidence/framey-terminal-arm-method-failure-2026-10-30.json": "1ec59359d80126599da086fcaa378ec1f90329b7ba2c41916a0b40c82a6442fd",
+      "docs/evidence/framey-terminal-arm-method-failure-2026-10-30.md": "5226b187477c25aad40ef8f2ef68b3475f74b6b56d6147eb7ad2034765b79deb",
+      "docs/evidence/framey-terminal-arm-request-drain-failure-2026-10-31-raw.json.gz": "e9c56fe20df0a7b5526c806e2eee3db58f942be57945f77bf4dfb37459024c3b",
+      "docs/evidence/framey-terminal-arm-request-drain-failure-2026-10-31.json": "e7109c764e89479d0212f86b4b66a3b8ca5fb7db871055ac34e00240e0324d2c",
+      "docs/evidence/framey-terminal-arm-request-drain-failure-2026-10-31.md": "06d550fc654f9c52a4b5b6e4d08800f59dffc22e7b878cd319ba34e5f36a6e94",
+      "docs/evidence/framey-terminal-cdp-startup-2026-10-31-output.png": "9d7b3a715b5932ed025770a0e12106a5d468ad11b95cb87b7948813dae6d682b",
+      "docs/evidence/framey-terminal-cdp-startup-2026-10-31-raw.json.gz": "4c56e4d6739f1b5089d799a1bbcd2989500f4cb0189f5f840b2b82a7b6894637",
+      "docs/evidence/framey-terminal-cdp-startup-2026-10-31-removed.png": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3",
+      "docs/evidence/framey-terminal-cdp-startup-2026-10-31-terminal.png": "211460e0cc7103ed4f88151b0fd3fdb580042aa482570ed893fff3184b8dde69",
+      "docs/evidence/framey-terminal-cdp-startup-2026-10-31.json": "7a169f3d38a3f2d772a45ab4b305d90a0d9343f917c6566a723124639a0738df",
+      "docs/evidence/framey-terminal-cdp-startup-2026-10-31.md": "51cc7f6af35a7b38d82e13aa0eb13c0cbb63b9166ce87f4fc576d6a8a2ee61ad",
+      "docs/evidence/framey-terminal-cef-trace-2026-10-31-raw.json.gz": "9d9d392d48ca45069fd2771618ea7ab311b842561bfc8059f6c7629d18d2cfa3",
+      "docs/evidence/framey-terminal-cef-trace-2026-10-31.json": "4f7c4c0ff26706609d1f3cdf73b0ad3fdb0a4ecd925ec6d48bd6fcdc30ce8ba5",
+      "docs/evidence/framey-terminal-cef-trace-2026-10-31.md": "1fcbffb355b7dd230b19822ce26aafea9abe16a0861a22f260d3c703dc2d8676",
+      "docs/evidence/framey-terminal-child-failure-2026-10-31-raw.json.gz": "de0137badc84d5c0cc2dce6efcb7959af043bc203d0c55208f0a4d0d12f72cbf",
+      "docs/evidence/framey-terminal-child-failure-2026-10-31.json": "192f6adae3f9082bef0e1ccd725e37a706c3a320253504ab338904d31b425036",
+      "docs/evidence/framey-terminal-child-failure-2026-10-31.md": "2d12ad12dfdd635502bd317eaa3188857e0777ee9c93d4c01239ee228a5e98af",
+      "docs/evidence/framey-terminal-fatal-diagnostic-2026-10-31-output.png": "d0d1088e0d6f4b1dd33771f83597be74a3299c2121eef3f49213f3c48c3e1546",
+      "docs/evidence/framey-terminal-fatal-diagnostic-2026-10-31-removed.png": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3",
+      "docs/evidence/framey-terminal-fatal-diagnostic-2026-10-31-terminal.png": "bba180c0d5c58097090788350ee4c4a13a39f0acbfce28ae29e3dc145232499b",
+      "docs/evidence/framey-terminal-fatal-diagnostic-2026-10-31.json": "24a69a00a4788acb0435bdfd52adbd4a58434b9cfa93506e3b9809aa01ddae2c",
+      "docs/evidence/framey-terminal-fatal-diagnostic-2026-10-31.md": "49bc9b5be841a9983fdcaf93aaeccac5c42d5b23c8eb206fe08efa3ac9ab59e3",
+      "docs/evidence/framey-terminal-http-before-paint-2026-10-30.json": "633cc8d8c3e6e1637d800bd949c3615eb5b456591f68d4f4a25fe70e59d0a58c",
+      "docs/evidence/framey-terminal-http-driver-failure-2026-10-30.json": "5799a9fe2e8db805ac6d9a278e003859f7d079df4fd07573e9fa58c88f1218bb",
+      "docs/evidence/framey-terminal-http-list-race-failure-2026-10-30.json": "beb22f8826ad47f99dfafe68178741270fcbae386edd17c14b40ce615178f5bf",
+      "docs/evidence/framey-terminal-http-output-2026-10-30.png": "991225c1fae4b4a429c820cb7fc43a01de2001a144c3deabe7a40866d0da7247",
+      "docs/evidence/framey-terminal-http-removed-2026-10-30.png": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3",
+      "docs/evidence/framey-terminal-http-terminal-2026-10-30.png": "8505f4c87a3bea60ca5d17a38d49079e6d8086027c3112907116618f399cf57e",
+      "docs/evidence/framey-terminal-integrated-browser-2026-10-30.json": "c760fd5f20928056e98aadbb7274c50d305ea4b2b398046cbf958cb28efd6880",
+      "docs/evidence/framey-terminal-integrated-browser-2026-10-30.md": "2540bedcef4817d27ca5b103ac5a801dfe725dad61db735614eaacc64663dd2c",
+      "docs/evidence/framey-terminal-integrated-output-2026-10-30.png": "fbbe17e731d3c03df78d3f1de91d7155b2f11f66b21e6187cdebef5b2ff6a914",
+      "docs/evidence/framey-terminal-integrated-removed-2026-10-30.png": "88feb90ff71258b38a413aef432f96a321508d378da9b982d5f5d1e93f08c4e6",
+      "docs/evidence/framey-terminal-integrated-terminal-2026-10-30.png": "e6878cac71e091389fcb62133223ecb015bed98aeb8c992efa3da51f1f42ede9",
+      "docs/evidence/framey-terminal-main072e-http-2026-11-14-raw.json.gz": "a4d76eeceb56c9b04d509af8c51b3658cb063105bbfcb5d4a800ff093f3a9548",
+      "docs/evidence/framey-terminal-main072e-http-2026-11-14.json": "29afa355dff465948e7d4a40b22bec0dd9abcf41c6fc35ddb9142ff330a56048",
+      "docs/evidence/framey-terminal-main072e-http-2026-11-14.md": "bcec74d3cf8a4e656014a78022799147ebe07007543ea6bc463ba5488d33e7de",
+      "docs/evidence/framey-terminal-main072e-http-failure-2026-11-14.json.gz": "fc38713e7d6f431de5b504e4b140f62003df293cc906ebddb0d34f24880c93b2",
+      "docs/evidence/framey-terminal-main4e1f664-packer-replay-2026-10-31-raw.json.gz": "d2687dfb760c60629d24e7f44dd9261db5a7305dace9b9b3939852d4c27e3710",
+      "docs/evidence/framey-terminal-main4e1f664-packer-replay-2026-10-31.json": "b90747467613293748b0d08a4592f6fcbacd202d84b9b925d00d15596f03594c",
+      "docs/evidence/framey-terminal-main4e1f664-packer-replay-2026-10-31.md": "0344583924e808750b6106b879eabc7c59ec9a2e7508eb1513d84079e5580328",
+      "docs/evidence/framey-terminal-method-diagnostic-ready-local-2026-10-30-output.png": "f00ccae897d201525e9f423b9295745db88f037a01f830cdc40ee959b832796e",
+      "docs/evidence/framey-terminal-method-diagnostic-ready-local-2026-10-30-removed.png": "48e3e61b0daf514063e301081175d146dd1347569c5fdf531c7e705a4eda7b67",
+      "docs/evidence/framey-terminal-method-diagnostic-ready-local-2026-10-30-terminal.png": "d296fe615da75713bc9b228189081d84b46fbd10347837efe30aa3546b068bb9",
+      "docs/evidence/framey-terminal-method-diagnostic-ready-local-2026-10-30.json": "72fc8ef94ef88de9c7f81df0b74d6df974baa6111cd455c94b45b8c2d929a184",
+      "docs/evidence/framey-terminal-method-diagnostic-ready-local-2026-10-30.md": "6c2cbf2b62f95bdbc40603b640ef15e30de8c0e10ff5cf340823de9a8731065d",
+      "docs/evidence/framey-terminal-method-diagnostic-startup-failure-2026-10-30.json": "51b817b5ffb53a34e27eb204f937ac5729cbc3daf085738d3dcea30f2a9e42c4",
+      "docs/evidence/framey-terminal-method-profile-corrected-2026-10-30.json": "fcb74a85e6bd95a0dab94ceaf837a7a1252a75f9afbb2b47d22115e05c526cc6",
+      "docs/evidence/framey-terminal-method-profile-corrected-2026-10-30.md": "9100fdf017002fc011591a28b2fb82661ef4801db15d1f963f191b77d6d7ca41",
+      "docs/evidence/framey-terminal-method-profile-corrected-2026-10-30/output.png": "ea842dcce999ebd05dab4b3ef15911f031a6529f49c95b4831000f5b80e691cd",
+      "docs/evidence/framey-terminal-method-profile-corrected-2026-10-30/removed.png": "3f14e90489b9344a9647a54ea95e4721a983ed9d6a59603400c181d019332994",
+      "docs/evidence/framey-terminal-method-profile-corrected-2026-10-30/terminal.png": "88a0c048311885a10336db4016ddc0f73b643df44f578a197fd27619bdb996dc",
+      "docs/evidence/framey-terminal-method-profile-local-2026-10-30.json": "4a84caeb06b2ac2f863893697d7a620fbbd4947ee4670f6577e7be37a9bda8dc",
+      "docs/evidence/framey-terminal-method-profile-local-2026-10-30.md": "b52968b1fabb563393b5c528ec8503386532a637666f363c5085dbc43f649dc5",
+      "docs/evidence/framey-terminal-method-profile-local-2026-10-30/output.png": "fe176fd05327be1c0ad9de863af390bf2bc288209a231d3bb858106399815b60",
+      "docs/evidence/framey-terminal-method-profile-local-2026-10-30/removed.png": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3",
+      "docs/evidence/framey-terminal-method-profile-local-2026-10-30/terminal.png": "6d452e73f6aac3eba8dcaf7055d4ad23af245c0708ba555dc13ccdfda94252f9",
+      "docs/evidence/framey-terminal-method-timeout-2026-10-30.json": "a10d94bec33b283286e6ccc0c47ec900417a344dfd0ef0198612dec8db18395c",
+      "docs/evidence/framey-terminal-method-timeout-2026-10-30.md": "4c7fdb51a6b46d5862a380607b84367b95a1171f3f190e5ef0efe1a3d53b935a",
+      "docs/evidence/framey-terminal-native-ci-amd-2026-10-30.json": "6a3782e75718d97e6cbfb473cf48f7d302072704f3cef569a061187ae1c992ed",
+      "docs/evidence/framey-terminal-native-ci-arm-failure-2026-10-30.json": "55f3eafcbf906f6d00ae005cd8703d971e33c881eb26ad8c6419ff205858b466",
+      "docs/evidence/framey-terminal-native-ci-local-2026-10-30.json": "13461e691df192e2561dca877f2d4a4b2077be1eff33b9cbbf1278f54a7f3627",
+      "docs/evidence/framey-terminal-native-ci-output-2026-10-30.png": "b2bd902db88f6abeba14ed9e2aaa936a5acca983bc9be34ba25c542d2a224422",
+      "docs/evidence/framey-terminal-native-ci-removed-2026-10-30.png": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3",
+      "docs/evidence/framey-terminal-native-ci-terminal-2026-10-30.png": "c7b848429c78d3d30418e30ffaab105283a64ba1d278cabd30b44b52dbf69233",
+      "docs/evidence/framey-terminal-panel-status-2026-10-30.md": "c99bd9f54a3d52863cc3a44bec1330b1ed01359201dfd17a8ec317ca777c8248",
+      "docs/evidence/framey-terminal-panel-status-arm-failure-2026-10-30.json": "8640d5c30e0112e5ec9269e309c75f6110269cb173a29338fdbee8b53f23f7c6",
+      "docs/evidence/framey-terminal-panel-status-arm-failure-2026-10-30.png": "5b1f38b8cc9b289681354e9a73d0b017ab9a645cbff53acc4302f24707a2892c",
+      "docs/evidence/framey-terminal-panel-status-http-local-2026-10-30.json": "763d8299c2f1214dff8a10eac46c6dba3302294245ec04ebd017ffe1964ca559",
+      "docs/evidence/framey-terminal-panel-status-http-local2-2026-10-30.json": "8881b65b4d08e39180cd9a96e8b7ed72c6f48465d620fd3574ece793fa52fb1e",
+      "docs/evidence/framey-terminal-panel-status-http-output-2026-10-30.png": "bf09f6a415d556948a82f01b7491ccc155d4890a936a6cb1e5c4d90e629eb66b",
+      "docs/evidence/framey-terminal-panel-status-http-removed-2026-10-30.png": "3f14e90489b9344a9647a54ea95e4721a983ed9d6a59603400c181d019332994",
+      "docs/evidence/framey-terminal-panel-status-http-terminal-2026-10-30.png": "1d4279c2bb5f80d6451b4965919e25d54345dd59165cadb5a79414147fe6f617",
+      "docs/evidence/framey-terminal-panel-status-http2-output-2026-10-30.png": "0c26db6ff5b45db9eb92c0d602d96b5d4d62a03e73d49e7ea1628a8754ec9f44",
+      "docs/evidence/framey-terminal-panel-status-http2-removed-2026-10-30.png": "3f14e90489b9344a9647a54ea95e4721a983ed9d6a59603400c181d019332994",
+      "docs/evidence/framey-terminal-panel-status-http2-terminal-2026-10-30.png": "9411cecb322403971c6b39162813ca5f757d841f2a04d5ac6a04ddde34a2f343",
+      "docs/evidence/framey-terminal-production-http-2026-10-30.json": "aa05fb99b28ca3eb523d137388ac5566816521a55c9fb7fe604b018d9e1e7561",
+      "docs/evidence/framey-terminal-production-http-2026-10-30.md": "0fd016f5487913b1459c9b19b82d94d20aaa6b69330d52e2d78e1d3dad6eacfd",
+      "docs/evidence/framey-terminal-request-drain-2026-10-31-raw.json.gz": "dee30a65af9d3331e5ed54776a0ac0708830f3e49994bb0ce5e4a8e5dcb914ab",
+      "docs/evidence/framey-terminal-request-drain-2026-10-31.json": "88420b24da2604f20a6d2c43845eae51f72118fbc67f78c65dcaa002564c1c6c",
+      "docs/evidence/framey-terminal-request-drain-2026-10-31.md": "fbb5a67500f9352906c6e935d2d9b3187bd2a07f3bd3c1e8a8774d1d9097fe93",
+      "docs/evidence/framey-terminal-status-cold-import-2026-10-30.md": "b9b732446ba612019ff3949f8dc33143f0bc8b0674fa0877f293bb867d4ce7fb",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/console.log": "8d8d8b869785c817a63b9a2941ff45fb7e42ec6696106fd1db11893755e9bc26",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/first-attempt-failure.json": "5cff33a80f6d39e62327c419ca6b3e8c94f519edaa216e2ddac360893f3c36d9",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/guest-result.packet": "99ce0cdaf6cd057d1dfbff5452ed9d6b019686ec0912a5d9eedf30cc7c146b30",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/independent-verifier.py": "c7578cc8a5c53b0b466dce05d0a0c8de030e4f665388eb1aadd1fa3a32ddec8d",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/inputs.json": "5487dad1ae1cef577259897b57f191c082541c6dddac13a33ff198860553b672",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/output.png": "83f41520c3bb5f3f77fb3b2149d86aa4fc2dbe9a1fc96937599384b99d320845",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/prompt-race-replay.json": "d57232bea01e1bc1c279541e000cb9f1071bd0eab92991089a316461bdf7d42f",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/removed.png": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/result.json": "f0b54c733ba0d89737d19e6567dfdec121cdf1dd503344121abb6ae095277d18",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/terminal.png": "d5c81f993d92503fc5543e06ceaf282e750d88af6f7341b49d82ba3fbd078dc5",
+      "docs/evidence/framey-terminal-status-http-2026-10-30/verified.json": "6b2c6c5b280ad1cbe7f03f7064afcdf6a0a78d94b22c2df6e4d3dbbe04d56a1a",
+      "docs/evidence/framey-terminal-status-macos-failure-2026-10-30.json": "612d1200b9b065358ab5739302002c71c7ec98a16213fa0d38773448000699db",
+      "docs/evidence/framey-terminal-status-timeout-arm-2026-10-30.json": "2f18026d410f8d955426caa409a5f926c4480d1a8ab2df914b60e1f5b04c1a7f",
+      "docs/evidence/framey-terminal-status-timeout-arm-2026-10-30.png": "a58823b91feb73241db476f4e6cb6a21c8a3427e2b5ce36e1c0245a5fd4fb586",
+      "docs/evidence/framey-terminal-status-trace-local-2026-10-30.json": "a63f41440b46ad7a86666868fe2699d25593022cc75f05defe1b0cc98073742c",
+      "docs/evidence/framey-terminal-windows-paths-2026-10-31.json": "108bedbd9fab90a9c7cd6a9128e5213ad49ed23859d1ddd22c86572c07c353ed"
+    },
+    "focusedTestsPassed": 96,
+    "snapshotHarnessErrors": "first extracted snapshot lacks required Git metadata:4 errors; all96 pass from actual Git checkout",
+    "arm64ReplayStillRequired": true
+  },
+  "rawReport": "framey-terminal-event-lease-integration-2026-11-14.json.gz",
+  "rawReportSha256": "9534d56e2ccd4d950f34e8597eca4d8f9a170409326041dcabd84adb57cca865",
+  "priorArm64SourceBindingsVerified": 177,
+  "priorArm64FailureRetained": true,
+  "priorArm64FailureCauseProven": false,
+  "productionHttpRequests": 21
+}

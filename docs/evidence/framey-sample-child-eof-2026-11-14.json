@@ -1,0 +1,163 @@
+{
+  "sourceCommit": "60001bb62c8b0916d966cf945fe24364199d13c8",
+  "base": "7560aae0ef6d7ae151c5156f5955c1fbd19b6a24",
+  "compressedEvidenceSha256": "89e4870a7542db97c0aa231998d3d41cc446be7af46c3bc1c17ddbe7241745d4",
+  "sourceBindingsVerified": 21,
+  "controlledRedSourceBindingsVerified": 19,
+  "controlledRedBackendUnmodifiedAtBase": true,
+  "redControlledPeerEofForcedKill": true,
+  "greenPostEofRpcCount": 3,
+  "greenRpcCalls": 21,
+  "greenCleanParentOnlyStops": [
+    {
+      "elapsedSeconds": 0.3,
+      "consoleSha256": "0e49c51104783f08344fb79a5706bb850d50c24d87b32fde0a90eb6d8ab8d8d0",
+      "descendantsBefore": {
+        "9": {
+          "state": "S",
+          "parent": 8,
+          "start": "470780785"
+        },
+        "19": {
+          "state": "S",
+          "parent": 9,
+          "start": "470780831"
+        },
+        "20": {
+          "state": "S",
+          "parent": 9,
+          "start": "470780831"
+        },
+        "21": {
+          "state": "S",
+          "parent": 20,
+          "start": "470780849"
+        }
+      },
+      "exactDescendantsRemaining": {},
+      "adoptedChildExits": [
+        {
+          "pid": 19,
+          "returncode": 0
+        },
+        {
+          "pid": 20,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 0.307,
+      "consoleSha256": "0e49c51104783f08344fb79a5706bb850d50c24d87b32fde0a90eb6d8ab8d8d0",
+      "descendantsBefore": {
+        "33": {
+          "state": "S",
+          "parent": 23,
+          "start": "470781195"
+        },
+        "34": {
+          "state": "S",
+          "parent": 23,
+          "start": "470781195"
+        },
+        "35": {
+          "state": "S",
+          "parent": 34,
+          "start": "470781215"
+        },
+        "23": {
+          "state": "S",
+          "parent": 22,
+          "start": "470781140"
+        }
+      },
+      "exactDescendantsRemaining": {},
+      "adoptedChildExits": [
+        {
+          "pid": 33,
+          "returncode": 0
+        },
+        {
+          "pid": 34,
+          "returncode": 0
+        }
+      ]
+    },
+    {
+      "elapsedSeconds": 0.275,
+      "consoleSha256": "0e49c51104783f08344fb79a5706bb850d50c24d87b32fde0a90eb6d8ab8d8d0",
+      "descendantsBefore": {
+        "48": {
+          "state": "S",
+          "parent": 37,
+          "start": "470781555"
+        },
+        "49": {
+          "state": "S",
+          "parent": 48,
+          "start": "470781572"
+        },
+        "37": {
+          "state": "S",
+          "parent": 36,
+          "start": "470781503"
+        },
+        "47": {
+          "state": "S",
+          "parent": 37,
+          "start": "470781555"
+        }
+      },
+      "exactDescendantsRemaining": {},
+      "adoptedChildExits": [
+        {
+          "pid": 47,
+          "returncode": 0
+        },
+        {
+          "pid": 48,
+          "returncode": 0
+        }
+      ]
+    }
+  ],
+  "settingsSnapshots": [
+    {
+      "cycle": 0,
+      "value": {
+        "schema": 1,
+        "enabled": true
+      },
+      "sha256": "d307e1d0bc9eaf274ae4a0d262ba65bcc0e4297dbc74ffc4da689fa077bc2568",
+      "mode": "0o600"
+    },
+    {
+      "cycle": 1,
+      "value": {
+        "schema": 1,
+        "enabled": false
+      },
+      "sha256": "ef9c969af3fd2708ad467cf5da26e012c7f268a54759946be44f14e04ec8c91d",
+      "mode": "0o600"
+    },
+    {
+      "cycle": 2,
+      "value": {
+        "schema": 1,
+        "enabled": false
+      },
+      "sha256": "ef9c969af3fd2708ad467cf5da26e012c7f268a54759946be44f14e04ec8c91d",
+      "mode": "0o600"
+    }
+  ],
+  "focusedTestsPassed": 26,
+  "helperMatchesManagedRepair": true,
+  "setup": "Two default-network Docker builds stopped by coordinator with exit143; same unchanged Containerfile prebuilt with host network, then unmodified runner builds reused cache. Native runtime remained network none. Original downloads were slow; cached loader digest verified.",
+  "originalArmTriggerEstablished": false,
+  "historicalArmTerminalCauseEstablished": false,
+  "browserReplayAtThisHeadVerified": false,
+  "nativeArmAtThisHeadVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "wornVrVerified": false
+}

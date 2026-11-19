@@ -1,0 +1,87 @@
+{
+  "base": "68373962b7229b9437094b163bbbd19ac53c83b1",
+  "change": {
+    "allOtherTestMethodsAndSetUpUnchanged": true,
+    "childSleepSeconds": 30,
+    "helperAndProductionUnchanged": true,
+    "outputSentinelsAndReapingRetained": true,
+    "outputTailBytes": 10000,
+    "realSubprocessTimeoutSeconds": 2,
+    "recordedElapsedNotClamped": true,
+    "testOnly": true
+  },
+  "originalFailure": {
+    "attempt": 1,
+    "conclusion": "failure",
+    "elapsedSeconds": 1.985,
+    "failures": 1,
+    "head": "a50c146b009d1df0b730c8dffea027a55d4ea9ed",
+    "historicalClockOrSchedulerCauseEstablished": false,
+    "job": 132596846337,
+    "jobMetadataIndependentlyRead": true,
+    "lowerBoundAssertion": 2,
+    "originalLogDigestVerified": true,
+    "run": 43643773417,
+    "skips": 511,
+    "tests": 2473
+  },
+  "rawEvidence": {
+    "decompressedSha256": "b7236498a00bb37869279ab6c4fd60f6c17babf8288ecfc31ce743636d240b3b",
+    "path": "docs/evidence/framey-captured-timeout-clock-2026-11-14.json.gz",
+    "recordSha256": {
+      "independentCandidateLog": "7c1a2ddcf9ee9c9a7c0f119a67dd151650d28758aa53d8640d7cccc43cb15438",
+      "independentMutationResults": "1445d150c113179c8b0783f52c2f23e21acab753d869eb334eddf168c92c1a42",
+      "independentMutationScript": "812deff499b36e4c0ca822da0ae8bb8ebfc5059b3d82e860037f6efa2500d838",
+      "independentOriginalFailureExcerpt": "a1575e157d5c84d532e815505d2b5f3b4362a30ecab9234779b8d356c30f1cb8",
+      "independentOriginalJobMetadata": "b5caaa17adaa106073cbd52ab8b5c370c2df505bfd30208162821f31ed345fc1",
+      "independentReview": "e1827148a6c9afb329a431c6402e42c0cbcc674297937c59265cde8a5652de95",
+      "independentSourceScope": "950a83612a37521d4ee78582a1e251c6f94736abc78b8894f7261b3931fd494e",
+      "nativeCandidateControlledGreenLog": "55ca87bf3231248f5c36a160afd53081e38d3fd4fe696196a73c89b7ac7608ee",
+      "nativeCandidateLinuxLog": "48c2211d8d7c5d8e6e8b4f98e618b1ad2ca4a523eadf0a4f2ca277751b80e0a0",
+      "nativeCandidateTest": "f9f41d778fd75fec20ca735dfe5b3fc9a527c67416db74430cfe9609007d3e6e",
+      "nativeControlledClockHarness": "ebbdef23d36dec6834482b8271addfa47043a1e8a6271c54c2209b2b02dd5731",
+      "nativeOriginalControlledRedLog": "24190ba7c1cccec75788551b9ece737be7b52f5b2cc78d02153e66972410f699",
+      "nativeOriginalLinuxLog": "70f236f341b3e3bfe5c9dfba2d48254cde4ff5d81083057785a976284cb375f4",
+      "nativeOriginalTest": "f41e8afc3d5ee228ee61e1283ed85af988fdbbe692783b9310541920b069b411",
+      "nativePatch": "30e1d542eac71e3ef956c79dacfee1181729efe7235698a2ba780cf7ebb145da",
+      "nativeReview": "c7ccb06f4145b1cf0ed56f8abf07df1c35d14a44a2de9952a7085671f1c0a84a",
+      "nativeTestHarness": "4574e4c029fcc2b91bfbdd441b9bf57a294e61395b21c05ced00bd7cfa41e52e",
+      "originalAttemptJobs": "2d82889408913cbd4fd0c9dbd690ad42ba936d40ce997f7c6a6ce099a2b3382c",
+      "originalWindowsJobLog": "1af8fdd9e0a629e731c2fd1e818aa5fc11ba158a998bbff693ae15904e9fcaf2"
+    },
+    "sha256": "ff20c99a8d79821c51b2eb5d6713ea444db55f9e260f08e59fb4ca7814344160"
+  },
+  "recordedAt": "2026-11-14T22:43:22.263567+00:00",
+  "scope": {
+    "historicalClockOrSchedulerCauseEstablished": false,
+    "laterSuccessfulAttemptDoesNotQualifyOldHead": true,
+    "newCandidateWindowsExecution": false,
+    "newOwnHostedQualificationRequired": true,
+    "originalFailedAttemptPreserved": true,
+    "realFrameContacted": false,
+    "releaseHoldCleared": false
+  },
+  "sourceCommit": "14746ded2bfc7f5a592ad7186e1b3a5cb9b52051",
+  "sourceSha256": {
+    ".github/workflows/checks.yml": "eac0e12bff2b1eb0cc3e26c4e4587d2868f857b09b6a047f36a39b28b6d33ea0",
+    "scripts/framey-test-syncthing-flatpak-package.py": "6849e4eddee91ee5414526e68c3ad48d4d4104611d00c63be8092fd100c5427b",
+    "tests/decky-runtime/guest_result.py": "c0c30f043a6d0af017ae8c42b5c60f36c65a7390ce314a311e3fbeb859fff86d",
+    "tests/decky-runtime/syncthing_flatpak_package.py": "5498078bf4e1fee0c9451354c16ecd536df23637a603582867fa3e36c054d389",
+    "tests/test_syncthing_package_timeout.py": "f9f41d778fd75fec20ca735dfe5b3fc9a527c67416db74430cfe9609007d3e6e"
+  },
+  "validation": {
+    "controlledCandidatePassed": true,
+    "controlledOriginalFailureMatches1_985": true,
+    "focusedCandidateTests": 4,
+    "independentCandidateTests": 4,
+    "independentMutationBaselinePassed": true,
+    "independentRejectedMutations": [
+      "clamped-to-timeout",
+      "zero-elapsed",
+      "wrong-timeout-forwarding",
+      "replaced-timeout-exception"
+    ],
+    "realChildTimeoutAndReapingPassed": true,
+    "skips": 0
+  }
+}

@@ -1,0 +1,81 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const act=callback=>ReactDOM.flushSync(callback);
+  try {
+    for(const component of [DFL.Dropdown,DFL.DropdownItem]) for(const deferred of [false,true]) {
+      const first={data:0,label:'First'},second={data:1,label:'Second'},changes=[];
+      let focusable,disabled=false,selected=0,loads=0,release;
+      const redraw=()=>render(React.createElement(component,{label:'Local choice',focusable,disabled,
+        description:React.createElement('em',null,'Local description'),rgOptions:[first,second],selectedOption:selected,
+        onChange:option=>changes.push(option),onMenuWillOpen:deferred ? show=>{loads++;release=show;} : undefined}));
+      redraw();
+      const initial=container.querySelector(deferred ? 'button' : 'select');
+      assert(initial.tabIndex===0&&!initial.hasAttribute('tabindex'),'omitted focusable changed native default');
+      focusable=false;redraw();
+      assert(initial.tabIndex===-1,'focusable=false left dropdown control in tab order');
+      if(deferred) {
+        act(()=>initial.click());
+        let cancel=[...container.querySelectorAll('button')].find(n=>n.textContent==='Cancel loading');
+        assert(loads===1&&cancel?.tabIndex===-1&&!container.querySelector('select'),'deferred gate or Cancel tab stop lost');
+        const stale=release;focusable=true;redraw();
+        assert(container.querySelector('button')===initial&&initial.tabIndex===0&&cancel.tabIndex===0,'loading focusability did not update');
+        focusable=false;redraw();act(()=>cancel.click());act(()=>stale());
+        assert(!container.querySelector('select'),'cancelled loader callback became selectable');
+        act(()=>initial.click());act(()=>release());
+        assert(loads===2&&initial.tabIndex===-1,'click activation or Reload focusability lost');
+      }
+      const select=container.querySelector('select');
+      assert(select.tabIndex===-1&&select.selectedOptions[0].textContent==='First','select opt-out or zero selection lost');
+      act(()=>select.focus());focusable=true;redraw();
+      assert(container.querySelector('select')===select&&select.tabIndex===0&&document.activeElement===select,
+        'focusability update replaced select or local focus');
+      focusable=false;redraw();
+      assert(select.tabIndex===-1&&document.activeElement===select,'tab opt-out unexpectedly blurred current selection');
+      act(()=>{select.value='1';select.dispatchEvent(new Event('change',{bubbles:true}));});
+      assert(changes.length===1&&changes[0]===second,'original option callback lost');
+      selected=1;disabled=true;focusable=false;redraw();
+      assert(select.disabled&&select.tabIndex===-1,'disabled select or tab opt-out lost');
+      act(()=>{select.value='0';select.dispatchEvent(new Event('change',{bubbles:true}));});
+      if(deferred)act(()=>initial.click());
+      assert(changes.length===1&&(!deferred||loads===2),'disabled select/loader emitted callback');
+      disabled=false;focusable=undefined;redraw();
+      assert(container.querySelector('select')===select&&!select.hasAttribute('tabindex')&&select.tabIndex===0,
+        'removing focusable did not restore native default');
+      assert(select.selectedOptions[0].textContent==='Second'&&container.querySelector('em')?.textContent==='Local description',
+        'focusable removal lost selection or description');
+      if(deferred)assert(!initial.hasAttribute('tabindex')&&initial.tabIndex===0&&loads===2,'Reload default or loader lifetime lost');
+      render(null);
+    }
+    // Actual local tab-entry logic must skip opted-out dropdown controls.
+    for(const deferred of [false,true]) {
+      const content=React.createElement(React.Fragment,null,
+        React.createElement(DFL.Dropdown,{label:'Skipped choice',focusable:false,rgOptions:[{data:0,label:'Zero'}],
+          selectedOption:0,onMenuWillOpen:deferred ? ()=>{} : undefined}),
+        React.createElement('button',{id:'next-action'},'Next action'));
+      render(React.createElement(DFL.Tabs,{autoFocusContents:true,tabs:[{id:'one',title:'One',content}]}));
+      assert(document.activeElement===container.querySelector('#next-action'),'tab entry focused opted-out dropdown');
+      render(null);
+    }
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      bothAliases:true,nativeAndDeferred:true,explicitTrueFalseAndOmitted:true,loadCancelReloadTabStops:true,
+      cancelledLoaderInert:true,clickActivationPreserved:true,originalOptionIdentity:true,
+      disabledSuppression:true,stableSelectSelectionAndFocus:true,tabEntrySkipsOptOut:true,syntheticProps:true,
+      physicalControllerTested:false,realFrameContacted:false,vrKeyboardVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

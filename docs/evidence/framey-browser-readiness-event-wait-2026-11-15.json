@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "date": "2026-11-15",
+  "sourceCommit": "5424afd2cf51e9e6db394f8bb74f30bc28ad17f6",
+  "summary": "Keep one owned CDP evaluation waiting for the existing browser ready state instead of repeatedly asking for snapshots.",
+  "sourceSha256": {
+    "tests/decky-runtime/syncthing_browser.py": "4c7b91a3417820e3422423af18267be03fb0d2bbc08ba51d4dea228f6891271c",
+    "tests/test_syncthing_browser_readiness.py": "4d7f765b1d3cde786c2c2e4b02d362ce2f40817da682376756bd03381575e9dd"
+  },
+  "existingTestAndHelperAstsPreserved": 13,
+  "newFocusedTestMethods": [
+    "test_async_ready_message_needs_only_one_cdp_evaluation",
+    "test_browser_wait_expires_without_promoting_an_unready_page",
+    "test_message_without_ready_state_cannot_promote_a_page",
+    "test_ready_handler_running_after_wait_listener_is_observed_after_dispatch",
+    "test_wait_transport_error_restores_timeout_and_closes_only_owned_candidate"
+  ],
+  "focusedMethodsPassed": 20,
+  "focusedSkips": 0,
+  "originalNewRegressionFunctionalFailures": 1,
+  "originalNewSignatureErrors": 4,
+  "originalRegressionFailure": "asynchronous readiness must not require repeated CDP evaluations: 2 != 1",
+  "nativeBrowser": "Google Chrome 150.0.7871.128",
+  "nativeSyntheticCases": 6,
+  "nativeDelayedReadyCdpEvaluations": {
+    "original": 25,
+    "candidate": 1
+  },
+  "nativeFalseAndLateControlsRejectedBoth": true,
+  "originalReadinessBudgetSeconds": 60,
+  "lateReadinessStillRejected": true,
+  "originalRpcDeadlinesUnchanged": true,
+  "browserSocketTimeoutRestored": true,
+  "browserMessageListenerAndTimerRemovedOnCompletion": true,
+  "unchangedOutsideReadinessHelperAndOneCallArgument": true,
+  "productionSourceChanged": false,
+  "allOwnedNativeBrowserGroupsStopped": true,
+  "originalMainFailure": {
+    "head": "5424afd2cf51e9e6db394f8bb74f30bc28ad17f6",
+    "artifactId": 14155939718,
+    "originalRun": 43698061322,
+    "originalJob": 132762878851,
+    "originalAttempt": 1,
+    "assertion": "Browser CDP/panel readiness unavailable",
+    "startupClock": {
+      "origin": "bridge-monotonic",
+      "readinessBudgetSeconds": 60,
+      "browserLaunchStartedAfterSeconds": 0.06,
+      "browserLaunchReturnedAfterSeconds": 0.072,
+      "readinessDeadlineAfterSeconds": 60.072,
+      "readinessFinishedAfterSeconds": 60.468,
+      "readinessPassed": false
+    },
+    "parentReadyReceivedAfterDeadlineSeconds": 4.436,
+    "uiStages": 0,
+    "startupErrors": [],
+    "traceOverflowRetained": true,
+    "lastSnapshotReadyMessages": 0,
+    "browserGroupAndBridgeCleanupPassed": true,
+    "qemuReaped": true,
+    "canonicalPartialMigrationVerificationPassed": true,
+    "readinessSourceEvaluateCallSites": 1,
+    "startupCauseEstablished": false
+  },
+  "historicalOrGeneralArmReadinessRepairEstablished": false,
+  "headArtifactsQualified": false,
+  "wholeHeadQualified": false,
+  "realFrameOrWornProof": false,
+  "releaseQualified": false,
+  "rawEvidence": {
+    "path": "framey-browser-readiness-event-wait-2026-11-15.json.gz",
+    "sha256": "dd592e8f61fa8eacbe009d65711c6a74a43bf35549cd124644f52d3bb5c68bb7",
+    "recordCount": 10,
+    "uncompressedSha256": "2774b9e4a6e5007c0eced8e843ceabc12f74abfc9720dbf6540fee0bf875459b"
+  }
+}

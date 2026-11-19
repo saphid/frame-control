@@ -89,6 +89,9 @@ os._exit(0 if saved is True else 2)
         self.assertTrue(result.stdout.startswith(marker), result.stdout)
         report = json.loads(result.stdout[len(marker):])
         self.assertIs(report['passed'], True, report)
+        for field in ('overlappingReadsReconciled', 'settledSaveDetected',
+                      'quickReadReconciled', 'retiredReaderSilent'):
+            self.assertIs(report[field], True, report)
         report['bundleSha256'] = hashlib.sha256((EXAMPLE.parent/'dist/index.js').read_bytes()).hexdigest()
         print(marker+json.dumps(report, sort_keys=True))
 
@@ -118,6 +121,24 @@ os._exit(0 if saved is True else 2)
             with self.assertRaises(ValueError): asyncio.run(plugin.get_setting('other'))
             with self.assertRaises(ValueError): asyncio.run(plugin.set_setting('enabled', 'yes'))
             self.assertFalse((Path(folder) / 'settings.json').exists())
+
+    def test_read_rejects_non_boolean_fallbacks_without_changing_storage(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'settings.json'
+            plugin = backend(folder)
+            for saved in (None, b'{}\n', b'{"schema": 1, "enabled": true}\n'):
+                with self.subTest(saved=saved):
+                    if saved is not None:
+                        path.write_bytes(saved)
+                    for fallback in ('false', '', 0, 1, None, [], {}):
+                        with self.subTest(fallback=fallback):
+                            with self.assertRaisesRegex(ValueError, 'boolean default'):
+                                asyncio.run(plugin.get_setting('enabled', fallback))
+                            self.assertEqual(path.read_bytes() if path.exists() else None, saved)
+                            self.assertEqual(list(Path(folder).glob('.settings-*')), [])
+                    # Valid reads remain available after rejected RPC input.
+                    expected = True if saved and b'true' in saved else False
+                    self.assertIs(asyncio.run(plugin.get_setting('enabled', False)), expected)
 
     def test_unreadable_or_invalid_saved_settings_are_preserved_on_read_and_save(self):
         with tempfile.TemporaryDirectory() as folder:

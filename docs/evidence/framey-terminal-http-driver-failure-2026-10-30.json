@@ -1,0 +1,24 @@
+{
+  "sourceRevision": "f8dace9853b2dc9568d96c33aefd74ebc0901c04",
+  "sourceFingerprintsVerified": 161,
+  "resultSha256": "401593532bbe62c33616ea75baac28160252e4d2a086f4c044da1901617cd72f",
+  "packetSha256": "b1eca1d46bd72bbd4897536d7d46ba364d67f151a4382816c05efb3cd47865b7",
+  "success": false,
+  "observedStages": [
+    "terminal",
+    "output"
+  ],
+  "completedMethods": [
+    "get_terminals",
+    "create_terminal",
+    "get_terminals",
+    "change_terminal_window_size",
+    "get_config"
+  ],
+  "sendInputRpcObserved": false,
+  "reason": "DOM driver advanced before asynchronous frontend configuration/subscription finished; marker read failed. The failed sample does not prove production input/output.",
+  "ownedCleanupVerified": true,
+  "ownedUserManagerStopped": true,
+  "ownedQemuReaped": true,
+  "realFrameContacted": false
+}

@@ -1,0 +1,54 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), container=document.getElementById('fixture');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const root=ReactDOM.createRoot(container), ref=React.createRef(), changes=[];
+  const help='Use a local name, for example <room> & device.';
+  const render=props=>ReactDOM.flushSync(()=>root.render(React.createElement(DFL.TextField,{
+    label:'Device name',description:'Saved by this example only.',defaultValue:'Private draft',
+    ref,onChange:event=>changes.push(event.currentTarget.value),
+    inlineControls:React.createElement('button',{type:'button'},'Check draft'),...props
+  })));
+  const input=()=>container.querySelector('input');
+  const notes=()=>[...container.querySelectorAll('small')].map(node=>node.textContent);
+  try {
+    render({tooltip:help});
+    assert(JSON.stringify(notes())===JSON.stringify(['Saved by this example only.',help]),
+      'TextField tooltip must be visible alongside its description without hover');
+    const original=input(),handle=ref.current;
+    assert(handle.element===original,'tooltip changed the TextField ref contract');
+    assert(container.querySelector('label').contains(original),'native label association lost');
+    assert(!container.querySelector('room'),'tooltip text was interpreted as markup');
+    assert(container.querySelector('button').textContent==='Check draft','inline controls lost');
+    ReactDOM.flushSync(()=>{
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(original,'Changed draft');
+      original.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    assert(JSON.stringify(changes)==='["Changed draft"]','native change event lost');
+    handle.Focus();assert(document.activeElement===original,'native focus handle failed');
+    render({tooltip:'Help is still visible when editing is disabled.',disabled:true});
+    assert(input()===original&&ref.current===handle,'help update replaced native input or handle');
+    assert(input().disabled&&notes().at(-1)==='Help is still visible when editing is disabled.',
+      'disabled field lost help');
+    assert(input().value==='Changed draft','help update reset the uncontrolled draft');
+    for(const props of [{tooltip:null},{tooltip:undefined},{}]) {
+      render(props);
+      assert(JSON.stringify(notes())==='["Saved by this example only."]','removed tooltip left stale help');
+      assert(input()===original&&input().value==='Changed draft','help removal reset the input');
+    }
+    render({tooltip:'Help only',description:undefined});
+    assert(JSON.stringify(notes())==='["Help only"]','tooltip depends on a description');
+    ReactDOM.flushSync(()=>root.unmount());
+    assert(ref.current===null&&handle.element===null,'unmount did not retire input refs');
+    result.textContent=JSON.stringify({passed:true,documentedApi:'@decky/ui 4.16.0 TextField.tooltip',
+      visibleWithoutHover:true,descriptionPreserved:true,disabledHelp:true,escapedText:true,
+      helpUpdatesAndRemoval:true,nativeInputAndRefPreserved:true,nativeChangePreserved:true,
+      syntheticProps:true,realFrameContacted:false});
+  }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

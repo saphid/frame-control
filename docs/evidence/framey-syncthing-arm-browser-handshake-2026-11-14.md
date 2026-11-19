@@ -1,0 +1,7 @@
+# ARM64 browser startup follow-up
+
+The [failed-run audit](framey-syncthing-arm-browser-handshake-2026-11-14.json) independently verifies the GitHub artifact digest and all 137 source fingerprints for #483 head `1f38e894`, job `131855674999`. The actual signed package installed, synchronized in both directions and completed migration cleanup before browser readiness failed. The retained browser progress record shows a live Chromium process, an assigned DevTools port, a loopback parent page, no reported startup errors and no completed browser stage or RPC. The owned browser and bridge were stopped. These facts do not establish the cause of the missing ready message.
+
+Current-main integration preserves the native ARM64 browser gate, the 60-second startup deadline, package budgets, sandbox requirements and strict success checks. Added bounded parent-handshake counters distinguish parent installation, iframe load, child cache request, seed reply and ready notification; failed readiness retains those counters with document state and whether the iframe URL was assigned, without retaining that URL or session values.
+
+All 78 focused readiness, package and HTTP tests pass. The isolated real-browser startup regression passes normal delivery and a seven-second streaming pause with the new counters observed. This is local x86_64 fixture proof. Fresh exact-head hosted checks, native ARM64 browser qualification, real Steam/Frame and worn/controller verification remain outstanding. Syncthing managed installation remains disabled.

@@ -1,0 +1,35 @@
+{
+  "baseMain": "6ab2ee27a96b09eca03086b8d72aa43b18d641a8",
+  "oldEventSourceSha256": "89046f4c89bdab0f578b910170a044d5ada540db0f7b71d6a370c68b4b008c3f",
+  "eventSourceSha256": "a5ab80f5e35cf168c220f387cc4f4da0033a4982371c98b7faf25d836a296c85",
+  "testSourceSha256": "971f168303ff7722e27d6b4c77d98cffa9b81554abe4b8c0e9128af9aeb63f09",
+  "oldIdleLeaseMilliseconds": 15000,
+  "newIdleLeaseMilliseconds": 60000,
+  "receiptRpcTimeoutSeconds": 15,
+  "eventRpcTimeoutSeconds": 25,
+  "redBeforeFix": true,
+  "regressionPollGapsMilliseconds": [
+    20000,
+    41000
+  ],
+  "greenAfterFix": true,
+  "idleExpiryVerifiedAfterMilliseconds": 61000,
+  "eventEmissionDoesNotRenewClientLease": true,
+  "explicitUnsubscribeStillImmediate": true,
+  "queueBoundsAndPluginFilteringUnchanged": true,
+  "panelTestsPassed": 38,
+  "arm64FailureObservation": {
+    "pr": 492,
+    "head": "789b430650ffd243c08f6b7698dce121d305af95",
+    "job": "https://github.com/saphid/frame-control/actions/runs/43563210062/job/132351266053",
+    "artifactId": 14103451465,
+    "nativeCefEventCount": 4,
+    "nativeCefContainsExpectedTerminalOutput": true,
+    "emptyHttpEventPolls": 7,
+    "idleExpiryObservedDirectly": false
+  },
+  "freshArm64ProductionHttpReplayPassed": false,
+  "realFrameContacted": false,
+  "wornVrVerified": false,
+  "historicalArm64ShutdownCauseProven": false
+}

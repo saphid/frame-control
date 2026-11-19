@@ -1,0 +1,108 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"><button id="opener">Plugin action</button></div>
+<div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const main=document.getElementById('framey-root'),container=document.getElementById('framey-modal');
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=(element,props)=>{let handle;ReactDOM.flushSync(()=>{handle=DFL.showModal(element,null,props);});return handle;};
+  const button=(label,scope=container)=>[...scope.querySelectorAll('button')].find(node=>node.textContent===label);
+  const tap=node=>{assert(node,'missing recovery control');ReactDOM.flushSync(()=>node.click());};
+  const DFL=window.DFL;
+  const unhandled=[];
+  addEventListener('unhandledrejection',event=>unhandled.push(String(event.reason)));
+  __OFFICIAL_ENCODER__
+  let payload='x'.repeat(4000),renders=0,cancels=0,closed=0,mounts=0,unmounts=0;
+  function PublishedQR(){
+    renders++;
+    const level='L',value=payload;
+    __OFFICIAL_RENDER_CALLS__
+    return React.createElement('p',null,'Synthetic QR encoded: '+qr.getModuleCount());
+  }
+  const WrappedQR=({closeModal})=>React.createElement(DFL.ModalRoot,{closeModal,
+    bCancelDisabled:true,bHideCloseIcon:true,onCancel:()=>{cancels++;throw Error('Unexpected plugin cancellation');}},
+    React.createElement(PublishedQR));
+  function Healthy(){
+    const [count,setCount]=React.useState(0);
+    React.useEffect(()=>{mounts++;return()=>unmounts++;},[]);
+    return React.createElement('button',{onClick:()=>setCount(count+1)},'Count '+count);
+  }
+  const failure=()=>{
+    const visible=[...container.querySelectorAll('.framey-dialog')].filter(node=>!node.hidden);
+    assert(visible.length===1,'failed dialog lost its shell or exposed another dialog');
+    const text=visible[0].querySelector('[role="alert"]')?.textContent;
+    assert(text?.includes('code length overflow.'),'published string diagnostic is absent: '+text);
+    assert(button('Close failed dialog',visible[0]),'failed dialog has no recovery action');
+    return visible[0];
+  };
+  try {
+    document.getElementById('opener').focus();
+    let handle=show(React.createElement(WrappedQR,{bHideCloseIcon:true,bCancelDisabled:true}),{fnOnClose:()=>closed++});
+    failure();assert(main.inert,'failed dialog unexpectedly released the main panel before dismissal');
+    tap(button('Close failed dialog'));await handle.ClosedPromise;await settle();
+    assert(!main.inert&&!container.querySelector('.framey-dialog')&&closed===1&&cancels===0,
+      'recovery dismissal left the panel inert, duplicated close or called broken plugin code');
+    assert(document.activeElement.id==='opener','recovery did not restore opener focus');
+
+    // A failed nested dialog must leave the mounted parent and its state intact.
+    const parent=show(React.createElement(Healthy));await settle();tap(button('Count 0'));
+    handle=show(React.createElement(WrappedQR),{fnOnClose:()=>closed++});failure();
+    assert(mounts===1&&unmounts===0,'nested failure unmounted healthy parent');
+    const failedRenders=renders;
+    const sibling=show(React.createElement('p',null,'Healthy sibling'));
+    assert(renders===failedRenders,'stack redraw retried failed dialog');
+    ReactDOM.flushSync(()=>sibling.Close());await sibling.ClosedPromise;failure();
+    tap(button('Close failed dialog'));await handle.ClosedPromise;await settle();
+    assert(button('Count 1')&&!button('Count 1').closest('.framey-dialog').hidden,
+      'healthy parent state or visibility was lost');
+    tap(button('Count 1'));assert(button('Count 2'),'parent controls no longer work');
+    ReactDOM.flushSync(()=>parent.Update(React.createElement(Healthy)));
+    assert(button('Count 2')&&mounts===1,'healthy Update remounted its content');
+    ReactDOM.flushSync(()=>parent.Close());await parent.ClosedPromise;await settle();
+    assert(unmounts===1&&!main.inert,'parent dismissal did not clean up');
+
+    // Update is an explicit replacement: repaired content may mount again.
+    handle=show(React.createElement(WrappedQR));failure();
+    payload='small synthetic payload';
+    ReactDOM.flushSync(()=>handle.Update(React.createElement(WrappedQR)));
+    assert(container.textContent.includes('Synthetic QR encoded:')&&!button('Close failed dialog'),
+      'explicit replacement could not recover from render failure');
+    ReactDOM.flushSync(()=>handle.Close());await handle.ClosedPromise;await settle();
+    assert(!main.inert,'final close left main panel inert');
+
+    // A render failure can also unmount a confirmation with backend work in
+    // flight. Recovery closes only its shell; it cannot cancel that work.
+    let resolveSave,saves=0;
+    const pendingSave=new Promise(resolve=>{resolveSave=resolve;});
+    const Broken=()=>{throw Error('Synthetic save-time render failure');};
+    function SaveDialog({closeModal,frameySetModalBusy}){
+      const [broken,setBroken]=React.useState(false);
+      return React.createElement(DFL.ConfirmModal,{closeModal,frameySetModalBusy,
+        onOK:()=>{saves++;setBroken(true);return pendingSave;}},
+        broken ? React.createElement(Broken) : 'Synthetic settings');
+    }
+    const saving=show(React.createElement(SaveDialog));tap(button('OK'));await settle();
+    assert(container.querySelector('[role="alert"]')?.textContent.includes('Synthetic save-time render failure'),
+      'pending dialog failure has no diagnostic');
+    tap(button('Close failed dialog'));await saving.ClosedPromise;
+    const replacement=show(React.createElement('p',null,'New healthy dialog'));
+    resolveSave();await settle();
+    assert(saves===1&&container.textContent.includes('New healthy dialog')&&!button('Close').disabled,
+      'late save closed or locked replacement dialog');
+    ReactDOM.flushSync(()=>replacement.Close());await replacement.ClosedPromise;await settle();
+    assert(!main.inert&&unhandled.length===0,'pending failure left inert panel or unhandled promise');
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedWineCellarEncoder:true,syntheticOversizedInput:true,failedDialogDismissible:true,
+      cancelDisabledAndHiddenCloseRecovery:true,openerFocusRestored:true,nestedParentStatePreserved:true,
+      failedContentNotRetriedOnStackRedraw:true,healthyUpdatePreservesState:true,explicitUpdateRecovers:true,
+      closedCallbackOnce:true,healthyParentCleanup:true,pendingActionFailureRecovery:true,
+      lateSaveIsolated:true,realPluginFailureObserved:false,
+      realBackendContacted:false,realFrameContacted:false,wornVisibilityVerified:false,
+      controllerInputVerified:false,vrKeyboardVerified:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

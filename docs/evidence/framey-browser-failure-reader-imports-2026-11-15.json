@@ -1,0 +1,51 @@
+{
+  "sourceCommit": "dd2223e799bb3db8256285e353d5a0ad2f4bd014",
+  "changedSourceSha256": {
+    "tests/decky-runtime/syncthing_browser.py": "95b47a1f28047ade729f5b3d24e5249b1347172b04d2394d4597fc7bec1f9e1b",
+    "tests/test_syncthing_browser_diagnostic_imports.py": "115a4df4ebc4fd8a2d2c52b0a7f64036785dc5a02805eb1d0f0ebba682bb9acb"
+  },
+  "originalFailure": {
+    "head": "dd2223e799bb3db8256285e353d5a0ad2f4bd014",
+    "run": 43757172707,
+    "job": 132943689896,
+    "attempt": 1,
+    "artifact": 14180295699,
+    "zipSha256": "4552f34f6e884556e8c96d07904c5dff10bb0e6df7baec366a1fa950c01f2eb0",
+    "readinessDeadlineSeconds": 60.08,
+    "readinessFinishedSeconds": 60.507,
+    "parentReadyReceivedSeconds": 63.978,
+    "uiStages": 0,
+    "finalReaderTimeoutSeconds": 8,
+    "finalReaderImportMarkers": [
+      "syncthing_browser",
+      "hashlib"
+    ],
+    "originalFailureRetained": true,
+    "startupCauseEstablished": false
+  },
+  "allAstOutsideFailureOnlyReaderUnchanged": true,
+  "readOnlyQueryAstUnchanged": true,
+  "originalEightSecondDeadlineIncludesSourceExtraction": true,
+  "sourceReadLimit": 65536,
+  "querySourceLimit": 8192,
+  "focusedMethodsPerPython": 41,
+  "pythonVersions": [
+    "3.12",
+    "3.9"
+  ],
+  "skips": 0,
+  "controlledUnrelatedModuleInitializationStallRedGreen": true,
+  "originalHostedFailureReproduced": false,
+  "startupRepairEstablished": false,
+  "originalMainFailuresRemainUnqualified": true,
+  "newPluginOrVmRuntimeExecutions": 0,
+  "newHostedReruns": 0,
+  "realFrameContacted": false,
+  "privateSnapshotPackagingErrorRetained": true,
+  "priorPrivateRevisionDidNotChargeExtractionTime": true,
+  "rawArchive": {
+    "path": "docs/evidence/framey-browser-failure-reader-imports-2026-11-15-raw.json.gz",
+    "sha256": "a8f495ba6006176a76a65b5356bfa6e904995bb0273713893a2266b96a7b0c75",
+    "records": 16
+  }
+}

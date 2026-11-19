@@ -1,0 +1,43 @@
+test_manual_copy_retries_with_automatic_switches_off (test_autosync.AutoSyncTest.test_manual_copy_retries_with_automatic_switches_off) ... 
+  test_manual_copy_retries_with_automatic_switches_off (test_autosync.AutoSyncTest.test_manual_copy_retries_with_automatic_switches_off) (kind='shots') ... FAIL
+  test_manual_copy_retries_with_automatic_switches_off (test_autosync.AutoSyncTest.test_manual_copy_retries_with_automatic_switches_off) (kind='clips') ... FAIL
+test_manual_copy_resume_retries_after_the_attempt_limit (test_autosync.AutoSyncTest.test_manual_copy_resume_retries_after_the_attempt_limit) ... 
+  test_manual_copy_resume_retries_after_the_attempt_limit (test_autosync.AutoSyncTest.test_manual_copy_resume_retries_after_the_attempt_limit) (kind='shots') ... FAIL
+  test_manual_copy_resume_retries_after_the_attempt_limit (test_autosync.AutoSyncTest.test_manual_copy_resume_retries_after_the_attempt_limit) (kind='clips') ... FAIL
+
+======================================================================
+FAIL: test_manual_copy_retries_with_automatic_switches_off (test_autosync.AutoSyncTest.test_manual_copy_retries_with_automatic_switches_off) (kind='shots')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/tests/test_autosync.py", line 459, in test_manual_copy_retries_with_automatic_switches_off
+    self.assertTrue(sync.state()["pending"])
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_manual_copy_retries_with_automatic_switches_off (test_autosync.AutoSyncTest.test_manual_copy_retries_with_automatic_switches_off) (kind='clips')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/tests/test_autosync.py", line 459, in test_manual_copy_retries_with_automatic_switches_off
+    self.assertTrue(sync.state()["pending"])
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_manual_copy_resume_retries_after_the_attempt_limit (test_autosync.AutoSyncTest.test_manual_copy_resume_retries_after_the_attempt_limit) (kind='shots')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/tests/test_autosync.py", line 484, in test_manual_copy_resume_retries_after_the_attempt_limit
+    self.assertEqual(f.calls.count(copy_call), fa.TRIES)
+AssertionError: 1 != 3
+
+======================================================================
+FAIL: test_manual_copy_resume_retries_after_the_attempt_limit (test_autosync.AutoSyncTest.test_manual_copy_resume_retries_after_the_attempt_limit) (kind='clips')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/tests/test_autosync.py", line 484, in test_manual_copy_resume_retries_after_the_attempt_limit
+    self.assertEqual(f.calls.count(copy_call), fa.TRIES)
+AssertionError: 1 != 3
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.003s
+
+FAILED (failures=4)
