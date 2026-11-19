@@ -207,11 +207,31 @@ tested with hand-made responses (`tests/test_itch_purchases.py`) only.
 |---|---|
 | Bearer key, `GET /profile`, `/profile/owned-keys` paging and its fields, the `errors` array | Documented in the public reference (checked 2026-10-13) |
 | `GET /games/<id>/uploads` and `download_key_id` | Not in the public reference; paths and parameter from itch.io's app client, [go-itchio](https://github.com/itchio/go-itchio) |
-| Upload fields (`filename`, `display_name`, `size`, `storage`, `type`, `traits`, `updated_at`, `demo`, `preorder`) | Assumed from go-itchio and the API's snake_case convention |
+| Upload fields (`filename`, `display_name`, `size`, `storage`, `type`, `traits`, `updated_at`, `demo`, `preorder`) | Client models support most fields, but transform raw responses; these fixtures are not captured wire responses |
 | The `p_android` trait on games | Assumed from itch.io's `p_windows`/`p_linux`/`p_osx` naming; upload selection requires an `.apk` filename |
 | What `/uploads/<id>/download` returns | Unknown: go-itchio only builds the URL and hands it to a downloader, so a redirect, a JSON `url` and the file are all accepted |
 | Whether that endpoint accepts the key as a Bearer header | Unknown: go-itchio puts it in the query string, which Frame Control refuses to do |
 | itch.io's storage host names and addresses | Unknown; any public HTTPS host is allowed |
+
+Source review on 19 November 2026 used go-itchio commit
+[`51030e31bd10075ead05bb69a56286644b15d345`](https://github.com/itchio/go-itchio/tree/51030e31bd10075ead05bb69a56286644b15d345).
+Its `endpoints_profile.go` confirms `/profile/owned-keys`, `page` and
+`per_page` (maximum 500); `endpoints_uploads.go` and `query.go` confirm the
+upload paths and `download_key_id`. `http_helpers.go` camel-cases JSON keys
+before decoding the client models, so their camelCase fields are not raw
+response examples. `hook_game.go` and `hook_upload.go` call `traits` a
+transitional format and handle Windows, Linux and macOS traits; neither
+establishes `p_android`. The client also requests `application/vnd.itch.v2`,
+whereas this adapter requests JSON. Compatibility of those responses remains
+unverified. Its download URL helper includes the API key in the query, so it
+does not establish that our header-only download request works.
+
+The public reference returned HTTP 429 during this review; it was not rechecked
+successfully. This source review does not replace the missing live acceptance:
+connect an account, compare its owned games and APK uploads with itch.io, fetch
+a direct APK without exposing the key, then install through Frame Control on a
+real Frame. Until that passes, this account source remains an unreleased
+candidate. No account credentials or paid downloads were used for the review.
 
 Limits: a game whose page doesn't mark Android, or whose Android build is
 inside a `.zip`, won't install. Android builds have no version codes on
