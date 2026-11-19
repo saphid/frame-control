@@ -100,6 +100,21 @@ test('Apps Games Tools Settings expose installed, browse, ownership and intentio
     f.navigate(route);assert.equal(f.activePage,page,route);assert.equal(f.run('primaryPage(page)'),primary,route);
   }
 });
+test('mailing-list shortcut opens the current Privacy settings workspace, including repeat visits',()=>{
+  const f=workspaceFixture();let focused=0;
+  f.el('cEmail').focus=()=>focused++;
+  const start=html.indexOf('function openMailingList()');
+  f.run(html.slice(start,html.indexOf('if (window.frameApp',start)));
+  for(const from of ['#appStore','#privacy','#mailingList']) {
+    f.navigate(from);f.calls.length=0;f.run('openMailingList()');
+    assert.equal(f.activePage,'settings');assert.equal(f.el('privacy').hidden,false);
+    assert.equal(f.el('privacy').parentNode,f.el('settingsWorkspace'));
+    assert.equal(f.el('settingsDirectory').hidden,true);assert.equal(f.el('settingsWorkspace').hidden,false);
+    assert.equal(f.el('settingsTitle').textContent,'Privacy & updates');
+    assert.ok(f.calls.some(c=>c[0]==='section'&&c[1]==='mailingList'));
+  }
+  assert.equal(focused,3);
+});
 test('app views and game scopes restore separate scroll positions, queries and filters',()=>{
   const f=workspaceFixture();f.navigate('#appStore');f.el('sourceQ').value='video';f.scroll(480);
   f.run("selectApps('installed')");f.el('libQ').value='player';f.scroll(220);

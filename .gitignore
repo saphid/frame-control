@@ -7,6 +7,8 @@ compat-db/.lakebed/
 tests/smoke/results/
 tests/smoke/results-sim/
 mac/bin/
+site/.wrangler/
+site/.dev.vars
 
 # Shared desktop streaming controller build products
 desktop/controller.dll
