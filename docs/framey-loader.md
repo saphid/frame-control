@@ -405,6 +405,20 @@ reproduce the original `~/.local/bin` CLI discovery failure and pre-EOF forced
 localhost QR asset, adapted ARM64/Frame execution and worn VR remain unverified;
 see [the native evidence](evidence/framey-tailscale-control-runtime-2026-11-21.md).
 
+Junk-Store 1.1.13 removes `Helper.ws_loop.stop()` and loop-wide
+`asyncio.all_tasks()` cancellation from unload (leaving Decky's shared event
+loop and IPC/unload tasks intact so `_unload` finishes without crashing in
+`RecursionError`) and installs the shared child IPC EOF repair while preserving
+all other archive files and script execute permissions. Existing copies need
+Update or reinstall. Local AMD64 Decky 3.3.0 probes run under UID 1100 with
+`--network=none` and verify static menu actions, localhost WebSocket startup and
+teardown, post-EOF RPC, restart and two strict parent-only stops completing
+Junk-Store's unload hook. Two negative controls reproduce the original
+`RecursionError` unload crash on `SIGTERM` and the pre-EOF forced `SIGKILL`
+shutdown. Legendary, login, game operations, RSS, WebSocket commands, adapted
+ARM64/Frame unload and worn VR remain unverified; see
+[the native evidence](evidence/framey-junk-store-unload-2026-11-21.md).
+
 The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the

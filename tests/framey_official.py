@@ -29,6 +29,7 @@ PLUGINS = (
     {'id': 38, 'name': 'Volume Mixer', 'version': '1.2.1-1', 'api_version': 'legacy', 'folder': 'VolumeMixer-decky', 'sha256': '11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3'},
     {'id': 58, 'name': 'Volume Boost', 'version': '0.0.7', 'api_version': 'legacy', 'folder': 'volume-boost', 'sha256': '2cc576a7f60751306d690268e227df626e59d3733680ced753de4c116629a9cc'},
     {'id': 43, 'name': 'Tailscale Control', 'version': '0.1.3', 'api_version': 'legacy', 'folder': 'tailscale-control', 'sha256': '06411711b27101d438339000da3d91202d682862710b02ef3ddf2462e642448a'},
+    {'id': 84, 'name': 'Junk-Store', 'version': '1.1.13', 'api_version': 'legacy', 'folder': 'Junk-Store', 'sha256': 'f7ad2a0103c85bf308929b2e96ec9aeeb0d76bcc6ae97eb1e4b5f31ffba0cbb1'},
     {'id': 87, 'name': 'ScreenSaver', 'version': '1.1.2', 'api_version': 'legacy', 'folder': 'DeckyInhibitScreenSaver', 'sha256': '5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822'},
     {'id': 23, 'name': 'Animation Changer', 'version': '1.3.2', 'api_version': 'legacy',
      'folder': 'SDH-AnimationChanger', 'sha256': 'f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133'},

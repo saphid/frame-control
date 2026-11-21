@@ -74,6 +74,14 @@
     ]
   },
   {
+    "id": 84,
+    "shim": "junk-store-clean-unload",
+    "probe": "junk-store-private-menu",
+    "additionalShims": [
+      "junk-store-ipc-eof"
+    ]
+  },
+  {
     "id": 87,
     "shim": "screensaver-user-bus",
     "additionalShims": [

@@ -359,6 +359,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 43 and digest == '06411711b27101d438339000da3d91202d682862710b02ef3ddf2462e642448a':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_TAILSCALE_CONTROL_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 84 and digest == 'f7ad2a0103c85bf308929b2e96ec9aeeb0d76bcc6ae97eb1e4b5f31ffba0cbb1':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_JUNK_STORE_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 87 and digest == '5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822':
         source = Path(__file__).with_name('framey_screensaver.py').read_text(encoding='utf-8')
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
@@ -806,6 +809,48 @@ try:
                 main.write_bytes(updated)
                 compat_shims.append('tailscale-control-user-runtime')
                 compat_shims.append('tailscale-control-ipc-eof')
+            if (int(plugin_id)==84 and digest=='f7ad2a0103c85bf308929b2e96ec9aeeb0d76bcc6ae97eb1e4b5f31ffba0cbb1' and folder=='Junk-Store'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Junk-Store' or manifest.get('flags')!=[]
+                        or 'api_version' in manifest
+                        or hashlib.sha256(original).hexdigest()!='36c3201eff834fb9b33952d3da60c8b99038ab4c637d5c543a2ad53f3370b45b'):
+                    raise RuntimeError('Junk-Store manifest or backend differs from pinned archive')
+                old_stop=(
+                    b'            # Stop the event loop if it exists\n'
+                    b'            if Helper.ws_loop and Helper.ws_loop.is_running():\n'
+                    b'                Helper.ws_loop.stop()\n'
+                )
+                old_cancel=(
+                    b'            # Cancel all pending asyncio tasks\n'
+                    b'            tasks = [task for task in asyncio.all_tasks() if not task.done()]\n'
+                    b'            if tasks:\n'
+                    b'                decky_plugin.logger.info(f"Cancelling {len(tasks)} pending tasks...")\n'
+                    b'                for task in tasks:\n'
+                    b'                    task.cancel()\n'
+                    b'                # Wait for all tasks to complete cancellation\n'
+                    b'                await asyncio.gather(*tasks, return_exceptions=True)\n'
+                )
+                if original.count(old_stop)!=1 or original.count(old_cancel)!=1:
+                    raise RuntimeError('Junk-Store unload block differs from pinned archive')
+                ipc=globals().get('FRAMEY_JUNK_STORE_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Junk-Store IPC helper')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Junk-Store IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                updated=prefix+original.replace(
+                    old_stop, b'            # Leave Decky\'s shared event loop running during plugin unload.\n'
+                ).replace(
+                    old_cancel, b'            # Leave Decky\'s shared IPC and unload tasks intact.\n'
+                )
+                compile(updated,str(main),'exec')
+                main.write_bytes(updated)
+                compat_shims.append('junk-store-clean-unload')
+                compat_shims.append('junk-store-ipc-eof')
             if (int(plugin_id)==87 and digest=='5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822' and folder=='DeckyInhibitScreenSaver'):
                 main=unpacked/'main.py'
                 original=main.read_bytes()

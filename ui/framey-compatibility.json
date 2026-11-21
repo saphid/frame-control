@@ -6764,7 +6764,7 @@
         "https://github.com/ebenbruyns/junkstore.git"
       ],
       "status": "partial",
-      "reason": "Official Decky 3.3.0 ARM64 static menu/backend calls pass; local Chromium Games/Epic navigation, About/Dependencies tabs, Back and reopen render with real Frame library metadata. Legendary is absent; dependency install, login, game operations, RSS, optional websocket and worn VR remain unverified. Existing installs need update/reinstall for script permissions.",
+      "reason": "Official Decky 3.3.0 ARM64 static menu/backend calls pass; local Chromium Games/Epic navigation, About/Dependencies tabs, Back and reopen render with real Frame library metadata. Exact managed installs now leave Decky's shared event loop and IPC tasks intact during unload (fixing the original RecursionError unload crash) and repair child IPC EOF shutdown; native AMD64 static menu actions, websocket port, post-EOF RPC, restart and two strict stops are covered. Update/reinstall old copies for script permissions and clean unload. Legendary is absent; dependency install, login, game operations, RSS, optional websocket commands, adapted ARM64/Frame unload and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -6827,6 +6827,15 @@
           "browser": "About/Dependencies, Back, close/reopen; real library projection; static ARM64 backend calls",
           "installedUnknown": "preserved as undefined; no fabricated false"
         }
+      },
+      "requiredShims": [
+        "junk-store-clean-unload",
+        "junk-store-ipc-eof"
+      ],
+      "junkStoreRuntime": {
+        "evidence": "docs/evidence/framey-junk-store-unload-2026-11-21.md",
+        "runtime": "published Decky 3.3.0 native AMD64; static menu actions and websocket teardown; actual UID 1100; network none",
+        "realFrameContacted": false
       }
     },
     {
