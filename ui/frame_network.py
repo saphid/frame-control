@@ -135,11 +135,12 @@ def parse_nmcli(text):
 
 def parse_netsh(text):
     """`netsh wlan show interfaces` -> the connected SSID (not the BSSID line)."""
-    state = re.search(r"^\s*State\s*:\s*(\S+)", text, re.M)
-    ssid = re.search(r"^\s*SSID\s*:\s*(.+?)\s*$", text, re.M)
-    if not ssid or (state and state.group(1).lower() != "connected"):
-        return None
-    return ssid.group(1)
+    for block in re.split(r"(?=^\s*Name\s*:)", text, flags=re.M):
+        state = re.search(r"^\s*State\s*:\s*(\S+)", block, re.M)
+        ssid = re.search(r"^\s*SSID\s*:\s*(.+?)\s*$", block, re.M)
+        if ssid and (not state or state.group(1).lower() == "connected"):
+            return ssid.group(1)
+    return None
 
 
 # ---- Tailscale -----------------------------------------------------------------
@@ -240,32 +241,54 @@ def local_ip(towards="192.0.2.1"):
         return None
 
 
+def _ipv4(text):
+    if not isinstance(text, str):
+        return None
+    try:
+        ip = ipaddress.ip_address(text)
+    except ValueError:
+        return None
+    return ip if ip.version == 4 else None
+
+
 def parse_neighbours(text, local, gateway=None):
     """Numeric IPv4 neighbours on this host's /24, excluding itself and its router.
 
     Accepts Linux `ip neigh`, macOS `arp -an` and Windows `arp -a`. The active
     search uses the same /24; the cache just puts recently seen peers first.
     """
-    if not valid_ip(local):
+    local_addr = _ipv4(local)
+    if local_addr is None:
         return []
-    subnet = ipaddress.ip_network(local + "/24", strict=False)
+    subnet = ipaddress.ip_network(f"{local_addr}/24", strict=False)
+    skip = {local_addr, subnet.network_address, subnet.broadcast_address}
+    gw_addr = _ipv4(gateway)
+    if gw_addr is not None:
+        skip.add(gw_addr)
     found = []
     for match in re.finditer(r"(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])", text):
-        ip = match.group()
-        if valid_ip(ip) and ipaddress.ip_address(ip) in subnet and ip not in (local, gateway) and ip not in found:
-            found.append(ip)
+        addr = _ipv4(match.group())
+        if addr is not None and addr in subnet and addr not in skip:
+            ip = str(addr)
+            if ip not in found:
+                found.append(ip)
     return found
 
 
 def local_scan_candidates(local=None, gateway_ip=None, neighbours=""):
     """Bounded IPv4 search order for an explicit Find action; never scan a WAN."""
-    local = local or local_ip()
-    if (not valid_ip(local) or not ipaddress.ip_address(local).is_private or
-            ipaddress.ip_address(local).is_loopback or is_tailscale(local)):
+    addr = _ipv4(local or local_ip())
+    if (addr is None or not addr.is_private or addr.is_loopback or
+            addr.is_unspecified or is_tailscale(str(addr))):
         return []
-    subnet = ipaddress.ip_network(local + "/24", strict=False)
-    recent = parse_neighbours(neighbours, local, gateway_ip)
-    return recent + [str(ip) for ip in subnet.hosts() if str(ip) not in recent and str(ip) not in (local, gateway_ip)]
+    local_str = str(addr)
+    subnet = ipaddress.ip_network(f"{local_str}/24", strict=False)
+    recent = parse_neighbours(neighbours, local_str, gateway_ip)
+    gw_addr = _ipv4(gateway_ip)
+    excluded = set(recent) | {local_str}
+    if gw_addr is not None:
+        excluded.add(str(gw_addr))
+    return recent + [str(ip) for ip in subnet.hosts() if str(ip) not in excluded]
 
 
 def neighbour_cache():

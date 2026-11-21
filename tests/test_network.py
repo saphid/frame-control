@@ -113,11 +113,55 @@ class Parsers(unittest.TestCase):
         self.assertNotIn("192.168.51.31", candidates)
         self.assertEqual(fn.local_scan_candidates("100.101.1.4", "100.101.1.1"), [])
 
+    def test_neighbour_scan_skips_network_broadcast_and_non_ipv4_locals(self):
+        win_arp = (
+            "Interface: 192.168.50.9 --- 0xc\n"
+            "  192.168.50.0          ff-ff-ff-ff-ff-ff     static\n"
+            "  192.168.50.1          b4-fb-e4-b5-67-55     dynamic\n"
+            "  192.168.50.31         00-11-22-33-44-55     dynamic\n"
+            "  192.168.50.255        ff-ff-ff-ff-ff-ff     static\n"
+        )
+        self.assertEqual(fn.parse_neighbours(win_arp, "192.168.50.9", "192.168.50.1"), ["192.168.50.31"])
+        candidates = fn.local_scan_candidates("192.168.50.9", "192.168.50.1", win_arp)
+        self.assertEqual(candidates[0], "192.168.50.31")
+        self.assertEqual(len(candidates), 252)
+        self.assertNotIn("192.168.50.0", candidates)
+        self.assertNotIn("192.168.50.255", candidates)
+        self.assertEqual(fn.local_scan_candidates("0.0.0.0"), [])
+        self.assertEqual(fn.parse_neighbours(win_arp, "fd00::1"), [])
+        self.assertEqual(fn.local_scan_candidates("fd00::1"), [])
+        self.assertEqual(fn.local_scan_candidates("fe80::1"), [])
+
     def test_windows(self):
         self.assertEqual(fn.parse_route_windows(WIN_ROUTE), ("192.168.1.1", "192.168.1.50"))
         self.assertEqual(fn.parse_arp_windows(WIN_ARP, "192.168.1.1"), "b4:fb:e4:b5:67:55")
         self.assertEqual(fn.parse_netsh(NETSH), "Office 5G")  # not the BSSID
         self.assertIsNone(fn.parse_netsh(NETSH_OFF))
+
+    def test_netsh_handles_multiple_interfaces(self):
+        second_connected = (
+            "There are 2 interfaces on the system:\n\n"
+            "    Name                   : Wi-Fi\n"
+            "    Description            : Intel(R) Wi-Fi 6 AX201 160MHz\n"
+            "    State                  : disconnected\n\n"
+            "    Name                   : Wi-Fi 2\n"
+            "    Description            : USB Wireless LAN\n"
+            "    State                  : connected\n"
+            "    SSID                   : Office 5G\n"
+            "    BSSID                  : 12:34:56:78:9a:bc\n"
+        )
+        first_connected = (
+            "There are 2 interfaces on the system:\n\n"
+            "    Name                   : Wi-Fi\n"
+            "    State                  : connected\n"
+            "    SSID                   : Home 5G\n\n"
+            "    Name                   : Wi-Fi 2\n"
+            "    State                  : disconnected\n"
+        )
+        both_disconnected = second_connected.replace("State                  : connected", "State                  : disconnected")
+        self.assertEqual(fn.parse_netsh(second_connected), "Office 5G")
+        self.assertEqual(fn.parse_netsh(first_connected), "Home 5G")
+        self.assertIsNone(fn.parse_netsh(both_disconnected))
 
     def test_mac_addresses(self):
         self.assertEqual(fn.norm_mac("B4-FB-E4-B5-67-55"), "b4:fb:e4:b5:67:55")
