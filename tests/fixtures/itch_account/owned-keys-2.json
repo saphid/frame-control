@@ -1,0 +1,19 @@
+{
+ "page": 2,
+ "per_page": 500,
+ "owned_keys": [
+  {"id": 8001, "game_id": 341190, "purchase_id": null, "downloads": 1,
+   "created_at": "2025-06-01T10:00:00Z", "updated_at": "2025-06-01T10:00:00Z",
+   "game": {"id": 341190, "title": "Orbit Garden VR", "url": "https://maker.itch.io/orbit-garden",
+            "type": "default", "classification": "game", "min_price": 1299,
+            "traits": ["p_windows", "p_android", "can_be_bought"],
+            "user": {"id": 46531, "username": "maker", "display_name": "Maker Studio"}}},
+  {"id": 8002, "game_id": 77, "purchase_id": null, "downloads": 2,
+   "created_at": "2025-05-01T10:00:00Z", "updated_at": "2025-05-01T10:00:00Z",
+   "game": {"id": 77, "title": "Free Quest Toy", "url": "https://toys.itch.io/quest-toy",
+            "cover_url": "http://img.example/not-itch.png",
+            "type": "default", "classification": "game", "min_price": 0,
+            "traits": ["p_android"], "published_at": "2025-04-01T00:00:00Z",
+            "user": {"id": 5, "username": "toys"}}}
+ ]
+}

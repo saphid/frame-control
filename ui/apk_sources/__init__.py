@@ -27,12 +27,15 @@ Entry dict (missing facts are None, never guessed)
  'version': '1.2', 'version_code': 12, 'min_sdk': 24, 'abis': ['arm64-v8a'],
  'vr': True/False/None, 'size': bytes, 'free': True, 'license': 'GPL-3.0' or None,
  'updated': 'YYYY-MM-DD', 'downloadable': bool,   # False = open page only
+ 'download_note': str,  # optional explanation when the creator's page is required
  'versions': [ {version, version_code, min_sdk, size, updated}, ... ]}  # details() only
 
 Rules
 -----
 - Only sources that distribute APKs with the developer's consent: free listings,
-  never paid apps re-hosted, no licence or entitlement workarounds.
+  never paid apps re-hosted, no licence or entitlement workarounds. The one paid
+  exception is a store's own download of a game the user bought there: a source
+  marked 'owned': True whose entries carry 'owned': True (itch.io purchases).
 - Honour each site's terms and robots rules; if automated download isn't allowed,
   return entries with 'downloadable': False and a 'page' link instead.
 - Cache indexes under frame_host.cache_dir('apk-sources'); send a clear
