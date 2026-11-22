@@ -245,7 +245,10 @@ def group(entries, query='', vr=None, installable=False, category=None, phone=Fa
         entry = decorate(entry, shots=3, reports=reports)
         if not categories.matches(entry, category, phone):
             continue
-        if vr is not None and (entry.get('vr') is True) != vr:  # unknown counts as flat
+        # Unknown counts as flat, except the user's own purchases (itch.io doesn't say which are
+        # VR): those show under either choice rather than vanish from one.
+        if vr is not None and (entry.get('vr') is True) != vr \
+                and not (entry.get('owned') is True and entry.get('vr') is None):
             continue
         if installable and entry['fit']['installable'] is not True:
             continue
@@ -276,6 +279,11 @@ def group(entries, query='', vr=None, installable=False, category=None, phone=Fa
                                a['offers'][0].get('vr') is not True,
                                normalise(a['name'])))
     return result
+
+
+def obtainable(source, entry):
+    """Free, or a game the user owns, listed by their own account's source (itch.io purchases)."""
+    return entry.get('free') is True or (source.get('owned') is True and entry.get('owned') is True)
 
 
 def _launch(module, source, query, limit, category=None, phone=False):
@@ -310,7 +318,7 @@ def _start(key, task):
         queued = None
         try:
             task['entries'] = [dict(e, source=key, source_name=source['name'], trust=source.get('trust'))
-                               for e in module.search(source, query, limit=limit, **kwargs) if e.get('free') is True]
+                               for e in module.search(source, query, limit=limit, **kwargs) if obtainable(source, e)]
             task['stale'] = bool(getattr(module, 'stale', lambda s: False)(source))
         except Exception as e:
             task['error'] = str(e)
@@ -403,7 +411,7 @@ def install(source_id, entry_id, version_code=None, progress=None):
     if not source['enabled']:
         raise SourceError('This source is disabled')
     entry = module.details(source, entry_id)
-    if entry.get('free') is not True or entry.get('downloadable') is not True:
+    if not obtainable(source, entry) or entry.get('downloadable') is not True:
         raise SourceError('This app must be obtained from its developer page')
     if progress:
         progress('Downloading', None)
