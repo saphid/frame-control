@@ -18,7 +18,12 @@ func nowUs() -> Int64 { hostUs(mach_absolute_time()) }
 func hostUs(_ ticks: UInt64) -> Int64 { Int64(ticks / 1000 * UInt64(timebase.numer) / UInt64(timebase.denom)) }
 
 /// A host-clock CMTime (ScreenCaptureKit's presentation times) in microseconds.
-func hostUs(_ t: CMTime) -> Int64 { t.isValid ? Int64(CMTimeGetSeconds(t) * 1_000_000) : nowUs() }
+func hostUs(_ t: CMTime) -> Int64 {
+    guard t.isNumeric else { return nowUs() }
+    let us = CMTimeGetSeconds(t) * 1_000_000
+    guard us.isFinite else { return nowUs() }
+    return Int64(min(max(us, -9e18), 9e18))
+}
 
 /// One frame's journey. Zero means "didn't happen" or "not reported yet".
 struct FrameRecord {
@@ -141,7 +146,7 @@ final class StreamStats {
         func ms(_ pick: (FrameRecord) -> (Int64, Int64)) -> [String: Double] {
             let v = recent.compactMap { r -> Double? in
                 let (a, b) = pick(r)
-                return a > 0 && b > 0 ? Double(b - a) / 1000 : nil
+                return a > 0 && b > 0 ? (Double(b) - Double(a)) / 1000 : nil
             }.sorted()
             guard !v.isEmpty else { return [:] }
             return ["p50": (percentile(v, 0.5)! * 10).rounded() / 10, "p95": (percentile(v, 0.95)! * 10).rounded() / 10]
@@ -160,10 +165,11 @@ final class StreamStats {
             "fps": (Double(shown) / secs * 10).rounded() / 10,
             "sentFps": (Double(recent.count) / secs * 10).rounded() / 10,
             "mbps": (Double(bytes * 8) / secs / 1e5).rounded() / 10,
-            "rtt": (rtt * 10).rounded() / 10,
-            "synced": clockSynced,
         ]
         withLock {
+            let safeRtt = rtt.isFinite ? (rtt * 10).rounded() / 10 : 0
+            s["rtt"] = safeRtt
+            s["synced"] = clockSynced
             s["captured"] = captured
             s["skipped"] = skipped
             s["dropped"] = viewerDropped
@@ -171,7 +177,7 @@ final class StreamStats {
             let done = inputOrder.suffix(20).compactMap { inputs[$0] }.compactMap { i -> Double? in
                 guard i.frame != 0, let f = frames[Int(i.frame) % StreamStats.capacity], f.seq == i.frame, f.vsync > 0
                 else { return nil }
-                return Double(f.vsync - i.viewer) / 1000
+                return (Double(f.vsync) - Double(i.viewer)) / 1000
             }.sorted()
             if !done.isEmpty { s["input"] = ["p50": percentile(done, 0.5)!, "n": done.count] }
         }

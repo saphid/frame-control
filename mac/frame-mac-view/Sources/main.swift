@@ -21,6 +21,7 @@
 // src is window:<CGWindowID>, display:<CGDirectDisplayID> or test.
 import AppKit
 import ApplicationServices
+import CryptoKit
 import Foundation
 import IOKit.pwr_mgt
 import ScreenCaptureKit
@@ -65,6 +66,16 @@ func printJSON(_ obj: Any) {
 
 /// A number from a JSON message, whatever its JSON type.
 func num(_ v: Any?) -> Double? { (v as? NSNumber)?.doubleValue }
+
+func safeInt64(_ v: Double?) -> Int64 {
+    guard let v, v.isFinite else { return 0 }
+    return Int64(min(max(v, -9e18), 9e18))
+}
+
+func safeDropCount(_ v: Double?) -> Int {
+    guard let v, v.isFinite, v > 0 else { return 0 }
+    return Int(min(v, 1_000_000))
+}
 
 /// One viewer watching one source.
 final class Session {
@@ -231,7 +242,9 @@ final class Session {
             // input this frame is the first reply to; all big-endian.
             var msg = Data(capacity: data.count + 17)
             msg.append(key ? 1 : 0)
-            var us = UInt64(max(0, CMTimeGetSeconds(pts)) * 1_000_000).bigEndian
+            let ptsSecs = CMTimeGetSeconds(pts)
+            let ptsUs = (pts.isNumeric && ptsSecs.isFinite && ptsSecs > 0) ? min(ptsSecs * 1_000_000, 1.8e19) : 0
+            var us = UInt64(ptsUs).bigEndian
             msg.append(Data(bytes: &us, count: 8))
             var s = seq.bigEndian, e = echo.bigEndian
             msg.append(Data(bytes: &s, count: 4))
@@ -345,7 +358,7 @@ final class Session {
     private func injected(_ m: [String: Any], kind: String) {
         guard let iid = (m["i"] as? NSNumber)?.uint32Value, iid != 0 else { return }
         let now = nowUs()
-        stats.addInput(InputRecord(id: iid, kind: kind, viewer: Int64(num(m["tv"]) ?? 0), injected: now))
+        stats.addInput(InputRecord(id: iid, kind: kind, viewer: safeInt64(num(m["tv"])), injected: now))
         lock.lock(); pendingEcho = (iid, now); lock.unlock()
     }
 
@@ -356,23 +369,24 @@ final class Session {
             ws.sendJSON(["t": "pong", "c": m["c"] ?? 0, "a": nowUs()])
         case "rx":
             guard let s = (m["s"] as? NSNumber)?.uint32Value else { break }
-            if let r = num(m["r"]) { stats.update(s) { $0.received = Int64(r) } }
+            if let r = num(m["r"]), r.isFinite { stats.update(s) { $0.received = safeInt64(r) } }
             if controller.acked(seq: s, at: nowUs()) { resendIfRoom() }
         case "fd":
             for f in m["f"] as? [[NSNumber]] ?? [] where f.count >= 4 {
                 stats.update(f[0].uint32Value) {
-                    $0.decoded = f[1].int64Value
-                    $0.drawn = f[2].int64Value
-                    $0.vsync = f[3].int64Value
+                    $0.decoded = safeInt64(f[1].doubleValue)
+                    $0.drawn = safeInt64(f[2].doubleValue)
+                    $0.vsync = safeInt64(f[3].doubleValue)
                 }
             }
-            let dropped = Int(num(m["drop"]) ?? 0)
-            stats.withLock { stats.viewerDropped += dropped }
+            let dropped = safeDropCount(num(m["drop"]))
+            stats.withLock { stats.viewerDropped = min(stats.viewerDropped + dropped, Int.max / 2) }
         case "w":
             break  // keep-warm filler, see sendInfo
         case "clock":
+            let rttVal = num(m["rtt"])
             stats.withLock {
-                stats.rtt = num(m["rtt"]) ?? 0
+                stats.rtt = (rttVal?.isFinite == true) ? rttVal! : 0
                 stats.clockSynced = true
                 if let d = m["dec"] as? String { stats.decoder = d }
             }
@@ -446,9 +460,8 @@ final class Session {
 }
 
 func randomKey() -> String {
-    var bytes = [UInt8](repeating: 0, count: 24)
-    _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
-    return Data(bytes).base64EncodedString().replacingOccurrences(of: "+", with: "-")
+    let raw = SymmetricKey(size: .bits192).withUnsafeBytes { Data($0) }
+    return raw.base64EncodedString().replacingOccurrences(of: "+", with: "-")
         .replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
 }
 
@@ -608,7 +621,9 @@ final class Agent {
             let list = sessions.values.filter { $0.source.key == req.query["src"] }
             lock.unlock()
             var m: [String: Any] = [:]
-            for (k, v) in req.query where k != "k" && k != "src" { m[k] = Double(v) ?? v as Any }
+            for (k, v) in req.query where k != "k" && k != "src" {
+                if let d = Double(v), d.isFinite { m[k] = d } else { m[k] = v }
+            }
             for s in list { s.bench(m) }
             c.respond(json: ["sent": list.count])
         case ("GET", "/snapshot"):
@@ -629,7 +644,8 @@ final class Agent {
         let codec = Codec(rawValue: req.query["codec"] ?? "h264") ?? .h264
         let maxLong = min(max(Int(req.query["max"] ?? "") ?? 1920, 320), 3840)
         let fps = min(max(Int(req.query["fps"] ?? "") ?? 60, 5), 120)
-        let bpp = min(max(Double(req.query["bpp"] ?? "") ?? 0.1, 0.02), 0.5)
+        let rawBpp = Double(req.query["bpp"] ?? "")
+        let bpp = (rawBpp?.isFinite == true) ? min(max(rawBpp!, 0.02), 0.5) : 0.1
         guard let ws = c.upgrade(req) else { return }
         let capture: CaptureSource
         switch src {

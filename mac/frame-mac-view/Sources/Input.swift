@@ -83,11 +83,17 @@ enum Input {
         e.post(tap: .cghidEventTap)
     }
 
+    private static func clampWheel(_ v: Double) -> Int32 {
+        guard v.isFinite else { return 0 }
+        let clamped = min(max((-v).rounded(), -100_000), 100_000)
+        return Int32(clamped)
+    }
+
     static func scroll(dx: Double, dy: Double, at p: CGPoint, owner: Int) {
         mouse("move", button: 0, at: p, owner: owner)
         // Browsers report pixels with +y meaning "scroll down"; macOS's +y is up.
         guard let e = CGEvent(scrollWheelEvent2Source: source, units: .pixel, wheelCount: 2,
-                              wheel1: Int32(-dy.rounded()), wheel2: Int32(-dx.rounded()), wheel3: 0) else { return }
+                              wheel1: clampWheel(dy), wheel2: clampWheel(dx), wheel3: 0) else { return }
         e.location = p
         e.post(tap: .cghidEventTap)
     }
