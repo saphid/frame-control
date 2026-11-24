@@ -102,20 +102,47 @@ struct WebShell: UIViewRepresentable {
             return content
         }
 
+        static func allowsBridgeOrigin(isMainFrame: Bool, scheme: String, host: String, port: Int, loaded: URL?) -> Bool {
+            guard isMainFrame, let loaded, let expectedPort = loaded.port else { return false }
+            return scheme.lowercased() == "http" && host == "127.0.0.1" && port == expectedPort
+        }
+
+        static func allowsWebNavigation(_ url: URL, loaded: URL?) -> Bool {
+            let scheme = url.scheme?.lowercased() ?? ""
+            if ["about", "blob", "data"].contains(scheme) { return true }
+            guard scheme == "http", url.host == "127.0.0.1", let expectedPort = loaded?.port else { return false }
+            return url.port == expectedPort
+        }
+
+        static func externalBrowserURL(_ url: URL) -> URL? {
+            guard let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme),
+                  let host = url.host?.lowercased(), !host.isEmpty,
+                  host != "127.0.0.1", host != "localhost", host != "::1", host != "[::1]" else { return nil }
+            return url
+        }
+
         // MARK: bridge
 
         @MainActor
         func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage,
                                    replyHandler: @escaping (Any?, String?) -> Void) {
+            let origin = message.frameInfo.securityOrigin
+            guard Self.allowsBridgeOrigin(
+                isMainFrame: message.frameInfo.isMainFrame,
+                scheme: origin.`protocol`,
+                host: origin.host,
+                port: origin.port,
+                loaded: loaded
+            ) else {
+                return replyHandler(nil, "Untrusted origin")
+            }
             guard let body = message.body as? [String: Any], let name = body["name"] as? String else {
                 return replyHandler(nil, "bad message")
             }
             let arg = body["arg"]
             switch name {
             case "notify":
-                guard message.frameInfo.isMainFrame,
-                      message.frameInfo.securityOrigin.host == "127.0.0.1",
-                      let args = arg as? [String: Any], let text = args["message"] as? String,
+                guard let args = arg as? [String: Any], let text = args["message"] as? String,
                       let content = Self.notificationContent(text) else {
                     return replyHandler(nil, "Invalid notification")
                 }
@@ -208,11 +235,14 @@ struct WebShell: UIViewRepresentable {
         @MainActor
         private func open(_ what: String) -> (message: String?, error: String?) {
             guard let s = model.settings else { return (nil, "Not paired with a Frame") }
+            guard let user = s.user.addingPercentEncoding(withAllowedCharacters: .urlUserAllowed) else {
+                return (nil, "Bad address")
+            }
             let host = s.host.contains(":") ? "[\(s.host)]" : s.host
             let target: (url: String, app: String, store: String)
             switch what {
-            case "terminal": target = ("ssh://\(s.user)@\(host):\(s.port)", "an SSH app such as Blink Shell or Termius", "https://apps.apple.com/search?term=ssh")
-            case "sftp": target = ("sftp://\(s.user)@\(host):\(s.port)", "an SFTP app such as Termius or Secure ShellFish", "https://apps.apple.com/search?term=sftp")
+            case "terminal": target = ("ssh://\(user)@\(host):\(s.port)", "an SSH app such as Blink Shell or Termius", "https://apps.apple.com/search?term=ssh")
+            case "sftp": target = ("sftp://\(user)@\(host):\(s.port)", "an SFTP app such as Termius or Secure ShellFish", "https://apps.apple.com/search?term=sftp")
             case "steamlink": target = ("steamlink://", "Steam Link", "https://apps.apple.com/app/steam-link/id1246969117")
             case "rdp": target = ("rdp://full%20address=s:\(s.host):3389", "Windows App (Microsoft Remote Desktop)", "https://apps.apple.com/app/windows-app/id714464092")
             default: return (nil, "Can't open \(what) on this \(model.deviceName)")
@@ -290,16 +320,20 @@ struct WebShell: UIViewRepresentable {
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             guard let url = action.request.url else { return decisionHandler(.cancel) }
-            if url.host == "127.0.0.1" || url.scheme == "about" || url.scheme == "blob" || url.scheme == "data" {
+            if Self.allowsWebNavigation(url, loaded: loaded) {
                 return decisionHandler(.allow)
             }
-            UIApplication.shared.open(url)
+            if let external = Self.externalBrowserURL(url) {
+                UIApplication.shared.open(external)
+            }
             decisionHandler(.cancel)
         }
 
         func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
                      for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-            if let url = action.request.url { UIApplication.shared.open(url) }  // target="_blank" links
+            if let url = action.request.url, let external = Self.externalBrowserURL(url) {
+                UIApplication.shared.open(external)
+            }  // target="_blank" links
             return nil
         }
 

@@ -294,8 +294,8 @@ final class AppModel: ObservableObject {
     }
 
     private static func randomKey() -> String {
-        var bytes = [UInt8](repeating: 0, count: 24)
-        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
-        return bytes.map { String(format: "%02x", $0) }.joined()
+        SymmetricKey(size: .bits192).withUnsafeBytes { bytes in
+            bytes.map { String(format: "%02x", $0) }.joined()
+        }
     }
 }
