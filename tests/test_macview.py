@@ -662,6 +662,45 @@ class Agent(unittest.TestCase):
         self.assertIn("fps", live["stats"])
         ws.close()
 
+    def test_extreme_numbers_and_non_finite_bench_do_not_crash_agent(self):
+        ws = WS(self.port, f"/stream?k={self.token}&src=test&codec=jpeg&fps=15&max=320&bpp=nan")
+        self.assertEqual(ws.status, 101)
+        hello = json.loads(ws.recv()[1])
+        self.assertEqual(hello["t"], "hello")
+        status, body = self.get(f"/bench?k={self.token}&src=test&x=nan&y=inf&z=1.5", method="POST")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(body)["sent"], 1)
+        ws.send_text(json.dumps({"t": "rx", "s": 1, "r": 1e30}))
+        ws.send_text(json.dumps({"t": "fd", "f": [[1, 1e30, -1e30, 1e30]], "drop": 1e30}))
+        ws.send_text(json.dumps({"t": "m", "e": "down", "b": 0, "x": 0.5, "y": 0.5, "i": 99, "tv": 1e30}))
+        ws.send_text(json.dumps({"t": "wheel", "dx": 1e30, "dy": -1e30, "x": 0.5, "y": 0.5, "i": 100, "tv": -1e30}))
+        ws.send_text(json.dumps({"t": "ping", "c": 42}))
+        bench_msg = None
+        pong = None
+        deadline = time.time() + 10
+        while time.time() < deadline and not (bench_msg and pong):
+            op, data = ws.recv()
+            if op != 1:
+                continue
+            msg = json.loads(data)
+            if msg.get("t") == "bench":
+                bench_msg = msg
+            elif msg.get("t") == "pong" and msg.get("c") == 42:
+                pong = msg
+        self.assertIsNotNone(bench_msg)
+        self.assertEqual(bench_msg["x"], "nan")
+        self.assertEqual(bench_msg["y"], "inf")
+        self.assertEqual(bench_msg["z"], 1.5)
+        self.assertIsNotNone(pong)
+        status, body = self.get(f"/status?k={self.token}")
+        self.assertEqual(status, 200)
+        self.assertIn("streams", json.loads(body))
+        status, body = self.get(f"/stats?k={self.token}")
+        self.assertEqual(status, 200)
+        self.assertIn("streams", json.loads(body))
+        ws.close()
+        self.get(f"/close?k={self.token}&src=test", method="POST")
+
 
 class PCViewHardening(unittest.TestCase):
     def test_pcview_show_guards_non_string_src_and_shutdown_tolerates_process_errors(self):
