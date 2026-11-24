@@ -96,18 +96,24 @@ final class FrameLink: @unchecked Sendable {
         try? await client.close()
     }
 
-    /// Runs a shell command; returns its combined output and exit status.
-    func run(_ command: String) async throws -> (output: String, status: Int) {
-        // stderr joins stdout (Citadel treats any stderr as a failure), and the
-        // status comes back as the last line so a non-zero exit isn't an exception.
-        let buffer = try await client.executeCommand("{ \(command)\n} 2>&1; echo \"@@rc=$?\"")
-        var text = String(buffer: buffer)
-        var status = 0
+    /// Parses the combined stdout/stderr and trailing @@rc=<status> sentinel.
+    /// Fails closed (-1) if the sentinel is missing or malformed (e.g. truncated stream).
+    static func parseCommandOutput(_ raw: String) -> (output: String, status: Int) {
+        var text = raw
+        var status = -1
         if let range = text.range(of: "@@rc=", options: .backwards) {
             status = Int(text[range.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)) ?? -1
             text = String(text[..<range.lowerBound])
         }
         return (text.trimmingCharacters(in: .whitespacesAndNewlines), status)
+    }
+
+    /// Runs a shell command; returns its combined output and exit status.
+    func run(_ command: String) async throws -> (output: String, status: Int) {
+        // stderr joins stdout (Citadel treats any stderr as a failure), and the
+        // status comes back as the last line so a non-zero exit isn't an exception.
+        let buffer = try await client.executeCommand("{ \(command)\n} 2>&1; echo \"@@rc=$?\"")
+        return Self.parseCommandOutput(String(buffer: buffer))
     }
 
     /// Runs a command that must succeed; its output, or a FrameFailure with it.

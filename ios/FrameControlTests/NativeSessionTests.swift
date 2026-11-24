@@ -15,8 +15,13 @@ final class NativeSessionTests: XCTestCase {
         }
         XCTAssertEqual(FrameSettings.parse(host: "  [2001:db8::42]:2222\n", user: " steamos "),
                        FrameSettings(host: "2001:db8::42", port: 2222))
-        for host in ["", "frame.local:0", "frame.local:65536", "frame.local:no", "[::1]:no", "[::1]junk", "[::1"] {
+        for host in ["", "frame.local:0", "frame.local:65536", "frame.local:no", "[::1]:no", "[::1]junk", "[::1",
+                     "frame.local/path", "user@frame.local", "frame.local?x=1", "frame.local#frag",
+                     "bad host", "frame.local\nbad", "[[::1]]"] {
             XCTAssertNil(FrameSettings.parse(host: host, user: "steamos"), host)
+        }
+        for user in ["", "bad user", "root@host", "a:b", "a/b", "a?b", "a#b", "a\nb"] {
+            XCTAssertNil(FrameSettings.parse(host: "frame.local", user: user), user)
         }
     }
 

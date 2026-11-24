@@ -28,7 +28,15 @@ struct FrameSettings: Codable, Equatable {
             port = value
             host = String(host[..<colon])
         }
-        guard !host.isEmpty, !user.isEmpty, (1...65535).contains(port) else { return nil }
+        let hostInvalid = CharacterSet(charactersIn: "/?#@[]")
+        let userInvalid = CharacterSet(charactersIn: "/?#@:")
+        let hasBadHost = host.unicodeScalars.contains {
+            $0.value <= 0x20 || $0.value == 0x7f || CharacterSet.whitespacesAndNewlines.contains($0) || hostInvalid.contains($0)
+        }
+        let hasBadUser = user.unicodeScalars.contains {
+            $0.value <= 0x20 || $0.value == 0x7f || CharacterSet.whitespacesAndNewlines.contains($0) || userInvalid.contains($0)
+        }
+        guard !host.isEmpty, !user.isEmpty, !hasBadHost, !hasBadUser, (1...65535).contains(port) else { return nil }
         return FrameSettings(host: host, port: port, user: user)
     }
 }
